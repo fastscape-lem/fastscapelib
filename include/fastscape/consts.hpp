@@ -8,7 +8,7 @@
 
 
 namespace fs {
-namespace constants {
+namespace consts {
 
     /*
      * @brief Row index offsets (from a central grid point) of D8

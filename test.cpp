@@ -3,7 +3,7 @@
 
 #include "xtensor/xio.hpp"
 
-#include "sinks.hpp"
+#include "include/fastscape/sinks.hpp"
 
 
 void test() {
@@ -14,7 +14,7 @@ void test() {
 
     std::cout << arr1 << std::endl;
 
-    fill_sinks_flat(arr1);
+    fs::fill_sinks_flat(arr1);
 
     std::cout << arr1 << std::endl;
 
@@ -27,7 +27,7 @@ void test() {
 
     assert(arr1(1, 1) == arr1(0, 0));
 
-    fill_sinks_sloped(arr2);
+    fs::fill_sinks_sloped(arr2);
 
     std::cout << arr2 << std::endl;
 

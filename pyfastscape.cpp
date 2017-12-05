@@ -1,6 +1,6 @@
 /*
   <%
-  cfg['dependencies'] = ['sinks.hpp', 'constants.hpp']
+  cfg['dependencies'] = ['include/fastscape/sinks.hpp', 'include/fastscape/consts.hpp']
   cfg['compiler_args'] = ['-std=c++14']
   cfg['include_dirs'] = ['/Users/bbovy/miniconda3/envs/fastscape_py36/lib/python3.6/site-packages/numpy/core/include']
   setup_pybind11(cfg)
@@ -10,7 +10,7 @@
 #define FORCE_IMPORT_ARRAY
 #include "xtensor-python/pytensor.hpp"
 
-#include "sinks.hpp"
+#include "include/fastscape/sinks.hpp"
 
 
 namespace py = pybind11;
@@ -19,14 +19,14 @@ namespace py = pybind11;
 template<class T>
 void fill_sinks_flat_py(xt::pytensor<T, 2>& elevation) {
     py::gil_scoped_release release;
-    fill_sinks_flat(elevation);
+    fs::fill_sinks_flat(elevation);
 }
 
 
 template<class T>
 void fill_sinks_sloped_py(xt::pytensor<T, 2>& elevation) {
     py::gil_scoped_release release;
-    fill_sinks_sloped(elevation);
+    fs::fill_sinks_sloped(elevation);
 }
 
 
