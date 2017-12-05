@@ -7,7 +7,7 @@
 #define CONSTANTS_HPP
 
 
-namespace fs {
+namespace fastscape {
 namespace consts {
 
     /*

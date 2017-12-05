@@ -17,6 +17,9 @@
 #include "consts.hpp"
 
 
+namespace fs = fastscape;
+
+
 /**
     @brief A simple grid node container.
 
@@ -93,7 +96,7 @@ void init_pflood(xt::xexpression<E>& elevation,
 }
 
 
-namespace fs {
+namespace fastscape {
 
     template<class E>
     auto fill_sinks_flat(xt::xexpression<E>& elevation) {

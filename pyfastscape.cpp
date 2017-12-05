@@ -14,6 +14,7 @@
 
 
 namespace py = pybind11;
+namespace fs = fastscape;
 
 
 template<class T>

@@ -6,6 +6,9 @@
 #include "include/fastscape/sinks.hpp"
 
 
+namespace fs = fastscape;
+
+
 void test() {
     xt::xtensor<double, 2> arr1
        {{1.0, 2.0, 3.0},
