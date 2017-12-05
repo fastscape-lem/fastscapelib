@@ -23,6 +23,13 @@ void priority_flood_original_py(xt::pyarray<T>& elevation) {
 }
 
 
+template<class T>
+void priority_flood_epsilon_py(xt::pyarray<T>& elevation) {
+    py::gil_scoped_release release;
+    priority_flood_epsilon(elevation);
+}
+
+
 PYBIND11_MODULE(pyfastscape, m) {
     m.doc() = "A collection of efficient algorithms for"
         "processing topographic data and landscape evolution modeling";
@@ -31,6 +38,6 @@ PYBIND11_MODULE(pyfastscape, m) {
 
     m.def("priority_flood_original_d", &priority_flood_original_py<double>,
           "Fill depressions in elevation data (flat surfaces).");
-    //m.def("priority_flood_epsilon_d", &priority_flood_epsilon_py<double>,
-    //      "Fill depressions in elevation data (no flat surfaces)");
+    m.def("priority_flood_epsilon_d", &priority_flood_epsilon_py<double>,
+          "Fill depressions in elevation data (no flat surfaces)");
 }

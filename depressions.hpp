@@ -58,6 +58,7 @@ auto priority_flood_original(xt::xexpression<E>& elevation) {
     ssize_t ncols = elev_shape[1];
 
     node_pr_queue<elev_t> open;
+
     xt::xtensor<bool, 2> closed = xt::zeros<bool>(elev_shape);
 
     auto place_node = [&](ssize_t r, ssize_t c) {
@@ -81,9 +82,9 @@ auto priority_flood_original(xt::xexpression<E>& elevation) {
         node_container<elev_t> inode = open.top();
         open.pop();
 
-        for(int ineighbor=1; ineighbor<=8; ineighbor++) {
-            ssize_t inb_r = inode.r + fs::constants::d8_row_offsets[ineighbor];
-            ssize_t inb_c = inode.c + fs::constants::d8_col_offsets[ineighbor];
+        for(int inb=1; inb<=8; inb++) {
+            ssize_t inb_r = inode.r + fs::constants::d8_row_offsets[inb];
+            ssize_t inb_c = inode.c + fs::constants::d8_col_offsets[inb];
 
             try { if(closed.at(inb_r, inb_c)) continue; }
             catch (const std::out_of_range& e) { continue; }
@@ -93,6 +94,77 @@ auto priority_flood_original(xt::xexpression<E>& elevation) {
         }
     }
 }
+
+
+template<class E>
+auto priority_flood_epsilon(xt::xexpression<E>& elevation) {
+    using elev_t = typename E::value_type;
+    auto& elev = elevation.derived_cast();
+    auto elev_shape = elev.shape();
+
+    ssize_t nrows = elev_shape[0];
+    ssize_t ncols = elev_shape[1];
+
+    node_pr_queue<elev_t> open;
+    node_queue<elev_t> pit;
+
+    xt::xtensor<bool, 2> closed = xt::zeros<bool>(elev_shape);
+
+    auto place_node = [&](ssize_t r, ssize_t c) {
+        open.emplace(node_container<elev_t>(r, c, elev(r, c)));
+        closed(r, c) = true;
+    };
+
+    // Add top and bottom rows in priority queue
+    for(ssize_t c=0; c<ncols; c++) {
+        place_node(0, c);
+        place_node(nrows-1, c);
+    }
+
+    // Add left and right borders in priority queue
+    for(ssize_t r=1; r<nrows-1; r++) {
+        place_node(r, 0);
+        place_node(r, ncols-1);
+    }
+
+    while(!open.empty() || !pit.empty()) {
+        node_container<elev_t> inode, nb_node;
+        node_container<elev_t> onode = open.top();
+        node_container<elev_t> pnode = pit.front();
+
+        if(!pit.empty() && (open.empty() || open.top().value == pit.front().value)) {
+            inode = pit.front();
+            pit.pop();
+        }
+        else {
+            inode = open.top();
+            open.pop();
+        }
+
+        elev_t elev_tiny_step = std::nextafter(
+            inode.value, std::numeric_limits<elev_t>::infinity());
+
+        for(int nb=1; nb<=8; nb++) {
+            ssize_t nb_r = inode.r + fs::constants::d8_row_offsets[nb];
+            ssize_t nb_c = inode.c + fs::constants::d8_col_offsets[nb];
+
+            try { if(closed.at(nb_r, nb_c)) continue; }
+            catch (const std::out_of_range& e) { continue; }
+
+            closed(nb_r, nb_c) = true;
+
+            if(elev(nb_r, nb_c) <= elev_tiny_step) {
+                elev(nb_r, nb_c) = elev_tiny_step;
+                nb_node = node_container<elev_t>(nb_r, nb_c, elev(nb_r, nb_c));
+                pit.emplace(nb_node);
+            }
+            else {
+                open.emplace(node_container<elev_t>(nb_r, nb_c, elev(nb_r, nb_c)));
+            }
+        }
+    }
+}
+
 
 
 #endif
