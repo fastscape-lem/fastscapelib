@@ -3,9 +3,7 @@
  * @brief Defines a number of constants used in this library.
  */
 
-#ifndef CONSTANTS_HPP
-#define CONSTANTS_HPP
-
+#pragma once
 
 namespace fastscape {
 namespace consts {
@@ -29,6 +27,3 @@ namespace consts {
 
 }
 }
-
-
-#endif

@@ -4,8 +4,7 @@
  *        algorithms for depression filling.
  */
 
-#ifndef SINKS_HPP
-#define SINKS_HPP
+#pragma once
 
 #include <cmath>
 #include <functional>
@@ -177,6 +176,3 @@ namespace fastscape {
     }
 
 }
-
-
-#endif
