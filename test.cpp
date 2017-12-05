@@ -1,8 +1,9 @@
 #include <iostream>
+#include <cassert>
 
 #include "xtensor/xio.hpp"
 
-#include "depressions.hpp"
+#include "sinks.hpp"
 
 
 void test() {
@@ -13,7 +14,7 @@ void test() {
 
     std::cout << arr1 << std::endl;
 
-    priority_flood_original(arr1);
+    fill_sinks_flat(arr1);
 
     std::cout << arr1 << std::endl;
 
@@ -24,11 +25,13 @@ void test() {
 
     std::cout << arr2 << std::endl;
 
-    priority_flood_epsilon(arr2);
+    assert(arr1(1, 1) == arr1(0, 0));
+
+    fill_sinks_sloped(arr2);
 
     std::cout << arr2 << std::endl;
 
-    std::cout << (arr2(1, 1) > arr2(0, 0)) << std::endl;
+    assert(arr2(1, 1) > arr2(0, 0));
 
     std::cout << "end" << std::endl;
 }
