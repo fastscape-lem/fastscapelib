@@ -3,7 +3,7 @@
 
 #include "xtensor/xio.hpp"
 
-#include "include/fastscape/sinks.hpp"
+#include "include/fastscape/fastscape.hpp"
 
 
 namespace fs = fastscape;
