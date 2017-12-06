@@ -1,7 +1,7 @@
 /**
  * @file
  * @brief Provides implementation of various efficient
- *        algorithms for depression filling.
+ *        algorithms for depression filling or pit resolving.
  */
 
 #pragma once
