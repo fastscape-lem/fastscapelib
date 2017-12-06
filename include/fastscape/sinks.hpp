@@ -29,7 +29,8 @@ namespace fastscape {
          * Stores both a position (r, c) and a value at that position.
          * Also defines  operator '>' that compares only on `value`.
          *
-         * The main purpose of this container is for using with (priority) queues.
+         * The main purpose of this container is for using with
+         * (priority) queues.
          */
         template<class T>
         struct node_container {
@@ -37,7 +38,8 @@ namespace fastscape {
             ssize_t c;
             T value;
             node_container() { }
-            node_container(ssize_t row, ssize_t col, T val) : r(row), c(col), value(val) { }
+            node_container(ssize_t row, ssize_t col, T val) :
+                r(row), c(col), value(val) { }
             bool operator > (const node_container<T>& other) const {
                 return value > other.value;
             }
