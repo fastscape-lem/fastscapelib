@@ -14,7 +14,7 @@ namespace consts {
      *
      *  The first element correspond to the central grid point itself.
      */
-    const int d8_row_offsets[9] = {0, -1, -1, 0, 1, 1, 1, 0, -1};
+    const short d8_row_offsets[9] = {0, -1, -1, 0, 1, 1, 1, 0, -1};
 
 
     /**
@@ -23,7 +23,7 @@ namespace consts {
 
      * The first element correspond to the central grid point itself.
      */
-    const int d8_col_offsets[9] = {0, 0, -1, -1, -1, 0, 1, 1, 1};
+    const short d8_col_offsets[9] = {0, 0, -1, -1, -1, 0, 1, 1, 1};
 
 }
 }

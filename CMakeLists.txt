@@ -28,11 +28,24 @@ message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 
 set(FASTSCAPE_HEADERS
   ${FASTSCAPE_INCLUDE_DIR}/fastscape/config.hpp
+  ${FASTSCAPE_INCLUDE_DIR}/fastscape/utils.hpp
   ${FASTSCAPE_INCLUDE_DIR}/fastscape/consts.hpp
   ${FASTSCAPE_INCLUDE_DIR}/fastscape/sinks.hpp
 )
 
 include_directories(${xtensor_INCLUDE_DIRS})
+
+OPTION(BUILD_TESTS "fastscape test suite" OFF)
+OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
+
+if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
+    set(BUILD_TESTS ON)
+endif()
+
+if(BUILD_TESTS)
+    include_directories(${FASTSCAPE_INCLUDE_DIR})
+    add_subdirectory(test)
+endif()
 
 # Installation
 # ============

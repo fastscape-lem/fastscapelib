@@ -10,9 +10,13 @@
 #include <functional>
 #include <algorithm>
 #include <queue>
+#include <limits>
+#include <stdexcept>
+
 
 #include "xtensor/xtensor.hpp"
 
+#include "utils.hpp"
 #include "consts.hpp"
 
 
@@ -34,11 +38,11 @@ namespace fastscape {
          */
         template<class T>
         struct node_container {
-            ssize_t r;
-            ssize_t c;
+            index_t r;
+            index_t c;
             T value;
             node_container() { }
-            node_container(ssize_t row, ssize_t col, T val) :
+            node_container(index_t row, index_t col, T val) :
                 r(row), c(col), value(val) { }
             bool operator > (const node_container<T>& other) const {
                 return value > other.value;
@@ -61,8 +65,9 @@ namespace fastscape {
          *        otherwise).
          */
         template<class S>
-        bool in_bounds(const S& shape, ssize_t row, ssize_t col) {
-            if(row >= 0 && row < shape[0] && col >= 0 && col < shape[1]) {
+        bool in_bounds(const S& shape, index_t row, index_t col) {
+            if(row >= 0 && row < (index_t) shape[0]
+                   && col >= 0 && col < (index_t) shape[1]) {
                 return true;
             }
             return false;
@@ -81,20 +86,20 @@ namespace fastscape {
             auto& elev = elevation.derived_cast();
             auto elev_shape = elev.shape();
 
-            ssize_t nrows = elev_shape[0];
-            ssize_t ncols = elev_shape[1];
+            index_t nrows = (index_t) elev_shape[0];
+            index_t ncols = (index_t) elev_shape[1];
 
-            auto place_node = [&](ssize_t row, ssize_t col) {
+            auto place_node = [&](index_t row, index_t col) {
                 open.emplace(node_container<elev_t>(row, col, elev(row, col)));
                 closed(row, col) = true;
             };
 
-            for(ssize_t c=0; c<ncols; c++) {
+            for(index_t c=0; c<ncols; ++c) {
                 place_node(0, c);
                 place_node(nrows-1, c);
             }
 
-            for(ssize_t r=1; r<nrows-1; r++) {
+            for(index_t r=1; r<nrows-1; ++r) {
                 place_node(r, 0);
                 place_node(r, ncols-1);
             }
@@ -117,9 +122,9 @@ namespace fastscape {
             detail::node_container<elev_t> inode = open.top();
             open.pop();
 
-            for(int k=1; k<=8; k++) {
-                ssize_t kr = inode.r + fs::consts::d8_row_offsets[k];
-                ssize_t kc = inode.c + fs::consts::d8_col_offsets[k];
+            for(int k=1; k<=8; ++k) {
+                index_t kr = inode.r + fs::consts::d8_row_offsets[k];
+                index_t kc = inode.c + fs::consts::d8_col_offsets[k];
 
                 if(!detail::in_bounds(elev_shape, kr, kc)) { continue; }
                 if(closed(kr, kc)) { continue; }
@@ -160,9 +165,9 @@ namespace fastscape {
             elev_t elev_tiny_step = std::nextafter(
                 inode.value, std::numeric_limits<elev_t>::infinity());
 
-            for(int k=1; k<=8; k++) {
-                ssize_t kr = inode.r + fs::consts::d8_row_offsets[k];
-                ssize_t kc = inode.c + fs::consts::d8_col_offsets[k];
+            for(int k=1; k<=8; ++k) {
+                index_t kr = inode.r + fs::consts::d8_row_offsets[k];
+                index_t kc = inode.c + fs::consts::d8_col_offsets[k];
 
                 if(!detail::in_bounds(elev_shape, kr, kc)) { continue; }
                 if(closed(kr, kc)) { continue; }
