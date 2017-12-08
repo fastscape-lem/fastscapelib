@@ -1,34 +1,69 @@
-Fastscape Core
-==============
+Fastscape
+=========
 
 A C++ library of efficient algorithms for processing topographic data
 and landscape evolution modeling.
+
+This library has also Python bindings: see the README file in the
+``fastscape-python`` subfolder of this repository for more information
+on how to install and use it.
 
 Installation
 ------------
 
 This library is header only and uses C++14 standards. It depends on
-xtensor_, which can be installed using the conda package manager::
+xtensor_.
 
-  $ conda install xtensor -c conda-forge
+Installation from source in a conda environment, using cmake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Currently, this repository also provides Python bindings, which
-requires xtensor-python_ and pybind11_::
+We recommend installing Fastscape in its own conda_ environment. To
+create a new environment named 'fastscape' and install the required
+dependencies::
 
-  $ conda install xtensor-python pybind11 -c conda-forge
+  $ conda create -n fastscape xtensor cmake -c conda-forge
 
-There is no ``setup.py`` file yet to install the Python package, but
-you can use cppimport_ to compile and import the python module in one
-step. For this you can install cppimport using pip::
+To activate the environment (on Unix platforms)::
 
-  $ pip install cppimport
+  $ source activate fastscape
 
-Then in a Python console (launched from within this directory)::
+To activate the environment (on Windows platforms)::
 
-  >>> import cppimport
-  >>> fscape = cppimport.imp('pyfastscape')
+  $ activate fastscape
+
+Run the commands below from the source directory to install the
+``fastscape`` header files using cmake (on Unix platforms)::
+
+  $ mkdir build
+  $ cd build
+  $ cmake -DCMAKE_INSTALL_PREFIX=/path/to/prefix ..
+  $ make install
+
+Where ``/path/to/prefix`` is the path to the newly created conda environment.
+
+On Windows platforms::
+
+  $ mkdir build
+  $ cd build
+  $ cmake -G "NMake Makefiles" -DCMAKE_INSTALL_PREFIX=/path/to/prefix ..
+  $ nmake
+  $ nmake install
 
 .. _xtensor: https://github.com/QuantStack/xtensor
-.. _xtensor-python: https://github.com/QuantStack/xtensor-python
-.. _pybind11: https://github.com/pybind/pybind11
-.. _cppimport: https://github.com/tbenthompson/cppimport
+.. _conda: https://conda.io/docs/
+
+Testing
+-------
+
+Fastscape has a test suite based on GTest_. To install it you can use
+conda too::
+
+  $ conda install gtest -c conda-forge
+
+To build and run the test suite (Unix platforms), from the build
+directory created above::
+
+  $ cmake -DBUILD_TESTS=ON ..
+  $ make run_tests
+
+.. _GTest: https://github.com/google/googletest
