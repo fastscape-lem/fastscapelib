@@ -6,4 +6,5 @@
  */
 #pragma once
 
+#include "fastscape/flow_routing.hpp"
 #include "fastscape/sinks.hpp"

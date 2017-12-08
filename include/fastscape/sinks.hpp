@@ -11,8 +11,6 @@
 #include <algorithm>
 #include <queue>
 #include <limits>
-#include <stdexcept>
-
 
 #include "xtensor/xtensor.hpp"
 
@@ -61,36 +59,22 @@ namespace fastscape {
 
 
         /**
-         * @brief Return true if a given (row, col) index is in bounds (false
-         *        otherwise).
-         */
-        template<class S>
-        bool in_bounds(const S& shape, index_t row, index_t col) {
-            if(row >= 0 && row < (index_t) shape[0]
-                   && col >= 0 && col < (index_t) shape[1]) {
-                return true;
-            }
-            return false;
-        }
-
-        /**
          * @brief Initialize priority flood algorithms.
          *
          * Add border grid nodes to the priority queue and mark them as
          * resolved.
          */
-        template<class E, class elev_t>
-        void init_pflood(xt::xexpression<E>& elevation,
+        template<class A, class elev_t>
+        void init_pflood(A& elevation,
                          xt::xtensor<bool, 2>& closed,
                          node_pr_queue<elev_t>& open) {
-            auto& elev = elevation.derived_cast();
-            auto elev_shape = elev.shape();
+            auto elev_shape = elevation.shape();
 
             index_t nrows = (index_t) elev_shape[0];
             index_t ncols = (index_t) elev_shape[1];
 
             auto place_node = [&](index_t row, index_t col) {
-                open.emplace(node_container<elev_t>(row, col, elev(row, col)));
+                open.emplace(node_container<elev_t>(row, col, elevation(row, col)));
                 closed(row, col) = true;
             };
 
@@ -107,11 +91,10 @@ namespace fastscape {
 
     }
 
-    template<class E>
-    auto fill_sinks_flat(xt::xexpression<E>& elevation) {
-        using elev_t = typename E::value_type;
-        auto& elev = elevation.derived_cast();
-        auto elev_shape = elev.shape();
+    template<class A>
+    auto fill_sinks_flat(A& elevation) {
+        using elev_t = typename A::value_type;
+        auto elev_shape = elevation.shape();
 
         detail::node_pr_queue<elev_t> open;
         xt::xtensor<bool, 2> closed = xt::zeros<bool>(elev_shape);
@@ -126,22 +109,21 @@ namespace fastscape {
                 index_t kr = inode.r + fs::consts::d8_row_offsets[k];
                 index_t kc = inode.c + fs::consts::d8_col_offsets[k];
 
-                if(!detail::in_bounds(elev_shape, kr, kc)) { continue; }
+                if(!fs::detail::in_bounds(elev_shape, kr, kc)) { continue; }
                 if(closed(kr, kc)) { continue; }
 
-                elev(kr, kc) = std::max(elev(kr, kc), inode.value);
-                open.emplace(detail::node_container<elev_t>(kr, kc, elev(kr, kc)));
+                elevation(kr, kc) = std::max(elevation(kr, kc), inode.value);
+                open.emplace(detail::node_container<elev_t>(kr, kc, elevation(kr, kc)));
                 closed(kr, kc) = true;
             }
         }
     }
 
 
-    template<class E>
-        auto fill_sinks_sloped(xt::xexpression<E>& elevation) {
-        using elev_t = typename E::value_type;
-        auto& elev = elevation.derived_cast();
-        auto elev_shape = elev.shape();
+    template<class A>
+    auto fill_sinks_sloped(A& elevation) {
+        using elev_t = typename A::value_type;
+        auto elev_shape = elevation.shape();
 
         detail::node_pr_queue<elev_t> open;
         detail::node_queue<elev_t> pit;
@@ -169,16 +151,16 @@ namespace fastscape {
                 index_t kr = inode.r + fs::consts::d8_row_offsets[k];
                 index_t kc = inode.c + fs::consts::d8_col_offsets[k];
 
-                if(!detail::in_bounds(elev_shape, kr, kc)) { continue; }
+                if(!fs::detail::in_bounds(elev_shape, kr, kc)) { continue; }
                 if(closed(kr, kc)) { continue; }
 
-                if(elev(kr, kc) <= elev_tiny_step) {
-                    elev(kr, kc) = elev_tiny_step;
-                    knode = detail::node_container<elev_t>(kr, kc, elev(kr, kc));
+                if(elevation(kr, kc) <= elev_tiny_step) {
+                    elevation(kr, kc) = elev_tiny_step;
+                    knode = detail::node_container<elev_t>(kr, kc, elevation(kr, kc));
                     pit.emplace(knode);
                 }
                 else {
-                    knode = detail::node_container<elev_t>(kr, kc, elev(kr, kc));
+                    knode = detail::node_container<elev_t>(kr, kc, elevation(kr, kc));
                     open.emplace(knode);
                 }
 

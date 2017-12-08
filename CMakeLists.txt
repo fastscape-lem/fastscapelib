@@ -32,6 +32,7 @@ set(FASTSCAPE_HEADERS
   ${FASTSCAPE_INCLUDE_DIR}/fastscape/utils.hpp
   ${FASTSCAPE_INCLUDE_DIR}/fastscape/consts.hpp
   ${FASTSCAPE_INCLUDE_DIR}/fastscape/sinks.hpp
+  ${FASTSCAPE_INCLUDE_DIR}/fastscape/flow_routing.hpp
 )
 
 include_directories(${xtensor_INCLUDE_DIRS})

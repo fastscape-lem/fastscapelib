@@ -76,6 +76,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 
 set(FASTSCAPE_TESTS
   main.cpp
+  test_flow_routing.cpp
   test_sinks.cpp
 )
 
