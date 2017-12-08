@@ -32,7 +32,7 @@ To activate the environment (on Windows platforms)::
   $ activate fastscape
 
 Run the commands below from the source directory to install the
-``fastscape`` header files using cmake (on Unix platforms)::
+Fastscape's header files using cmake (on Unix platforms)::
 
   $ mkdir build
   $ cd build
