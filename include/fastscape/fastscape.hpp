@@ -6,4 +6,4 @@
  */
 #pragma once
 
-#include "sinks.hpp"
+#include "fastscape/sinks.hpp"

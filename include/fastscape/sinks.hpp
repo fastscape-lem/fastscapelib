@@ -16,8 +16,8 @@
 
 #include "xtensor/xtensor.hpp"
 
-#include "utils.hpp"
-#include "consts.hpp"
+#include "fastscape/utils.hpp"
+#include "fastscape/consts.hpp"
 
 
 namespace fs = fastscape;

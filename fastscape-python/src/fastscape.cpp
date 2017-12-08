@@ -1,16 +1,12 @@
-/*
-  <%
-  cfg['dependencies'] = ['include/fastscape/fastscape.hpp', 'include/fastscape/sinks.hpp', 'include/fastscape/consts.hpp']
-  cfg['compiler_args'] = ['-std=c++14']
-  cfg['include_dirs'] = ['/Users/benbovy/miniconda3/envs/fastscape_py36/lib/python3.6/site-packages/numpy/core/include', '/Users/bbovy/miniconda3/envs/fastscape_py36/lib/python3.6/site-packages/numpy/core/include']
-  setup_pybind11(cfg)
-  %>
+/**
+ * @file
+ * @brief Fastscape Python bindings.
 */
 #include "pybind11/pybind11.h"
 #define FORCE_IMPORT_ARRAY
 #include "xtensor-python/pytensor.hpp"
 
-#include "include/fastscape/fastscape.hpp"
+#include "fastscape/fastscape.hpp"
 
 
 namespace py = pybind11;
@@ -31,7 +27,7 @@ void fill_sinks_sloped_py(xt::pytensor<T, 2>& elevation) {
 }
 
 
-PYBIND11_MODULE(pyfastscape, m) {
+PYBIND11_MODULE(fastscape, m) {
     m.doc() = "A collection of efficient algorithms"
         "for processing topographic data and landscape evolution modeling";
 

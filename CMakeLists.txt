@@ -27,6 +27,7 @@ message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 # =====
 
 set(FASTSCAPE_HEADERS
+  ${FASTSCAPE_INCLUDE_DIR}/fastscape/fastscape.hpp
   ${FASTSCAPE_INCLUDE_DIR}/fastscape/config.hpp
   ${FASTSCAPE_INCLUDE_DIR}/fastscape/utils.hpp
   ${FASTSCAPE_INCLUDE_DIR}/fastscape/consts.hpp
