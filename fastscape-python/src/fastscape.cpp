@@ -38,6 +38,15 @@ void compute_donors_py(xt::pytensor<index_t, 1>& ndonors,
 }
 
 
+void compute_stack_py(xt::pytensor<index_t, 1>& stack,
+                      const xt::pytensor<index_t, 1>& ndonors,
+                      const xt::pytensor<index_t, 2>& donors,
+                      const xt::pytensor<index_t, 1>& receivers) {
+    py::gil_scoped_release release;
+    fs::compute_stack(stack, ndonors, donors, receivers);
+}
+
+
 template<class T>
 void fill_sinks_flat_py(xt::pytensor<T, 2>& elevation) {
     py::gil_scoped_release release;
@@ -60,10 +69,17 @@ PYBIND11_MODULE(fastscape, m) {
 
     m.def("compute_receivers_d8_d", &compute_receivers_d8_py<double>,
           "Compute D8 flow receivers, a single receiver for each grid node.");
+
     m.def("compute_donors", &compute_donors_py,
           "Compute flow donors (invert flow receivers).");
+
+    m.def("compute_stack", &compute_stack_py,
+          "Build a stack of grid node ids such that each node in the stack "
+          "is visited before any of its upstream nodes.");
+
     m.def("fill_sinks_flat_d", &fill_sinks_flat_py<double>,
           "Fill depressions in elevation data (flat surfaces).");
+
     m.def("fill_sinks_sloped_d", &fill_sinks_sloped_py<double>,
           "Fill depressions in elevation data (slightly sloped surfaces).");
 }

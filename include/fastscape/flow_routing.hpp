@@ -37,6 +37,21 @@ namespace fastscape {
             return d8_dists;
         }
 
+
+        template<class A1, class A2, class A3>
+        void add2stack(index_t& nstack,
+                       A1& stack,
+                       const A2& ndonors,
+                       const A3& donors,
+                       index_t inode) {
+            for(unsigned short k=0; k<ndonors(inode); ++k) {
+                index_t idonor = donors(inode, k);
+                stack(nstack) = idonor;
+                ++nstack;
+                add2stack(nstack, stack, ndonors, donors, idonor);
+            }
+        }
+
     }
 
     template<class A1, class A2, class A3, class A4>
@@ -58,6 +73,8 @@ namespace fastscape {
         for(index_t r=0; r<nrows; ++r) {
             for(index_t c=0; c<ncols; ++c) {
                 elev_t inode = r * ncols + c;
+
+                receivers(inode) = inode;
 
                 if(!active_nodes(r, c)) {
                     continue;
@@ -90,7 +107,7 @@ namespace fastscape {
     void compute_donors(A1& ndonors, A2& donors, const A3& receivers) {
 
         for(index_t inode=0; inode<ndonors.size(); ++inode) {
-            ndonors(inode) = (index_t) 0;
+            ndonors(inode) = 0;
         }
 
         for(index_t inode=0; inode<receivers.size(); ++inode) {
@@ -98,6 +115,23 @@ namespace fastscape {
                 index_t irec = receivers(inode);
                 donors(irec, ndonors(irec)) = inode;
                 ++ndonors(irec);
+            }
+        }
+    }
+
+
+    template<class A1, class A2, class A3, class A4>
+    void compute_stack(A1& stack,
+                       const A2& ndonors,
+                       const A3& donors,
+                       const A4& receivers) {
+        index_t nstack = 0;
+
+        for(index_t inode=0; inode<receivers.size(); ++inode) {
+            if(receivers(inode) == inode) {
+                stack(nstack) = inode;
+                ++nstack;
+                detail::add2stack(nstack, stack, ndonors, donors, inode);
             }
         }
     }
