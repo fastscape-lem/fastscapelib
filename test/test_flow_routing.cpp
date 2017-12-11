@@ -34,12 +34,12 @@ TEST(flow_routing, compute_receivers_d8) {
          0.,  0.,  1.,  0.,
          0.,  0.,  0.,  0.};
 
-
     fs::compute_receivers_d8(receivers, dist2receivers,
                              elevation, active_nodes,
                              1., 1.);
 
-    //TODO: test with different dx / dy
+    //TODO: test with different dx, dy
 
     ASSERT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
+    ASSERT_TRUE(xt::allclose(dist2receivers, expected_dist2receivers));
 }
