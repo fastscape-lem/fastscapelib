@@ -7,11 +7,11 @@
 
 ACTIVE_ENV=$(conda info | grep 'default environment' | awk '{print $4}')
 
-cd build
+rm -rf build; mkdir build; cd build;
 cmake -DCMAKE_INSTALL_PREFIX=$ACTIVE_ENV ..
 make install
 
-cmake -DBUILD_TESTS=ON
+cmake -DBUILD_TESTS=ON ..
 make run_tests
 
 cd ../fastscape-python/
