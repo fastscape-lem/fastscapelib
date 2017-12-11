@@ -2,7 +2,6 @@
  * @file
  * @brief Fastscape library configuration.
  */
-
 #pragma once
 
 #define FASTSCAPE_VERSION_MAJOR 0

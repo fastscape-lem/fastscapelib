@@ -11,6 +11,7 @@
 #include <array>
 
 #include "xtensor/xtensor.hpp"
+#include "xtensor/xview.hpp"
 
 #include "fastscape/utils.hpp"
 #include "fastscape/consts.hpp"
@@ -39,7 +40,7 @@ namespace fastscape {
     }
 
     template<class A1, class A2, class A3, class A4>
-    auto compute_receivers_d8(A1& receivers,
+    void compute_receivers_d8(A1& receivers,
                               A2& dist2receivers,
                               const A3& elevation,
                               const A4& active_nodes,
@@ -82,6 +83,23 @@ namespace fastscape {
             }
         }
 
+    }
+
+
+    template<class A1, class A2, class A3>
+    void compute_donors(A1& ndonors, A2& donors, const A3& receivers) {
+
+        for(index_t inode=0; inode<ndonors.size(); ++inode) {
+            ndonors(inode) = (index_t) 0;
+        }
+
+        for(index_t inode=0; inode<receivers.size(); ++inode) {
+            if(receivers(inode) != inode) {
+                index_t irec = receivers(inode);
+                donors(irec, ndonors(irec)) = inode;
+                ++ndonors(irec);
+            }
+        }
     }
 
 }
