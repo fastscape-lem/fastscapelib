@@ -11,7 +11,6 @@
 #include <array>
 
 #include "xtensor/xtensor.hpp"
-#include "xtensor/xview.hpp"
 
 #include "fastscape/utils.hpp"
 #include "fastscape/consts.hpp"
@@ -72,7 +71,7 @@ namespace fastscape {
 
         for(index_t r=0; r<nrows; ++r) {
             for(index_t c=0; c<ncols; ++c) {
-                elev_t inode = r * ncols + c;
+                index_t inode = r * ncols + c;
 
                 receivers(inode) = inode;
 
