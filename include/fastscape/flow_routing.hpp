@@ -74,6 +74,7 @@ namespace fastscape {
                 index_t inode = r * ncols + c;
 
                 receivers(inode) = inode;
+                dist2receivers(inode) = 0.;
 
                 if(!active_nodes(r, c)) {
                     continue;
@@ -104,12 +105,13 @@ namespace fastscape {
 
     template<class A1, class A2, class A3>
     void compute_donors(A1& ndonors, A2& donors, const A3& receivers) {
+        index_t nnodes = (index_t) receivers.size();
 
-        for(index_t inode=0; inode<ndonors.size(); ++inode) {
+        for(index_t inode=0; inode<nnodes; ++inode) {
             ndonors(inode) = 0;
         }
 
-        for(index_t inode=0; inode<receivers.size(); ++inode) {
+        for(index_t inode=0; inode<nnodes; ++inode) {
             if(receivers(inode) != inode) {
                 index_t irec = receivers(inode);
                 donors(irec, ndonors(irec)) = inode;
@@ -124,9 +126,10 @@ namespace fastscape {
                        const A2& ndonors,
                        const A3& donors,
                        const A4& receivers) {
+        index_t nnodes = (index_t) receivers.size();
         index_t nstack = 0;
 
-        for(index_t inode=0; inode<receivers.size(); ++inode) {
+        for(index_t inode=0; inode<nnodes; ++inode) {
             if(receivers(inode) == inode) {
                 stack(nstack) = inode;
                 ++nstack;
