@@ -11,6 +11,7 @@
 #include <array>
 
 #include "xtensor/xtensor.hpp"
+#include "xtensor/xview.hpp"
 
 #include "fastscape/utils.hpp"
 #include "fastscape/consts.hpp"
@@ -63,7 +64,7 @@ namespace fastscape {
         using elev_t = typename A3::value_type;
         const auto d8_dists = detail::get_d8_distances(dx, dy);
 
-        //TODO: shape assertions here? or do it (or already done) in callers...
+        //TODO: insert shape/size assertions here
 
         const auto elev_shape = elevation.shape();
         const index_t nrows = (index_t) elev_shape[0];
@@ -107,6 +108,8 @@ namespace fastscape {
     void compute_donors(A1& ndonors, A2& donors, const A3& receivers) {
         index_t nnodes = (index_t) receivers.size();
 
+        //TODO: insert shape/size assertions here
+
         for(index_t inode=0; inode<nnodes; ++inode) {
             ndonors(inode) = 0;
         }
@@ -118,6 +121,7 @@ namespace fastscape {
                 ++ndonors(irec);
             }
         }
+
     }
 
 
@@ -129,6 +133,8 @@ namespace fastscape {
         index_t nnodes = (index_t) receivers.size();
         index_t nstack = 0;
 
+        //TODO: insert shape/size assertions here
+
         for(index_t inode=0; inode<nnodes; ++inode) {
             if(receivers(inode) == inode) {
                 stack(nstack) = inode;
@@ -136,6 +142,67 @@ namespace fastscape {
                 detail::add2stack(nstack, stack, ndonors, donors, inode);
             }
         }
+
+    }
+
+
+    template<class A1, class A2, class A3, class A4>
+    index_t compute_basins(A1& basins,
+                           A2& outlets,
+                           const A3& stack,
+                           const A4& receivers) {
+        index_t nnodes = (index_t) receivers.size();
+
+        //TODO: insert shape/size assertions here
+
+        index_t ibasin = -1;
+
+        for(index_t inode=0; inode<nnodes; ++inode) {
+            index_t istack = stack(inode);
+            index_t irec = receivers(istack);
+
+            if(irec == istack) {
+                ++ibasin;
+                outlets(ibasin) = istack;
+            }
+
+            basins(istack) = ibasin;
+        }
+
+        index_t nbasins = ibasin + 1;
+
+        return nbasins;
+    }
+
+
+    template<class A1, class A2, class A3>
+    index_t compute_pits(A1& pits,
+                         const A2& outlets,
+                         const A3& active_nodes,
+                         index_t nbasins) {
+        index_t nnodes = (index_t) outlets.size();
+
+        //TODO: instead of using the 1d underlying buffer, find a more
+        //      robust way of getting a flattened view of active_node
+        //      using xtensor
+        auto active_nodes_data = active_nodes.data();
+
+        //TODO: insert shape/size assertions here
+
+        index_t ipit = 0;
+
+        for(index_t ibasin=0; ibasin<nbasins; ++ibasin) {
+            index_t inode = outlets(ibasin);
+
+            if(active_nodes_data[(size_t) inode]) {
+                pits(ipit) = inode;
+                ++ipit;
+            }
+        }
+
+        index_t npits = ipit;
+
+        return npits;
     }
 
 }

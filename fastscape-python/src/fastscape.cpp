@@ -47,6 +47,24 @@ void compute_stack_py(xt::pytensor<index_t, 1>& stack,
 }
 
 
+index_t compute_basins_py(xt::pytensor<index_t, 1>& basins,
+                          xt::pytensor<index_t, 1>& outlets,
+                          const xt::pytensor<index_t, 1>& stack,
+                          const xt::pytensor<index_t, 1>& receivers) {
+    py::gil_scoped_release release;
+    return fs::compute_basins(basins, outlets, stack, receivers);
+}
+
+
+index_t compute_pits_py(xt::pytensor<index_t, 1>& pits,
+                        const xt::pytensor<index_t, 1>& outlets,
+                        const xt::pytensor<bool, 2>& active_nodes,
+                        index_t nbasins) {
+    py::gil_scoped_release release;
+    return fs::compute_pits(pits, outlets, active_nodes, nbasins);
+}
+
+
 template<class T>
 void fill_sinks_flat_py(xt::pytensor<T, 2>& elevation) {
     py::gil_scoped_release release;
@@ -76,6 +94,12 @@ PYBIND11_MODULE(fastscape, m) {
     m.def("compute_stack", &compute_stack_py,
           "Build a stack of grid node ids such that each node in the stack "
           "is visited before any of its upstream nodes.");
+
+    m.def("compute_basins", &compute_basins_py,
+          "Compute basin ids. Return total number of basins");
+
+    m.def("compute_pits", &compute_pits_py,
+          "Detect pit node ids. Return total number of pit nodes");
 
     m.def("fill_sinks_flat_d", &fill_sinks_flat_py<double>,
           "Fill depressions in elevation data (flat surfaces).");

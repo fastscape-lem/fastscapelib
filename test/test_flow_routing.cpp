@@ -97,3 +97,49 @@ TEST(flow_routing, compute_stack) {
 
     ASSERT_TRUE(xt::all(xt::equal(stack, expected_stack)));
 }
+
+
+TEST(flow_routing, compute_basins) {
+    // Example in Braun and Willet, 2013 as a test case.
+    // TODO: test with multiple basins in node network.
+    xt::xtensor<index_t, 1> receivers {1, 4, 1, 6, 4, 4, 5, 4, 6, 7};
+    xt::xtensor<index_t, 1> stack {4, 1, 0, 2, 5, 6, 3, 8, 7, 9};
+    xt::xtensor<index_t, 1> basins = xt::ones<index_t>({10}) * -1;
+    xt::xtensor<index_t, 1> outlets = xt::ones<index_t>({10}) * -1;
+
+    xt::xtensor<index_t, 1> expected_basins
+        {0,  0,  0,  0,  0,  0,  0,  0,  0,  0};
+    xt::xtensor<index_t, 1> expected_outlets
+        {4, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+
+    index_t nbasins = fs::compute_basins(basins, outlets, stack, receivers);
+
+    ASSERT_EQ(nbasins, 1);
+    ASSERT_TRUE(xt::all(xt::equal(basins, expected_basins)));
+    ASSERT_TRUE(xt::all(xt::equal(outlets, expected_outlets)));
+}
+
+
+TEST(flow_routing, compute_pits) {
+    // simple 4x4 test case with fixed boundaries and pit located at (2, 1)
+    // 12 boundary nodes (i.e., 1-node open basin) + 1 pit = 13 basins
+    index_t nbasins = 13;
+    xt::xtensor<index_t, 1> outlets
+        {0, 1, 2, 3, 4, 7, 8, 11, 12, 13, 14, 15, 9, -1, -1, -1};
+
+    xt::xtensor<bool, 2> active_nodes
+       {{false,  false,  false,  false},
+        {false,  true,   true,   false},
+        {false,  true,   true,   false},
+        {false,  false,  false,  false}};
+
+    xt::xtensor<index_t, 1> pits = xt::ones<index_t>({16}) * -1;
+
+    xt::xtensor<index_t, 1> expected_pits
+    {9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+
+    index_t npits = fs::compute_pits(pits, outlets, active_nodes, nbasins);
+
+    ASSERT_EQ(npits, 1);
+    ASSERT_TRUE(xt::all(xt::equal(pits, expected_pits)));
+}
