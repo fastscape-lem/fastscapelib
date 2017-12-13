@@ -149,14 +149,11 @@ namespace fastscape {
                            A2& outlets,
                            const A3& stack,
                            const A4& receivers) {
-        index_t nnodes = (index_t) receivers.size();
-
         //TODO: insert shape/size assertions here
 
         index_t ibasin = -1;
 
-        for(index_t inode=0; inode<nnodes; ++inode) {
-            index_t istack = stack(inode);
+        for(auto&& istack : stack) {
             index_t irec = receivers(istack);
 
             if(irec == istack) {
@@ -178,14 +175,12 @@ namespace fastscape {
                          const A2& outlets,
                          const A3& active_nodes,
                          index_t nbasins) {
-        index_t nnodes = (index_t) outlets.size();
+        //TODO: insert shape/size assertions here
 
-        //TODO: not safe in case of non-contigous data (see xtensor issue #322).
-        //      We have to wait for xtensor issue #324 (flatten view).
+        //TODO: replace with safe way to get flatten view in xtensor.
+        //      (see xtensor issues #322 #324).
         const auto active_nodes_flat = xt::adapt(
             active_nodes.data(), std::array<size_t, 1>{ outlets.size() });
-
-        //TODO: insert shape/size assertions here
 
         index_t ipit = 0;
 
@@ -201,6 +196,36 @@ namespace fastscape {
         index_t npits = ipit;
 
         return npits;
+    }
+
+
+    template<class A1, class A2, class A3>
+    void compute_drainage_area(A1& area, const A2& stack, const A3& receivers) {
+        //TODO: insert shape/size assertions here
+
+        for(auto inode=stack.crbegin(); inode!=stack.crend(); ++inode) {
+            if(receivers(*inode) != *inode) {
+                area(receivers(*inode)) += area(*inode);
+            }
+        }
+    }
+
+
+    template<class A1, class A2, class A3>
+    void compute_drainage_area(A1& area,
+                               const A2& stack,
+                               const A3& receivers,
+                               double dx,
+                               double dy) {
+        //TODO: insert shape/size assertions here
+
+        std::fill(area.begin(), area.end(), dx * dy);
+
+        //TODO: replace with safe way to get flatten view in xtensor.
+        auto area_flat = xt::adapt(area.data(),
+                                   std::array<size_t, 1>{ stack.size() });
+
+        compute_drainage_area(area_flat, stack, receivers);
     }
 
 }

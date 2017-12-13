@@ -65,6 +65,16 @@ index_t compute_pits_py(xt::pytensor<index_t, 1>& pits,
 }
 
 
+template<class T, std::size_t ND, class ...Args>
+void compute_drainage_area_py(xt::pytensor<T, ND>& area,
+                              const xt::pytensor<index_t, 1>& stack,
+                              const xt::pytensor<index_t, 1>& receivers,
+                              Args... dxdy) {
+    py::gil_scoped_release release;
+    fs::compute_drainage_area(area, stack, receivers, dxdy...);
+}
+
+
 template<class T>
 void fill_sinks_flat_py(xt::pytensor<T, 2>& elevation) {
     py::gil_scoped_release release;
@@ -100,6 +110,14 @@ PYBIND11_MODULE(fastscape, m) {
 
     m.def("compute_pits", &compute_pits_py,
           "Detect pit node ids. Return total number of pit nodes");
+
+    m.def("compute_drainage_area_d",
+          &compute_drainage_area_py<double, 2>,
+          "Compute drainage area.");
+
+    m.def("compute_drainage_area_d_2d",
+          &compute_drainage_area_py<double, 2, double, double>,
+          "Compute drainage area.");
 
     m.def("fill_sinks_flat_d", &fill_sinks_flat_py<double>,
           "Fill depressions in elevation data (flat surfaces).");
