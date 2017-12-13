@@ -11,7 +11,7 @@
 #include <array>
 
 #include "xtensor/xtensor.hpp"
-#include "xtensor/xview.hpp"
+#include "xtensor/xadapt.hpp"
 
 #include "fastscape/utils.hpp"
 #include "fastscape/consts.hpp"
@@ -180,10 +180,10 @@ namespace fastscape {
                          index_t nbasins) {
         index_t nnodes = (index_t) outlets.size();
 
-        //TODO: instead of using the 1d underlying buffer, find a more
-        //      robust way of getting a flattened view of active_node
-        //      using xtensor
-        auto active_nodes_data = active_nodes.data();
+        //TODO: not safe in case of non-contigous data (see xtensor issue #322).
+        //      We have to wait for xtensor issue #324 (flatten view).
+        const auto active_nodes_flat = xt::adapt(
+            active_nodes.data(), std::array<size_t, 1>{ outlets.size() });
 
         //TODO: insert shape/size assertions here
 
@@ -192,7 +192,7 @@ namespace fastscape {
         for(index_t ibasin=0; ibasin<nbasins; ++ibasin) {
             index_t inode = outlets(ibasin);
 
-            if(active_nodes_data[(size_t) inode]) {
+            if(active_nodes_flat(inode)) {
                 pits(ipit) = inode;
                 ++ipit;
             }
