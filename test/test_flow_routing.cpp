@@ -43,8 +43,8 @@ TEST(flow_routing, compute_receivers_d8) {
     //TODO: -> ideally, test case should include all 8 directions
     //      (maybe create fixtures with transpose)
 
-    ASSERT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
-    ASSERT_TRUE(xt::allclose(dist2receivers, expected_dist2receivers));
+    EXPECT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
+    EXPECT_TRUE(xt::allclose(dist2receivers, expected_dist2receivers));
 }
 
 
@@ -69,8 +69,8 @@ TEST(flow_routing, compute_donors) {
 
     fs::compute_donors(ndonors, donors, receivers);
 
-    ASSERT_TRUE(xt::all(xt::equal(ndonors, expected_ndonors)));
-    ASSERT_TRUE(xt::all(xt::equal(donors, expected_donors)));
+    EXPECT_TRUE(xt::all(xt::equal(ndonors, expected_ndonors)));
+    EXPECT_TRUE(xt::all(xt::equal(donors, expected_donors)));
 }
 
 
@@ -95,7 +95,7 @@ TEST(flow_routing, compute_stack) {
 
     fs::compute_stack(stack, ndonors, donors, receivers);
 
-    ASSERT_TRUE(xt::all(xt::equal(stack, expected_stack)));
+    EXPECT_TRUE(xt::all(xt::equal(stack, expected_stack)));
 }
 
 
@@ -114,9 +114,9 @@ TEST(flow_routing, compute_basins) {
 
     index_t nbasins = fs::compute_basins(basins, outlets, stack, receivers);
 
-    ASSERT_EQ(nbasins, 1);
-    ASSERT_TRUE(xt::all(xt::equal(basins, expected_basins)));
-    ASSERT_TRUE(xt::all(xt::equal(outlets, expected_outlets)));
+    EXPECT_EQ(nbasins, 1);
+    EXPECT_TRUE(xt::all(xt::equal(basins, expected_basins)));
+    EXPECT_TRUE(xt::all(xt::equal(outlets, expected_outlets)));
 }
 
 
@@ -140,6 +140,6 @@ TEST(flow_routing, compute_pits) {
 
     index_t npits = fs::compute_pits(pits, outlets, active_nodes, nbasins);
 
-    ASSERT_EQ(npits, 1);
-    ASSERT_TRUE(xt::all(xt::equal(pits, expected_pits)));
+    EXPECT_EQ(npits, 1);
+    EXPECT_TRUE(xt::all(xt::equal(pits, expected_pits)));
 }

@@ -12,7 +12,7 @@ TEST(sinks, fill_sinks_flat) {
 
     fs::fill_sinks_flat(arr);
 
-    ASSERT_EQ(arr(1, 1), arr(0, 0));
+    EXPECT_EQ(arr(1, 1), arr(0, 0));
 }
 
 
@@ -24,5 +24,5 @@ TEST(sinks, fill_sinks_sloped) {
 
     fs::fill_sinks_sloped(arr);
 
-    ASSERT_GT(arr(1, 1), arr(0, 0));
+    EXPECT_GT(arr(1, 1), arr(0, 0));
 }
