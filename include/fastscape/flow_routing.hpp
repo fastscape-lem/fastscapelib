@@ -176,18 +176,15 @@ namespace fastscape {
                          const A3& active_nodes,
                          index_t nbasins) {
         //TODO: insert shape/size assertions here
-
-        //TODO: replace with safe way to get flatten view in xtensor.
-        //      (see xtensor issues #322 #324).
-        const auto active_nodes_flat = xt::adapt(
-            active_nodes.data(), std::array<size_t, 1>{ outlets.size() });
+        //TODO: the code below works whether active_nodes is 1-d or 2-d
+        //      check if it's safe.
 
         index_t ipit = 0;
 
         for(index_t ibasin=0; ibasin<nbasins; ++ibasin) {
             index_t inode = outlets(ibasin);
 
-            if(active_nodes_flat(inode)) {
+            if(active_nodes(inode)) {
                 pits(ipit) = inode;
                 ++ipit;
             }
@@ -222,6 +219,9 @@ namespace fastscape {
         std::fill(area.begin(), area.end(), dx * dy);
 
         //TODO: replace with safe way to get flatten view in xtensor.
+        //      (see xtensor issues #322 #324).
+        //      or check if this is really needed
+        //      (i.e., if operator() couldn't be directly used)
         auto area_flat = xt::adapt(area.data(),
                                    std::array<size_t, 1>{ stack.size() });
 
