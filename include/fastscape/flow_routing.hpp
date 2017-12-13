@@ -110,9 +110,7 @@ namespace fastscape {
 
         //TODO: insert shape/size assertions here
 
-        for(index_t inode=0; inode<nnodes; ++inode) {
-            ndonors(inode) = 0;
-        }
+        std::fill(ndonors.begin(), ndonors.end(), 0);
 
         for(index_t inode=0; inode<nnodes; ++inode) {
             if(receivers(inode) != inode) {
