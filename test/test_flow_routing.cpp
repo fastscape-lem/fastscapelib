@@ -1,8 +1,26 @@
+#include <cmath>
+
 #include "gtest/gtest.h"
 #include "xtensor/xtensor.hpp"
 
 #include "fastscape/utils.hpp"
 #include "fastscape/flow_routing.hpp"
+
+
+TEST(flow_routing, get_d8_distances) {
+    auto d8_dist = fs::detail::get_d8_distances(2., 1.);
+
+    double ddiag = std::sqrt(4 + 1);
+
+    std::array<double, 9> expected
+        {0., 1., ddiag, 2., ddiag,  1., ddiag, 2., ddiag};
+
+    EXPECT_TRUE(std::equal(d8_dist.begin(), d8_dist.end(),
+                           expected.begin(), expected.end()));
+
+    //TODO: consider using google mock which gives more details about failure
+    //EXPECT_THAT(d8_dist, ::testing::ContainerEq(expected));
+}
 
 
 TEST(flow_routing, compute_receivers_d8) {
