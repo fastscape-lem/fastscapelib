@@ -14,14 +14,14 @@
 
 #include "xtensor/xtensor.hpp"
 
-#include "fastscape/utils.hpp"
-#include "fastscape/consts.hpp"
+#include "fastscapelib/utils.hpp"
+#include "fastscapelib/consts.hpp"
 
 
-namespace fs = fastscape;
+namespace fs = fastscapelib;
 
 
-namespace fastscape {
+namespace fastscapelib {
 
     namespace detail {
 

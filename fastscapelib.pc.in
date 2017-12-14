@@ -2,7 +2,7 @@ prefix=@CMAKE_INSTALL_PREFIX@
 libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
 includedir=${prefix}/include
 
-Name: fastscape
+Name: fastscapelib
 Description: A C++ library of efficient algorithms for processing topographic data and landscape evolution modeling.
-Version: @fastscape_VERSION@
+Version: @fastscapelib_VERSION@
 Cflags: -I${includedir}

@@ -39,8 +39,8 @@ class get_numpy_include(object):
 
 ext_modules = [
     Extension(
-        'fastscape',
-        ['src/fastscape.cpp'],
+        'fastscapelib',
+        ['src/fastscapelib.cpp'],
         include_dirs=[
             get_pybind_include(),
             get_pybind_include(user=True),
@@ -105,12 +105,12 @@ class BuildExt(build_ext):
 
 
 setup(
-    name='fastscape',
+    name='fastscapelib',
     version=__version__,
     maintainer='Benoit Bovy',
     maintainer_email='benbovy@gmail.com',
     # TODO: update url when moving to github
-    url='https://gitext.gfz-potsdam.de/sec55-public/fastscape_core',
+    url='https://gitext.gfz-potsdam.de/sec55-public/fastscapelib_core',
     description=('A library of efficient algorithms for processing '
                  'topographic data and landscape evolution modeling'),
     long_description='',  # TODO: import README here

@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace fastscape {
+namespace fastscapelib {
 namespace consts {
 
     /*

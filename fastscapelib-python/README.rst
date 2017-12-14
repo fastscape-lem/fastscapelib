@@ -1,5 +1,5 @@
-Fastscape (Python)
-==================
+Fastscapelib (Python)
+=====================
 
 A collection of efficient algorithms for processing topographic data
 and landscape evolution modeling, available from within Python.
@@ -16,8 +16,8 @@ Installation from source in a conda environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The procedure below assumes that you have first installed the
-Fastscape C++ library in a conda envrionment by following the steps in
-the main README file of this repository.
+fastscapelib C++ library in a conda envrionment by following the steps
+in the main README file of this repository.
 
 To install the required dependencies in the activated conda
 environment::
@@ -33,4 +33,4 @@ Import the package from within Python
 
 In a Python console::
 
-  >>> import fastscape
+  >>> import fastscapelib

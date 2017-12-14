@@ -11,7 +11,7 @@
 using index_t = int64_t;
 
 
-namespace fastscape {
+namespace fastscapelib {
 
     namespace detail {
 

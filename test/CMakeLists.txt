@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.1)
 
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    project(fastscape-test)
+    project(fastscapelib-test)
 
     find_package(xtensor REQUIRED CONFIG)
     set(XTENSOR_INCLUDE_DIR ${xtensor_INCLUDE_DIR})
-    find_package(fastscape REQUIRED CONFIG)
-    set(FASTSCAPE_INCLUDE_DIR ${fastscape_INCLUDE_DIRS})
+    find_package(fastscapelib REQUIRED CONFIG)
+    set(FASTSCAPELIB_INCLUDE_DIR ${fastscapelib_INCLUDE_DIRS})
 endif ()
 
 message(STATUS "Forcing tests build type to Release")
@@ -23,7 +23,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"
     if (HAS_CPP14_FLAG)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
     else()
-        message(FATAL_ERROR "Unsupported compiler -- fastscape requires C++14 support!")
+        message(FATAL_ERROR "Unsupported compiler -- fastscapelib requires C++14 support!")
     endif()
 endif()
 
@@ -71,22 +71,22 @@ message(STATUS "Prefix path: " ${CMAKE_PREFIX_PATH})
 find_package(xtensor REQUIRED)
 
 include_directories(${XTENSOR_INCLUDE_DIR})
-include_directories(${FASTSCAPE_INCLUDE_DIR})
+include_directories(${FASTSCAPELIB_INCLUDE_DIR})
 include_directories(${GTEST_INCLUDE_DIRS})
 
-set(FASTSCAPE_TESTS
+set(FASTSCAPELIB_TESTS
   main.cpp
   test_flow_routing.cpp
   test_sinks.cpp
 )
 
-set(FASTSCAPE_TARGET test_fastscape)
+set(FASTSCAPELIB_TARGET test_fastscapelib)
 
-add_executable(${FASTSCAPE_TARGET} ${FASTSCAPE_TESTS} ${FASTSCAPE_HEADERS} ${XTENSOR_HEADERS})
+add_executable(${FASTSCAPELIB_TARGET} ${FASTSCAPELIB_TESTS} ${FASTSCAPELIB_HEADERS} ${XTENSOR_HEADERS})
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
-    add_dependencies(${FASTSCAPE_TARGET} gtest_main)
+    add_dependencies(${FASTSCAPELIB_TARGET} gtest_main)
 endif()
 
-target_link_libraries(${FASTSCAPE_TARGET} ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${FASTSCAPELIB_TARGET} ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
-add_custom_target(run_tests COMMAND test_fastscape DEPENDS ${FASTSCAPE_TARGET})
+add_custom_target(run_tests COMMAND test_fastscapelib DEPENDS ${FASTSCAPELIB_TARGET})

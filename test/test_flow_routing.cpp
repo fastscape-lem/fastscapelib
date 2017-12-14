@@ -3,8 +3,8 @@
 #include "gtest/gtest.h"
 #include "xtensor/xtensor.hpp"
 
-#include "fastscape/utils.hpp"
-#include "fastscape/flow_routing.hpp"
+#include "fastscapelib/utils.hpp"
+#include "fastscapelib/flow_routing.hpp"
 
 
 TEST(flow_routing, get_d8_distances) {

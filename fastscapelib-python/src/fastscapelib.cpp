@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Fastscape Python bindings.
+ * @brief Fastscapelib Python bindings.
 */
 #include <cstdint>
 
@@ -8,12 +8,12 @@
 #define FORCE_IMPORT_ARRAY
 #include "xtensor-python/pytensor.hpp"
 
-#include "fastscape/utils.hpp"
-#include "fastscape/fastscape.hpp"
+#include "fastscapelib/utils.hpp"
+#include "fastscapelib/fastscapelib.hpp"
 
 
 namespace py = pybind11;
-namespace fs = fastscape;
+namespace fs = fastscapelib;
 
 
 template<class T>
@@ -89,7 +89,7 @@ void fill_sinks_sloped_py(xt::pytensor<T, 2>& elevation) {
 }
 
 
-PYBIND11_MODULE(fastscape, m) {
+PYBIND11_MODULE(fastscapelib, m) {
     m.doc() = "A collection of efficient algorithms"
         "for processing topographic data and landscape evolution modeling.";
 

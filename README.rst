@@ -1,11 +1,11 @@
-Fastscape
-=========
+Fastscapelib
+============
 
 A C++ library of efficient algorithms for processing topographic data
 and landscape evolution modeling.
 
 This library has also Python bindings: see the README file in the
-``fastscape-python`` subfolder of this repository for more information
+``fastscapelib-python`` subfolder of this repository for more information
 on how to install and use it.
 
 Installation
@@ -17,7 +17,7 @@ xtensor_.
 Installation from source in a conda environment, using cmake
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We recommend installing Fastscape in its own conda_ environment. To
+We recommend installing Fastscapelib in its own conda_ environment. To
 create a new environment named 'fastscape' and install the required
 dependencies::
 
@@ -32,7 +32,7 @@ To activate the environment (on Windows platforms)::
   $ activate fastscape
 
 Run the commands below from the source directory to install the
-Fastscape's header files using cmake (on Unix platforms)::
+fastscapelib's header files using cmake (on Unix platforms)::
 
   $ mkdir build
   $ cd build
@@ -55,8 +55,8 @@ On Windows platforms::
 Testing
 -------
 
-Fastscape has a test suite based on GTest_. To install it you can use
-conda too::
+Fastscapelib has a test suite based on GTest_. To install it you can
+use conda too::
 
   $ conda install gtest -c conda-forge
 

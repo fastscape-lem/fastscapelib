@@ -20,8 +20,8 @@ cmake -DBUILD_TESTS=ON ..
 make run_tests
 
 echo -e "${YLW}Install the Python package${NC}"
-cd ../fastscape-python/
-pip uninstall fastscape --yes
+cd ../fastscapelib-python/
+pip uninstall fastscapelib --yes
 pip install .
 
 cd ..

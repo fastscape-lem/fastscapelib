@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "xtensor/xtensor.hpp"
 
-#include "fastscape/sinks.hpp"
+#include "fastscapelib/sinks.hpp"
 
 
 TEST(sinks, fill_sinks_flat) {
