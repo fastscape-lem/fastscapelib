@@ -32,9 +32,9 @@ namespace detail
 
         for(size_t k=0; k<9; ++k)
         {
-            d8_dists[k] = std::sqrt(
-                std::pow(dy * fs::consts::d8_row_offsets[k], 2.0) +
-                std::pow(dx * fs::consts::d8_col_offsets[k], 2.0));
+            double d8_dx = dx * fs::consts::d8_col_offsets[k];
+            double d8_dy = dy * fs::consts::d8_row_offsets[k];
+            d8_dists[k] = std::sqrt(d8_dy*d8_dy + d8_dx*d8_dx);
         }
 
         return d8_dists;
