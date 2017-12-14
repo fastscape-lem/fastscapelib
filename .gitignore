@@ -58,3 +58,4 @@ docs/build/
 
 # emacs
 .dir-locals.el
+.projectile
