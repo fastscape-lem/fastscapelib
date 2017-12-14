@@ -6,7 +6,7 @@ import setuptools
 
 
 # TODO: get version from parsing ../include/config.hpp
-__version__ = '0.0.1'
+__version__ = '0.1.0dev'
 
 
 class get_pybind_include(object):
