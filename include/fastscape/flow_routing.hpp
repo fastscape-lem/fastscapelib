@@ -64,8 +64,6 @@ namespace fastscape {
         using elev_t = typename A3::value_type;
         const auto d8_dists = detail::get_d8_distances(dx, dy);
 
-        //TODO: insert shape/size assertions here
-
         const auto elev_shape = elevation.shape();
         const index_t nrows = (index_t) elev_shape[0];
         const index_t ncols = (index_t) elev_shape[1];
@@ -108,8 +106,6 @@ namespace fastscape {
     void compute_donors(A1& ndonors, A2& donors, const A3& receivers) {
         index_t nnodes = (index_t) receivers.size();
 
-        //TODO: insert shape/size assertions here
-
         std::fill(ndonors.begin(), ndonors.end(), 0);
 
         for(index_t inode=0; inode<nnodes; ++inode) {
@@ -131,8 +127,6 @@ namespace fastscape {
         index_t nnodes = (index_t) receivers.size();
         index_t nstack = 0;
 
-        //TODO: insert shape/size assertions here
-
         for(index_t inode=0; inode<nnodes; ++inode) {
             if(receivers(inode) == inode) {
                 stack(nstack) = inode;
@@ -149,8 +143,6 @@ namespace fastscape {
                            A2& outlets,
                            const A3& stack,
                            const A4& receivers) {
-        //TODO: insert shape/size assertions here
-
         index_t ibasin = -1;
 
         for(auto&& istack : stack) {
@@ -175,10 +167,8 @@ namespace fastscape {
                          const A2& outlets,
                          const A3& active_nodes,
                          index_t nbasins) {
-        //TODO: insert shape/size assertions here
-        //TODO: the code below works whether active_nodes is 1-d or 2-d
-        //      check if it's safe.
-
+        //TODO: works whether active_nodes is 1-d or 2-d but not safe!
+        //      see xtensor issue #588
         index_t ipit = 0;
 
         for(index_t ibasin=0; ibasin<nbasins; ++ibasin) {
@@ -198,7 +188,6 @@ namespace fastscape {
 
     template<class A1, class A2, class A3>
     void compute_drainage_area(A1& area, const A2& stack, const A3& receivers) {
-        //TODO: insert shape/size assertions here
 
         for(auto inode=stack.crbegin(); inode!=stack.crend(); ++inode) {
             if(receivers(*inode) != *inode) {
@@ -214,14 +203,10 @@ namespace fastscape {
                                const A3& receivers,
                                double dx,
                                double dy) {
-        //TODO: insert shape/size assertions here
-
         std::fill(area.begin(), area.end(), dx * dy);
 
-        //TODO: replace with safe way to get flatten view in xtensor.
-        //      (see xtensor issues #322 #324).
-        //      or check if this is really needed
-        //      (i.e., if operator() couldn't be directly used)
+        //TODO: replace with safe/clean way to get flatten view in xtensor.
+        //      (see xtensor issues #322 #324 #588).
         auto area_flat = xt::adapt(area.data(),
                                    std::array<size_t, 1>{ stack.size() });
 
