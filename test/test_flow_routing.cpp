@@ -161,3 +161,30 @@ TEST(flow_routing, compute_pits) {
     EXPECT_EQ(npits, 1);
     EXPECT_TRUE(xt::all(xt::equal(pits, expected_pits)));
 }
+
+
+TEST(flow_routing, compute_drainage_area) {
+    // Example in Braun and Willet, 2013 as a test case
+    // (setting constant area = 2 for all cells).
+    xt::xtensor<index_t, 1> receivers {1, 4, 1, 6, 4, 4, 5, 4, 6, 7};
+    xt::xtensor<index_t, 1> stack {4, 1, 0, 2, 5, 6, 3, 8, 7, 9};
+
+    xt::xtensor<double, 1> expected_area
+        {2., 6., 2., 2., 20., 8., 6., 4., 2., 2.};
+
+    {
+        SCOPED_TRACE("generic flow tree");
+        xt::xtensor<double, 1> area = xt::ones<double>({10}) * 2;
+        fs::compute_drainage_area(area, stack, receivers);
+
+        EXPECT_TRUE(xt::all(xt::equal(area, expected_area)));
+    }
+
+    {
+        SCOPED_TRACE("2d grid");
+        xt::xtensor<double, 1> area = xt::ones<double>({10}) * -1;
+        fs::compute_drainage_area(area, stack, receivers, 1., 2.);
+
+        EXPECT_TRUE(xt::all(xt::equal(area, expected_area)));
+    }
+}
