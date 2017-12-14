@@ -4,7 +4,8 @@
 #include "fastscapelib/sinks.hpp"
 
 
-TEST(sinks, fill_sinks_flat) {
+TEST(sinks, fill_sinks_flat)
+{
     xt::xtensor<double, 2> arr
        {{1.0, 2.0, 3.0},
         {2.0, 0.1, 7.0},
@@ -16,7 +17,8 @@ TEST(sinks, fill_sinks_flat) {
 }
 
 
-TEST(sinks, fill_sinks_sloped) {
+TEST(sinks, fill_sinks_sloped)
+{
     xt::xtensor<double, 2> arr
        {{1.0, 2.0, 3.0},
         {2.0, 0.1, 7.0},

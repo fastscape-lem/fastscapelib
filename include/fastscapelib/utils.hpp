@@ -11,23 +11,29 @@
 using index_t = int64_t;
 
 
-namespace fastscapelib {
+namespace fastscapelib
+{
 
-    namespace detail {
+namespace detail
+{
 
-        /**
-         * @brief Return true if a given (row, col) index is in bounds (false
-         *        otherwise).
-         */
-        template<class S>
-        bool in_bounds(const S& shape, index_t row, index_t col) {
-            if(row >= 0 && row < (index_t) shape[0]
-               && col >= 0 && col < (index_t) shape[1]) {
-                return true;
-            }
-            return false;
-        }
 
+/**
+ * @brief Return true if a given (row, col) index is in bounds (false
+ *        otherwise).
+ */
+template<class S>
+bool in_bounds(const S& shape, index_t row, index_t col)
+{
+    if(row >= 0 && row < (index_t) shape[0]
+       && col >= 0 && col < (index_t) shape[1])
+    {
+        return true;
     }
-
+    return false;
 }
+
+
+}  // namespace detail
+
+}  // namespace fastscapelib

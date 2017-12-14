@@ -7,7 +7,8 @@
 #include "fastscapelib/flow_routing.hpp"
 
 
-TEST(flow_routing, get_d8_distances) {
+TEST(flow_routing, get_d8_distances)
+{
     auto d8_dist = fs::detail::get_d8_distances(2., 1.);
 
     double ddiag = std::sqrt(4 + 1);
@@ -23,7 +24,8 @@ TEST(flow_routing, get_d8_distances) {
 }
 
 
-TEST(flow_routing, compute_receivers_d8) {
+TEST(flow_routing, compute_receivers_d8)
+{
     xt::xtensor<double, 2> elevation
         {{0.82,  0.16,  0.14,  0.20},
          {0.71,  0.97,  0.41,  0.09},
@@ -66,7 +68,8 @@ TEST(flow_routing, compute_receivers_d8) {
 }
 
 
-TEST(flow_routing, compute_donors) {
+TEST(flow_routing, compute_donors)
+{
     // Example in Braun and Willet, 2013 as a test case.
     xt::xtensor<index_t, 1> receivers {1, 4, 1, 6, 4, 4, 5, 4, 6, 7};
     xt::xtensor<index_t, 1> ndonors = xt::ones<index_t>({10}) * -1;
@@ -92,7 +95,8 @@ TEST(flow_routing, compute_donors) {
 }
 
 
-TEST(flow_routing, compute_stack) {
+TEST(flow_routing, compute_stack)
+{
     // Example in Braun and Willet, 2013 as a test case.
     xt::xtensor<index_t, 1> receivers {1, 4, 1, 6, 4, 4, 5, 4, 6, 7};
     xt::xtensor<index_t, 1> ndonors   {0, 2, 0, 0, 3, 1, 2, 1, 0, 0};
@@ -117,7 +121,8 @@ TEST(flow_routing, compute_stack) {
 }
 
 
-TEST(flow_routing, compute_basins) {
+TEST(flow_routing, compute_basins)
+{
     // Example in Braun and Willet, 2013 as a test case.
     // TODO: test with multiple basins in node network.
     xt::xtensor<index_t, 1> receivers {1, 4, 1, 6, 4, 4, 5, 4, 6, 7};
@@ -138,7 +143,8 @@ TEST(flow_routing, compute_basins) {
 }
 
 
-TEST(flow_routing, compute_pits) {
+TEST(flow_routing, compute_pits)
+{
     // simple 4x4 test case with fixed boundaries and pit located at (2, 1)
     // 12 boundary nodes (i.e., 1-node open basin) + 1 pit = 13 basins
     index_t nbasins = 13;
@@ -163,7 +169,8 @@ TEST(flow_routing, compute_pits) {
 }
 
 
-TEST(flow_routing, compute_drainage_area) {
+TEST(flow_routing, compute_drainage_area)
+{
     // Example in Braun and Willet, 2013 as a test case
     // (setting constant area = 2 for all cells).
     xt::xtensor<index_t, 1> receivers {1, 4, 1, 6, 4, 4, 5, 4, 6, 7};
