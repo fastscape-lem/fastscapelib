@@ -16,6 +16,8 @@
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/consts.hpp"
 
+#include "fastscapelib/basin_graph.hpp"
+
 
 namespace fs = fastscapelib;
 
@@ -83,7 +85,8 @@ void compute_receivers_d8(A1& receivers,
             receivers(inode) = inode;
             dist2receivers(inode) = 0.;
 
-            if(!active_nodes(r, c)) { continue; }
+            if(!active_nodes(r, c))
+                continue;
 
             double slope_max = std::numeric_limits<double>::min();
 
@@ -92,7 +95,8 @@ void compute_receivers_d8(A1& receivers,
                 index_t kr = r + fs::consts::d8_row_offsets[k];
                 index_t kc = c + fs::consts::d8_col_offsets[k];
 
-                if(!fs::detail::in_bounds(elev_shape, kr, kc)) { continue; }
+                if(!fs::detail::in_bounds(elev_shape, kr, kc))
+                    continue;
 
                 index_t ineighbor = kr * ncols + kc;
                 double slope = (elevation(r, c) - elevation(kr, kc)) / d8_dists[k];
@@ -149,30 +153,20 @@ void compute_stack(A1& stack,
 }
 
 
-template<class A1, class A2, class A3, class A4>
-index_t compute_basins(A1& basins,
-                       A2& outlets,
-                       const A3& stack,
-                       const A4& receivers)
+template <class Basins_XT, class Stack_XT, class Rcv_XT>
+auto compute_basins(Basins_XT& basins,
+                       const Stack_XT& stack,
+                       const Rcv_XT& receivers)
+        -> typename Basins_XT::value_type         // returns last basin +1
 {
-    index_t ibasin = -1;
 
-    for(auto&& istack : stack)
-    {
-        index_t irec = receivers(istack);
+    using Basin_T = typename Basins_XT::value_type;
+    using Node_T  = typename Stack_XT::value_type;
+    BasinGraph<Basin_T, Node_T> basin_graph;
 
-        if(irec == istack)
-        {
-            ++ibasin;
-            outlets(ibasin) = istack;
-        }
+    basin_graph.compute_basins(basins, stack, receivers);
+    return basin_graph.end_basin();
 
-        basins(istack) = ibasin;
-    }
-
-    index_t nbasins = ibasin + 1;
-
-    return nbasins;
 }
 
 
@@ -182,7 +176,7 @@ index_t compute_pits(A1& pits,
                      const A3& active_nodes,
                      index_t nbasins)
 {
-    //TODO: works whether active_nodes is 1-d or 2-d but not safe!
+    //TODO: works whether active_nodes is 1-d or 2-d but nif(!active_nodes(r, c)) { continue; }ot safe!
     //      see xtensor issue #588
     index_t ipit = 0;
 
@@ -232,5 +226,28 @@ void compute_drainage_area(A1& area,
 
     compute_drainage_area(area_flat, stack, receivers);
 }
+
+
+template <class BasinGraph_T, class Basins_XT, class Rcv_XT, class Stack_XT, class Active_XT, class Elevation_XT>
+void correct_flowrouting(BasinGraph_T& basin_graph, Basins_XT& basins, Rcv_XT& receivers,
+                         const Stack_XT& stack,
+                         const Active_XT& active_nodes,
+                         typename Elevation_XT::value_type dx,
+                         typename Elevation_XT::value_type dy)
+{
+    basin_graph.init();
+
+    compute_basins(basin_graph, basins, stack, recveivers);
+    connect_basins(basin_graph, basins, receivers, stack, active_nodes, elevation);
+
+    basin_graph.compute_mst();
+
+    correct_receivers(basin_graph, receivers, dist_2_receivers, elevation, dx, dy);
+
+)
+
+}
+
+
 
 }  // namespace fastscapelib
