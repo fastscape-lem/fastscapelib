@@ -237,12 +237,12 @@ void correct_flowrouting(BasinGraph_T& basin_graph, Basins_XT& basins, Rcv_XT& r
 {
     basin_graph.init();
 
-    compute_basins(basin_graph, basins, stack, recveivers);
+    /*compute_basins(basin_graph, basins, stack, recveivers);
     connect_basins(basin_graph, basins, receivers, stack, active_nodes, elevation);
 
     basin_graph.compute_mst();
 
-    correct_receivers(basin_graph, receivers, dist_2_receivers, elevation, dx, dy);
+    correct_receivers(basin_graph, receivers, dist_2_receivers, elevation, dx, dy);*/
 
 )
 
