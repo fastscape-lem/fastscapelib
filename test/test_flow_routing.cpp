@@ -62,6 +62,7 @@ TEST(flow_routing, compute_receivers_d8)
     //TODO: test case with diagonal receivers (check dist2receivers)
     //TODO: -> ideally, test case should include all 8 directions
     //      (maybe create fixtures with transpose)
+    //TODO: check non square boundary conditions
 
     EXPECT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
     EXPECT_TRUE(xt::allclose(dist2receivers, expected_dist2receivers));
@@ -128,18 +129,14 @@ TEST(flow_routing, compute_basins)
     xt::xtensor<index_t, 1> receivers {1, 4, 1, 6, 4, 4, 5, 4, 6, 7};
     xt::xtensor<index_t, 1> stack {4, 1, 0, 2, 5, 6, 3, 8, 7, 9};
     xt::xtensor<index_t, 1> basins = xt::ones<index_t>({10}) * -1;
-    xt::xtensor<index_t, 1> outlets = xt::ones<index_t>({10}) * -1;
 
     xt::xtensor<index_t, 1> expected_basins
         {0,  0,  0,  0,  0,  0,  0,  0,  0,  0};
-    xt::xtensor<index_t, 1> expected_outlets
-        {4, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
-    index_t nbasins = fs::compute_basins(basins, outlets, stack, receivers);
+    index_t nbasins = fs::compute_basins(basins, stack, receivers);
 
     EXPECT_EQ(nbasins, 1);
     EXPECT_TRUE(xt::all(xt::equal(basins, expected_basins)));
-    EXPECT_TRUE(xt::all(xt::equal(outlets, expected_outlets)));
 }
 
 

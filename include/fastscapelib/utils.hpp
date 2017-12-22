@@ -82,13 +82,10 @@ public:
 private:
     Array_T& _array_ref;
     size_type _ncols;
-}
+};
 
-template<class Array_T, class Index_T>
-typename Array_T::value_type& index_proxy(Array_T& array, Index_T elmt)
-{
-    auto c = coords(elmt, )
-}
+template <class Array_T>
+Flattened2D<Array_T> make_flattened(Array_T& ref) {return Flattened2D<Array_T>(ref);}
 
 
 }  // namespace detail

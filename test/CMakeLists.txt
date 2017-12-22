@@ -78,6 +78,7 @@ set(FASTSCAPELIB_TESTS
   main.cpp
   test_flow_routing.cpp
   test_sinks.cpp
+  test_basin_graph.cpp
 )
 
 set(FASTSCAPELIB_TARGET test_fastscapelib)

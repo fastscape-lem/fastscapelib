@@ -165,7 +165,7 @@ auto compute_basins(Basins_XT& basins,
     BasinGraph<Basin_T, Node_T> basin_graph;
 
     basin_graph.compute_basins(basins, stack, receivers);
-    return basin_graph.end_basin();
+    return basin_graph.basin_count();
 
 }
 
@@ -243,8 +243,6 @@ void correct_flowrouting(BasinGraph_T& basin_graph, Basins_XT& basins, Rcv_XT& r
     basin_graph.compute_mst();
 
     correct_receivers(basin_graph, receivers, dist_2_receivers, elevation, dx, dy);*/
-
-)
 
 }
 

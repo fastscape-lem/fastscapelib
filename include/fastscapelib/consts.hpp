@@ -34,7 +34,7 @@ const short d8_col_offsets[9] = {0, 0, -1, -1, -1, 0, 1, 1, 1};
  *
  *  The first element correspond to the central grid point itself.
  */
-const short d4_row_offsets[5] = {0, -1, -1, 0};
+const short d4_row_offsets[5] = {0, -1, 0, 0, 1};
 
 
 /**
@@ -43,7 +43,7 @@ const short d4_row_offsets[5] = {0, -1, -1, 0};
  *
  * The first element correspond to the central grid point itself.
  */
-const short d4_col_offsets[5] = {0, 0, -1, -1};
+const short d4_col_offsets[5] = {0, 0, -1, 1, 0};
 
 
 }  // namespace consts
