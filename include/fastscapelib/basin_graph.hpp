@@ -2,9 +2,11 @@
 
 #include <vector>
 #include <limits>
+#include <numeric>
+#include <algorithm>
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/consts.hpp"
-
+#include "fastscapelib/union_find.hpp"
 
 
 namespace fs = fastscapelib;
@@ -52,6 +54,8 @@ public:
     void connect_basins (const Basins_XT& basins, const Rcv_XT& receivers,
                          const Stack_XT& stack, const Active_XT& active_nodes,
                          const Elevation_XT& elevation);
+
+    void compute_tree_kruskal();
 
     Basin_T basin_count() {return Basin_T(_outlets.size());}
 
@@ -138,6 +142,7 @@ private:
 
     std::vector<Basin_T> _outlets;
     std::vector<Link_T>  _links;
+    std::vector<index_t> _tree; // indices of links
 
     Basin_T root;
 
@@ -145,6 +150,10 @@ private:
     Basin_T conn_cur_basin;
     std::vector<index_t> conn_pos;
     std::vector<index_t> conn_pos_used;
+
+    // kruskal
+    std::vector<index_t> link_indices;
+    UnionFind_T<Basin_T> basin_uf;
 
 };
 
@@ -239,6 +248,33 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::connect_basins (const Basins_XT& 
 
             }
 
+        }
+    }
+}
+
+template<class Basin_T, class Node_T, class Elevation_T>
+void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_kruskal()
+{
+    _tree.reserve(_outlets.size()-1);
+    _tree.clear();
+
+    // sort edges by indices
+    link_indices.resize(_links.size());
+    std::iota(link_indices.begin(), link_indices.end(), 0);
+    std::sort(link_indices.begin(), link_indices.end(),
+              [&_links = _links](const Link_T& i0, const Link_T& i1) {return _links[i0].weight < _links[i1].weight;});
+
+    basin_uf.resize(_outlets.size());
+    basin_uf.clear();
+
+    for (index_t l_id : link_indices)
+    {
+        Basin_T* link_basins = _links[l_id].basins;
+
+        if (basin_uf.find(link_basins[0]) != basin_uf.find(link_basins[1]))
+        {
+            _tree.push_back(l_id);
+            basin_uf.merge(link_basins[0], link_basins[1]);
         }
     }
 }

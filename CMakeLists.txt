@@ -34,6 +34,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sinks.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_routing.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/basin_graph.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/union_find.hpp
 )
 
 include_directories(${xtensor_INCLUDE_DIRS})
