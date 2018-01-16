@@ -1,6 +1,8 @@
 /**
  * @file
  * @brief Provides implementation for the classical Union-Find data structure
+ *
+ * @author Guillaume Cordonnier
  */
 
 #pragma once
