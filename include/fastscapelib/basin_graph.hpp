@@ -16,8 +16,7 @@
 #include "fastscapelib/consts.hpp"
 #include "fastscapelib/union_find.hpp"
 
-
-namespace fs = fastscapelib;
+class BasinGraph_Test;
 
 namespace fastscapelib
 {
@@ -61,45 +60,6 @@ public:
 
     std::vector<Node_T>& outlets() {return _outlets;}
 
-
-    template <class Basins_XT, class Rcv_XT, class Stack_XT,
-              class Active_XT, class Elevation_XT>
-    void connect_basins (const Basins_XT& basins, const Rcv_XT& receivers,
-                         const Stack_XT& stack, const Active_XT& active_nodes,
-                         const Elevation_XT& elevation);
-
-    void compute_tree_kruskal();
-
-    template<bool keep_order, class Elevation_XT>
-    void reorder_tree(const Elevation_XT& elevation);
-
-    template<class Rcv_XT, class DistRcv_XT, class Elevation_XT>
-    void update_pits_receivers(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
-                               const Elevation_XT& elevation, double dx, double dy);
-    void update_pits_receivers_continuous();
-    void fill_sinks_flat();
-    void fill_sinks_sloped();
-
-
-    // Tests:
-    bool is_links_eq(std::vector<Link_T>& oth)
-    {
-        if (oth.size() != _links.size())
-            return false;
-        for (size_t i = 0; i< _links.size(); ++i)
-            if (!(_links[i] == oth[i]))
-            {
-                std::cout << '(' << _links[i].basins[0]<<'-'<<_links[i].basins[1] << "),(" << _links[i].nodes[0]<<'-'<<_links[i].nodes[1]  << ") w=" << _links[i].weight << std::endl;
-                std::cout << '(' << oth[i].basins[0]<<'-'<<oth[i].basins[1] << "),(" << oth[i].nodes[0]<<'-'<<oth[i].nodes[1]  << ") w=" << oth[i].weight << std::endl;
-                return false;
-            }
-        return true;
-    }
-    void print_links()
-    {
-        for (auto& l : _links)
-            std::cout << '(' << l.basins[0]<<'-'<<l.basins[1] << "),(" << l.nodes[0]<<'-'<<l.nodes[1]  << ") w=" << l.weight << std::endl;
-    }
 
 protected:
 
@@ -155,6 +115,23 @@ protected:
     }
 
 
+    template <class Basins_XT, class Rcv_XT, class Stack_XT,
+              class Active_XT, class Elevation_XT>
+    void connect_basins (const Basins_XT& basins, const Rcv_XT& receivers,
+                         const Stack_XT& stack, const Active_XT& active_nodes,
+                         const Elevation_XT& elevation);
+
+    void compute_tree_kruskal();
+
+    template<bool keep_order, class Elevation_XT>
+    void reorder_tree(const Elevation_XT& elevation);
+
+    template<class Rcv_XT, class DistRcv_XT, class Elevation_XT>
+    void update_pits_receivers(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
+                               const Elevation_XT& elevation, double dx, double dy);
+    void update_pits_receivers_continuous();
+    void fill_sinks_flat();
+    void fill_sinks_sloped();
 
 private:
 
@@ -183,6 +160,8 @@ private:
     // reoder_tree, keep order
     std::vector<Link_T> passes;
     std::vector<Basin_T> basin_stack;
+
+    friend class ::BasinGraph_Test;
 
 };
 

@@ -243,7 +243,6 @@ void correct_flowrouting(BasinGraph_T& basin_graph, Basins_XT& basins, Rcv_XT& r
     basin_graph.compute_mst();
 
     correct_receivers(basin_graph, receivers, dist_2_receivers, elevation, dx, dy);*/
-
 }
 
 

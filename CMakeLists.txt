@@ -41,6 +41,7 @@ include_directories(${xtensor_INCLUDE_DIRS})
 
 OPTION(BUILD_TESTS "fastscapelib test suite" OFF)
 OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
+OPTION(BUILD_BENCHMARKS "fastscapelib benchmarks" OFF)
 
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
     set(BUILD_TESTS ON)
@@ -49,6 +50,11 @@ endif()
 if(BUILD_TESTS)
     include_directories(${FASTSCAPELIB_INCLUDE_DIR})
     add_subdirectory(test)
+endif()
+
+if(BUILD_BENCHMARKS)
+    include_directories(${FASTSCAPELIB_INCLUDE_DIR})
+    add_subdirectory(benchmarks)
 endif()
 
 # Installation
