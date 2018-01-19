@@ -3,7 +3,7 @@
 #include "fastscapelib/sinks.hpp"
 
 
-void benchmark_sinks_flat(xt::xtensor<double, 2>& elevation)
+void benchmark_sinks_flat(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>&)
 {
     fs::fill_sinks_flat(elevation);
 }
@@ -11,7 +11,7 @@ void benchmark_sinks_flat(xt::xtensor<double, 2>& elevation)
 RandomBenchmark::Register register_sinks_flat("Sinks Flat", benchmark_sinks_flat);
 
 
-void benchmark_sinks_sloped(xt::xtensor<double, 2>& elevation)
+void benchmark_sinks_sloped(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>&)
 {
     fs::fill_sinks_sloped(elevation);
 }

@@ -18,6 +18,8 @@
 
 #include "fastscapelib/basin_graph.hpp"
 
+#include "fastscapelib/Profile.h"
+
 
 namespace fs = fastscapelib;
 
@@ -28,36 +30,36 @@ namespace fastscapelib
 namespace detail
 {
 
-    inline auto get_d8_distances(double dx, double dy) -> std::array<double, 9>
+inline auto get_d8_distances(double dx, double dy) -> std::array<double, 9>
+{
+    std::array<double, 9> d8_dists;
+
+    for(size_t k=0; k<9; ++k)
     {
-        std::array<double, 9> d8_dists;
-
-        for(size_t k=0; k<9; ++k)
-        {
-            double d8_dx = dx * fs::consts::d8_col_offsets[k];
-            double d8_dy = dy * fs::consts::d8_row_offsets[k];
-            d8_dists[k] = std::sqrt(d8_dy*d8_dy + d8_dx*d8_dx);
-        }
-
-        return d8_dists;
+        double d8_dx = dx * fs::consts::d8_col_offsets[k];
+        double d8_dy = dy * fs::consts::d8_row_offsets[k];
+        d8_dists[k] = std::sqrt(d8_dy*d8_dy + d8_dx*d8_dx);
     }
 
+    return d8_dists;
+}
 
-    template<class A1, class A2, class A3>
-    void add2stack(index_t& nstack,
-                   A1& stack,
-                   const A2& ndonors,
-                   const A3& donors,
-                   index_t inode)
+
+template<class A1, class A2, class A3>
+void add2stack(index_t& nstack,
+               A1& stack,
+               const A2& ndonors,
+               const A3& donors,
+               index_t inode)
+{
+    for(unsigned short k=0; k<ndonors(inode); ++k)
     {
-        for(unsigned short k=0; k<ndonors(inode); ++k)
-        {
-            index_t idonor = donors(inode, k);
-            stack(nstack) = idonor;
-            ++nstack;
-            add2stack(nstack, stack, ndonors, donors, idonor);
-        }
+        index_t idonor = donors(inode, k);
+        stack(nstack) = idonor;
+        ++nstack;
+        add2stack(nstack, stack, ndonors, donors, idonor);
     }
+}
 
 }  // namespace detail
 
@@ -85,10 +87,11 @@ void compute_receivers_d8(A1& receivers,
             receivers(inode) = inode;
             dist2receivers(inode) = 0.;
 
-            if(!active_nodes(r, c))
+            if(!active_nodes(inode))
                 continue;
 
-            double slope_max = std::numeric_limits<double>::min();
+            double slope_max = 0.0;
+            size_t k_found = 0;
 
             for(size_t k=1; k<=8; ++k)
             {
@@ -99,15 +102,20 @@ void compute_receivers_d8(A1& receivers,
                     continue;
 
                 index_t ineighbor = kr * ncols + kc;
-                double slope = (elevation(r, c) - elevation(kr, kc)) / d8_dists[k];
+                double slope = (elevation(inode) - elevation(ineighbor)) / d8_dists[k];
 
                 if(slope > slope_max)
                 {
                     slope_max = slope;
-                    receivers(inode) = ineighbor;
-                    dist2receivers(inode) = d8_dists[k];
+                    k_found = k;
                 }
             }
+
+            index_t kr = r + fs::consts::d8_row_offsets[k_found];
+            index_t kc = c + fs::consts::d8_col_offsets[k_found];
+
+            receivers(inode) = kr * ncols + kc;
+            dist2receivers(inode) = d8_dists[k_found];
         }
     }
 }
@@ -155,9 +163,9 @@ void compute_stack(A1& stack,
 
 template <class Basins_XT, class Stack_XT, class Rcv_XT>
 auto compute_basins(Basins_XT& basins,
-                       const Stack_XT& stack,
-                       const Rcv_XT& receivers)
-        -> typename Basins_XT::value_type         // returns last basin +1
+                    const Stack_XT& stack,
+                    const Rcv_XT& receivers)
+-> typename Basins_XT::value_type         // returns last basin +1
 {
 
     using Basin_T = typename Basins_XT::value_type;
@@ -228,21 +236,94 @@ void compute_drainage_area(A1& area,
 }
 
 
-template <class BasinGraph_T, class Basins_XT, class Rcv_XT, class Stack_XT, class Active_XT, class Elevation_XT>
-void correct_flowrouting(BasinGraph_T& basin_graph, Basins_XT& basins, Rcv_XT& receivers,
-                         const Stack_XT& stack,
+template <class BasinGraph_T, class Basins_XT, class Rcv_XT,
+          class DistRcv_XT, class NDonnors_XT, class Donnors_XT,
+          class Stack_XT, class Active_XT,
+          class Elevation_XT>
+void correct_flowrouting(BasinGraph_T& basin_graph, Basins_XT& basins,
+                         Rcv_XT& receivers, DistRcv_XT& dist2receivers,
+                         NDonnors_XT& ndonors, Donnors_XT& donors,
+                         Stack_XT& stack,
                          const Active_XT& active_nodes,
+                         const Elevation_XT elevation,
                          typename Elevation_XT::value_type dx,
                          typename Elevation_XT::value_type dy)
 {
-    basin_graph.init();
+    {
+        PROFILE_COUNT(t0, "compute_basins", 8);
+    basin_graph.compute_basins(basins, stack, receivers);
+    }
+    {
+        PROFILE_COUNT(t1, "update_receivers", 8);
 
-    /*compute_basins(basin_graph, basins, stack, recveivers);
-    connect_basins(basin_graph, basins, receivers, stack, active_nodes, elevation);
+    basin_graph.update_receivers(receivers, dist2receivers, basins, stack,  active_nodes,
+                                 elevation, dx, dy);
+    }
 
-    basin_graph.compute_mst();
+    compute_donors(ndonors, donors, receivers);
 
-    correct_receivers(basin_graph, receivers, dist_2_receivers, elevation, dx, dy);*/
+    compute_stack(stack, ndonors, donors, receivers);
+}
+
+template <class Elevation_XT, class Stack_XT, class Rcv_XT>
+void fill_sinks_flat(Elevation_XT elevation, const Stack_XT& stack, const Rcv_XT& receivers)
+{
+    for(auto inode : stack)
+    {
+        auto ircv = receivers(inode);
+        elevation(inode) = std::max(elevation(inode), elevation(ircv));
+    }
+}
+
+template <class Elevation_XT, class Active_XT>
+void fill_sinks_flat_basin_graph(Elevation_XT& elevation,
+                                 const Active_XT& active_nodes,
+                                 typename Elevation_XT::value_type dx,
+                                 typename Elevation_XT::value_type dy)
+{
+    const auto elev_shape = elevation.shape();
+    const size_t nrows = (size_t) elev_shape[0];
+    const size_t ncols = (size_t) elev_shape[1];
+    std::array<std::size_t, 1> shape_1D {nrows * ncols};
+
+    BasinGraph<index_t, index_t, typename Elevation_XT::value_type> basin_graph;
+
+    xt::xtensor<index_t, 1> basins (shape_1D);
+    xt::xtensor<index_t, 1> receivers (shape_1D);
+    xt::xtensor<typename Elevation_XT::value_type, 1> dist2receivers (shape_1D);
+    xt::xtensor<index_t, 1> ndonors (shape_1D);
+    xt::xtensor<index_t, 2> donors ({nrows * ncols, 8});
+    xt::xtensor<index_t, 1> stack (shape_1D);
+
+    {
+        PROFILE(s0, "compute_receivers_d8");
+        compute_receivers_d8(receivers, dist2receivers,
+                             elevation, active_nodes,
+                             1., 1.);
+    }
+
+
+    {PROFILE(s1, "compute_donors");
+        compute_donors(ndonors, donors, receivers);
+    }
+
+    {PROFILE(s2, "compute_stack");
+        compute_stack(stack, ndonors, donors, receivers);
+
+    }
+    {
+        PROFILE(s3, "correct_flowrouting");
+        correct_flowrouting(basin_graph, basins, receivers, dist2receivers,
+                            ndonors, donors, stack,
+                            active_nodes, elevation, dx, dy);
+
+    }
+
+    {
+        PROFILE(s4, "fill_sinks_flat");
+        fill_sinks_flat(elevation, stack, receivers);
+
+    }
 }
 
 

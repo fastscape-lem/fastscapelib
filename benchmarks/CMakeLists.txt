@@ -16,6 +16,7 @@ include(CheckCXXCompilerFlag)
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wunused-parameter -Wextra -Wreorder -Wconversion")
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
+    SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
     CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)
 
@@ -45,6 +46,7 @@ set(FASTSCAPELIB_BENCHMARK
   random_benchmark.hpp
   benchmark_sinks.cpp
   benchmark_basin_graph.cpp
+  benchmark_v2.cpp
 )
 
 set(FASTSCAPELIB_BENCH_TARGET benchmark_fastscapelib)

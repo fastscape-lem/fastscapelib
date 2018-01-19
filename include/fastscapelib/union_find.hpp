@@ -56,6 +56,31 @@ public:
     }
 
     /**
+     * @brief reserve
+     * Allocate some memory for a given number of class
+     * @param _size the number of classes
+     */
+    void reserve(size_t _size)
+    {
+        parent.reserve(_size);
+        rank.reserve(_size);
+    }
+
+    /**
+     * @brief push_back
+     * append a new item at the end of the union find structure
+     * @param c the class of the new item
+     */
+
+    void push_back(T_Class c)
+    {
+        parent.push_back(c);
+        rank.push_back(0);
+        if (c != parent.size()-1 && !rank[c])
+            rank[c] = 1;
+    }
+
+    /**
      * @brief resize
      * Resize the internal containers of union find. This only add classes if the new
      * size is larger. Else, some elements are removed, but it is possible that the

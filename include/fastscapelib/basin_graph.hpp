@@ -16,6 +16,8 @@
 #include "fastscapelib/consts.hpp"
 #include "fastscapelib/union_find.hpp"
 
+#include "fastscapelib/Profile.h"
+
 class BasinGraph_Test;
 
 namespace fastscapelib
@@ -59,6 +61,14 @@ public:
     Basin_T basin_count() {return Basin_T(_outlets.size());}
 
     std::vector<Node_T>& outlets() {return _outlets;}
+
+    template <class Basins_XT, class Rcv_XT, class DistRcv_XT,
+              class Stack_XT, class Active_XT, class Elevation_XT>
+    void update_receivers(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
+                          const Basins_XT& basins,
+                          const Stack_XT& stack, const Active_XT& active_nodes,
+                          const Elevation_XT& elevation, Elevation_T dx, Elevation_T dy);
+    void fill_sinks();
 
 
 protected:
@@ -130,6 +140,8 @@ protected:
     void update_pits_receivers(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
                                const Elevation_XT& elevation, double dx, double dy);
     void update_pits_receivers_continuous();
+
+
     void fill_sinks_flat();
     void fill_sinks_sloped();
 
@@ -243,7 +255,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::connect_basins (const Basins_XT& 
 
                 Node_T ineighbor = detail::index(kr, kc, ncols);
                 const Basin_T& ineighbor_basin = basins(ineighbor);
-                const Node_T&  ineighbor_outlet = _outlets[ineighbor];
+                const Node_T&  ineighbor_outlet = _outlets[ineighbor_basin];
 
                 // skip same basin or already connected adjacent basin
                 // don't skip adjacent basin if it's an open basin
@@ -270,7 +282,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_kruskal()
     link_indices.resize(_links.size());
     std::iota(link_indices.begin(), link_indices.end(), 0);
     std::sort(link_indices.begin(), link_indices.end(),
-              [&_links = _links](const Link_T& i0, const Link_T& i1) {return _links[i0].weight < _links[i1].weight;});
+              [&_links = _links](const index_t& i0, const index_t& i1) {return _links[i0].weight < _links[i1].weight;});
 
     basin_uf.resize(_outlets.size());
     basin_uf.clear();
@@ -355,8 +367,8 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree(const Elevation_XT& 
     while (reorder_stack.size())
     {
         Basin_T node, parent;
-        std::tie(node, parent) = reorder_tree.back();
-        reorder_tree.pop_back();
+        std::tie(node, parent) = reorder_stack.back();
+        reorder_stack.pop_back();
 
 
         for(size_t i = nodes_connects_ptr[node];
@@ -473,7 +485,29 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers(Rcv_XT& rec
             dist2receivers[link.nodes[INFLOW]] = std::sqrt(delta_x * delta_x + delta_y * delta_y);
         }
     }
+}
 
+template<class Basin_T, class Node_T, class Elevation_T>
+template <class Basins_XT, class Rcv_XT, class DistRcv_XT,
+          class Stack_XT, class Active_XT, class Elevation_XT>
+void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
+        Rcv_XT& receivers, DistRcv_XT& dist2receivers,
+        const Basins_XT& basins,
+        const Stack_XT& stack, const Active_XT& active_nodes,
+        const Elevation_XT& elevation, Elevation_T dx, Elevation_T dy)
+{
+    {PROFILE(u0, "connect_basins");
+    connect_basins(basins, receivers, stack, active_nodes, elevation);
+    }
+    {PROFILE(u1, "compute_tree_kruskal");
+    compute_tree_kruskal();
+    }
+    {PROFILE(u2, "reorder_tree");
+    reorder_tree<false>(elevation);
+    }
+    {PROFILE(u3, "update_pits_receivers");
+    update_pits_receivers(receivers, dist2receivers,elevation, dx, dy);
+    }
 }
 
 }
