@@ -23,6 +23,8 @@ class BasinGraph_Test;
 namespace fastscapelib
 {
 
+enum class BasinAlgo {Kruskal, Boruvka};
+
 template <class Basin_T, class Node_T, class Weight_T>
 struct Link
 {
@@ -62,7 +64,10 @@ public:
 
     std::vector<Node_T>& outlets() {return _outlets;}
 
-    template <class Basins_XT, class Rcv_XT, class DistRcv_XT,
+
+
+    template <BasinAlgo algo,
+            class Basins_XT, class Rcv_XT, class DistRcv_XT,
               class Stack_XT, class Active_XT, class Elevation_XT>
     void update_receivers(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
                           const Basins_XT& basins,
@@ -132,6 +137,8 @@ protected:
                          const Elevation_XT& elevation);
 
     void compute_tree_kruskal();
+    template<int max_low_degree = 16> // 16 for d8, 8 for plannar graph
+    void compute_tree_boruvka();
 
     template<bool keep_order, class Elevation_XT>
     void reorder_tree(const Elevation_XT& elevation);
@@ -162,6 +169,16 @@ private:
     // kruskal
     std::vector<index_t> link_indices;
     UnionFind_T<Basin_T> basin_uf;
+
+    // boruvka
+    std::vector<Elevation_T[2]> link_basins;
+    struct Connect {index_t begin; index_t size;};
+    std::vector<Connect> adjacency;
+    struct EdgeParse {index_t link_id; index_t next;};
+    std::vector<EdgeParse> adjacency_list;
+    std::vector<index_t> low_degrees, large_degrees;
+    std::vector<index_t> edge_bucket;
+    std::vector<index_t> edge_in_bucket;
 
     //reorder tree
     std::vector<size_t> nodes_connects_size;
@@ -296,6 +313,222 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_kruskal()
             _tree.push_back(l_id);
             basin_uf.merge(link_basins[0], link_basins[1]);
         }
+    }
+}
+
+template<class Basin_T, class Node_T, class Elevation_T>
+template<int max_low_degree> // 16 for d8, 8 for plannar graph
+void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
+{
+    adjacency.resize(_outlets.size());
+    low_degrees.reserve(_outlets.size());
+    large_degrees.reserve(_outlets.size());
+
+    // copy link basins
+    link_basins.resize(_links.size());
+    for(size_t i = 0; i<link_basins.size(); ++i)
+        link_basins[i] = {_links[i].basins[0], _links[i].basins[1]};
+
+    // first pass: create edge vector and compute adjacency size
+    for (size_t lid = 0; lid < _links.size(); ++lid)
+    {
+        ++adjacency[link_basins[lid][0]].size;
+        ++adjacency[link_basins[lid][1]].size;
+    }
+
+    // compute adjacency pointers
+    adjacency[0].begin = 0;
+    for(size_t nid = 1; nid < _outlets.size(); ++nid)
+    {
+        adjacency[nid].begin = adjacency[nid-1].begin + adjacency[nid-1].size;
+        adjacency[nid-1].size = 0;
+    }
+
+    adjacency_list.resize(adjacency.back().begin + adjacency.back().size());
+    adjacency.back().size = 0;
+
+    for (index_t adj_data_i = 0;  adj_data_i < adjacency_list.size; ++adj_data_i)
+        adjacency_list[adj_data_i].next = adj_data_i + 1;
+
+    // second pass on edges: fill adjacency list
+    for (size_t lid = 0; lid < _links.size(); ++lid)
+    {
+        Basin_T* basins = link_basins[lid];
+
+        adjacency_list[adjacency[basins[0]].begin + adjacency[basins[0]].size].link_id = lid;
+        adjacency_list[adjacency[basins[1]].begin + adjacency[basins[1]].size].link_id = lid;
+
+        ++adjacency[basins[0]].size;
+        ++adjacency[basins[1]].size;
+    }
+
+    for(size_t nid = 1; nid < _outlets.size(); ++nid)
+    {
+        // if degree is low enough
+        if (adjacency[nid].size <= max_low_degree)
+            low_degrees.push_back(nid);
+        else
+            large_degrees.push_back(nid);
+
+    }
+
+
+    // compute the min span tree
+    _tree.reserve(_outlets.size()-1);
+    _tree.clear();
+
+    while (low_degrees.size())
+    {
+        for (index_t nid : low_degrees)
+        {
+            // the node may have large degree after collapse
+            if (adjacency[nid].size > max_low_degree)
+            {
+                large_degrees.push_back(nid);
+                continue;
+            }
+
+            // get the minimal weight edge that leaves that node
+            index_t found_edge = -1;
+            index_t node_B_id;
+            Elevation_T found_edge_weight = std::numeric_limits<Elevation_T>::max();
+
+            index_t adjacency_data_ptr = adjacency[nid].begin;
+            for(index_t step = 0; step < adjacency[nid].size; ++step)
+            {
+                // find next adjacent edge in the list
+                index_t parsed_edge_id = adjacency_list[adjacency_data_ptr].edge_id;
+                adjacency_data_ptr = adjacency_list[adjacency_data_ptr].next;
+
+                // check if the edge is valid (connected to a existing node)
+                // and if the weight is better than the previously found one
+                index_t opp_node = link_basins[parsed_edge_id][0];
+                if (opp_node == nid)
+                    opp_node = link_basins[parsed_edge_id][1];
+
+                if (opp_node != nid && adjacency[opp_node].size > 0 &&
+                        _links[parsed_edge_id].weight < found_edge_weight)
+                {
+                    found_edge = parsed_edge_id;
+                    found_edge_weight = _links[parsed_edge_id].weight;
+                    node_B_id = opp_node;
+                }
+            }
+
+            if (found_edge == -1)
+                continue; //TODO does it happens?
+
+            // add edge to the tree
+            _tree.push_back(found_edge);
+
+            //  and collapse it toward opposite node
+
+            // rename all A to B in adjacency of A
+            adjacency_data_ptr = adjacency[nid].begin;
+            for(index_t step = 0; step < adjacency[nid].size; ++step)
+            {
+                // find next adjacent edge in the list
+                index_t edge_AC_id = adjacency_list[adjacency_data_ptr].edge_id;
+
+                // TODO optimize that out?
+                if (step != adjacency[nid].size - 1)
+                    adjacency_data_ptr = adjacency_list[adjacency_data_ptr].next;
+
+                // avoid self loop. A doesn't exist anymore, so edge AB
+                // will be discarded
+                if(link_basins[edge_AC_id][0] == nid)
+                    link_basins[edge_AC_id][0] = node_B_id;
+                else
+                    link_basins[edge_AC_id][1] = node_B_id;
+
+                // Append adjacency of B at the end of A
+                adjacency_list[adjacency_data_ptr].next = adjacency[node_B_id].begin;
+
+                // And collapse A into B
+                adjacency[node_B_id].begin = adjacency[nid].begin;
+                adjacency[node_B_id].size += adjacency[nid].size;
+
+                // Remove the node from the graph
+                adjacency[nid].size = 0;
+            }
+        }
+
+        // Clean up graph (many edges are duplicates or self loops).
+
+        // parse large degree in reverse order (easier to remove items)
+        int cur_large_degree = 0;
+        for (index_t node_A_id : large_degrees)
+        {
+            // we will store all edges from A in the bucket, so that each edge
+            // can appear only once
+            edge_in_bucket.clear();
+            index_t adjacency_data_ptr = adjacency[node_A_id].begin;
+
+            for (size_t step = 0; step < adjacency[node_A_id].size; ++step)
+            {
+
+                index_t edge_AB_id = adjacency_list[adjacency_data_ptr].link_id;
+                adjacency_data_ptr = adjacency_list[adjacency_data_ptr].next;
+
+                // find node B
+                size_t node_B_id = link_basins[edge_AB_id][0];
+                if (node_B_id == node_A_id)
+                    node_B_id = link_basins[edge_AB_id][1];
+
+                if (adjacency[node_B_id].size > 0 && node_B_id != node_A_id)
+                {
+                    // edge_bucket contain the edge_id connecting to opp_node_id
+                    // or NodeId(-1)) if this is the first time we see it
+                    index_t edge_AB_id_in_bucket = edge_bucket[node_B_id];
+
+                    // first time we see
+                    if(edge_AB_id_in_bucket == -1)
+                    {
+                        edge_bucket[node_B_id] = edge_AB_id;
+                        edge_in_bucket.push_back(node_B_id);
+                    }
+                    else
+                    {
+                        // get weight of AB and of previously stored weight
+                        Elevation_T weight_in_bucket = _links[edge_AB_id_in_bucket].weight;
+                        Elevation_T weight_AB = _links[edge_AB_id].weight;
+
+                        // if both weight are the same, we choose edge
+                        // with min id
+                        if (weight_in_bucket == weight_AB)
+                            edge_bucket[node_B_id] = std::min(edge_AB_id_in_bucket, edge_AB_id);
+                        else if (weight_AB < weight_in_bucket)
+                            edge_bucket[node_B_id] = edge_AB_id;
+                    }
+                }
+
+            }
+
+            // recompute connectivity of node A
+            index_t cur_ptr = adjacency[node_A_id].begin;
+            adjacency[node_A_id].size = edge_in_bucket.size();
+
+            for (index_t node_B_id : edge_in_bucket)
+            {
+                adjacency_list[cur_ptr].link_id = edge_bucket[node_B_id];
+                        cur_ptr = adjacency_list[cur_ptr].next;
+
+                // clean occupency of edge_bucket for latter use
+                edge_bucket[node_B_id] = -1;
+            }
+
+            // update low degree information, if node A has low degree
+            if (adjacency[node_A_id].size <= max_low_degree)
+            {
+
+                // add the node in low degree list
+                if (adjacency[node_A_id].size > 0)
+                    low_degrees.push_back(node_A_id);
+            }
+            else
+                large_degrees[cur_large_degree++] = node_A_id;
+        }
+        large_degrees.resize(cur_large_degree);
     }
 }
 
@@ -488,7 +721,8 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers(Rcv_XT& rec
 }
 
 template<class Basin_T, class Node_T, class Elevation_T>
-template <class Basins_XT, class Rcv_XT, class DistRcv_XT,
+template <BasinAlgo algo,
+          class Basins_XT, class Rcv_XT, class DistRcv_XT,
           class Stack_XT, class Active_XT, class Elevation_XT>
 void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
         Rcv_XT& receivers, DistRcv_XT& dist2receivers,
@@ -497,16 +731,22 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
         const Elevation_XT& elevation, Elevation_T dx, Elevation_T dy)
 {
     {PROFILE(u0, "connect_basins");
-    connect_basins(basins, receivers, stack, active_nodes, elevation);
+        connect_basins(basins, receivers, stack, active_nodes, elevation);
     }
+    if (algo == BasinAlgo::Kruskal)
     {PROFILE(u1, "compute_tree_kruskal");
-    compute_tree_kruskal();
+        compute_tree_kruskal();
+    }
+    else
+    {
+        PROFILE(u1, "compute_tree_boruvka");
+                compute_tree_kruskal();
     }
     {PROFILE(u2, "reorder_tree");
-    reorder_tree<false>(elevation);
+        reorder_tree<false>(elevation);
     }
     {PROFILE(u3, "update_pits_receivers");
-    update_pits_receivers(receivers, dist2receivers,elevation, dx, dy);
+        update_pits_receivers(receivers, dist2receivers,elevation, dx, dy);
     }
 }
 

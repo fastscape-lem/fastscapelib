@@ -16,4 +16,4 @@ void benchmark_v2(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>& activ
 
 }
 
-RandomBenchmark::Register register_v2("v2", benchmark_v2);
+//RandomBenchmark::Register register_v2("v2", benchmark_v2);
