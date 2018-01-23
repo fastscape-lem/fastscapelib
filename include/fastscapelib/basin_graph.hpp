@@ -56,6 +56,8 @@ public:
 
     BasinGraph() {}
 
+
+
     template <class Basins_XT, class Stack_XT, class Rcv_XT>
     void compute_basins(Basins_XT& basins, const Stack_XT& stack,
                         const Rcv_XT& receivers);
@@ -67,7 +69,7 @@ public:
 
 
     template <BasinAlgo algo,
-            class Basins_XT, class Rcv_XT, class DistRcv_XT,
+              class Basins_XT, class Rcv_XT, class DistRcv_XT,
               class Stack_XT, class Active_XT, class Elevation_XT>
     void update_receivers(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
                           const Basins_XT& basins,
@@ -77,6 +79,7 @@ public:
 
 
 protected:
+
 
     Basin_T add_basin(const Node_T& outlet)
     /*  */ {_outlets.push_back(outlet); return Basin_T(_outlets.size()-1);}
@@ -108,11 +111,12 @@ protected:
         // the optimization structures
         const Basin_T& optim_basin = l.basins[0];
         const Basin_T& ineighbor_basin = l.basins[1];
+
         if (conn_cur_basin != optim_basin)
         {
             // clear used array
             for (auto& iused : conn_pos_used)
-                iused = -1;
+                conn_pos[iused] = -1;
             conn_pos_used.clear();
             conn_cur_basin = optim_basin;
         }
@@ -125,7 +129,9 @@ protected:
             add_link(std::move(l));
         }
         else if (l.weight < _links[conn_idx].weight)
+        {
             _links[conn_idx] = l;
+        }
 
     }
 
@@ -153,7 +159,6 @@ protected:
     void fill_sinks_sloped();
 
 private:
-
 
     std::vector<Node_T> _outlets; // bottom nodes of basins
     std::vector<Link_T>  _links;
@@ -193,6 +198,7 @@ private:
     friend class ::BasinGraph_Test;
 
 };
+
 
 template<class Basin_T, class Node_T, class Elevation_T>
 template <class Basins_XT, class Stack_XT, class Rcv_XT>
@@ -262,10 +268,10 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::connect_basins (const Basins_XT& 
         {
             Node_T r, c; std::tie(r,c) = detail::coords(istack, ncols);
 
-            for (int i = 1; i<5; ++i)
+            for (int i = 1; i<9; ++i)
             {
-                Node_T kr = r + (Node_T)consts::d4_row_offsets[i];
-                Node_T kc = c + (Node_T)consts::d4_col_offsets[i];
+                Node_T kr = r + (Node_T)consts::d8_row_offsets[i];
+                Node_T kc = c + (Node_T)consts::d8_col_offsets[i];
 
                 if (!detail::in_bounds(elev_shape, kr, kc))
                     continue;
@@ -274,8 +280,9 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::connect_basins (const Basins_XT& 
                 const Basin_T& ineighbor_basin = basins(ineighbor);
                 const Node_T&  ineighbor_outlet = _outlets[ineighbor_basin];
 
+
                 // skip same basin or already connected adjacent basin
-                // don't skip adjacent basin if it's an open basin
+                // don't skip adjacent basin if it is an open basin
                 if (ibasin >= ineighbor_basin && active_nodes(ineighbor_outlet))
                     continue;
 
@@ -511,7 +518,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
             for (index_t node_B_id : edge_in_bucket)
             {
                 adjacency_list[cur_ptr].link_id = edge_bucket[node_B_id];
-                        cur_ptr = adjacency_list[cur_ptr].next;
+                cur_ptr = adjacency_list[cur_ptr].next;
 
                 // clean occupency of edge_bucket for latter use
                 edge_bucket[node_B_id] = -1;
@@ -732,15 +739,22 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
 {
     {PROFILE(u0, "connect_basins");
         connect_basins(basins, receivers, stack, active_nodes, elevation);
+        /*for(auto l : _links)
+            std::cout << "[(" << l.basins[0] << ',' <<l.basins[1]<<")("
+                      << l.nodes[0] << ',' <<l.nodes[1]<<") "<< l.weight << "] ";
+        std::cout << std::endl;*/
     }
     if (algo == BasinAlgo::Kruskal)
     {PROFILE(u1, "compute_tree_kruskal");
         compute_tree_kruskal();
+        /*for(auto t : _tree)
+            std::cout << "(" << _links[t].basins[0] << ',' <<_links[t].basins[1]<<")";
+        std::cout << std::endl;*/
     }
     else
     {
         PROFILE(u1, "compute_tree_boruvka");
-                compute_tree_kruskal();
+        compute_tree_kruskal();
     }
     {PROFILE(u2, "reorder_tree");
         reorder_tree<false>(elevation);

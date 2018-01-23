@@ -19,7 +19,8 @@
 #include "fastscapelib/basin_graph.hpp"
 
 #include "fastscapelib/Profile.h"
-
+#include <assert.h>
+#include <xtensor/xio.hpp>
 
 namespace fs = fastscapelib;
 
@@ -252,6 +253,7 @@ void correct_flowrouting(BasinGraph_T& basin_graph, Basins_XT& basins,
     {
         PROFILE_COUNT(t0, "compute_basins", 8);
     basin_graph.compute_basins(basins, stack, receivers);
+    //std::cout << basins << std::endl;
     }
     {
         PROFILE_COUNT(t1, "update_receivers", 8);
@@ -266,7 +268,7 @@ void correct_flowrouting(BasinGraph_T& basin_graph, Basins_XT& basins,
 }
 
 template <class Elevation_XT, class Stack_XT, class Rcv_XT>
-void fill_sinks_flat(Elevation_XT elevation, const Stack_XT& stack, const Rcv_XT& receivers)
+void fill_sinks_flat(Elevation_XT& elevation, const Stack_XT& stack, const Rcv_XT& receivers)
 {
     for(auto inode : stack)
     {
@@ -274,6 +276,59 @@ void fill_sinks_flat(Elevation_XT elevation, const Stack_XT& stack, const Rcv_XT
         elevation(inode) = std::max(elevation(inode), elevation(ircv));
     }
 }
+
+template <class Water_XT, class Elevation_XT, class Stack_XT, class Rcv_XT>
+void fill_sinks_flat(Water_XT& water, const Elevation_XT& elevation, const Stack_XT& stack, const Rcv_XT& receivers)
+{
+    for(auto inode : stack)
+    {
+        auto ircv = receivers(inode);
+        if(inode == ircv)
+            water(inode) = elevation(inode);
+        else
+            water(inode) = std::max(elevation(inode), water(ircv));
+    }
+}
+
+template <class Elevation_XT, class Water_XT, class Active_XT>
+bool check_fill_flat(const Elevation_XT& elevation, const Water_XT& water, const Active_XT& active_nodes)
+{
+    using elev_t = typename Elevation_XT::value_type;
+
+    const auto elev_shape = elevation.shape();
+    const index_t nrows = (index_t) elev_shape[0];
+    const index_t ncols = (index_t) elev_shape[1];
+
+    for(index_t r=0; r<nrows; ++r)
+    {
+        for(index_t c=0; c<ncols; ++c)
+        {
+            index_t inode = r * ncols + c;
+
+            if(!active_nodes(inode))
+                continue;
+
+            if(elevation(inode) == water(inode))
+                continue;
+
+            for(size_t k=1; k<=8; ++k)
+            {
+                index_t kr = r + fs::consts::d8_row_offsets[k];
+                index_t kc = c + fs::consts::d8_col_offsets[k];
+
+                if(!fs::detail::in_bounds(elev_shape, kr, kc))
+                    continue;
+
+                index_t ineighbor = kr * ncols + kc;
+
+                if(elevation(inode) > water(ineighbor))
+                    return false;
+            }
+        }
+    }
+    return true;
+}
+
 
 template <BasinAlgo algo,
         class Elevation_XT, class Active_XT>
@@ -301,6 +356,7 @@ void fill_sinks_flat_basin_graph(Elevation_XT& elevation,
         compute_receivers_d8(receivers, dist2receivers,
                              elevation, active_nodes,
                              1., 1.);
+        //std::cout << receivers << std::endl;
     }
 
 
@@ -320,11 +376,27 @@ void fill_sinks_flat_basin_graph(Elevation_XT& elevation,
 
     }
 
+    xt::xtensor<typename Elevation_XT::value_type, 1> water (shape_1D);
+
+    fill_sinks_flat(water, elevation, stack, receivers);
+
+    if(!check_fill_flat(elevation, water, active_nodes))
+    {
+
+        std::cout << elevation << std::endl;
+        std::cout << water << std::endl;
+
+        assert(false);
+    }
+
+
+    /*
+
     {
         PROFILE(s4, "fill_sinks_flat");
         fill_sinks_flat(elevation, stack, receivers);
 
-    }
+    }*/
 }
 
 

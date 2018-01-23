@@ -116,11 +116,11 @@ public:
 
         if(++cur_count == count)
         {
-            std::cerr << "Profile " << name_
+            /*std::cerr << "Profile " << name_
                       << ": min = " << min_
                       << "ms, max = " << max_
                       << "ms, avg = " << sum_ / double(count)
-                      << "ms" << std::endl;
+                      << "ms" << std::endl;*/
             cur_count = 0;
         }
 

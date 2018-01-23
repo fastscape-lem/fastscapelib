@@ -51,6 +51,8 @@ void RandomBenchmark::do_run(size_t nrows, size_t ncols, int num_loops,
     for(auto F : benchmarks)
     {
 
+        xt::random::seed(1);
+
         std::vector<int64_t> times;
         int64_t times_sum = 0;
 
