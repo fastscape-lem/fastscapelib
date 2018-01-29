@@ -68,6 +68,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define PROFILE(type_name, name) class type_name; Profile<type_name> profile_scope_var_ ## type_name ## _sjflfo (name)
 #define PROFILE_COUNT(type_name, name, count) class type_name; Profile<type_name, count> profile_scope_var_ ## type_name ## count ## _sjflfo (name)
+//#define PROFILE(type_name, name)
+//#define PROFILE_COUNT(type_name, name, count)
 
 namespace ns_profile_types {
 
@@ -116,11 +118,11 @@ public:
 
         if(++cur_count == count)
         {
-            /*std::cerr << "Profile " << name_
+            std::cerr << "Profile " << name_
                       << ": min = " << min_
                       << "ms, max = " << max_
                       << "ms, avg = " << sum_ / double(count)
-                      << "ms" << std::endl;*/
+                      << "ms" << std::endl;
             cur_count = 0;
         }
 

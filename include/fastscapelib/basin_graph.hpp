@@ -9,6 +9,7 @@
 #pragma once
 
 #include <vector>
+#include <array>
 #include <limits>
 #include <numeric>
 #include <algorithm>
@@ -176,8 +177,8 @@ private:
     UnionFind_T<Basin_T> basin_uf;
 
     // boruvka
-    std::vector<Elevation_T[2]> link_basins;
-    struct Connect {index_t begin; index_t size;};
+    std::vector<std::array<index_t, 2>> link_basins;
+    struct Connect {index_t begin; size_t size;};
     std::vector<Connect> adjacency;
     struct EdgeParse {index_t link_id; index_t next;};
     std::vector<EdgeParse> adjacency_list;
@@ -331,10 +332,15 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
     low_degrees.reserve(_outlets.size());
     large_degrees.reserve(_outlets.size());
 
+    edge_bucket.resize(_outlets.size(), -1);
+
     // copy link basins
     link_basins.resize(_links.size());
     for(size_t i = 0; i<link_basins.size(); ++i)
-        link_basins[i] = {_links[i].basins[0], _links[i].basins[1]};
+    {
+        link_basins[i][0] = _links[i].basins[0];
+        link_basins[i][1] = _links[i].basins[1];
+    }
 
     // first pass: create edge vector and compute adjacency size
     for (size_t lid = 0; lid < _links.size(); ++lid)
@@ -351,16 +357,16 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
         adjacency[nid-1].size = 0;
     }
 
-    adjacency_list.resize(adjacency.back().begin + adjacency.back().size());
+    adjacency_list.resize(adjacency.back().begin + adjacency.back().size);
     adjacency.back().size = 0;
 
-    for (index_t adj_data_i = 0;  adj_data_i < adjacency_list.size; ++adj_data_i)
+    for (size_t adj_data_i = 0;  adj_data_i < adjacency_list.size(); ++adj_data_i)
         adjacency_list[adj_data_i].next = adj_data_i + 1;
 
     // second pass on edges: fill adjacency list
     for (size_t lid = 0; lid < _links.size(); ++lid)
     {
-        Basin_T* basins = link_basins[lid];
+        auto& basins = link_basins[lid];
 
         adjacency_list[adjacency[basins[0]].begin + adjacency[basins[0]].size].link_id = lid;
         adjacency_list[adjacency[basins[1]].begin + adjacency[basins[1]].size].link_id = lid;
@@ -369,7 +375,8 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
         ++adjacency[basins[1]].size;
     }
 
-    for(size_t nid = 1; nid < _outlets.size(); ++nid)
+
+    for(size_t nid = 0; nid < _outlets.size(); ++nid)
     {
         // if degree is low enough
         if (adjacency[nid].size <= max_low_degree)
@@ -397,14 +404,14 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
 
             // get the minimal weight edge that leaves that node
             index_t found_edge = -1;
-            index_t node_B_id;
+            index_t node_B_id = -1;
             Elevation_T found_edge_weight = std::numeric_limits<Elevation_T>::max();
 
             index_t adjacency_data_ptr = adjacency[nid].begin;
-            for(index_t step = 0; step < adjacency[nid].size; ++step)
+            for(size_t step = 0; step < adjacency[nid].size; ++step)
             {
                 // find next adjacent edge in the list
-                index_t parsed_edge_id = adjacency_list[adjacency_data_ptr].edge_id;
+                index_t parsed_edge_id = adjacency_list[adjacency_data_ptr].link_id;
                 adjacency_data_ptr = adjacency_list[adjacency_data_ptr].next;
 
                 // check if the edge is valid (connected to a existing node)
@@ -432,10 +439,10 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
 
             // rename all A to B in adjacency of A
             adjacency_data_ptr = adjacency[nid].begin;
-            for(index_t step = 0; step < adjacency[nid].size; ++step)
+            for(size_t step = 0; step < adjacency[nid].size; ++step)
             {
                 // find next adjacent edge in the list
-                index_t edge_AC_id = adjacency_list[adjacency_data_ptr].edge_id;
+                index_t edge_AC_id = adjacency_list[adjacency_data_ptr].link_id;
 
                 // TODO optimize that out?
                 if (step != adjacency[nid].size - 1)
@@ -443,26 +450,27 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
 
                 // avoid self loop. A doesn't exist anymore, so edge AB
                 // will be discarded
+
                 if(link_basins[edge_AC_id][0] == nid)
                     link_basins[edge_AC_id][0] = node_B_id;
                 else
                     link_basins[edge_AC_id][1] = node_B_id;
-
-                // Append adjacency of B at the end of A
-                adjacency_list[adjacency_data_ptr].next = adjacency[node_B_id].begin;
-
-                // And collapse A into B
-                adjacency[node_B_id].begin = adjacency[nid].begin;
-                adjacency[node_B_id].size += adjacency[nid].size;
-
-                // Remove the node from the graph
-                adjacency[nid].size = 0;
             }
+
+            // Append adjacency of B at the end of A
+            adjacency_list[adjacency_data_ptr].next = adjacency[node_B_id].begin;
+
+            // And collapse A into B
+            adjacency[node_B_id].begin = adjacency[nid].begin;
+            adjacency[node_B_id].size += adjacency[nid].size;
+
+            // Remove the node from the graph
+            adjacency[nid].size = 0;
         }
 
-        // Clean up graph (many edges are duplicates or self loops).
+        low_degrees.clear();
 
-        // parse large degree in reverse order (easier to remove items)
+        // Clean up graph (many edges are duplicates or self loops).
         int cur_large_degree = 0;
         for (index_t node_A_id : large_degrees)
         {
@@ -478,7 +486,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
                 adjacency_data_ptr = adjacency_list[adjacency_data_ptr].next;
 
                 // find node B
-                size_t node_B_id = link_basins[edge_AB_id][0];
+                index_t node_B_id = link_basins[edge_AB_id][0];
                 if (node_B_id == node_A_id)
                     node_B_id = link_basins[edge_AB_id][1];
 
@@ -527,7 +535,6 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
             // update low degree information, if node A has low degree
             if (adjacency[node_A_id].size <= max_low_degree)
             {
-
                 // add the node in low degree list
                 if (adjacency[node_A_id].size > 0)
                     low_degrees.push_back(node_A_id);
@@ -754,7 +761,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
     else
     {
         PROFILE(u1, "compute_tree_boruvka");
-        compute_tree_kruskal();
+        compute_tree_boruvka();
     }
     {PROFILE(u2, "reorder_tree");
         reorder_tree<false>(elevation);

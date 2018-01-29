@@ -31,7 +31,7 @@ namespace fastscapelib
 namespace detail
 {
 
-inline auto get_d8_distances(double dx, double dy) -> std::array<double, 9>
+inline auto get_d8_distances_inv(double dx, double dy) -> std::array<double, 9>
 {
     std::array<double, 9> d8_dists;
 
@@ -39,7 +39,7 @@ inline auto get_d8_distances(double dx, double dy) -> std::array<double, 9>
     {
         double d8_dx = dx * fs::consts::d8_col_offsets[k];
         double d8_dy = dy * fs::consts::d8_row_offsets[k];
-        d8_dists[k] = std::sqrt(d8_dy*d8_dy + d8_dx*d8_dx);
+        d8_dists[k] = 1.0/std::sqrt(d8_dy*d8_dy + d8_dx*d8_dx);
     }
 
     return d8_dists;
@@ -73,7 +73,7 @@ void compute_receivers_d8(A1& receivers,
                           double dy)
 {
     using elev_t = typename A3::value_type;
-    const auto d8_dists = detail::get_d8_distances(dx, dy);
+    const auto d8_dists = detail::get_d8_distances_inv(dx, dy);
 
     const auto elev_shape = elevation.shape();
     const index_t nrows = (index_t) elev_shape[0];
@@ -103,7 +103,7 @@ void compute_receivers_d8(A1& receivers,
                     continue;
 
                 index_t ineighbor = kr * ncols + kc;
-                double slope = (elevation(inode) - elevation(ineighbor)) / d8_dists[k];
+                double slope = (elevation(inode) - elevation(ineighbor)) * d8_dists[k];
 
                 if(slope > slope_max)
                 {

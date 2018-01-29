@@ -9,12 +9,12 @@
 
 TEST(flow_routing, get_d8_distances)
 {
-    auto d8_dist = fs::detail::get_d8_distances(2., 1.);
+    auto d8_dist = fs::detail::get_d8_distances_inv(2., 1.);
 
     double ddiag = std::sqrt(4 + 1);
 
     std::array<double, 9> expected
-        {0., 1., ddiag, 2., ddiag,  1., ddiag, 2., ddiag};
+        {0., 1., 1.0/ddiag, 1.0/2., 1.0/ddiag,  1., 1.0/ddiag, 1.0/2., 1.0/ddiag};
 
     EXPECT_TRUE(std::equal(d8_dist.begin(), d8_dist.end(),
                            expected.begin(), expected.end()));
