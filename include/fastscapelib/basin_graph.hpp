@@ -10,6 +10,8 @@
 
 #include <vector>
 #include <array>
+#include <queue>
+#include <stack>
 #include <limits>
 #include <numeric>
 #include <algorithm>
@@ -25,6 +27,7 @@ namespace fastscapelib
 {
 
 enum class BasinAlgo {Kruskal, Boruvka};
+enum class ConnectType {Simple, Carved, Sloped};
 
 template <class Basin_T, class Node_T, class Weight_T>
 struct Link
@@ -69,7 +72,7 @@ public:
 
 
 
-    template <BasinAlgo algo,
+    template <BasinAlgo algo, ConnectType connect,
               class Basins_XT, class Rcv_XT, class DistRcv_XT,
               class Stack_XT, class Active_XT, class Elevation_XT>
     void update_receivers(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
@@ -147,13 +150,20 @@ protected:
     template<int max_low_degree = 16> // 16 for d8, 8 for plannar graph
     void compute_tree_boruvka();
 
-    template<bool keep_order, class Elevation_XT>
-    void reorder_tree(const Elevation_XT& elevation);
+    template<bool keep_order>
+    void reorder_tree();
 
     template<class Rcv_XT, class DistRcv_XT, class Elevation_XT>
     void update_pits_receivers(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
                                const Elevation_XT& elevation, double dx, double dy);
-    void update_pits_receivers_continuous();
+
+    template<class Rcv_XT, class DistRcv_XT, class Elevation_XT>
+    void update_pits_receivers_carve(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
+                                     const Elevation_XT& elevation, double dx, double dy);
+
+    template<class Rcv_XT, class DistRcv_XT, class Elevation_XT>
+    void update_pits_receivers_sloped(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
+                                      const Elevation_XT& elevation, double dx, double dy);
 
 
     void fill_sinks_flat();
@@ -193,8 +203,7 @@ private:
     std::vector<std::pair<Basin_T /*node*/, Basin_T /*parent*/>> reorder_stack;
 
     // reoder_tree, keep order
-    std::vector<Link_T> passes;
-    std::vector<Basin_T> basin_stack;
+    std::vector<index_t /*link id*/> pass_stack;
 
     friend class ::BasinGraph_Test;
 
@@ -547,8 +556,8 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::compute_tree_boruvka()
 }
 
 template<class Basin_T, class Node_T, class Elevation_T>
-template<bool keep_order, class Elevation_XT>
-void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree(const Elevation_XT& elevation)
+template<bool keep_order>
+void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree()
 {
     /*Orient the graph (tree) of basins so that the edges are directed in
         the inverse of the flow direction.
@@ -604,11 +613,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree(const Elevation_XT& 
     // compile time if
     if (keep_order)
     {
-        passes.resize(_outlets.size());
-        passes[root] = Link_T::outlink(root, root);
-        basin_stack.reserve(_outlets.size());
-        basin_stack.clear();
-        basin_stack.push_back(root);
+        pass_stack.clear();
     }
 
     while (reorder_stack.size())
@@ -631,34 +636,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree(const Elevation_XT& 
 
                 if (keep_order)
                 {
-                    Link_T& pass = passes[node];
-                    pass = link;
-
-                    if(pass.nodes[0] != -1) //node is not a global min
-                    {
-
-                        Elevation_T pass_height =
-                                std::max(
-                                    elevation[pass.nodes[0]],
-                                /**/elevation[pass.nodes[1]]);
-
-                        // sill is below parent sill and parent is not
-                        // a global min (otherwise flat starting areas are not handled))
-                        if (pass_height <= passes[parent].weight
-                                && passes[parent].nodes[0] != -1)
-                        {
-                            // in particular, basin[0] is set to parent
-                            pass = passes[parent];
-                        }
-                        else
-                        {
-                            basin_stack.push_back(node);
-                            // basin[0] is set to node, meaning that the
-                            // found pass is at water level
-                            pass.basins[0] = node;
-                            pass.weight = pass_height;
-                        }
-                    }
+                    pass_stack.push_back(nodes_adjacency[i]);
                 }
             }
             else
@@ -676,6 +654,39 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree(const Elevation_XT& 
             }
         }
     }
+}
+
+namespace detail
+{
+inline
+auto get_d8_distances_inv_sep(double dx, double dy) -> std::array<double, 9>
+{
+    std::array<double, 9> d8_dists;
+
+    for(size_t k=0; k<9; ++k)
+    {
+        double d8_dx = dx * double(k % 3 -1);
+        double d8_dy = dy * double(k / 3 -1);
+        d8_dists[k] = 1.0/std::sqrt(d8_dy*d8_dy + d8_dx*d8_dx);
+    }
+
+    return d8_dists;
+}
+
+template<class T>
+auto get_d8_distance_id(const T n1r, const T n1c, const T n2r, const T n2c)
+{
+    T r = n1r - n2r +1;
+    T c = n1c - n2c +1;
+    return r + 3*c;
+}
+
+template<class T>
+auto get_d8_distance_id(const T n1, const T n2, const T ncols)
+{
+    return get_d8_distance_id(n1 / ncols, n2 / ncols, n1 %ncols, n2%ncols);
+}
+
 }
 
 template<class Basin_T, class Node_T, class Elevation_T>
@@ -735,7 +746,160 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers(Rcv_XT& rec
 }
 
 template<class Basin_T, class Node_T, class Elevation_T>
-template <BasinAlgo algo,
+template<class Rcv_XT, class DistRcv_XT, class Elevation_XT>
+void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_carve(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
+                                                                           const Elevation_XT& elevation, double dx, double dy)
+{
+    const auto elev_shape = elevation.shape();
+    const index_t nrows = (index_t) elev_shape[0];
+    const index_t ncols = (index_t) elev_shape[1];
+
+    for (index_t l_id : _tree)
+    {
+        Link_T& link = _links[l_id];
+#define OUTFLOW 0 // to
+#define INFLOW  1 // from
+
+        // skip open basins
+        if (link.nodes[OUTFLOW] == -1)
+            continue;
+
+        Node_T outlet_inflow = _outlets[link.basins[INFLOW]];
+        Node_T cur_node = link.nodes[INFLOW];
+        Node_T next_node = receivers(cur_node);
+        Elevation_T previous_dist = dist2receivers[cur_node];
+
+        receivers(cur_node) = link.nodes[OUTFLOW];
+
+        // update distance
+        double delta_x = dx * double(link.nodes[INFLOW] % ncols - link.nodes[OUTFLOW] % ncols);
+        double delta_y = dy * double(link.nodes[INFLOW] / ncols - link.nodes[OUTFLOW] / ncols);
+
+        dist2receivers(link.nodes[INFLOW]) = std::sqrt(delta_x * delta_x + delta_y * delta_y);
+
+        while( cur_node != outlet_inflow)
+        {
+            std::swap(dist2receivers(next_node), previous_dist);
+
+            Node_T rcv_next_node = receivers(next_node);
+            receivers(next_node) = cur_node;
+            cur_node = next_node;
+            next_node = rcv_next_node;
+        }
+    }
+}
+
+template<class Basin_T, class Node_T, class Elevation_T>
+template<class Rcv_XT, class DistRcv_XT, class Elevation_XT>
+void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
+                                                                            const Elevation_XT& elevation, double dx, double dy)
+{
+
+    const auto elev_shape = elevation.shape();
+    const index_t nrows = (index_t) elev_shape[0];
+    const index_t ncols = (index_t) elev_shape[1];
+
+    const auto d8_distances = detail::get_d8_distances_inv_sep(dx, dy);
+
+    std::queue<Node_T> queue;
+    std::stack<Node_T> stack;
+    std::vector<index_t> level (nrows * ncols, -1);
+
+
+    // parse in basin order
+    for(const index_t& pass : pass_stack)
+    {
+        Link_T& l = _links[pass];
+#define OUTFLOW 0 // to
+#define INFLOW  1 // from
+
+        Node_T pass_node = l.nodes[OUTFLOW];
+
+        // case 1 : basin node is above outflow node
+        if (elevation(l.nodes[INFLOW]) > elevation(l.nodes[OUTFLOW]))
+        {
+            receivers[l.nodes[INFLOW]] = l.nodes[OUTFLOW];
+            dist2receivers(l.nodes[INFLOW]) = d8_distances[detail::get_d8_distance_id(l.nodes[INFLOW], l.nodes[OUTFLOW], ncols)];
+            pass_node = l.nodes[INFLOW];
+        }
+
+        if(level[pass_node] == -1)
+        {
+            queue.push(pass_node);
+            level[pass_node] = 0;
+        }
+
+        const Elevation_T elev = elevation(pass_node);
+
+        index_t cur_level = 0;
+
+        while(!queue.empty())
+        {
+            while(!queue.empty())
+            {
+                const Node_T node = queue.front();
+                if (level[node] != cur_level)
+                    break;
+
+                queue.pop();
+                stack.push(node);
+
+                index_t r, c;
+                std::tie(r, c) = detail::coords(node, ncols);
+
+                for(int i = 1; i<5; ++i)
+                {
+                    index_t rr = r + consts::d4_row_offsets[i];
+                    index_t cc = c + consts::d4_row_offsets[i];
+                    if(detail::in_bounds(elev_shape, rr, cc))
+                    {
+                        const Node_T ineighbor = detail::index(rr, cc, ncols);
+                        if(level[ineighbor] == -1 && elevation(ineighbor) < elev)
+                        {
+                            queue.push(ineighbor);
+                            level[ineighbor] = cur_level + 1;
+                            receivers(ineighbor) = node;
+                            dist2receivers(ineighbor) = d8_distances[detail::get_d8_distance_id(r, c, rr, cc)];
+                        }
+                    }
+                }
+            }
+
+            while(!stack.empty())
+            {
+                Node_T node = stack.top();
+                stack.pop();
+
+                index_t r, c;
+                std::tie(r, c) = detail::coords(node, ncols);
+
+                for(int i = 1; i<5; ++i)
+                {
+                    index_t rr = r + consts::d4_row_offsets_cross[i];
+                    index_t cc = c + consts::d4_row_offsets_cross[i];
+                    if(detail::in_bounds(elev_shape, rr, cc))
+                    {
+                        const Node_T ineighbor = detail::index(rr, cc, ncols);
+                        if(level[ineighbor] == -1 && elevation(ineighbor) < elev)
+                        {
+                            queue.push(ineighbor);
+                            level[ineighbor] = cur_level + 2;
+                            receivers(ineighbor) = node;
+                            dist2receivers(ineighbor) = d8_distances[detail::get_d8_distance_id(r, c, rr, cc)];
+                        }
+                    }
+                }
+            }
+
+            cur_level +=2;
+        }
+
+    }
+
+}
+
+template<class Basin_T, class Node_T, class Elevation_T>
+template <BasinAlgo algo, ConnectType connect,
           class Basins_XT, class Rcv_XT, class DistRcv_XT,
           class Stack_XT, class Active_XT, class Elevation_XT>
 void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
@@ -764,10 +928,23 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
         compute_tree_boruvka();
     }
     {PROFILE(u2, "reorder_tree");
-        reorder_tree<false>(elevation);
+        reorder_tree<connect != ConnectType::Sloped>();
     }
     {PROFILE(u3, "update_pits_receivers");
-        update_pits_receivers(receivers, dist2receivers,elevation, dx, dy);
+        switch (connect) {
+        case ConnectType::Simple:
+            update_pits_receivers(receivers, dist2receivers,elevation, dx, dy);
+            break;
+        case ConnectType::Carved:
+            update_pits_receivers_carve(receivers, dist2receivers,elevation, dx, dy);
+            break;
+        case ConnectType::Sloped:
+            update_pits_receivers_sloped(receivers, dist2receivers,elevation, dx, dy);
+            break;
+        default:
+            break;
+        }
+
     }
 }
 

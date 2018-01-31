@@ -66,10 +66,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
-#define PROFILE(type_name, name) class type_name; Profile<type_name> profile_scope_var_ ## type_name ## _sjflfo (name)
-#define PROFILE_COUNT(type_name, name, count) class type_name; Profile<type_name, count> profile_scope_var_ ## type_name ## count ## _sjflfo (name)
-//#define PROFILE(type_name, name)
-//#define PROFILE_COUNT(type_name, name, count)
+//#define PROFILE(type_name, name) class type_name; Profile<type_name> profile_scope_var_ ## type_name ## _sjflfo (name)
+//#define PROFILE_COUNT(type_name, name, count) class type_name; Profile<type_name, count> profile_scope_var_ ## type_name ## count ## _sjflfo (name)
+#define PROFILE(type_name, name)
+#define PROFILE_COUNT(type_name, name, count)
 
 namespace ns_profile_types {
 

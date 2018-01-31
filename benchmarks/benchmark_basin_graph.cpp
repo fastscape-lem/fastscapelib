@@ -5,7 +5,7 @@
 void benchmark_basin_flat_kruskal(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>& active_nodes)
 {
 
-    fs::fill_sinks_flat_basin_graph<fs::BasinAlgo::Kruskal>(elevation, active_nodes, 1.0, 1.0);
+    fs::fill_sinks_flat_basin_graph<fs::BasinAlgo::Kruskal, fs::ConnectType::Sloped>(elevation, active_nodes, 1.0, 1.0);
 
 }
 
@@ -14,7 +14,7 @@ RandomBenchmark::Register register_basin_flat_kruskal("Basin Flat kruskal", benc
 void benchmark_basin_flat_boruvka(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>& active_nodes)
 {
 
-    fs::fill_sinks_flat_basin_graph<fs::BasinAlgo::Boruvka>(elevation, active_nodes, 1.0, 1.0);
+    fs::fill_sinks_flat_basin_graph<fs::BasinAlgo::Boruvka, fs::ConnectType::Carved>(elevation, active_nodes, 1.0, 1.0);
 
 }
 

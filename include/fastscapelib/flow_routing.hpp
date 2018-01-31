@@ -237,7 +237,7 @@ void compute_drainage_area(A1& area,
 }
 
 
-template <BasinAlgo algo, class BasinGraph_T, class Basins_XT, class Rcv_XT,
+template <BasinAlgo algo, ConnectType connect, class BasinGraph_T, class Basins_XT, class Rcv_XT,
           class DistRcv_XT, class NDonnors_XT, class Donnors_XT,
           class Stack_XT, class Active_XT,
           class Elevation_XT>
@@ -258,7 +258,7 @@ void correct_flowrouting(BasinGraph_T& basin_graph, Basins_XT& basins,
     {
         PROFILE_COUNT(t1, "update_receivers", 8);
 
-    basin_graph.template update_receivers<algo>(receivers, dist2receivers, basins, stack,  active_nodes,
+    basin_graph.template update_receivers<algo, connect>(receivers, dist2receivers, basins, stack,  active_nodes,
                                  elevation, dx, dy);
     }
 
@@ -330,7 +330,7 @@ bool check_fill_flat(const Elevation_XT& elevation, const Water_XT& water, const
 }
 
 
-template <BasinAlgo algo,
+template <BasinAlgo algo, ConnectType connect,
         class Elevation_XT, class Active_XT>
 void fill_sinks_flat_basin_graph(Elevation_XT& elevation,
                                  const Active_XT& active_nodes,
@@ -370,7 +370,7 @@ void fill_sinks_flat_basin_graph(Elevation_XT& elevation,
     }
     {
         PROFILE(s3, "correct_flowrouting");
-        correct_flowrouting<algo>(basin_graph, basins, receivers, dist2receivers,
+        correct_flowrouting<algo, connect>(basin_graph, basins, receivers, dist2receivers,
                             ndonors, donors, stack,
                             active_nodes, elevation, dx, dy);
 
