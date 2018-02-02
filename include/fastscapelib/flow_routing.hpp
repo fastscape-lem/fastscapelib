@@ -290,8 +290,8 @@ void fill_sinks_flat(Water_XT& water, const Elevation_XT& elevation, const Stack
     }
 }
 
-template <class Elevation_XT, class Water_XT, class Active_XT>
-bool check_fill_flat(const Elevation_XT& elevation, const Water_XT& water, const Active_XT& active_nodes)
+template <class Elevation_XT, class Water_XT, class Active_XT, class Rcv_XT>
+bool check_fill_flat(const Elevation_XT& elevation, const Water_XT& water, const Active_XT& active_nodes, const Rcv_XT& rcv)
 {
     using elev_t = typename Elevation_XT::value_type;
 
@@ -307,6 +307,12 @@ bool check_fill_flat(const Elevation_XT& elevation, const Water_XT& water, const
 
             if(!active_nodes(inode))
                 continue;
+
+            if(rcv(inode) == inode)
+            {
+                std::cout << "Pits remaining !" << std::endl;
+                return false;
+            }
 
             if(elevation(inode) == water(inode))
                 continue;
@@ -380,13 +386,15 @@ void fill_sinks_flat_basin_graph(Elevation_XT& elevation,
 
     fill_sinks_flat(water, elevation, stack, receivers);
 
-    if(!check_fill_flat(elevation, water, active_nodes))
+    if(!check_fill_flat(elevation, water, active_nodes, receivers))
     {
 
+        std::cout << basins << std::endl;
         std::cout << elevation << std::endl;
         std::cout << water << std::endl;
 
         assert(false);
+        exit(0);
     }
 
 

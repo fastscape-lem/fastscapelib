@@ -19,6 +19,7 @@
 #include "fastscapelib/consts.hpp"
 #include "fastscapelib/union_find.hpp"
 
+#include "assert.h"
 #include "fastscapelib/Profile.h"
 
 class BasinGraph_Test;
@@ -161,9 +162,9 @@ protected:
     void update_pits_receivers_carve(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
                                      const Elevation_XT& elevation, double dx, double dy);
 
-    template<class Rcv_XT, class DistRcv_XT, class Elevation_XT>
+    template<class Rcv_XT, class DistRcv_XT, class Elevation_XT, class Basins_XT>
     void update_pits_receivers_sloped(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
-                                      const Elevation_XT& elevation, double dx, double dy);
+                                      const Elevation_XT& elevation, const Basins_XT&, double dx, double dy);
 
 
     void fill_sinks_flat();
@@ -200,10 +201,12 @@ private:
     std::vector<size_t> nodes_connects_size;
     std::vector<size_t> nodes_connects_ptr;
     std::vector<index_t> nodes_adjacency;
-    std::vector<std::pair<Basin_T /*node*/, Basin_T /*parent*/>> reorder_stack;
+    std::vector<std::tuple<Basin_T /*node*/, Basin_T /*parent*/,
+    /**/    Elevation_T /*pass height */, Elevation_T /* parent pass height */>> reorder_stack;
 
     // reoder_tree, keep order
     std::vector<index_t /*link id*/> pass_stack;
+    std::vector<index_t> parent_basins;
 
     friend class ::BasinGraph_Test;
 
@@ -608,18 +611,23 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree()
     reorder_stack.reserve(_outlets.size());
     reorder_stack.clear();
 
-    reorder_stack.push_back({root, root});
+    reorder_stack.push_back({root, root,
+                             std::numeric_limits<Elevation_T>::min(),
+                             std::numeric_limits<Elevation_T>::min()});
 
     // compile time if
     if (keep_order)
     {
         pass_stack.clear();
+        parent_basins.resize(_outlets.size());
+        parent_basins[root] = root;
     }
 
     while (reorder_stack.size())
     {
         Basin_T node, parent;
-        std::tie(node, parent) = reorder_stack.back();
+        Elevation_T pass_height, parent_pass_height;
+        std::tie(node, parent, pass_height, parent_pass_height) = reorder_stack.back();
         reorder_stack.pop_back();
 
 
@@ -636,7 +644,14 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree()
 
                 if (keep_order)
                 {
-                    pass_stack.push_back(nodes_adjacency[i]);
+                    if(pass_height <= parent_pass_height)
+                        // the pass is bellow the water level of the parent basin
+                        parent_basins[link.basins[1]] = parent_basins[link.basins[0]];
+                    else
+                    {
+                        parent_basins[link.basins[1]] = link.basins[1];
+                        pass_stack.push_back(nodes_adjacency[i]);
+                    }
                 }
             }
             else
@@ -650,7 +665,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree()
                     std::swap(link.nodes[0], link.nodes[1]);
                 }
 
-                reorder_stack.push_back({link.basins[1], node});
+                reorder_stack.push_back({link.basins[1], node, std::max(link.weight, pass_height), pass_height});
             }
         }
     }
@@ -684,7 +699,7 @@ auto get_d8_distance_id(const T n1r, const T n1c, const T n2r, const T n2c)
 template<class T>
 auto get_d8_distance_id(const T n1, const T n2, const T ncols)
 {
-    return get_d8_distance_id(n1 / ncols, n2 / ncols, n1 %ncols, n2%ncols);
+    return get_d8_distance_id(n1 / ncols, n1 %ncols, n2 / ncols, n2%ncols);
 }
 
 }
@@ -709,6 +724,9 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers(Rcv_XT& rec
     const auto elev_shape = elevation.shape();
     const index_t nrows = (index_t) elev_shape[0];
     const index_t ncols = (index_t) elev_shape[1];
+
+    const auto d8_distances = detail::get_d8_distances_inv_sep(dx, dy);
+
 
     for (index_t l_id : _tree)
     {
@@ -736,11 +754,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers(Rcv_XT& rec
             receivers[outlet_inflow] = link.nodes[INFLOW];
             receivers[link.nodes[INFLOW]] = link.nodes[OUTFLOW];
 
-            // update distance
-            double delta_x = dx * double(link.nodes[INFLOW] % ncols - link.nodes[OUTFLOW] % ncols);
-            double delta_y = dy * double(link.nodes[INFLOW] / ncols - link.nodes[OUTFLOW] / ncols);
-
-            dist2receivers[link.nodes[INFLOW]] = std::sqrt(delta_x * delta_x + delta_y * delta_y);
+            dist2receivers(link.nodes[INFLOW]) = d8_distances[detail::get_d8_distance_id(link.nodes[INFLOW], link.nodes[OUTFLOW], ncols)];
         }
     }
 }
@@ -753,6 +767,8 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_carve(Rcv_X
     const auto elev_shape = elevation.shape();
     const index_t nrows = (index_t) elev_shape[0];
     const index_t ncols = (index_t) elev_shape[1];
+
+    const auto d8_distances = detail::get_d8_distances_inv_sep(dx, dy);
 
     for (index_t l_id : _tree)
     {
@@ -770,12 +786,9 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_carve(Rcv_X
         Elevation_T previous_dist = dist2receivers[cur_node];
 
         receivers(cur_node) = link.nodes[OUTFLOW];
+        dist2receivers(cur_node) = d8_distances[detail::get_d8_distance_id(cur_node, link.nodes[OUTFLOW], ncols)];
 
-        // update distance
-        double delta_x = dx * double(link.nodes[INFLOW] % ncols - link.nodes[OUTFLOW] % ncols);
-        double delta_y = dy * double(link.nodes[INFLOW] / ncols - link.nodes[OUTFLOW] / ncols);
-
-        dist2receivers(link.nodes[INFLOW]) = std::sqrt(delta_x * delta_x + delta_y * delta_y);
+        //std::cout << "Pass " << cur_node << " -> " << link.nodes[OUTFLOW] << std::endl;
 
         while( cur_node != outlet_inflow)
         {
@@ -783,6 +796,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_carve(Rcv_X
 
             Node_T rcv_next_node = receivers(next_node);
             receivers(next_node) = cur_node;
+            //std::cout << next_node << " -> " << cur_node << std::endl;
             cur_node = next_node;
             next_node = rcv_next_node;
         }
@@ -790,9 +804,10 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_carve(Rcv_X
 }
 
 template<class Basin_T, class Node_T, class Elevation_T>
-template<class Rcv_XT, class DistRcv_XT, class Elevation_XT>
+template<class Rcv_XT, class DistRcv_XT, class Elevation_XT, class Basins_XT>
 void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
-                                                                            const Elevation_XT& elevation, double dx, double dy)
+                                                                            const Elevation_XT& elevation, const Basins_XT& basins,
+                                                                            double dx, double dy)
 {
 
     const auto elev_shape = elevation.shape();
@@ -806,6 +821,10 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
     std::vector<index_t> level (nrows * ncols, -1);
 
 
+    index_t tag_level = 1;
+    index_t cur_level = 0;
+
+
     // parse in basin order
     for(const index_t& pass : pass_stack)
     {
@@ -813,33 +832,58 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
 #define OUTFLOW 0 // to
 #define INFLOW  1 // from
 
-        Node_T pass_node = l.nodes[OUTFLOW];
 
-        // case 1 : basin node is above outflow node
-        if (elevation(l.nodes[INFLOW]) > elevation(l.nodes[OUTFLOW]))
+        if (l.nodes[OUTFLOW] == -1)
         {
+            continue;
+        }
+
+//        std::cout << '(' << l.nodes[0] << ',' << l.nodes[1] << ") ";
+
+
             receivers[l.nodes[INFLOW]] = l.nodes[OUTFLOW];
             dist2receivers(l.nodes[INFLOW]) = d8_distances[detail::get_d8_distance_id(l.nodes[INFLOW], l.nodes[OUTFLOW], ncols)];
-            pass_node = l.nodes[INFLOW];
-        }
 
-        if(level[pass_node] == -1)
-        {
-            queue.push(pass_node);
-            level[pass_node] = 0;
-        }
+            if (level[l.nodes[INFLOW]] != -1)
+            {
+                std::cout << basins << std::endl;
+                std::cout << elevation << std::endl;
+                for(int i = 0; i< 8; ++i)
+                {
+                    for(int j = 0; j<8; ++j)
+                    std::cout << parent_basins[basins[j+8*i]] << ' ';
+                    std::cout << std::endl;
+                }
+                for(int i = 0; i< 8; ++i)
+                {
+                    for(int j = 0; j<8; ++j)
+                    std::cout << j+8*i << ' ';
+                    std::cout << std::endl;
+                }
+            }
 
-        const Elevation_T elev = elevation(pass_node);
+            assert(level[l.nodes[INFLOW]] == -1);
 
-        index_t cur_level = 0;
+
+
+        queue.push(l.nodes[INFLOW]);
+        level[l.nodes[INFLOW]] = cur_level;
+        const Basin_T parsed_basin = l.basins[INFLOW];
+        assert(parsed_basin == parent_basins[parsed_basin]);
+
+        const Elevation_T elev = l.weight;
 
         while(!queue.empty())
         {
+            bool found = false;
+
             while(!queue.empty())
             {
                 const Node_T node = queue.front();
-                if (level[node] != cur_level)
+                if (level[node] > cur_level)
                     break;
+
+//                std::cout << "Parse Queue node " << node << '(' << level[node]<<'/' << cur_level<< ')' << std::endl;
 
                 queue.pop();
                 stack.push(node);
@@ -850,25 +894,33 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
                 for(int i = 1; i<5; ++i)
                 {
                     index_t rr = r + consts::d4_row_offsets[i];
-                    index_t cc = c + consts::d4_row_offsets[i];
+                    index_t cc = c + consts::d4_col_offsets[i];
                     if(detail::in_bounds(elev_shape, rr, cc))
                     {
                         const Node_T ineighbor = detail::index(rr, cc, ncols);
-                        if(level[ineighbor] == -1 && elevation(ineighbor) < elev)
+                        if(level[ineighbor] == -1 && parent_basins[basins(ineighbor)] == parsed_basin &&  elevation(ineighbor) < elev)
                         {
+ //                           std::cout << "Add " << ineighbor << " to queue " <<tag_level << std::endl;
                             queue.push(ineighbor);
-                            level[ineighbor] = cur_level + 1;
+                            level[ineighbor] = tag_level;
+                            found = true;
                             receivers(ineighbor) = node;
                             dist2receivers(ineighbor) = d8_distances[detail::get_d8_distance_id(r, c, rr, cc)];
                         }
                     }
                 }
             }
+            if(found)
+                ++tag_level;
+            found = false;
 
             while(!stack.empty())
             {
                 Node_T node = stack.top();
                 stack.pop();
+
+//                std::cout << "Parse Stack node " << node << std::endl;
+
 
                 index_t r, c;
                 std::tie(r, c) = detail::coords(node, ncols);
@@ -876,25 +928,31 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
                 for(int i = 1; i<5; ++i)
                 {
                     index_t rr = r + consts::d4_row_offsets_cross[i];
-                    index_t cc = c + consts::d4_row_offsets_cross[i];
+                    index_t cc = c + consts::d4_col_offsets_cross[i];
                     if(detail::in_bounds(elev_shape, rr, cc))
                     {
                         const Node_T ineighbor = detail::index(rr, cc, ncols);
-                        if(level[ineighbor] == -1 && elevation(ineighbor) < elev)
+                        if(level[ineighbor] == -1 && parent_basins[basins(ineighbor)] == parsed_basin && elevation(ineighbor) < elev)
                         {
+ //                           std::cout << "Add " << ineighbor << " to queue " <<tag_level << std::endl;
                             queue.push(ineighbor);
-                            level[ineighbor] = cur_level + 2;
+                            level[ineighbor] = tag_level;
+                            found = true;
                             receivers(ineighbor) = node;
                             dist2receivers(ineighbor) = d8_distances[detail::get_d8_distance_id(r, c, rr, cc)];
                         }
                     }
                 }
             }
-
-            cur_level +=2;
+            if(found)
+                ++tag_level;
+            ++cur_level;
         }
-
+        ++tag_level;
     }
+
+//    std::cout << std::endl;
+
 
 }
 
@@ -928,7 +986,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
         compute_tree_boruvka();
     }
     {PROFILE(u2, "reorder_tree");
-        reorder_tree<connect != ConnectType::Sloped>();
+        reorder_tree<connect == ConnectType::Sloped>();
     }
     {PROFILE(u3, "update_pits_receivers");
         switch (connect) {
@@ -939,7 +997,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
             update_pits_receivers_carve(receivers, dist2receivers,elevation, dx, dy);
             break;
         case ConnectType::Sloped:
-            update_pits_receivers_sloped(receivers, dist2receivers,elevation, dx, dy);
+            update_pits_receivers_sloped(receivers, dist2receivers,elevation,basins, dx, dy);
             break;
         default:
             break;
