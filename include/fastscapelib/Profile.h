@@ -64,7 +64,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#if 0
+#if 1
 #define PROFILE(type_name, name) class type_name; Profile<type_name> profile_scope_var_ ## type_name ## _sjflfo (name)
 #define PROFILE_COUNT(type_name, name, count) class type_name; Profile<type_name, count> profile_scope_var_ ## type_name ## count ## _sjflfo (name)
 #else
@@ -122,8 +122,10 @@ public:
             std::cerr << "Profile " << name_
                       << ": min = " << min_
                       << "ms, max = " << max_
-                      << "ms, avg = " << sum_ / double(count)
-                      << "ms" << std::endl;
+                      << "ms, avg = " << sum_ / double(count);
+            if(cur_count !=1)
+                std::cerr << "mx, total = " << sum_;
+            std::cerr << "ms" << std::endl;
             cur_count = 0;
         }
 

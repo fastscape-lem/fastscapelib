@@ -46,7 +46,6 @@ set(FASTSCAPELIB_BENCHMARK
   random_benchmark.hpp
   benchmark_sinks.cpp
   benchmark_basin_graph.cpp
-  benchmark_v2.cpp
 )
 
 set(FASTSCAPELIB_BENCH_TARGET benchmark_fastscapelib)

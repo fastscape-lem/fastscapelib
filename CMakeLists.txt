@@ -28,6 +28,7 @@ message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 
 set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/fastscapelib.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/bedrock_chanel.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/config.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/consts.hpp
@@ -35,7 +36,6 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_routing.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/basin_graph.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/union_find.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_routing_v2.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/Profile.h
 )
 
