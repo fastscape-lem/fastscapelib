@@ -64,7 +64,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#if 1
+#if 0
 #define PROFILE(type_name, name) class type_name; Profile<type_name> profile_scope_var_ ## type_name ## _sjflfo (name)
 #define PROFILE_COUNT(type_name, name, count) class type_name; Profile<type_name, count> profile_scope_var_ ## type_name ## count ## _sjflfo (name)
 #else

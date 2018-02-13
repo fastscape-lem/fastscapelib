@@ -194,7 +194,6 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::connect_basins (const Basins_XT& 
                                                                const Stack_XT& stack, const Active_XT& active_nodes,
                                                                const Elevation_XT& elevation)
 {
-    PROFILE_COUNT(basins_profile, "Basins", 1);
     _links.clear();
     _links.reserve(4*_outlets.size());
 
