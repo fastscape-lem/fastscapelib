@@ -26,7 +26,8 @@ public:
     class Register
     {
     public:
-        Register(std::string name, std::string type, Func_Type f) {benchmarks[type].push_back({name, f});}
+        Register(std::string name, std::string type, Func_Type f) 
+			{benchmarks[type].push_back({ name, f });}
     };
 
 private:

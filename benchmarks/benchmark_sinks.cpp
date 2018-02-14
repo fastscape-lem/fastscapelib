@@ -1,7 +1,9 @@
 #include "benchmark.hpp"
 #include "random_benchmark.hpp"
+#include "fastscape_benchmark.hpp"
 
 #include "fastscapelib/sinks.hpp"
+#include "fastscapelib/flow_routing.hpp"
 
 
 
@@ -19,3 +21,24 @@ void benchmark_sinks_sloped(xt::xtensor<double, 2>& elevation, xt::xtensor<bool,
 }
 
 RegisterRandom register_sinks_sloped("Sinks Sloped", benchmark_sinks_sloped);
+
+void benchmark_fastscape_sinks(
+	xt::xtensor<index_t, 1>&      stack,
+	xt::xtensor<index_t, 1>&      receivers,
+	xt::xtensor<double, 1>&       dist2receviers,
+	const xt::xtensor<double, 2>& elevation,
+	const xt::xtensor<bool, 2>&   active_nodes,
+	double dx, double dy)
+{
+
+	xt::xtensor<bool, 2> tmp_elevation = elevation;
+	xt::xtensor<index_t, 1> donors(stack.shape());
+	xt::xtensor<index_t, 2> ndonors(std::array<size_t, 2>{stack.shape()[0], 8});
+	fs::fill_sinks_sloped(tmp_elevation);
+	fs::compute_receivers_d8(receivers, dist2receviers, tmp_elevation, active_nodes, dx, dy);
+	fs::compute_donors(ndonors, donors, receivers);
+	fs::compute_stack(stack, ndonors, donors, receivers);
+
+}
+
+RegisterFastscape register_fastscape_sinks("Sinks", benchmark_fastscape_sinks);

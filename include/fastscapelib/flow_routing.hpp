@@ -358,7 +358,7 @@ void fill_sinks_flat_basin_graph(Elevation_XT& elevation,
         PROFILE(s0, "compute_receivers_d8");
         compute_receivers_d8(receivers, dist2receivers,
                              elevation, active_nodes,
-                             1., 1.);
+                             dx, dy);
         //std::cout << receivers << std::endl;
     }
 
