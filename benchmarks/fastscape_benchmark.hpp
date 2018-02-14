@@ -1,11 +1,20 @@
-#ifndef FASTSCAPE_BECHMARK_H
-#define FASTSCAPE_BECHMARK_H
+#pragma once
+
+#include "benchmark.hpp"
+
+#include "xtensor/xtensor.hpp"
+#include <functional>
+
+using FastscapeFunctionType = std::function<void(xt::xtensor<double, 2>&, xt::xtensor<bool, 2>&)>;
+
+void fastscape_run(size_t, size_t, FastscapeFunctionType);
 
 
-class FastscapeBechmark
+class RegisterFastscape
 {
 public:
-    FastscapeBechmark();
-};
+    RegisterFastscape(std::string name, RandomFunctionType func)
+        : _internal(name, "fastscape", std::bind(random_run, std::placeholders::_1, std::placeholders::_2, func)) {}
 
-#endif // FASTSCAPE_BECHMARK_H
+    Benchmark::Register _internal;
+};
