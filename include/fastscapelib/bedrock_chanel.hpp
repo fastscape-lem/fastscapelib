@@ -30,13 +30,13 @@ namespace fastscapelib
 
 template<class Erosion_XT, class Elevation_XT, class Stack_XT,
          class Receivers_XT, class Dist2Receivers_XT,
+         class Area_XT,
          class Float_T = typename Erosion_XT::value_type>
 void erode_spower(Erosion_XT& erosion, const Elevation_XT& elevation, const Stack_XT&stack,
                   const Receivers_XT& receivers, const Dist2Receivers_XT& dist2receivers,
-                 Float_T area, Float_T k, Float_T m, Float_T n, Float_T dt, Float_T tolerance)
+                 const Area_XT& area, Float_T k, Float_T m, Float_T n, Float_T dt, Float_T tolerance)
 {
 
-    const auto global_factor = k * dt * std::pow(area, m);
 
     for (const auto istack : stack)
     {
@@ -49,7 +49,7 @@ void erode_spower(Erosion_XT& erosion, const Elevation_XT& elevation, const Stac
             continue;
         }
 
-        const auto factor = global_factor / std::pow(dist2receivers(istack), n);
+        const auto factor = k * dt * std::pow(area(istack), m) / std::pow(dist2receivers(istack), n);
 
         const auto node_elevation = elevation(istack);
         const auto rcv_elevation = elevation(irec) - erosion(irec);

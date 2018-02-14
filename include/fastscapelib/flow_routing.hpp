@@ -46,22 +46,6 @@ inline auto get_d8_distances_inv(double dx, double dy) -> std::array<double, 9>
 }
 
 
-template<class A1, class A2, class A3>
-void add2stack(index_t& nstack,
-               A1& stack,
-               const A2& ndonors,
-               const A3& donors,
-               index_t inode)
-{
-    for(unsigned short k=0; k<ndonors(inode); ++k)
-    {
-        index_t idonor = donors(inode, k);
-        stack(nstack) = idonor;
-        ++nstack;
-        add2stack(nstack, stack, ndonors, donors, idonor);
-    }
-}
-
 }  // namespace detail
 
 template<class A1, class A2, class A3, class A4>
@@ -150,15 +134,28 @@ void compute_stack(A1& stack,
     index_t nnodes = (index_t) receivers.size();
     index_t nstack = 0;
 
+    std::stack<index_t> tmp;
+
     for(index_t inode=0; inode<nnodes; ++inode)
     {
         if(receivers(inode) == inode)
         {
-            stack(nstack) = inode;
-            ++nstack;
-            detail::add2stack(nstack, stack, ndonors, donors, inode);
+            tmp.push(inode);
+            stack(nstack++) = inode;
+            while(!tmp.empty())
+            {
+                index_t istack = tmp.top();
+                tmp.pop();
+                for(unsigned short k=0; k<ndonors(istack); ++k)
+                {
+                    index_t idonor = donors(istack, k);
+                    stack(nstack++) = idonor;
+                    tmp.push(idonor);
+                }
+            }
         }
     }
+    assert(nstack == nnodes);
 }
 
 
