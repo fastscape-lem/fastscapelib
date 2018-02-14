@@ -1,37 +1,20 @@
 #pragma once
 
-#include "xtensor/xtensor.hpp"
-#include <chrono>
+#include "benchmark.hpp"
 
-class RandomBenchmark
+#include "xtensor/xtensor.hpp"
+#include <functional>
+
+using RandomFunctionType = std::function<void(xt::xtensor<double, 2>&, xt::xtensor<bool, 2>&)>;
+
+void random_run(size_t, size_t, RandomFunctionType);
+
+
+class RegisterRandom
 {
 public:
+    RegisterRandom(std::string name, RandomFunctionType func)
+        : _internal(name, "random", std::bind(random_run, std::placeholders::_1, std::placeholders::_2, func)) {}
 
-    RandomBenchmark() = delete;
-
-    template<class Duration>
-    static void run(size_t nrows, size_t ncols, int num_loops,
-                    Duration max_time, bool pretty_print)
-    {
-        do_run(nrows, ncols, num_loops,
-               std::chrono::duration_cast<std::chrono::nanoseconds>(max_time),
-               pretty_print);
-    }
-
-    using Func_Type = void (*) (xt::xtensor<double, 2>&, xt::xtensor<bool, 2>&);
-
-    class Register
-    {
-    public:
-        Register(std::string name, Func_Type f) {benchmarks.push_back({name, f});}
-    };
-
-private:
-    static void do_run(size_t, size_t, int num_loops,
-                       std::chrono::nanoseconds max_time, bool pretty_print);
-
-private:
-    static std::vector<std::pair<std::string, Func_Type>> benchmarks;
+    Benchmark::Register _internal;
 };
-
-

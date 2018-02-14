@@ -9,7 +9,7 @@ void benchmark_basin_flat_kruskal_simple(xt::xtensor<double, 2>& elevation, xt::
 
 }
 
-RandomBenchmark::Register register_basin_flat_kruskal_simple("Kruskal simple", benchmark_basin_flat_kruskal_simple);
+RegisterRandom register_basin_flat_kruskal_simple("Kruskal simple", benchmark_basin_flat_kruskal_simple);
 
 void benchmark_basin_flat_boruvka_simple(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>& active_nodes)
 {
@@ -18,7 +18,7 @@ void benchmark_basin_flat_boruvka_simple(xt::xtensor<double, 2>& elevation, xt::
 
 }
 
-RandomBenchmark::Register register_basin_flat_boruvka("Boruvka simple", benchmark_basin_flat_boruvka_simple);
+RegisterRandom register_basin_flat_boruvka("Boruvka simple", benchmark_basin_flat_boruvka_simple);
 
 void benchmark_basin_flat_kruskal_carved(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>& active_nodes)
 {
@@ -27,7 +27,7 @@ void benchmark_basin_flat_kruskal_carved(xt::xtensor<double, 2>& elevation, xt::
 
 }
 
-RandomBenchmark::Register register_basin_flat_kruskal_carved("Kruskal carved", benchmark_basin_flat_kruskal_carved);
+RegisterRandom register_basin_flat_kruskal_carved("Kruskal carved", benchmark_basin_flat_kruskal_carved);
 
 void benchmark_basin_flat_boruvka_carved(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>& active_nodes)
 {
@@ -36,7 +36,7 @@ void benchmark_basin_flat_boruvka_carved(xt::xtensor<double, 2>& elevation, xt::
 
 }
 
-RandomBenchmark::Register register_basin_flat_boruvka_carved("Boruvka carved", benchmark_basin_flat_boruvka_carved);
+RegisterRandom register_basin_flat_boruvka_carved("Boruvka carved", benchmark_basin_flat_boruvka_carved);
 
 void benchmark_basin_flat_kruskal_sloped(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>& active_nodes)
 {
@@ -45,7 +45,7 @@ void benchmark_basin_flat_kruskal_sloped(xt::xtensor<double, 2>& elevation, xt::
 
 }
 
-RandomBenchmark::Register register_basin_flat_kruskal_sloped("Kruskal sloped", benchmark_basin_flat_kruskal_sloped);
+RegisterRandom register_basin_flat_kruskal_sloped("Kruskal sloped", benchmark_basin_flat_kruskal_sloped);
 
 void benchmark_basin_flat_boruvka_sloped(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>& active_nodes)
 {
@@ -54,4 +54,4 @@ void benchmark_basin_flat_boruvka_sloped(xt::xtensor<double, 2>& elevation, xt::
 
 }
 
-RandomBenchmark::Register register_basin_flat_boruvka_sloped("Boruvka sloped", benchmark_basin_flat_boruvka_sloped);
+RegisterRandom register_basin_flat_boruvka_sloped("Boruvka sloped", benchmark_basin_flat_boruvka_sloped);

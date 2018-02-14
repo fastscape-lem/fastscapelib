@@ -42,8 +42,12 @@ include_directories(${FASTSCAPELIB_INCLUDE_DIR})
 
 set(FASTSCAPELIB_BENCHMARK
   main.cpp
+  benchmark.cpp
+  benchmark.hpp
   random_benchmark.cpp
   random_benchmark.hpp
+  fastscape_benchmark.cpp
+  fastscape_benchmark.hpp
   benchmark_sinks.cpp
   benchmark_basin_graph.cpp
 )
