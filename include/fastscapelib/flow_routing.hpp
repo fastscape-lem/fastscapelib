@@ -31,6 +31,20 @@ namespace fastscapelib
 namespace detail
 {
 
+inline auto get_d8_distances(double dx, double dy) -> std::array<double, 9>
+{
+    std::array<double, 9> d8_dists;
+
+    for(size_t k=0; k<9; ++k)
+    {
+        double d8_dx = dx * fs::consts::d8_col_offsets[k];
+        double d8_dy = dy * fs::consts::d8_row_offsets[k];
+        d8_dists[k] = std::sqrt(d8_dy*d8_dy + d8_dx*d8_dx);
+    }
+
+    return d8_dists;
+}
+
 inline auto get_d8_distances_inv(double dx, double dy) -> std::array<double, 9>
 {
     std::array<double, 9> d8_dists;
@@ -57,7 +71,9 @@ void compute_receivers_d8(A1& receivers,
                           double dy)
 {
     using elev_t = typename A3::value_type;
-    const auto d8_dists = detail::get_d8_distances_inv(dx, dy);
+    const auto d8_dists = detail::get_d8_distances(dx, dy);
+    const auto d8_dists_inv = detail::get_d8_distances_inv(dx, dy);
+
 
     const auto elev_shape = elevation.shape();
     const index_t nrows = (index_t) elev_shape[0];
@@ -87,7 +103,7 @@ void compute_receivers_d8(A1& receivers,
                     continue;
 
                 index_t ineighbor = kr * ncols + kc;
-                double slope = (elevation(inode) - elevation(ineighbor)) * d8_dists[k];
+                double slope = (elevation(inode) - elevation(ineighbor)) * d8_dists_inv[k];
 
                 if(slope > slope_max)
                 {
@@ -188,7 +204,7 @@ index_t compute_pits(A1& pits,
 
     for(index_t ibasin=0; ibasin<nbasins; ++ibasin)
     {
-        index_t inode = outlets(ibasin);
+        index_t inode = outlets[ibasin];
 
         if(active_nodes(inode))
         {
@@ -247,10 +263,13 @@ void correct_flowrouting(BasinGraph_T& basin_graph, Basins_XT& basins,
                          typename Elevation_XT::value_type dx,
                          typename Elevation_XT::value_type dy)
 {
+//    std::cout << elevation << std::endl;
+//    std::cout << receivers << std::endl;
+
     {
         PROFILE_COUNT(t0, "compute_basins", 8);
     basin_graph.compute_basins(basins, stack, receivers);
-    //std::cout << basins << std::endl;
+//    std::cout << basins << std::endl;
     }
     {
         PROFILE_COUNT(t1, "update_receivers", 8);

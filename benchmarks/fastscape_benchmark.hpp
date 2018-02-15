@@ -1,7 +1,7 @@
 #pragma once
 
 #include "benchmark.hpp"
-#include "fastscapelib\utils.hpp"
+#include "fastscapelib/utils.hpp"
 
 #include "xtensor/xtensor.hpp"
 

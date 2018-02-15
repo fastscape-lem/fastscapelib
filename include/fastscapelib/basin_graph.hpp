@@ -659,7 +659,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree()
 namespace detail
 {
 inline
-auto get_d8_distances_inv_sep(double dx, double dy) -> std::array<double, 9>
+auto get_d8_distances_sep(double dx, double dy) -> std::array<double, 9>
 {
     std::array<double, 9> d8_dists;
 
@@ -667,7 +667,7 @@ auto get_d8_distances_inv_sep(double dx, double dy) -> std::array<double, 9>
     {
         double d8_dx = dx * double(k % 3 -1);
         double d8_dy = dy * double(k / 3 -1);
-        d8_dists[k] = 1.0/std::sqrt(d8_dy*d8_dy + d8_dx*d8_dx);
+        d8_dists[k] = std::sqrt(d8_dy*d8_dy + d8_dx*d8_dx);
     }
 
     return d8_dists;
@@ -710,7 +710,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers(Rcv_XT& rec
     const index_t nrows = (index_t) elev_shape[0];
     const index_t ncols = (index_t) elev_shape[1];
 
-    const auto d8_distances = detail::get_d8_distances_inv_sep(dx, dy);
+    const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
 
 
     for (index_t l_id : _tree)
@@ -753,7 +753,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_carve(Rcv_X
     const index_t nrows = (index_t) elev_shape[0];
     const index_t ncols = (index_t) elev_shape[1];
 
-    const auto d8_distances = detail::get_d8_distances_inv_sep(dx, dy);
+    const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
 
     for (index_t l_id : _tree)
     {
@@ -799,7 +799,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
     const index_t nrows = (index_t) elev_shape[0];
     const index_t ncols = (index_t) elev_shape[1];
 
-    const auto d8_distances = detail::get_d8_distances_inv_sep(dx, dy);
+    const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
 
     std::queue<Node_T> queue;
     std::stack<Node_T> stack;
@@ -951,17 +951,17 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
 {
     {PROFILE(u0, "connect_basins");
         connect_basins(basins, receivers, stack, active_nodes, elevation);
-        /*for(auto l : _links)
-            std::cout << "[(" << l.basins[0] << ',' <<l.basins[1]<<")("
-                      << l.nodes[0] << ',' <<l.nodes[1]<<") "<< l.weight << "] ";
-        std::cout << std::endl;*/
+//        for(auto l : _links)
+//            std::cout << "[(" << l.basins[0] << ',' <<l.basins[1]<<")("
+//                      << l.nodes[0] << ',' <<l.nodes[1]<<") "<< l.weight << "] ";
+//        std::cout << std::endl;
     }
     if (algo == BasinAlgo::Kruskal)
     {PROFILE(u1, "compute_tree_kruskal");
         compute_tree_kruskal();
-        /*for(auto t : _tree)
-            std::cout << "(" << _links[t].basins[0] << ',' <<_links[t].basins[1]<<")";
-        std::cout << std::endl;*/
+//        for(auto t : _tree)
+//            std::cout << "(" << _links[t].basins[0] << ',' <<_links[t].basins[1]<<")";
+//        std::cout << std::endl;
     }
     else
     {
@@ -985,6 +985,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_receivers(
         default:
             break;
         }
+        //std::cout << receivers << '\n' << dist2receivers << std::endl;
 
     }
 }

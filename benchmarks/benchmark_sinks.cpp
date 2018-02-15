@@ -31,13 +31,29 @@ void benchmark_fastscape_sinks(
 	double dx, double dy)
 {
 
-	xt::xtensor<bool, 2> tmp_elevation = elevation;
-	xt::xtensor<index_t, 1> donors(stack.shape());
-	xt::xtensor<index_t, 2> ndonors(std::array<size_t, 2>{stack.shape()[0], 8});
+    //std::cout<< elevation << std::endl;
+
+    xt::xtensor<double, 2> tmp_elevation = elevation;
+    xt::xtensor<index_t, 1> ndonors(stack.shape());
+    xt::xtensor<index_t, 2> donors(std::array<size_t, 2>{stack.shape()[0], 8});
 	fs::fill_sinks_sloped(tmp_elevation);
+
+    //std::cout<< tmp_elevation << std::endl;
+
+
 	fs::compute_receivers_d8(receivers, dist2receviers, tmp_elevation, active_nodes, dx, dy);
+
+    //std::cout<< receivers << std::endl;
+
 	fs::compute_donors(ndonors, donors, receivers);
+
+    //std::cout<< ndonors << std::endl;
+    //std::cout<< donors << std::endl;
+
+
 	fs::compute_stack(stack, ndonors, donors, receivers);
+
+
 
 }
 
