@@ -44,6 +44,7 @@ set(FASTSCAPELIB_BENCHMARK
   main.cpp
   benchmark.cpp
   benchmark.hpp
+  dbg_output.hpp
   random_benchmark.cpp
   random_benchmark.hpp
   fastscape_benchmark.cpp

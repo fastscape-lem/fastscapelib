@@ -57,4 +57,4 @@ void benchmark_fastscape_sinks(
 
 }
 
-RegisterFastscape register_fastscape_sinks("Sinks", benchmark_fastscape_sinks);
+//RegisterFastscape register_fastscape_sinks("Sinks", benchmark_fastscape_sinks);

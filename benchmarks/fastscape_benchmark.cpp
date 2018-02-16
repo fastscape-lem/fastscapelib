@@ -5,6 +5,8 @@
 
 #include "xtensor/xrandom.hpp"
 
+#include "dbg_output.hpp"
+
 void fastscape_run(size_t nrows, size_t ncols, FastscapeFunctionType func)
 {
     const double dx = 100.0;
@@ -17,7 +19,7 @@ void fastscape_run(size_t nrows, size_t ncols, FastscapeFunctionType func)
     const double dt = 1000.0;
     const double tolerance = 1e-3;
 
-    const int nsteps = 10;
+    const int nsteps = 30;
 
     std::array<size_t, 2> shape = { nrows, ncols };
     std::array<size_t, 1> shape1D = { nrows * ncols };
@@ -52,6 +54,9 @@ void fastscape_run(size_t nrows, size_t ncols, FastscapeFunctionType func)
 
     for (int step_count = 0; step_count < nsteps; ++step_count)
     {
+
+        dbg_out("out/elevation", step_count, elevation, shape);
+
         // apply uplift
         elevation += active_nodes * dt * uplift_rate;
 
