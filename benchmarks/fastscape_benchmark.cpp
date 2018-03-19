@@ -77,13 +77,61 @@ void fastscape_run(size_t nrows, size_t ncols, FastscapeFunctionType func)
             std::cout << step_count << " " << npits << std::endl;
 
             if( step_count && npits)
-            {std::cerr << "err\n";
+            {std::cout << "err\n";
             }
 
         }
 
         // compute stack
         func(stack, receivers, dist2receivers, elevation, active_nodes, dx, dy);
+
+        //check if receivers are neighbors.
+        for(int i = 0; i<receivers.shape()[0]; ++i)
+            if(active_nodes(i))
+            {
+                int64_t rid = receivers(i);
+
+                auto x = i%ncols;
+                auto y = i/ncols;
+
+                auto rx = rid%ncols;
+                auto ry = rid/ncols;
+
+                if(x == rx && y == ry)
+                {
+                    std::cout << i << "(" << x << "," << y << ") -> "
+                              << rid << std::endl;
+                    std::abort();
+                }
+
+                if(x == rx)
+                {
+                    if(dist2receivers(i) != dy)
+                    {
+                        std::cout << i << " " << dist2receivers(i) << ' ' << dx << ' ' << dy << std::endl;
+                        std::abort();
+                    }
+                    assert(y == ry-1 || y == ry+1);
+                }
+                else if (y == ry)
+                {
+                    assert(dist2receivers(i) == dx);
+                    assert(x == rx-1 || x == rx+1);
+                }
+                else
+                {
+                    assert(x == rx-1 || x == rx+1);
+                    assert(y == ry-1 || y == ry+1);
+
+                    if(dist2receivers(i) != std::sqrt(dx*dx+dy*dy))
+                    {
+                        std::cout << i << " " << dist2receivers(i) << ' ' << std::sqrt(dx*dx+dy*dy) << std::endl;
+                        std::abort();
+                    }
+                }
+
+
+            }
 
         // update drainage area
         area = xt::ones<index_t>({ nrows*ncols }) * cell_area;

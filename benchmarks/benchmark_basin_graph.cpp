@@ -89,9 +89,9 @@ void benchmark_fastscape_basin(
 		ndonors, donors, stack, active_nodes, elevation, dx, dy);
 }
 
-RegisterFastscape register_fastscape_basin_ks("Kruskal simple", benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Simple>);
+//RegisterFastscape register_fastscape_basin_ks("Kruskal simple", benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Simple>);
 //RegisterFastscape register_fastscape_basin_bs("Boruvka simple", benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Simple>);
-//RegisterFastscape register_fastscape_basin_kc("Kruskal carved", benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Carved>);
-//RegisterFastscape register_fastscape_basin_bc("Boruvka carved", benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Carved>);
-//RegisterFastscape register_fastscape_basin_ksl("Kruskal sloped", benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Sloped>);
-//RegisterFastscape register_fastscape_basin_bsl("Boruvka sloped", benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Sloped>);
+RegisterFastscape register_fastscape_basin_kc("Kruskal carved", benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Carved>);
+RegisterFastscape register_fastscape_basin_bc("Boruvka carved", benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Carved>);
+RegisterFastscape register_fastscape_basin_ksl("Kruskal sloped", benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Sloped>);
+RegisterFastscape register_fastscape_basin_bsl("Boruvka sloped", benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Sloped>);

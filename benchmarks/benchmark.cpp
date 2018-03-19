@@ -47,8 +47,13 @@ void Benchmark::do_run(std::string type, size_t nrows, size_t ncols, int num_loo
                              std::chrono::nanoseconds max_time, bool pretty_print)
 {
 
+
+
     for(auto F : benchmarks[type])
     {
+
+         std::cout << F.first << std::endl;
+
         xt::random::seed(1);
 
         std::vector<int64_t> times;
