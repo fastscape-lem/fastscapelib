@@ -109,8 +109,21 @@ void compute_receivers_d8(A1& receivers,
 }
 
 
-template<class A1, class A2, class A3>
-void compute_donors(A1& ndonors, A2& donors, const A3& receivers)
+/**
+ * Compute flow donors for each grid node.
+ *
+ * Flow donors are retrieved by simply inverting flow
+ * receivers.
+ *
+ * @param[out]  ndonors    Number of flow donors at grid node.
+ *                           [ shape=(nnodes) ]
+ * @param[out]  donors     Indexes of flow donors at grid node.
+ *                           [ shape=(nnodes, :) ]
+ * @param[in]   receivers  Index of flow receiver at grid node.
+ *                           [ shape=(nnodes) ]
+ */
+template<class XT_N, class XT_D, class XT_R>
+void compute_donors(XT_N& ndonors, XT_D& donors, const XT_R& receivers)
 {
     index_t nnodes = (index_t) receivers.size();
 
@@ -127,12 +140,26 @@ void compute_donors(A1& ndonors, A2& donors, const A3& receivers)
     }
 }
 
-
-template<class A1, class A2, class A3, class A4>
-void compute_stack(A1& stack,
-                   const A2& ndonors,
-                   const A3& donors,
-                   const A4& receivers)
+/**
+ * Compute a stack of grid nodes in a flow consistent order.
+ *
+ * The stack is calculated recursively from outlets (or sinks) to
+ * sources, using Braun & Willet's (2013) algorithm.
+ *
+ * @param[out]  stack      Stack-ordered node indexes.
+ *                           [ shape=(nnodes) ]
+ * @param[in]   ndonors    Number of flow donors at grid node.
+ *                           [ shape=(nnodes) ]
+ * @param[in]   donors     Indexes of flow donors at grid node.
+ *                           [ shape=(nnodes, :) ]
+ * @param[in]   receivers  Index of flow receiver at grid node.
+ *                           [ shape=(nnodes) ]
+ */
+template<class XT_S, class XT_N, class XT_D, class XT_R>
+void compute_stack(XT_S& stack,
+                   const XT_N& ndonors,
+                   const XT_D& donors,
+                   const XT_R& receivers)
 {
     index_t nnodes = (index_t) receivers.size();
     index_t nstack = 0;
