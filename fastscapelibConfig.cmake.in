@@ -1,9 +1,9 @@
 # fastscapelib cmake module
 # This module sets the following variables in your project::
 #
-#   xtensor_FOUND - true if fastscapelib is found on the system
-#   xtensor_INCLUDE_DIRS - the directory containing fastscapelib headers
-#   xtensor_LIBRARY - empty
+#   fastscapelib_FOUND - true if fastscapelib is found on the system
+#   fastscapelib_INCLUDE_DIRS - the directory containing fastscapelib headers
+#   fastscapelib_LIBRARY - empty
 
 @PACKAGE_INIT@
 
