@@ -12,6 +12,7 @@
 
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xadapt.hpp"
+#include "xtensor/xstrided_view.hpp"
 
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/consts.hpp"
@@ -289,15 +290,14 @@ index_t compute_pits(A1& pits,
                      const A3& active_nodes,
                      index_t nbasins)
 {
-    //TODO: works whether active_nodes is 1-d or 2-d but not safe!
-    //      see xtensor issue #588
     index_t ipit = 0;
+    auto active_nodes_flat = xt::flatten(active_nodes);
 
     for(index_t ibasin=0; ibasin<nbasins; ++ibasin)
     {
         index_t inode = outlets(ibasin);
 
-        if(active_nodes(inode))
+        if(active_nodes_flat(inode))
         {
             pits(ipit) = inode;
             ++ipit;
@@ -332,10 +332,7 @@ void compute_drainage_area(A1& area,
 {
     std::fill(area.begin(), area.end(), dx * dy);
 
-    //TODO: replace with safe/clean way to get flatten view in xtensor.
-    //      (see xtensor issues #322 #324 #588).
-    auto area_flat = xt::adapt(area.data(),
-                               std::array<size_t, 1>{ stack.size() });
+    auto area_flat = xt::flatten(area);
 
     compute_drainage_area(area_flat, stack, receivers);
 }
