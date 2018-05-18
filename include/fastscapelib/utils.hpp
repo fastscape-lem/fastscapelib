@@ -6,9 +6,14 @@
 
 #include <cstdint>
 
+#include "xtensor/xexpression.hpp"
+
 
 // type used for indexing arrays and array sizes.
 using index_t = int64_t;
+
+template<typename T>
+using xtensor_t = xt::xexpression<T>;
 
 
 namespace fastscapelib

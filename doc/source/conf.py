@@ -184,7 +184,7 @@ texinfo_documents = [
 
 # -- Breathe configuration -------------------------------------------------
 
-breathe_projects = {'fastscapelib': '../xml'}
+breathe_projects = {'fastscapelib': '../_xml'}
 
 
 # -- Options for intersphinx extension ---------------------------------------
