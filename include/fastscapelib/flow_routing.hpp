@@ -99,15 +99,10 @@ void compute_receivers_d8(xtensor_t<R>& receivers,
                           double dx,
                           double dy)
 {
-    R& d_receivers = receivers.derived_cast();
-    D& d_dist2receivers = dist2receivers.derived_cast();
-    const E& d_elevation = elevation.derived_cast();
-    const A& d_active_nodes = active_nodes.derived_cast();
-
     using elev_t = typename E::value_type;
     const auto d8_dists = detail::get_d8_distances(dx, dy);
 
-    const auto elev_shape = d_elevation.shape();
+    const auto elev_shape = elevation.shape();
     const index_t nrows = (index_t) elev_shape[0];
     const index_t ncols = (index_t) elev_shape[1];
 
@@ -117,10 +112,10 @@ void compute_receivers_d8(xtensor_t<R>& receivers,
         {
             index_t inode = r * ncols + c;
 
-            d_receivers(inode) = inode;
-            d_dist2receivers(inode) = 0.;
+            receivers(inode) = inode;
+            dist2receivers(inode) = 0.;
 
-            if(!d_active_nodes(r, c))
+            if(!active_nodes(r, c))
             {
                 continue;
             }
@@ -138,13 +133,13 @@ void compute_receivers_d8(xtensor_t<R>& receivers,
                 }
 
                 index_t ineighbor = kr * ncols + kc;
-                double slope = (d_elevation(r, c) - d_elevation(kr, kc)) / d8_dists[k];
+                double slope = (elevation(r, c) - elevation(kr, kc)) / d8_dists[k];
 
                 if(slope > slope_max)
                 {
                     slope_max = slope;
-                    d_receivers(inode) = ineighbor;
-                    d_dist2receivers(inode) = d8_dists[k];
+                    receivers(inode) = ineighbor;
+                    dist2receivers(inode) = d8_dists[k];
                 }
             }
         }
@@ -207,21 +202,16 @@ void compute_stack(xtensor_t<S>& stack,
                    const xtensor_t<D>& donors,
                    const xtensor_t<R>& receivers)
 {
-    S& d_stack = stack.derived_cast();
-    const N& d_ndonors = ndonors.derived_cast();
-    const D& d_donors = donors.derived_cast();
-    const R& d_receivers = receivers.derived_cast();
-
-    index_t nnodes = (index_t) d_receivers.size();
+    index_t nnodes = (index_t) receivers.size();
     index_t nstack = 0;
 
     for(index_t inode=0; inode<nnodes; ++inode)
     {
-        if(d_receivers(inode) == inode)
+        if(receivers(inode) == inode)
         {
-            d_stack(nstack) = inode;
+            stack(nstack) = inode;
             ++nstack;
-            detail::add2stack(nstack, d_stack, d_ndonors, d_donors, inode);
+            detail::add2stack(nstack, stack, ndonors, donors, inode);
         }
     }
 }

@@ -12,8 +12,9 @@
 // type used for indexing arrays and array sizes.
 using index_t = int64_t;
 
-template<typename T>
-using xtensor_t = xt::xexpression<T>;
+
+template<typename D>
+using xtensor_t = xt::xcontainer<D>;
 
 
 namespace fastscapelib
