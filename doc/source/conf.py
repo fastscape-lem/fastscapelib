@@ -192,5 +192,6 @@ breathe_projects = {'fastscapelib': '../_xml'}
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python': ('https://docs.python.org/', None),
-    'xtensor': ('https://xtensor.readthedocs.io/en/latest/', None)
+    'xtensor': ('https://xtensor.readthedocs.io/en/latest/', None),
+    'xtensor-python': ('https://xtensor-python.readthedocs.io/en/latest/', None)
 }
