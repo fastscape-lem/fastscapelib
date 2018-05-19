@@ -42,11 +42,11 @@ namespace detail
     }
 
 
-    template<class D1, class D2, class D3>
+    template<class S, class N, class D>
     void add2stack(index_t& nstack,
-                   D1& stack,
-                   const D2& ndonors,
-                   const D3& donors,
+                   xtensor_t<S>& stack,
+                   const xtensor_t<N>& ndonors,
+                   const xtensor_t<D>& donors,
                    index_t inode)
     {
         for(unsigned short k=0; k<ndonors(inode); ++k)
@@ -153,17 +153,17 @@ void compute_receivers_d8(xtensor_t<R>& receivers,
  * Flow donors are retrieved by simply inverting flow
  * receivers.
  *
- * @param[out]  ndonors    Number of flow donors at grid node.
- *                           ``[shape=(nnodes)]``
- * @param[out]  donors     Indexes of flow donors at grid node.
- *                           ``[shape=(nnodes, :)]``
- * @param[in]   receivers  Index of flow receiver at grid node.
- *                           ``[shape=(nnodes)]``
+ * @param ndonors : ``[intent=out, shape=(nnodes)]``
+ *     Number of flow donors at grid node.
+ * @param donors : ``[intent=out, shape=(nnodes, :)]``
+ *     Indexes of flow donors at grid node.
+ * @param receivers : ``[intent=in, shape=(nnodes)]``
+ *     Index of flow receiver at grid node.
  */
-template<class Xndonors, class Xdonors, class Xrec>
-void compute_donors(Xndonors& ndonors,
-                    Xdonors& donors,
-                    const Xrec& receivers)
+template<class N, class D, class R>
+void compute_donors(xtensor_t<N>& ndonors,
+                    xtensor_t<D>& donors,
+                    const xtensor_t<R>& receivers)
 {
     index_t nnodes = (index_t) receivers.size();
 
@@ -234,18 +234,19 @@ void compute_stack(xtensor_t<S>& stack,
  * catchment outlets (or pits) and returns the total number of
  * catchments found inside the domain.
  *
- * @param[out]  basins           Basin id at grid node.
- *                                 ``[shape=(nnodes)]``
- * @param[out]  outlets_or_pits  Grid node index of the outlet (or pit)
- *                               for basin id=0,1,...,nbasins-1.
- *                                 ``[shape=(nnodes)]``
- * @param[out]  stack            Stack position at grid node.
- *                                 ``[shape=(nnodes)]``
- * @param[in]   receivers        Index of flow receiver at grid node.
- *                                 ``[shape=(nnodes)]``
+ * @param basins: ``[intent=out, shape=(nnodes)]``
+ *     Basin id at grid node.
+ * @param outlets_or_pits : ``[intent=out, shape=(nnodes)]``
+ *     Grid node index of the outlet (or pit)
+ *     for basin id=0,1,...,nbasins-1.
+ * @param stack :``[intent=in, shape=(nnodes)]``
+ *     Stack position at grid node.
+ * @param receivers : ``[intent=in, shape=(nnodes)]``
+ *     Index of flow receiver at grid node.
  *
- * @returns  Total number of drainage basins
- *           (``1 <= nbasins <= nnodes``).
+ * @returns
+ *     Total number of drainage basins
+ *     (``1 <= nbasins <= nnodes``).
  */
 template<class Xbasins, class Xoutlets, class Xstack, class Xrec>
 index_t compute_basins(Xbasins& basins,
