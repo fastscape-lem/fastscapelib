@@ -30,7 +30,7 @@ namespace detail
     {
         std::array<double, 9> d8_dists;
 
-        for(size_t k=0; k<9; ++k)
+        for(unsigned short k=0; k<9; ++k)
         {
             d8_dists[k] = std::sqrt(
                 std::pow(dy * fs::consts::d8_row_offsets[k], 2.0) +
@@ -102,8 +102,8 @@ void compute_receivers_d8(xtensor_t<R>& receivers,
     const auto d8_dists = detail::get_d8_distances(dx, dy);
 
     const auto elev_shape = elevation.shape();
-    const index_t nrows = (index_t) elev_shape[0];
-    const index_t ncols = (index_t) elev_shape[1];
+    const index_t nrows = static_cast<index_t>(elev_shape[0]);
+    const index_t ncols = static_cast<index_t>(elev_shape[1]);
 
     for(index_t r=0; r<nrows; ++r)
     {
@@ -121,7 +121,7 @@ void compute_receivers_d8(xtensor_t<R>& receivers,
 
             double slope_max = std::numeric_limits<double>::min();
 
-            for(size_t k=1; k<=8; ++k)
+            for(unsigned short k=1; k<=8; ++k)
             {
                 index_t kr = r + fs::consts::d8_row_offsets[k];
                 index_t kc = c + fs::consts::d8_col_offsets[k];
@@ -164,7 +164,7 @@ void compute_donors(xtensor_t<N>& ndonors,
                     xtensor_t<D>& donors,
                     const xtensor_t<R>& receivers)
 {
-    index_t nnodes = (index_t) receivers.size();
+    index_t nnodes = static_cast<index_t>(receivers.size());
 
     std::fill(ndonors.begin(), ndonors.end(), 0);
 
@@ -201,7 +201,7 @@ void compute_stack(xtensor_t<S>& stack,
                    const xtensor_t<D>& donors,
                    const xtensor_t<R>& receivers)
 {
-    index_t nnodes = (index_t) receivers.size();
+    index_t nnodes = static_cast<index_t>(receivers.size());
     index_t nstack = 0;
 
     for(index_t inode=0; inode<nnodes; ++inode)

@@ -75,8 +75,8 @@ namespace detail
     {
         auto elev_shape = elevation.shape();
 
-        index_t nrows = (index_t) elev_shape[0];
-        index_t ncols = (index_t) elev_shape[1];
+        index_t nrows = static_cast<index_t>(elev_shape[0]);
+        index_t ncols = static_cast<index_t>(elev_shape[1]);
 
         auto place_node = [&](index_t row, index_t col)
         {

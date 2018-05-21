@@ -31,8 +31,8 @@ namespace detail
 template<class S>
 bool in_bounds(const S& shape, index_t row, index_t col)
 {
-    if(row >= 0 && row < (index_t) shape[0]
-       && col >= 0 && col < (index_t) shape[1])
+    if(row >= 0 && row < static_cast<index_t>(shape[0])
+       && col >= 0 && col < static_cast<index_t>(shape[1]))
     {
         return true;
     }
