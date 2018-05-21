@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "xtensor/xexpression.hpp"
+#include "xtensor/xcontainer.hpp"
 
 
 // type used for indexing arrays and array sizes.

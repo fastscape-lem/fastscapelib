@@ -11,7 +11,6 @@
 #include <array>
 
 #include "xtensor/xtensor.hpp"
-#include "xtensor/xadapt.hpp"
 #include "xtensor/xstrided_view.hpp"
 
 #include "fastscapelib/utils.hpp"
@@ -248,11 +247,11 @@ void compute_stack(xtensor_t<S>& stack,
  *     Total number of drainage basins
  *     (``1 <= nbasins <= nnodes``).
  */
-template<class Xbasins, class Xoutlets, class Xstack, class Xrec>
-index_t compute_basins(Xbasins& basins,
-                       Xoutlets& outlets_or_pits,
-                       const Xstack& stack,
-                       const Xrec& receivers)
+template<class B, class O, class S, class R>
+index_t compute_basins(xtensor_t<B>& basins,
+                       xtensor_t<O>& outlets_or_pits,
+                       const xtensor_t<S>& stack,
+                       const xtensor_t<R>& receivers)
 {
     index_t ibasin = -1;
 
@@ -275,14 +274,15 @@ index_t compute_basins(Xbasins& basins,
 }
 
 
-template<class A1, class A2, class A3>
-index_t compute_pits(A1& pits,
-                     const A2& outlets,
-                     const A3& active_nodes,
+template<class P, class O, class A>
+index_t compute_pits(xtensor_t<P>& pits,
+                     const xtensor_t<O>& outlets,
+                     const xt::xexpression<A>& active_nodes,
                      index_t nbasins)
 {
     index_t ipit = 0;
-    auto active_nodes_flat = xt::flatten(active_nodes);
+    const A& active_nodes_ = active_nodes.derived_cast();
+    const auto active_nodes_flat = xt::flatten(active_nodes_);
 
     for(index_t ibasin=0; ibasin<nbasins; ++ibasin)
     {
