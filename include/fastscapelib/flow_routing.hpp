@@ -11,6 +11,7 @@
 #include <array>
 
 #include "xtensor/xtensor.hpp"
+#include "xtensor/xview.hpp"
 #include "xtensor/xstrided_view.hpp"
 
 #include "fastscapelib/utils.hpp"
@@ -316,31 +317,65 @@ index_t find_pits(xtensor_t<P>& pits,
 }
 
 
-template<class A1, class A2, class A3>
-void compute_drainage_area(A1& area, const A2& stack, const A3& receivers)
+/**
+ * Compute drainage area for each node on a generic grid/mesh.
+ *
+ * @param drainage_area : ``[intent=out, shape=(nrows, ncols)||(nnodes)]``
+ *     Drainage area at grid node.
+ * @param cell_area : ``[intent=in, shape=(nrows, ncols)||(nnodes)||()]``
+ *     Grid/mesh cell area at grid node (also accepts a scalar).
+ * @param stack :``[intent=in, shape=(nnodes)]``
+ *     Stack position at grid node.
+ * @param receivers : ``[intent=in, shape=(nnodes)]``
+ *     Index of flow receiver at grid node.
+ */
+template<class D, class C, class S, class R>
+void compute_drainage_area(D& drainage_area,
+                           C& cell_area,
+                           const xtensor_t<S>& stack,
+                           const xtensor_t<R>& receivers)
 {
+    // reset drainage area values (must use a view to prevent resizing
+    // drainage_area to 0-d when cell_area is 0-d!)
+    auto drainage_area_ = xt::view(drainage_area, xt::all(), xt::all());
+    drainage_area_ = cell_area;
+
+    // update drainage area values
+    auto drainage_area_flat = xt::flatten(drainage_area);
+
     for(auto inode=stack.crbegin(); inode!=stack.crend(); ++inode)
     {
         if(receivers(*inode) != *inode)
         {
-            area(receivers(*inode)) += area(*inode);
+            drainage_area_flat(receivers(*inode)) += drainage_area_flat(*inode);
         }
     }
 }
 
 
-template<class A1, class A2, class A3>
-void compute_drainage_area(A1& area,
-                           const A2& stack,
-                           const A3& receivers,
+/**
+ * Compute drainage area for each node on a 2-d rectangular grid.
+ *
+ * @param drainage_area : ``[intent=inout, shape=(nrows, ncols)]``
+ *     Drainage area at grid node.
+ * @param stack :``[intent=in, shape=(nnodes)]``
+ *     Stack position at grid node.
+ * @param receivers : ``[intent=in, shape=(nnodes)]``
+ *     Index of flow receiver at grid node.
+ * @param dx : ``[intent=in]``
+ *     Grid spacing in x.
+ * @param dy : ``[intent=in]``
+ *     Grid spacing in y.
+ */
+template<class D, class S, class R>
+void compute_drainage_area(D& drainage_area,
+                           const xtensor_t<S>& stack,
+                           const xtensor_t<R>& receivers,
                            double dx,
                            double dy)
 {
-    std::fill(area.begin(), area.end(), dx * dy);
-
-    auto area_flat = xt::flatten(area);
-
-    compute_drainage_area(area_flat, stack, receivers);
+    xt::xtensor<double, 0> cell_area = dx * dy;
+    compute_drainage_area(drainage_area, cell_area,  stack, receivers);
 }
 
 }  // namespace fastscapelib
