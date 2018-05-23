@@ -2,11 +2,15 @@ Fastscapelib
 ============
 
 A C++ library of efficient algorithms for processing topographic data
-and landscape evolution modeling
+and landscape evolution modeling.
 
 .. toctree::
-   :caption: C++ API Reference
-   :maxdepth: 2
+   :maxdepth: 1
 
-   api/arrays
-   api/topics
+   install
+
+.. toctree::
+   :caption: API Reference
+   :maxdepth: 3
+
+   api_cpp
