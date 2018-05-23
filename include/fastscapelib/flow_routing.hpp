@@ -1,7 +1,7 @@
 /**
- * @file
- * @brief Provides implementation of various efficient
- *        algorithms related to flow routing.
+ * @brief Functions used to route (water) flow on a topographic
+ * surface and compute flow path-related features or structures.
+ *
  */
 #pragma once
 
