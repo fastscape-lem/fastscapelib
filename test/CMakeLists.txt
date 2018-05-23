@@ -18,12 +18,17 @@ string(TOUPPER "${CMAKE_BUILD_TYPE}" U_CMAKE_BUILD_TYPE)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wunused-parameter -Wextra -Wreorder -Wconversion")
+
     CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)
 
     if (HAS_CPP14_FLAG)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+      # cleaner?
+      # see https://pabloariasal.github.io/2018/02/19/its-time-to-do-cmake-right/
+      # cmake min version: 3.8
+      #target_compile_features(fastscapelib INTERFACE cxx_std_14)
     else()
-        message(FATAL_ERROR "Unsupported compiler -- fastscapelib requires C++14 support!")
+      message(FATAL_ERROR "Unsupported compiler -- fastscapelib requires C++14 support!")
     endif()
 endif()
 
@@ -87,6 +92,6 @@ if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
     add_dependencies(${FASTSCAPELIB_TARGET} gtest_main)
 endif()
 
-target_link_libraries(${FASTSCAPELIB_TARGET} ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${FASTSCAPELIB_TARGET} fastscapelib ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_custom_target(run_tests COMMAND test_fastscapelib DEPENDS ${FASTSCAPELIB_TARGET})
