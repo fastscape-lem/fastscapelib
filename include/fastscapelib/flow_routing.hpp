@@ -273,12 +273,27 @@ index_t compute_basins(xtensor_t<B>& basins,
     return nbasins;
 }
 
-
+/**
+ * Find grid/mesh nodes that are pits.
+ *
+ * @param pits: ``[intent=out, shape=(nnodes)]``
+ *     Grid node index of the pit for pits in [0,1,...,npits-1].
+ * @param outlets_or_pits : ``[intent=in, shape=(nnodes)]``
+ *     Grid node index of the outlet (or pit)
+ *     for basin id=0,1,...,nbasins-1.
+ * @param active_nodes : ``[intent=in, shape=(nrows, ncols)]``
+ *     Boolean array for boundaries
+ * @param nbasins : ``[intent=in]``
+ *     Total number of drainage basins (``1 <= nbasins <= nnodes``).
+ *
+ * @returns
+ *     Total number of pits found (``0 <= npits <= nbasins``).
+ */
 template<class P, class O, class A>
-index_t compute_pits(xtensor_t<P>& pits,
-                     const xtensor_t<O>& outlets,
-                     const xt::xexpression<A>& active_nodes,
-                     index_t nbasins)
+index_t find_pits(xtensor_t<P>& pits,
+                  const xtensor_t<O>& outlets_or_pits,
+                  const xt::xexpression<A>& active_nodes,
+                  index_t nbasins)
 {
     index_t ipit = 0;
     const A& active_nodes_ = active_nodes.derived_cast();
@@ -286,7 +301,7 @@ index_t compute_pits(xtensor_t<P>& pits,
 
     for(index_t ibasin=0; ibasin<nbasins; ++ibasin)
     {
-        index_t inode = outlets(ibasin);
+        index_t inode = outlets_or_pits(ibasin);
 
         if(active_nodes_flat(inode))
         {
