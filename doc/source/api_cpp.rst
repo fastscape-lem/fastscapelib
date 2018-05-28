@@ -33,13 +33,29 @@ or include just a subset of the functions (by topic), e.g.,
 
    #include "fastscapelib/flow_routing.hpp"
 
+Sinks (depressions)
+-------------------
+
+Functions used for depression filling or pit resolving.
+
+Defined in ``fastscapelib/sinks.hpp``.
+
+Sink filling
+~~~~~~~~~~~~
+
+.. doxygenfunction:: fastscapelib::fill_sinks_flat
+   :project: fastscapelib
+
+.. doxygenfunction:: fastscapelib::fill_sinks_sloped
+   :project: fastscapelib
+
 Flow routing
 ------------
 
 Functions used to route (water) flow on a topographic surface and
 compute flow path-related features or structures.
 
-Defined in ``fastscapelib/flow_routing.hpp``
+Defined in ``fastscapelib/flow_routing.hpp``.
 
 Flow topology
 ~~~~~~~~~~~~~
