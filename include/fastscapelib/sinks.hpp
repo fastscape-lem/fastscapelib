@@ -1,9 +1,7 @@
 /**
- * @file
- * @brief Provides implementation of various efficient
- *        algorithms for depression filling or pit resolving.
+ * Provides implementation of various efficient algorithms for
+ * depression filling or pit resolving.
  */
-
 #pragma once
 
 #include <cmath>
@@ -26,9 +24,8 @@ namespace fastscapelib
 
 namespace detail
 {
-
     /**
-     * @brief A simple grid node container.
+     * A simple grid node container.
      *
      * Stores both a position (r, c) and a value at that position.
      * Also defines  operator '>' that compares only on `value`.
@@ -63,7 +60,7 @@ namespace detail
 
 
     /**
-     * @brief Initialize priority flood algorithms.
+     * Initialize priority flood algorithms.
      *
      * Add border grid nodes to the priority queue and mark them as
      * resolved.
@@ -75,8 +72,8 @@ namespace detail
     {
         auto elev_shape = elevation.shape();
 
-        index_t nrows = (index_t) elev_shape[0];
-        index_t ncols = (index_t) elev_shape[1];
+        index_t nrows = static_cast<index_t>(elev_shape[0]);
+        index_t ncols = static_cast<index_t>(elev_shape[1]);
 
         auto place_node = [&](index_t row, index_t col)
         {
@@ -100,10 +97,23 @@ namespace detail
 }  // namespace detail
 
 
-template<class A>
-auto fill_sinks_flat(A& elevation)
+/**
+ * Fill all pits and remove all digital dams from a digital
+ * elevation model (rectangular grid).
+ *
+ * Elevation values may be updated so that no depression (sinks or
+ * local minima) remains.
+ *
+ * The algorithm is based on priority queues and is detailed
+ * in Barnes (2014). It fills sinks with flat areas.
+ *
+ * @param elevation : ``[intent=inout, shape=(nrows, ncols)]``
+ *     Elevation at grid node.
+ */
+template<class E>
+auto fill_sinks_flat(E& elevation)
 {
-    using elev_t = typename A::value_type;
+    using elev_t = typename E::value_type;
     auto elev_shape = elevation.shape();
 
     detail::node_pr_queue<elev_t> open;
@@ -132,10 +142,27 @@ auto fill_sinks_flat(A& elevation)
 }
 
 
-template<class A>
-auto fill_sinks_sloped(A& elevation)
+/**
+ * Fill all pits and remove all digital dams from a digital
+ * elevation model (rectangular grid).
+ *
+ * Elevation values may be updated so that no depression (sinks or
+ * local minima) remains.
+ *
+ * The algorithm is based on priority queues and is detailed in Barnes
+ * (2014). This variant fills sinks with nearly flat areas
+ * (i.e. elevation is increased by small amount) so that there is no
+ * drainage singularities.
+ *
+ * @param elevation : ``[intent=inout, shape=(nrows, ncols)]``
+ *     Elevation at grid node.
+ *
+ * @sa fill_sinks_flat
+ */
+template<class E>
+auto fill_sinks_sloped(E& elevation)
 {
-    using elev_t = typename A::value_type;
+    using elev_t = typename E::value_type;
     auto elev_shape = elevation.shape();
 
     detail::node_pr_queue<elev_t> open;

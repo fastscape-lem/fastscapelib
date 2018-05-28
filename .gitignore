@@ -46,9 +46,11 @@ test/CMakeFiles/
 test/cmake_install.cmake
 
 # Documentation build artefacts
-docs/CMakeCache.txt
-docs/xml/
-docs/build/
+# Documentation build artefacts
+doc/CMakeCache.txt
+doc/_xml/
+doc/_build/
+doc/*.tmp
 
 # Jupyter artefacts
 .ipynb_checkpoints/

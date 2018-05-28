@@ -1,0 +1,5 @@
+name: fastscapelib-docs
+channels:
+  - conda-forge
+dependencies:
+  - breathe
