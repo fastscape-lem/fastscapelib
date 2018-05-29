@@ -1,10 +1,10 @@
 language: cpp
-dist: precise
 notifications:
   email: false
 branches:
   only:
     - master
+dist: trusty
 
 matrix:
   fast_finish: true
