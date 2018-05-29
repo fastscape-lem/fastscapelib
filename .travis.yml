@@ -44,7 +44,7 @@ before_install:
         export CXX=g++-$GCC CC=gcc-$GCC;
       fi
       if [[ "$COMPILER" == "clang" ]]; then
-        export CXX=clang++-$CLANG CC=clang-$CLANG;
+        export CXX=clang++-$CLANG CC=clang-$CLANG CXXFLAGS=\"-stdlib=libc++\";
       fi
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       export CXX=clang++ CC=clang;
