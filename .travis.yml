@@ -1,5 +1,7 @@
 language: cpp
 dist: precise
+notifications:
+  email: false
 
 matrix:
   fast_finish: true
