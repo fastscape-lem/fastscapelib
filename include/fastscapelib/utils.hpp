@@ -4,17 +4,18 @@
  */
 #pragma once
 
-#include <cstdint>
+#include <cstddef>
 
 #include "xtensor/xcontainer.hpp"
 
 
 // type used for indexing arrays and array sizes.
-using index_t = int64_t;
+// TODO: use xt::index_t directly if/when xtensor #661 is merged.
+using index_t = std::ptrdiff_t;
 
 
-template<typename D>
-using xtensor_t = xt::xcontainer<D>;
+template<class E>
+using xtensor_t = xt::xexpression<E>;
 
 
 namespace fastscapelib
