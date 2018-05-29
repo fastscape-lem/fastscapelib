@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <limits>
 #include <array>
+#include <type_traits>
 
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"
@@ -27,36 +28,230 @@ namespace fastscapelib
 namespace detail
 {
 
-    inline auto get_d8_distances(double dx, double dy) -> std::array<double, 9>
+
+inline auto get_d8_distances(double dx, double dy) -> std::array<double, 9>
+{
+    std::array<double, 9> d8_dists;
+
+    for(size_t k=0; k<9; ++k)
     {
-        std::array<double, 9> d8_dists;
-
-        for(unsigned short k=0; k<9; ++k)
-        {
-            d8_dists[k] = std::sqrt(
-                std::pow(dy * fs::consts::d8_row_offsets[k], 2.0) +
-                std::pow(dx * fs::consts::d8_col_offsets[k], 2.0));
-        }
-
-        return d8_dists;
+        d8_dists[k] = std::sqrt(
+            std::pow(dy * fs::consts::d8_row_offsets[k], 2.0) +
+            std::pow(dx * fs::consts::d8_col_offsets[k], 2.0));
     }
 
+    return d8_dists;
+}
 
-    template<class S, class N, class D>
-    void add2stack(index_t& nstack,
-                   xtensor_t<S>& stack,
-                   const xtensor_t<N>& ndonors,
-                   const xtensor_t<D>& donors,
-                   index_t inode)
+
+template<class S, class N, class D>
+void add2stack(index_t& nstack,
+               S&& stack,
+               N&& ndonors,
+               D&& donors,
+               index_t inode)
+{
+    for(index_t k=0; k<ndonors(inode); ++k)
     {
-        for(unsigned short k=0; k<ndonors(inode); ++k)
+        index_t idonor = donors(inode, k);
+        stack(nstack) = idonor;
+        ++nstack;
+        add2stack(nstack, stack, ndonors, donors, idonor);
+    }
+}
+
+
+/**
+ * compute_receivers_d8 implementation.
+ */
+template<class R, class D, class E, class A>
+void compute_receivers_d8_impl(R&& receivers,
+                               D&& dist2receivers,
+                               E&& elevation,
+                               A&& active_nodes,
+                               double dx,
+                               double dy)
+{
+    using elev_t = typename std::decay_t<E>::value_type;
+    const auto d8_dists = detail::get_d8_distances(dx, dy);
+
+    const auto elev_shape = elevation.shape();
+    const index_t nrows = static_cast<index_t>(elev_shape[0]);
+    const index_t ncols = static_cast<index_t>(elev_shape[1]);
+
+    for(index_t r=0; r<nrows; ++r)
+    {
+        for(index_t c=0; c<ncols; ++c)
         {
-            index_t idonor = donors(inode, k);
-            stack(nstack) = idonor;
+            index_t inode = r * ncols + c;
+
+            receivers(inode) = inode;
+            dist2receivers(inode) = 0.;
+
+            if(!active_nodes(r, c))
+            {
+                continue;
+            }
+
+            double slope_max = std::numeric_limits<double>::min();
+
+            for(size_t k=1; k<=8; ++k)
+            {
+                index_t kr = r + fs::consts::d8_row_offsets[k];
+                index_t kc = c + fs::consts::d8_col_offsets[k];
+
+                if(!fs::detail::in_bounds(elev_shape, kr, kc))
+                {
+                    continue;
+                }
+
+                index_t ineighbor = kr * ncols + kc;
+                double slope = (elevation(r, c) - elevation(kr, kc)) / d8_dists[k];
+
+                if(slope > slope_max)
+                {
+                    slope_max = slope;
+                    receivers(inode) = ineighbor;
+                    dist2receivers(inode) = d8_dists[k];
+                }
+            }
+        }
+    }
+}
+
+
+/**
+ * compute_donors implementation.
+ */
+template<class N, class D, class R>
+void compute_donors_impl(N&& ndonors,
+                         D&& donors,
+                         R&& receivers)
+{
+    index_t nnodes = static_cast<index_t>(receivers.size());
+
+    std::fill(ndonors.begin(), ndonors.end(), 0);
+
+    for(index_t inode=0; inode<nnodes; ++inode)
+    {
+        if(receivers(inode) != inode)
+        {
+            index_t irec = receivers(inode);
+            donors(irec, ndonors(irec)) = inode;
+            ++ndonors(irec);
+        }
+    }
+}
+
+
+/**
+ * compute_stack implementation.
+ */
+template<class S, class N, class D, class R>
+void compute_stack_impl(S&& stack,
+                        N&& ndonors,
+                        D&& donors,
+                        R&& receivers)
+{
+    index_t nnodes = static_cast<index_t>(receivers.size());
+    index_t nstack = 0;
+
+    for(index_t inode=0; inode<nnodes; ++inode)
+    {
+        if(receivers(inode) == inode)
+        {
+            stack(nstack) = inode;
             ++nstack;
-            add2stack(nstack, stack, ndonors, donors, idonor);
+            add2stack(nstack, stack, ndonors, donors, inode);
         }
     }
+}
+
+
+/**
+ * compute_basins implementation.
+ */
+template<class B, class O, class S, class R>
+index_t compute_basins_impl(B&& basins,
+                            O&& outlets_or_pits,
+                            S&& stack,
+                            R&& receivers)
+{
+    index_t ibasin = -1;
+
+    for(auto&& istack : stack)
+    {
+        index_t irec = receivers(istack);
+
+        if(irec == istack)
+        {
+            ++ibasin;
+            outlets_or_pits(ibasin) = istack;
+        }
+
+        basins(istack) = ibasin;
+    }
+
+    index_t nbasins = ibasin + 1;
+
+    return nbasins;
+}
+
+
+/**
+ * find_pits implementation.
+ */
+template<class P, class O, class A>
+index_t find_pits_impl(P&& pits,
+                       O&& outlets_or_pits,
+                       A&& active_nodes,
+                       index_t nbasins)
+{
+    index_t ipit = 0;
+    const auto active_nodes_flat = xt::flatten(active_nodes);
+
+    for(index_t ibasin=0; ibasin<nbasins; ++ibasin)
+    {
+        index_t inode = outlets_or_pits(ibasin);
+
+        if(active_nodes_flat(inode))
+        {
+            pits(ipit) = inode;
+            ++ipit;
+        }
+    }
+
+    index_t npits = ipit;
+
+    return npits;
+}
+
+
+/**
+ * compute_drainage_area implementation.
+ */
+template<class D, class C, class S, class R>
+void compute_drainage_area_impl(D&& drainage_area,
+                                C&& cell_area,
+                                S&& stack,
+                                R&& receivers)
+{
+    // reset drainage area values (must use a view to prevent resizing
+    // drainage_area to 0-d when cell_area is 0-d!)
+    auto drainage_area_ = xt::view(drainage_area, xt::all(), xt::all());
+    drainage_area_ = cell_area;
+
+    // update drainage area values
+    auto drainage_area_flat = xt::flatten(drainage_area);
+
+    for(auto inode=stack.crbegin(); inode!=stack.crend(); ++inode)
+    {
+        if(receivers(*inode) != *inode)
+        {
+            drainage_area_flat(receivers(*inode)) += drainage_area_flat(*inode);
+        }
+    }
+}
 
 }  // namespace detail
 
@@ -99,51 +294,11 @@ void compute_receivers_d8(xtensor_t<R>& receivers,
                           double dx,
                           double dy)
 {
-    using elev_t = typename E::value_type;
-    const auto d8_dists = detail::get_d8_distances(dx, dy);
-
-    const auto elev_shape = elevation.shape();
-    const index_t nrows = static_cast<index_t>(elev_shape[0]);
-    const index_t ncols = static_cast<index_t>(elev_shape[1]);
-
-    for(index_t r=0; r<nrows; ++r)
-    {
-        for(index_t c=0; c<ncols; ++c)
-        {
-            index_t inode = r * ncols + c;
-
-            receivers(inode) = inode;
-            dist2receivers(inode) = 0.;
-
-            if(!active_nodes(r, c))
-            {
-                continue;
-            }
-
-            double slope_max = std::numeric_limits<double>::min();
-
-            for(unsigned short k=1; k<=8; ++k)
-            {
-                index_t kr = r + fs::consts::d8_row_offsets[k];
-                index_t kc = c + fs::consts::d8_col_offsets[k];
-
-                if(!fs::detail::in_bounds(elev_shape, kr, kc))
-                {
-                    continue;
-                }
-
-                index_t ineighbor = kr * ncols + kc;
-                double slope = (elevation(r, c) - elevation(kr, kc)) / d8_dists[k];
-
-                if(slope > slope_max)
-                {
-                    slope_max = slope;
-                    receivers(inode) = ineighbor;
-                    dist2receivers(inode) = d8_dists[k];
-                }
-            }
-        }
-    }
+    detail::compute_receivers_d8_impl(receivers.derived_cast(),
+                                      dist2receivers.derived_cast(),
+                                      elevation.derived_cast(),
+                                      active_nodes.derived_cast(),
+                                      dx, dy);
 }
 
 
@@ -165,20 +320,11 @@ void compute_donors(xtensor_t<N>& ndonors,
                     xtensor_t<D>& donors,
                     const xtensor_t<R>& receivers)
 {
-    index_t nnodes = static_cast<index_t>(receivers.size());
-
-    std::fill(ndonors.begin(), ndonors.end(), 0);
-
-    for(index_t inode=0; inode<nnodes; ++inode)
-    {
-        if(receivers(inode) != inode)
-        {
-            index_t irec = receivers(inode);
-            donors(irec, ndonors(irec)) = inode;
-            ++ndonors(irec);
-        }
-    }
+    detail::compute_donors_impl(ndonors.derived_cast(),
+                                donors.derived_cast(),
+                                receivers.derived_cast());
 }
+
 
 /**
  * Compute a stack of grid/mesh nodes to be used for flow tree
@@ -202,18 +348,10 @@ void compute_stack(xtensor_t<S>& stack,
                    const xtensor_t<D>& donors,
                    const xtensor_t<R>& receivers)
 {
-    index_t nnodes = static_cast<index_t>(receivers.size());
-    index_t nstack = 0;
-
-    for(index_t inode=0; inode<nnodes; ++inode)
-    {
-        if(receivers(inode) == inode)
-        {
-            stack(nstack) = inode;
-            ++nstack;
-            detail::add2stack(nstack, stack, ndonors, donors, inode);
-        }
-    }
+    detail::compute_stack_impl(stack.derived_cast(),
+                               ndonors.derived_cast(),
+                               donors.derived_cast(),
+                               receivers.derived_cast());
 }
 
 
@@ -254,25 +392,12 @@ index_t compute_basins(xtensor_t<B>& basins,
                        const xtensor_t<S>& stack,
                        const xtensor_t<R>& receivers)
 {
-    index_t ibasin = -1;
-
-    for(auto&& istack : stack)
-    {
-        index_t irec = receivers(istack);
-
-        if(irec == istack)
-        {
-            ++ibasin;
-            outlets_or_pits(ibasin) = istack;
-        }
-
-        basins(istack) = ibasin;
-    }
-
-    index_t nbasins = ibasin + 1;
-
-    return nbasins;
+    return detail::compute_basins_impl(basins.derived_cast(),
+                                       outlets_or_pits.derived_cast(),
+                                       stack.derived_cast(),
+                                       receivers.derived_cast());
 }
+
 
 /**
  * Find grid/mesh nodes that are pits.
@@ -293,27 +418,13 @@ index_t compute_basins(xtensor_t<B>& basins,
 template<class P, class O, class A>
 index_t find_pits(xtensor_t<P>& pits,
                   const xtensor_t<O>& outlets_or_pits,
-                  const xt::xexpression<A>& active_nodes,
+                  const xtensor_t<A>& active_nodes,
                   index_t nbasins)
 {
-    index_t ipit = 0;
-    const A& active_nodes_ = active_nodes.derived_cast();
-    const auto active_nodes_flat = xt::flatten(active_nodes_);
-
-    for(index_t ibasin=0; ibasin<nbasins; ++ibasin)
-    {
-        index_t inode = outlets_or_pits(ibasin);
-
-        if(active_nodes_flat(inode))
-        {
-            pits(ipit) = inode;
-            ++ipit;
-        }
-    }
-
-    index_t npits = ipit;
-
-    return npits;
+    return detail::find_pits_impl(pits.derived_cast(),
+                                  outlets_or_pits.derived_cast(),
+                                  active_nodes.derived_cast(),
+                                  nbasins);
 }
 
 
@@ -330,26 +441,15 @@ index_t find_pits(xtensor_t<P>& pits,
  *     Index of flow receiver at grid node.
  */
 template<class D, class C, class S, class R>
-void compute_drainage_area(D& drainage_area,
-                           C& cell_area,
+void compute_drainage_area(xtensor_t<D>& drainage_area,
+                           xtensor_t<C>& cell_area,
                            const xtensor_t<S>& stack,
                            const xtensor_t<R>& receivers)
 {
-    // reset drainage area values (must use a view to prevent resizing
-    // drainage_area to 0-d when cell_area is 0-d!)
-    auto drainage_area_ = xt::view(drainage_area, xt::all(), xt::all());
-    drainage_area_ = cell_area;
-
-    // update drainage area values
-    auto drainage_area_flat = xt::flatten(drainage_area);
-
-    for(auto inode=stack.crbegin(); inode!=stack.crend(); ++inode)
-    {
-        if(receivers(*inode) != *inode)
-        {
-            drainage_area_flat(receivers(*inode)) += drainage_area_flat(*inode);
-        }
-    }
+    detail::compute_drainage_area_impl(drainage_area.derived_cast(),
+                                       cell_area.derived_cast(),
+                                       stack.derived_cast(),
+                                       receivers.derived_cast());
 }
 
 
@@ -368,7 +468,7 @@ void compute_drainage_area(D& drainage_area,
  *     Grid spacing in y.
  */
 template<class D, class S, class R>
-void compute_drainage_area(D& drainage_area,
+void compute_drainage_area(xtensor_t<D>& drainage_area,
                            const xtensor_t<S>& stack,
                            const xtensor_t<R>& receivers,
                            double dx,
