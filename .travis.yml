@@ -22,7 +22,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.9
+            - llvm-toolchain-trusty-3.9
           packages:
             - clang-3.9
       env: COMPILER=clang CLANG=3.9
@@ -44,7 +44,7 @@ before_install:
         export CXX=g++-$GCC CC=gcc-$GCC;
       fi
       if [[ "$COMPILER" == "clang" ]]; then
-        export CXX=clang++-$CLANG CC=clang-$CLANG CXXFLAGS=\"-stdlib=libc++\";
+        export CXX=clang++-$CLANG CC=clang-$CLANG;
       fi
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       export CXX=clang++ CC=clang;
