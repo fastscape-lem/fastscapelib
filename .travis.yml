@@ -33,7 +33,8 @@ env:
 
 before_install:
   # Configure build variables
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       if [[ "$COMPILER" == "gcc" ]]; then
         export CXX=g++-$GCC CC=gcc-$GCC;
       fi
