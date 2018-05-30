@@ -81,33 +81,26 @@ endif()
 
 find_package(Threads)
 
-message(STATUS "Prefix path: " ${CMAKE_PREFIX_PATH})
-
-find_package(xtensor REQUIRED)
-
-include_directories(${XTENSOR_INCLUDE_DIR})
-include_directories(${FASTSCAPELIB_INCLUDE_DIR})
 include_directories(${GTEST_INCLUDE_DIRS})
 
-set(FASTSCAPELIB_TESTS
+set(FASTSCAPELIB_TEST_SRC
   main.cpp
   test_flow_routing.cpp
   test_sinks.cpp
 )
 
-set(FASTSCAPELIB_TARGET test_fastscapelib)
+set(FASTSCAPELIB_TEST_TARGET test_fastscapelib)
 
-add_executable(${FASTSCAPELIB_TARGET}
-  ${FASTSCAPELIB_TESTS} ${FASTSCAPELIB_HEADERS} ${XTENSOR_HEADERS})
+add_executable(${FASTSCAPELIB_TEST_TARGET} ${FASTSCAPELIB_TEST_SRC})
 
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
-    add_dependencies(${FASTSCAPELIB_TARGET} gtest_main)
+    add_dependencies(${FASTSCAPELIB_TEST_TARGET} gtest_main)
 endif()
 
-target_link_libraries(${FASTSCAPELIB_TARGET}
+target_link_libraries(${FASTSCAPELIB_TEST_TARGET}
   fastscapelib ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_custom_target(run_tests
-  COMMAND test_fastscapelib
-  DEPENDS ${FASTSCAPELIB_TARGET}
+  COMMAND ${FASTSCAPELIB_TEST_TARGET}
+  DEPENDS ${FASTSCAPELIB_TEST_TARGET}
 )
