@@ -28,6 +28,8 @@ message(STATUS "Building fastscapelib v${${PROJECT_NAME}_VERSION}")
 # Dependencies
 # ============
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
 # TODO: xtl should be found by xtensor config.
 # fix upstream"find_dependency(xtl REQUIRED)" in xtensorConfig.cmake?
 find_package(xtl REQUIRED)
@@ -48,15 +50,17 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_routing.hpp
 )
 
-add_library(fastscapelib INTERFACE)
+set(FASTSCAPELIB_TARGET fastscapelib)
 
-target_include_directories(fastscapelib
+add_library(${FASTSCAPELIB_TARGET} INTERFACE)
+
+target_include_directories(${FASTSCAPELIB_TARGET}
   INTERFACE
     $<BUILD_INTERFACE:${FASTSCAPELIB_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(fastscapelib INTERFACE xtensor)
+target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor)
 
 OPTION(BUILD_TESTS "fastscapelib test suite" OFF)
 OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
@@ -70,6 +74,14 @@ if(BUILD_TESTS)
   add_subdirectory(test)
 endif()
 
+OPTION(BUILD_PYTHON_MODULE "fastscapelib Python bindings" OFF)
+
+if(BUILD_PYTHON_MODULE)
+  include_directories(${FASTSCAPELIB_INCLUDE_DIR})
+  add_subdirectory(python)
+endif()
+
+
 # Installation
 # ============
 
@@ -82,7 +94,7 @@ install(FILES ${FASTSCAPELIB_HEADERS}
 )
 
 # -- create/install targets (also importable from the build dir)
-install(TARGETS fastscapelib
+install(TARGETS ${FASTSCAPELIB_TARGET}
   EXPORT ${PROJECT_NAME}-targets
 )
 

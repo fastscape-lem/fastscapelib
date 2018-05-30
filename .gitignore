@@ -46,7 +46,6 @@ test/CMakeFiles/
 test/cmake_install.cmake
 
 # Documentation build artefacts
-# Documentation build artefacts
 doc/CMakeCache.txt
 doc/_xml/
 doc/_build/
@@ -61,3 +60,36 @@ doc/*.tmp
 # emacs
 .dir-locals.el
 .projectile
+
+# Python Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+
+# IPython / Jupyter
+.ipynb_checkpoints
+
+# misc
+.DS_Store

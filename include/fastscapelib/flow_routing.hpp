@@ -442,7 +442,7 @@ index_t find_pits(xtensor_t<P>& pits,
  */
 template<class D, class C, class S, class R>
 void compute_drainage_area(xtensor_t<D>& drainage_area,
-                           xtensor_t<C>& cell_area,
+                           const xtensor_t<C>& cell_area,
                            const xtensor_t<S>& stack,
                            const xtensor_t<R>& receivers)
 {
