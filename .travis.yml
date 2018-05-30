@@ -96,6 +96,7 @@ matrix:
       osx_image: xcode9
       compiler: clang
     - python: 3.5
+      language: python
       env: DOCS=yes
 
 env:
@@ -155,7 +156,8 @@ install:
 script:
   # Build docs or run tests
   - if [[ "$DOCS" == "yes" ]]; then
-      sphinx-build -n -j auto -b html -d _build/doctrees . _build/html;
+      doxygen;
+      sphinx-build -n -j auto -b html -d _build/doctrees source _build/html;
     else
       ./test_fastscapelib;
     fi
