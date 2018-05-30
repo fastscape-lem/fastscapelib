@@ -79,7 +79,7 @@ Drainage area, basins, outlets & pits
 .. doxygenfunction:: fastscapelib::find_pits
    :project: fastscapelib
 
-.. doxygenfunction:: fastscapelib::compute_drainage_area(xtensor_t<D>&, xtensor_t<C>&, const xtensor_t<S>&, const xtensor_t<R>&)
+.. doxygenfunction:: fastscapelib::compute_drainage_area(xtensor_t<D>&, const xtensor_t<C>&, const xtensor_t<S>&, const xtensor_t<R>&)
    :project: fastscapelib
 
 .. doxygenfunction:: fastscapelib::compute_drainage_area(xtensor_t<D>&, const xtensor_t<S>&, const xtensor_t<R>&, double, double)
