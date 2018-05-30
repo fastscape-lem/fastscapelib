@@ -95,6 +95,8 @@ matrix:
     - os: osx
       osx_image: xcode9
       compiler: clang
+    - python: 3.5
+      env: DOCS=yes
 
 env:
   global:
@@ -115,8 +117,6 @@ before_install:
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       export CXX=clang++ CC=clang;
     fi
-
-install:
   # Install miniconda / update conda
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       MINICONDA_OS=$MINICONDA_LINUX;
@@ -129,13 +129,33 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda install gtest cmake xtensor -c conda-forge
-  # Testing
-  - mkdir build
-  - cd build
-  - cmake -DBUILD_TESTS=ON ..
-  - make -j2 test_fastscapelib
-  - cd test
+  - conda info -a
+
+install:
+  # Create conda environment
+  - if [[ "$DOCS" == "yes" ]]; then
+      conda env create -n test_env --file doc/environment.yml;
+      conda install -n test_env doxygen sphinx_rtd_theme -c conda-forge;
+    else
+      conda create -n test_env gtest cmake xtensor -c conda-forge;
+    fi
+  - source activate test_env
+  - conda list
+  # Maybe build tests
+  - if [[ "$DOCS" == "yes" ]]; then
+      cd doc;
+    else
+      mkdir build;
+      cd build;
+      cmake -DBUILD_TESTS=ON ..;
+      make -j2 test_fastscapelib;
+      cd test;
+    fi
 
 script:
-  - ./test_fastscapelib
+  # Build docs or run tests
+  - if [[ "$DOCS" == "yes" ]]; then
+      sphinx-build -n -j auto -b html -d _build/doctrees . _build/html;
+    else
+      ./test_fastscapelib;
+    fi
