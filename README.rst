@@ -6,9 +6,8 @@ Fastscapelib
 A C++ library of efficient algorithms for processing topographic data
 and landscape evolution modeling.
 
-This library has also Python bindings: see the README file in the
-``fastscapelib-python`` subfolder of this repository for more information
-on how to install and use it.
+This library currently has Python bindings and is easily extensible to
+other languages.
 
 .. |Build Status| image:: https://travis-ci.org/fastscape-lem/fastscapelib.svg?branch=master
    :target: https://travis-ci.org/fastscape-lem/fastscapelib
