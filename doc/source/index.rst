@@ -8,7 +8,7 @@ Documentation index
 -------------------
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    install
 
@@ -17,6 +17,12 @@ Documentation index
    :maxdepth: 3
 
    api_cpp
+
+.. toctree::
+   :caption: Developer Zone
+   :maxdepth: 2
+
+   build_options
 
 Acknowledgment
 --------------

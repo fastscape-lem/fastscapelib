@@ -51,33 +51,45 @@ void compute_stack_py(xt::pytensor<index_t, 1>& stack,
 
 
 index_t compute_basins_py(xt::pytensor<index_t, 1>& basins,
-                          xt::pytensor<index_t, 1>& outlets,
+                          xt::pytensor<index_t, 1>& outlets_or_pits,
                           const xt::pytensor<index_t, 1>& stack,
                           const xt::pytensor<index_t, 1>& receivers)
 {
     py::gil_scoped_release release;
-    return fs::compute_basins(basins, outlets, stack, receivers);
+    return fs::compute_basins(basins, outlets_or_pits, stack, receivers);
 }
 
 
-index_t compute_pits_py(xt::pytensor<index_t, 1>& pits,
-                        const xt::pytensor<index_t, 1>& outlets,
-                        const xt::pytensor<bool, 1>& active_nodes,
-                        index_t nbasins)
+index_t find_pits_py(xt::pytensor<index_t, 1>& pits,
+                     const xt::pytensor<index_t, 1>& outlets_or_pits,
+                     const xt::pytensor<bool, 1>& active_nodes,
+                     index_t nbasins)
 {
     py::gil_scoped_release release;
-    return fs::compute_pits(pits, outlets, active_nodes, nbasins);
+    return fs::find_pits(pits, outlets_or_pits, active_nodes, nbasins);
 }
 
 
-template<class T, std::size_t ND, class ...Args>
-void compute_drainage_area_py(xt::pytensor<T, ND>& area,
-                              const xt::pytensor<index_t, 1>& stack,
-                              const xt::pytensor<index_t, 1>& receivers,
-                              Args... dxdy)
+template<class T>
+void compute_drainage_area_mesh_py(xt::pytensor<T, 1>& drainage_area,
+                                   const xt::pytensor<T, 1>& cell_area,
+                                   const xt::pytensor<index_t, 1>& stack,
+                                   const xt::pytensor<index_t, 1>& receivers)
 {
     py::gil_scoped_release release;
-    fs::compute_drainage_area(area, stack, receivers, dxdy...);
+    fs::compute_drainage_area(drainage_area, cell_area, stack, receivers);
+}
+
+
+template<class T>
+void compute_drainage_area_grid_py(xt::pytensor<T, 2>& drainage_area,
+                                   const xt::pytensor<index_t, 1>& stack,
+                                   const xt::pytensor<index_t, 1>& receivers,
+                                   double dx,
+                                   double dy)
+{
+    py::gil_scoped_release release;
+    fs::compute_drainage_area(drainage_area, stack, receivers, dx, dy);
 }
 
 
@@ -97,7 +109,7 @@ void fill_sinks_sloped_py(xt::pytensor<T, 2>& elevation)
 }
 
 
-PYBIND11_MODULE(fastscapelib, m)
+PYBIND11_MODULE(_fastscapelib_py, m)
 {
     m.doc() = "A collection of efficient algorithms"
         "for processing topographic data and landscape evolution modeling.";
@@ -117,16 +129,16 @@ PYBIND11_MODULE(fastscapelib, m)
     m.def("compute_basins", &compute_basins_py,
           "Compute basin ids. Return total number of basins");
 
-    m.def("compute_pits", &compute_pits_py,
-          "Detect pit node ids. Return total number of pit nodes");
+    m.def("find_pits", &find_pits_py,
+          "Find pit node ids. Return total number of pit nodes");
 
-    m.def("compute_drainage_area_d",
-          &compute_drainage_area_py<double, 2>,
-          "Compute drainage area.");
+    m.def("compute_drainage_area_mesh_d",
+          &compute_drainage_area_mesh_py<double>,
+          "Compute drainage area on a mesh.");
 
-    m.def("compute_drainage_area_d_2d",
-          &compute_drainage_area_py<double, 2, double, double>,
-          "Compute drainage area.");
+    m.def("compute_drainage_area_grid_d",
+          &compute_drainage_area_grid_py<double>,
+          "Compute drainage area on a 2D grid.");
 
     m.def("fill_sinks_flat_d", &fill_sinks_flat_py<double>,
           "Fill depressions in elevation data (flat surfaces).");
