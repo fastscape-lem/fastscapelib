@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.1)
-project(fastscapelib-python)
+
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  project(fastscapelib-python)
+
+  find_package(xtensor REQUIRED CONFIG)
+  find_package(fastscapelib REQUIRED CONFIG)
+endif ()
 
 # Dependencies
 # ============
