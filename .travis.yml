@@ -144,9 +144,9 @@ install:
       conda env create -n test_env --file doc/environment.yml;
       conda install -n test_env doxygen sphinx_rtd_theme -c conda-forge;
     elif [[ "$PYTEST" == "2.7" ]]; then
-      conda install -n test_env python=2.7 pip numpy cmake xtensor-python pytest -c conda-forge;
+      conda create -n test_env python=2.7 pip numpy cmake xtensor-python pytest -c conda-forge;
     elif [[ "$PYTEST" == "3.6" ]]; then
-      conda install -n test_env python=3.6 pip numpy cmake xtensor-python pytest -c conda-forge;
+      conda create -n test_env python=3.6 pip numpy cmake xtensor-python pytest -c conda-forge;
     else
       conda create -n test_env gtest cmake xtensor -c conda-forge;
     fi
