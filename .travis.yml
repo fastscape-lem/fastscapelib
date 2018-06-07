@@ -95,12 +95,24 @@ matrix:
     - os: osx
       osx_image: xcode9
       compiler: clang
-    - python: 2.7
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
       language: python
-      env: PYTEST=2.7
-    - python: 3.6
+      env: PYTEST=2.7 COMPILER=gcc GCC=7
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
       language: python
-      env: PYTEST=3.6
+      env: PYTEST=3.6 COMPILER=gcc GCC=7
     - python: 3.5
       language: python
       env: DOCS=yes
