@@ -1,3 +1,5 @@
+.. _build_options:
+
 Build and configuration
 =======================
 

@@ -4,6 +4,9 @@ Fastscapelib
 A C++ library of efficient algorithms for processing topographic data
 and landscape evolution modeling.
 
+This library currently has Python bindings and is easily extensible to
+other languages.
+
 Documentation index
 -------------------
 
@@ -17,6 +20,7 @@ Documentation index
    :maxdepth: 3
 
    api_cpp
+   api_python
 
 .. toctree::
    :caption: Developer Zone
