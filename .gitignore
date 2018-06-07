@@ -85,6 +85,9 @@ wheels/
 .installed.cfg
 *.egg
 
+# Python tests
+.pytest_cache
+
 # Installer logs
 pip-log.txt
 
