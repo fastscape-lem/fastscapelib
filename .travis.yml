@@ -169,7 +169,7 @@ install:
       cd doc;
     elif [[ "$PYTEST" == "2.7" || "$PYTEST" == "3.6" ]]; then
       cd python;
-      pip install -e . -v
+      pip install -e . -v;
     else
       mkdir build;
       cd build;
@@ -184,7 +184,7 @@ script:
       doxygen;
       sphinx-build -n -j auto -b html -d _build/doctrees source _build/html;
     elif [[ "$PYTEST" == "2.7" || "$PYTEST" == "3.6" ]]; then
-      pytest -vv fastscapelib
+      pytest -vv fastscapelib;
     else
       ./test_fastscapelib;
     fi
