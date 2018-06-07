@@ -22,6 +22,14 @@ Documentation
 Documentation is hosted on ReadTheDocs:
 http://fastscapelib.readthedocs.io
 
+License
+-------
+
+This library is licensed under the `GNU General Public License
+v3.0`_. See LICENSE file.
+
+.. _`GNU General Public License v3.0`: https://www.gnu.org/licenses/gpl-3.0.en.html
+
 Acknowledgment
 --------------
 
