@@ -62,8 +62,11 @@ target_include_directories(${FASTSCAPELIB_TARGET}
 
 target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor)
 
-OPTION(BUILD_TESTS "fastscapelib test suite" OFF)
+OPTION(BUILD_TESTS "build fastscapelib test suite" OFF)
+OPTION(BUILD_BENCHMARK "build fastscapelib benchmark suite" OFF)
 OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
+OPTION(DOWNLOAD_GBENCHMARK "download google benchmark and build from source" ON)
+OPTION(BUILD_PYTHON_MODULE "build fastscapelib Python bindings" OFF)
 
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
   set(BUILD_TESTS ON)
@@ -74,7 +77,9 @@ if(BUILD_TESTS)
   add_subdirectory(test)
 endif()
 
-OPTION(BUILD_PYTHON_MODULE "fastscapelib Python bindings" OFF)
+if(BUILD_BENCHMARK)
+    add_subdirectory(benchmark)
+endif()
 
 if(BUILD_PYTHON_MODULE)
   include_directories(${FASTSCAPELIB_INCLUDE_DIR})
