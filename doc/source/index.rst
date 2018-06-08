@@ -14,6 +14,7 @@ Documentation index
    :maxdepth: 2
 
    install
+   release_notes
 
 .. toctree::
    :caption: API Reference

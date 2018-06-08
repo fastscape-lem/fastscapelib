@@ -1,6 +1,6 @@
 .. _build_options:
 
-Build and configuration
+Build and Configuration
 =======================
 
 Build options
