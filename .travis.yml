@@ -38,22 +38,6 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-      env: COMPILER=gcc GCC=7
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-8
-      env: COMPILER=gcc GCC=8
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-3.9
           packages:
             - clang-3.9
@@ -95,6 +79,24 @@ matrix:
     - os: osx
       osx_image: xcode9
       compiler: clang
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      language: python
+      env: PYTEST=2.7 COMPILER=gcc GCC=7
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+      language: python
+      env: PYTEST=3.6 COMPILER=gcc GCC=8
     - python: 3.5
       language: python
       env: DOCS=yes
@@ -137,14 +139,21 @@ install:
   - if [[ "$DOCS" == "yes" ]]; then
       conda env create -n test_env --file doc/environment.yml;
       conda install -n test_env doxygen sphinx_rtd_theme -c conda-forge;
+    elif [[ "$PYTEST" == "2.7" ]]; then
+      conda create -n test_env python=2.7 pip numpy cmake xtensor-python pytest -c conda-forge;
+    elif [[ "$PYTEST" == "3.6" ]]; then
+      conda create -n test_env python=3.6 pip numpy cmake xtensor-python pytest -c conda-forge;
     else
       conda create -n test_env gtest cmake xtensor -c conda-forge;
     fi
   - source activate test_env
   - conda list
-  # Maybe build tests
+  # Maybe build tests or build/install Python bindings
   - if [[ "$DOCS" == "yes" ]]; then
       cd doc;
+    elif [[ "$PYTEST" == "2.7" || "$PYTEST" == "3.6" ]]; then
+      cd python;
+      pip install -e . -v;
     else
       mkdir build;
       cd build;
@@ -158,6 +167,8 @@ script:
   - if [[ "$DOCS" == "yes" ]]; then
       doxygen;
       sphinx-build -n -j auto -b html -d _build/doctrees source _build/html;
+    elif [[ "$PYTEST" == "2.7" || "$PYTEST" == "3.6" ]]; then
+      pytest -vv fastscapelib;
     else
       ./test_fastscapelib;
     fi

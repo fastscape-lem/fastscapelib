@@ -62,7 +62,7 @@ index_t compute_basins_py(xt::pytensor<index_t, 1>& basins,
 
 index_t find_pits_py(xt::pytensor<index_t, 1>& pits,
                      const xt::pytensor<index_t, 1>& outlets_or_pits,
-                     const xt::pytensor<bool, 1>& active_nodes,
+                     const xt::pytensor<bool, 2>& active_nodes,
                      index_t nbasins)
 {
     py::gil_scoped_release release;
