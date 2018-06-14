@@ -600,7 +600,6 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree()
                              std::numeric_limits<Elevation_T>::min(),
                              std::numeric_limits<Elevation_T>::min()});
 
-    // compile time if
     if (keep_order)
     {
         pass_stack.clear();
@@ -629,7 +628,8 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::reorder_tree()
 
                 if (keep_order)
                 {
-                    if(pass_height <= parent_pass_height)
+					// force children of base nodes to be parsed
+                    if(pass_height <= parent_pass_height && link.nodes[0] != -1)
                         // the pass is bellow the water level of the parent basin
                         parent_basins[link.basins[1]] = parent_basins[link.basins[0]];
                     else
@@ -828,7 +828,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
             continue;
         }
 
-        //        std::cout << '(' << l.nodes[0] << ',' << l.nodes[1] << ") ";
+		//std::cout << '(' << l.nodes[0] << ',' << l.nodes[1] << ") " << l.weight << std::endl;
 
 
         receivers[l.nodes[INFLOW]] = l.nodes[OUTFLOW];
@@ -861,21 +861,25 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
         const Basin_T parsed_basin = l.basins[INFLOW];
         assert(parsed_basin == parent_basins[parsed_basin]);
 
+		//std::cout << "Parsed b: " << parsed_basin << std::endl;
+
         const Elevation_T elev = l.weight;
 
         while(!queue.empty())
         {
-            bool found = false;
+			// flag if a neighboor has been found in "+" directions 
+            bool found_plus = false;
 
-            while(!queue.empty())
+			// parse all first nodes of the queue tagged as "cur_level"
+            while(!queue.empty() && level[queue.front()] == cur_level)
             {
                 const Node_T node = queue.front();
-                if (level[node] > cur_level)
-                    break;
 
-                //                std::cout << "Parse Queue node " << node << '(' << level[node]<<'/' << cur_level<< ')' << std::endl;
+                // std::cout << "Parse Queue node " << node << '(' << level[node]<<'/' << cur_level<< ')' << std::endl;
 
                 queue.pop();
+
+				// add the node to the stack for checking the "x" neighbors
                 stack.push(node);
 
                 const auto coords = detail::coords(node, ncols);
@@ -887,28 +891,39 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
                     if(detail::in_bounds(elev_shape, rr, cc))
                     {
                         const Node_T ineighbor = detail::index(rr, cc, ncols);
-                        if(level[ineighbor] == -1 && parent_basins[basins(ineighbor)] == parsed_basin &&  elevation(ineighbor) < elev)
+
+						//std::cout << "See " << ineighbor << " level " << level[ineighbor] << ", pb " << parent_basins[basins(ineighbor)]
+						//	<< ", h " << elevation(ineighbor) << std::endl;
+
+						
+                        if(level[ineighbor] == -1 // unparsed neighbor
+							&& parent_basins[basins(ineighbor)] == parsed_basin // same basin
+							&&  elevation(ineighbor) <= elev) // bellow water level
                         {
-                            //                           std::cout << "Add " << ineighbor << " to queue " <<tag_level << std::endl;
+                             //std::cout << "Add " << ineighbor << " to queue " <<tag_level << std::endl;
+
+							// add nieghbor to parse queue
                             queue.push(ineighbor);
                             level[ineighbor] = tag_level;
-                            found = true;
+							found_plus = true;
                             receivers(ineighbor) = node;
                             dist2receivers(ineighbor) = d8_distances[detail::get_d8_distance_id(coords.first, coords.second, rr, cc)];
                         }
                     }
                 }
             }
-            if(found)
+            if(found_plus)
                 ++tag_level;
-            found = false;
+
+			// flag if a neighboor has been found in "x" directions 
+            bool found_diag = false;
 
             while(!stack.empty())
             {
                 const Node_T node = stack.top();
                 stack.pop();
 
-                //                std::cout << "Parse Stack node " << node << std::endl;
+                //std::cout << "Parse Stack node " << node << std::endl;
 
 
                 const auto coords = detail::coords(node, ncols);
@@ -920,20 +935,21 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
                     if(detail::in_bounds(elev_shape, rr, cc))
                     {
                         const Node_T ineighbor = detail::index(rr, cc, ncols);
-                        if(level[ineighbor] == -1 && parent_basins[basins(ineighbor)] == parsed_basin && elevation(ineighbor) < elev)
+                        if(level[ineighbor] == -1 && parent_basins[basins(ineighbor)] == parsed_basin && elevation(ineighbor) <= elev)
                         {
-                            //                           std::cout << "Add " << ineighbor << " to queue " <<tag_level << std::endl;
+                            //std::cout << "Add " << ineighbor << " to queue " <<tag_level << std::endl;
                             queue.push(ineighbor);
                             level[ineighbor] = tag_level;
-                            found = true;
+							found_diag = true;
                             receivers(ineighbor) = node;
                             dist2receivers(ineighbor) = d8_distances[detail::get_d8_distance_id(coords.first, coords.second, rr, cc)];
                         }
                     }
                 }
             }
-            if(found)
+            if(found_diag)
                 ++tag_level;
+
             ++cur_level;
         }
         ++tag_level;

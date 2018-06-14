@@ -15,7 +15,7 @@ int main(int , char* [])
     //for (size_t x = 4096; x<4097; x*=2)
     //for (size_t x = 16*1024; x<=16*1024; x*=2)
     //for (size_t x = 64; x <= 8 * 1024; x +=64) //128 iter max
-    for (size_t x = 32; x<=32; ++x)
+    for (size_t x = 44; x<=44; x+=1)
     {
         std::cout << "Size " << x << std::endl;
         Benchmark::run("fastscape", x, x, 3, 2s, false);

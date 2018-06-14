@@ -74,16 +74,19 @@ void fastscape_run(size_t nrows, size_t ncols, FastscapeFunctionType func)
             basin_graph.compute_basins(basins, stack, receivers);
             auto npits   = fs::compute_pits(pits, basin_graph.outlets(), active_nodes, basin_graph.basin_count());
 
-            std::cout << step_count << " " << npits << std::endl;
+			//std::cout << step_count << " " << npits << std::endl;
 
             if( step_count && npits)
-            {std::cout << "err\n";
-            }
+			{
+				std::cout << "err " << pits[0] << std::endl;
+			}
 
         }
 
         // compute stack
         func(stack, receivers, dist2receivers, elevation, active_nodes, dx, dy);
+
+		std::cout << receivers[1800] << std::endl;
 
         //check if receivers are neighbors.
         for(int i = 0; i<receivers.shape()[0]; ++i)
