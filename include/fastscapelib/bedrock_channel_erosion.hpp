@@ -121,7 +121,7 @@ void erode_stream_power(xtensor_t<Er>& erosion,
                         double m_exp,
                         double n_exp,
                         double dt,
-                        double tolerance = 1e-3)
+                        double tolerance)
 {
     detail::erode_stream_power_impl(erosion.derived_cast(),
                                     elevation.derived_cast(),
