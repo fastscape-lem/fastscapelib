@@ -9,6 +9,8 @@
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xstrided_view.hpp"
 
+#include "fastscapelib/utils.hpp"
+
 
 namespace fastscapelib
 {
