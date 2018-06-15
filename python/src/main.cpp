@@ -17,6 +17,22 @@ namespace fs = fastscapelib;
 
 
 template<class T>
+void fill_sinks_flat_py(xt::pytensor<T, 2>& elevation)
+{
+    py::gil_scoped_release release;
+    fs::fill_sinks_flat(elevation);
+}
+
+
+template<class T>
+void fill_sinks_sloped_py(xt::pytensor<T, 2>& elevation)
+{
+    py::gil_scoped_release release;
+    fs::fill_sinks_sloped(elevation);
+}
+
+
+template<class T>
 void compute_receivers_d8_py(xt::pytensor<index_t, 1>& receivers,
                              xt::pytensor<T, 1>& dist2receivers,
                              const xt::pytensor<T, 2>& elevation,
@@ -94,18 +110,24 @@ void compute_drainage_area_grid_py(xt::pytensor<T, 2>& drainage_area,
 
 
 template<class T>
-void fill_sinks_flat_py(xt::pytensor<T, 2>& elevation)
+void erode_stream_power_py(xt::pyarray<T>& erosion,
+                           xt::pyarray<T>& elevation,
+                           xt::pytensor<index_t, 1>& stack,
+                           xt::pytensor<index_t, 1>& receivers,
+                           xt::pytensor<T, 1>& dist2receivers,
+                           xt::pyarray<T>& drainage_area,
+                           double k_coef,
+                           double m_exp,
+                           double n_exp,
+                           double dt,
+                           double tolerance)
 {
     py::gil_scoped_release release;
-    fs::fill_sinks_flat(elevation);
-}
-
-
-template<class T>
-void fill_sinks_sloped_py(xt::pytensor<T, 2>& elevation)
-{
-    py::gil_scoped_release release;
-    fs::fill_sinks_sloped(elevation);
+    fs::erode_stream_power(erosion, elevation,
+                           stack, receivers,
+                           dist2receivers, drainage_area,
+                           k_coef, m_exp, n_exp,
+                           dt, tolerance);
 }
 
 
@@ -145,4 +167,8 @@ PYBIND11_MODULE(_fastscapelib_py, m)
 
     m.def("fill_sinks_sloped_d", &fill_sinks_sloped_py<double>,
           "Fill depressions in elevation data (slightly sloped surfaces).");
+
+    m.def("erode_stream_power_d", &erode_stream_power_py<double>,
+          "Compute bedrock channel erosion during a single time step "
+          "using the Stream Power Law.");
 }
