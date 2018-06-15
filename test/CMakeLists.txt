@@ -87,7 +87,7 @@ set(FASTSCAPELIB_TEST_SRC
   main.cpp
   test_flow_routing.cpp
   test_sinks.cpp
-  test_bedrock_channel_erosion.cpp
+  test_bedrock_channel.cpp
 )
 
 set(FASTSCAPELIB_TEST_TARGET test_fastscapelib)

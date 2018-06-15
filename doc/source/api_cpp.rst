@@ -87,8 +87,12 @@ Drainage area, basins, outlets & pits
 .. doxygenfunction:: fastscapelib::compute_drainage_area(xtensor_t<D>&, const xtensor_t<S>&, const xtensor_t<R>&, double, double)
    :project: fastscapelib
 
-Bedrock channel erosion
------------------------
+Bedrock channel
+---------------
+
+Functions used to drive the evolution of bedrock channels.
+
+Defined in ``fastscapelib/bedrock_channel.hpp``.
 
 .. doxygenfunction:: fastscapelib::erode_stream_power
    :project: fastscapelib

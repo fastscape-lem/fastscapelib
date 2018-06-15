@@ -1,13 +1,13 @@
 #include "gtest/gtest.h"
 #include "xtensor/xtensor.hpp"
 
-#include "fastscapelib/bedrock_channel_erosion.hpp"
+#include "fastscapelib/bedrock_channel.hpp"
 
 
 namespace fs = fastscapelib;
 
 
-TEST(bedrock_channel_erosion, erode_stream_power)
+TEST(bedrock_channel, erode_stream_power)
 {
     // Example in Braun and Willet, 2013 as a test case
     // - fixed drainage area = 2 for all cells
