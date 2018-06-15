@@ -17,9 +17,6 @@
 #include "fastscapelib/consts.hpp"
 
 
-namespace fs = fastscapelib;
-
-
 namespace fastscapelib
 {
 
@@ -119,10 +116,10 @@ void fill_sinks_flat_impl(E&& elevation)
 
         for(unsigned short k=1; k<=8; ++k)
         {
-            index_t kr = inode.r + fs::consts::d8_row_offsets[k];
-            index_t kc = inode.c + fs::consts::d8_col_offsets[k];
+            index_t kr = inode.r + fastscapelib::consts::d8_row_offsets[k];
+            index_t kc = inode.c + fastscapelib::consts::d8_col_offsets[k];
 
-            if(!fs::detail::in_bounds(elev_shape, kr, kc)) { continue; }
+            if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc)) { continue; }
             if(closed(kr, kc)) { continue; }
 
             elevation(kr, kc) = std::max(elevation(kr, kc), inode.value);
@@ -169,10 +166,10 @@ void fill_sinks_sloped_impl(E&& elevation)
 
         for(unsigned short k=1; k<=8; ++k)
         {
-            index_t kr = inode.r + fs::consts::d8_row_offsets[k];
-            index_t kc = inode.c + fs::consts::d8_col_offsets[k];
+            index_t kr = inode.r + fastscapelib::consts::d8_row_offsets[k];
+            index_t kc = inode.c + fastscapelib::consts::d8_col_offsets[k];
 
-            if(!fs::detail::in_bounds(elev_shape, kr, kc)) { continue; }
+            if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc)) { continue; }
             if(closed(kr, kc)) { continue; }
 
             if(elevation(kr, kc) <= elev_tiny_step)

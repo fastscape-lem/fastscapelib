@@ -19,9 +19,6 @@
 #include "fastscapelib/consts.hpp"
 
 
-namespace fs = fastscapelib;
-
-
 namespace fastscapelib
 {
 
@@ -36,8 +33,8 @@ inline auto get_d8_distances(double dx, double dy) -> std::array<double, 9>
     for(size_t k=0; k<9; ++k)
     {
         d8_dists[k] = std::sqrt(
-            std::pow(dy * fs::consts::d8_row_offsets[k], 2.0) +
-            std::pow(dx * fs::consts::d8_col_offsets[k], 2.0));
+            std::pow(dy * fastscapelib::consts::d8_row_offsets[k], 2.0) +
+            std::pow(dx * fastscapelib::consts::d8_col_offsets[k], 2.0));
     }
 
     return d8_dists;
@@ -97,10 +94,10 @@ void compute_receivers_d8_impl(R&& receivers,
 
             for(size_t k=1; k<=8; ++k)
             {
-                index_t kr = r + fs::consts::d8_row_offsets[k];
-                index_t kc = c + fs::consts::d8_col_offsets[k];
+                index_t kr = r + fastscapelib::consts::d8_row_offsets[k];
+                index_t kc = c + fastscapelib::consts::d8_col_offsets[k];
 
-                if(!fs::detail::in_bounds(elev_shape, kr, kc))
+                if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc))
                 {
                     continue;
                 }
