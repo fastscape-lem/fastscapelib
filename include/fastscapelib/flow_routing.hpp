@@ -50,7 +50,7 @@ void add2stack(index_t& nstack,
 {
     for(index_t k=0; k<ndonors(inode); ++k)
     {
-        index_t idonor = donors(inode, k);
+        const auto idonor = donors(inode, k);
         stack(nstack) = idonor;
         ++nstack;
         add2stack(nstack, stack, ndonors, donors, idonor);
@@ -73,14 +73,14 @@ void compute_receivers_d8_impl(R&& receivers,
     const auto d8_dists = detail::get_d8_distances(dx, dy);
 
     const auto elev_shape = elevation.shape();
-    const index_t nrows = static_cast<index_t>(elev_shape[0]);
-    const index_t ncols = static_cast<index_t>(elev_shape[1]);
+    const auto nrows = static_cast<index_t>(elev_shape[0]);
+    const auto ncols = static_cast<index_t>(elev_shape[1]);
 
     for(index_t r=0; r<nrows; ++r)
     {
         for(index_t c=0; c<ncols; ++c)
         {
-            index_t inode = r * ncols + c;
+            const index_t inode = r * ncols + c;
 
             receivers(inode) = inode;
             dist2receivers(inode) = 0.;
@@ -94,16 +94,16 @@ void compute_receivers_d8_impl(R&& receivers,
 
             for(size_t k=1; k<=8; ++k)
             {
-                index_t kr = r + fastscapelib::consts::d8_row_offsets[k];
-                index_t kc = c + fastscapelib::consts::d8_col_offsets[k];
+                const index_t kr = r + fastscapelib::consts::d8_row_offsets[k];
+                const index_t kc = c + fastscapelib::consts::d8_col_offsets[k];
 
                 if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc))
                 {
                     continue;
                 }
 
-                index_t ineighbor = kr * ncols + kc;
-                double slope = (elevation(r, c) - elevation(kr, kc)) / d8_dists[k];
+                const index_t ineighbor = kr * ncols + kc;
+                const double slope = (elevation(r, c) - elevation(kr, kc)) / d8_dists[k];
 
                 if(slope > slope_max)
                 {
@@ -125,7 +125,7 @@ void compute_donors_impl(N&& ndonors,
                          D&& donors,
                          R&& receivers)
 {
-    index_t nnodes = static_cast<index_t>(receivers.size());
+    const auto nnodes = static_cast<index_t>(receivers.size());
 
     std::fill(ndonors.begin(), ndonors.end(), 0);
 
@@ -150,7 +150,7 @@ void compute_stack_impl(S&& stack,
                         D&& donors,
                         R&& receivers)
 {
-    index_t nnodes = static_cast<index_t>(receivers.size());
+    const auto nnodes = static_cast<index_t>(receivers.size());
     index_t nstack = 0;
 
     for(index_t inode=0; inode<nnodes; ++inode)
@@ -178,7 +178,7 @@ index_t compute_basins_impl(B&& basins,
 
     for(auto&& istack : stack)
     {
-        index_t irec = receivers(istack);
+        const auto irec = receivers(istack);
 
         if(irec == istack)
         {
@@ -209,7 +209,7 @@ index_t find_pits_impl(P&& pits,
 
     for(index_t ibasin=0; ibasin<nbasins; ++ibasin)
     {
-        index_t inode = outlets_or_pits(ibasin);
+        const index_t inode = outlets_or_pits(ibasin);
 
         if(active_nodes_flat(inode))
         {
