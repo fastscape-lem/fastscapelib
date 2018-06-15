@@ -7,6 +7,9 @@
 #include "fastscapelib/flow_routing.hpp"
 
 
+namespace fs = fastscapelib;
+
+
 TEST(flow_routing, get_d8_distances)
 {
     auto d8_dist = fs::detail::get_d8_distances(2., 1.);

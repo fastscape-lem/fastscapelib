@@ -4,6 +4,9 @@
 #include "fastscapelib/sinks.hpp"
 
 
+namespace fs = fastscapelib;
+
+
 TEST(sinks, fill_sinks_flat)
 {
     xt::xtensor<double, 2> arr
