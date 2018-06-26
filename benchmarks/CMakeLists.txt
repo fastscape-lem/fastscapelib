@@ -51,6 +51,9 @@ set(FASTSCAPELIB_BENCHMARK
   fastscape_benchmark.hpp
   benchmark_sinks.cpp
   benchmark_basin_graph.cpp
+  examples.hpp
+  voronoi.cpp
+  jail.cpp
 )
 
 set(FASTSCAPELIB_BENCH_TARGET benchmark_fastscapelib)

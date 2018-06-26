@@ -80,8 +80,9 @@ public:
                           const Basins_XT& basins,
                           const Stack_XT& stack, const Active_XT& active_nodes,
                           const Elevation_XT& elevation, Elevation_T dx, Elevation_T dy);
-    void fill_sinks();
 
+	const std::vector<Link_T>&  getLinks() const { return _links; }
+	const std::vector<index_t>& getTreeIndices() const { return _tree; }
 
 protected:
 
@@ -122,8 +123,7 @@ protected:
                                       const Elevation_XT& elevation, const Basins_XT&, double dx, double dy);
 
 
-    void fill_sinks_flat();
-    void fill_sinks_sloped();
+
 
 private:
 

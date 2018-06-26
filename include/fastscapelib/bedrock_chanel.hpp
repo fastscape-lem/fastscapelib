@@ -54,20 +54,41 @@ void erode_spower(Erosion_XT& erosion, const Elevation_XT& elevation, const Stac
         const auto node_elevation = elevation(istack);
         const auto rcv_elevation = elevation(irec) - erosion(irec);
 
-        // iterate: lower elevation until convergence
-        auto elevation_k = node_elevation;
-        auto elevation_prev = std::numeric_limits<Float_T>::max();
+		const auto s0 = rcv_elevation - node_elevation;
 
-        while (std::abs(elevation_k - elevation_prev) > tolerance)
-        {
-            const auto slope = elevation_k - rcv_elevation;
-            const auto diff = (elevation_k - node_elevation + factor * std::pow(slope, n)) /
-                    (1. + factor * n * std::pow(slope, n - 1));
-            elevation_k -= diff;
-            elevation_prev = elevation_k;
-        }
+		if (s0 >= 0.0)
+		{
+			erosion(istack) = 0.0;
+			continue;
+		}
 
-        erosion(istack) = node_elevation - elevation_k;
+		// solve for s = elevation - rcv_elevation (proxy for slope)
+		// equation becomes factor * s^n + s + s0 = 0
+		// with s > 0
+
+		// first guess. Always above the root
+		auto s = -s0;
+
+		for(;;)
+		{
+			const auto kxn = factor * std::pow(s, n);
+			const auto knxnm1 = n * kxn / s;
+			const auto F = kxn + s + s0;
+			const auto dFds = 1 + knxnm1;
+
+			// second order? To be tested and profiled
+			// const auto d2Fds2 = (n - 1) * knxnm1 / slope;
+			// const auto diff = 2 * F * dFds / (2 * dFds * dFds - F * d2Fds2)
+
+			const auto diff = F / dFds; // diff > 0
+			s -= diff;
+
+			if (diff <= tolerance)
+				break;
+		} 
+
+
+        erosion(istack) = node_elevation - rcv_elevation - s;
     }
 }
 
