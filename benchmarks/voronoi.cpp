@@ -129,7 +129,7 @@ void example_vornoi()
 		area = xt::ones<index_t>({ nrows*ncols }) * dx*dy;
 		fs::compute_drainage_area(area, stack, receivers);
 		fs::erode_spower(erosion, elevation, stack, receivers, dist2receivers, area,
-			7.0e-4f, 0.4f, 1.0f, 10.0f, 1.0e-4f);
+			7.0e-4, 0.4, 1.0, 10.0, 1.0e-4);
 
 		for (size_t k = 0; k < nrows*ncols; ++k)
 			elevation(k) = elevation(k) - erosion(k);

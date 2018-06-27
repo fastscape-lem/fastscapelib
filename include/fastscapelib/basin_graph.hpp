@@ -805,15 +805,16 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
     const index_t ncols = (index_t) elev_shape[1];
 
     const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
+	std::array<double, 9> d8_distances_inv;
+	for (int i = 0; i < 9; ++i)
+		d8_distances_inv[i] = 1.0 / d8_distances[i];
 
     std::queue<Node_T> queue;
-    std::stack<Node_T> stack;
-    std::vector<index_t> level (nrows * ncols, -1);
 
+	enum class Tag : char { UnParsed = 0, InQueue = 1, WithRcv = 2};
+    std::vector<Tag> tag (nrows * ncols, Tag::UnParsed);
 
-    index_t tag_level = 1;
-    index_t cur_level = 0;
-
+	
 
     // parse in basin order
     for(const index_t pass : pass_stack)
@@ -828,131 +829,80 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
             continue;
         }
 
-		//std::cout << '(' << l.nodes[0] << ',' << l.nodes[1] << ") " << l.weight << std::endl;
+		//receivers[l.nodes[INFLOW]] = l.nodes[OUTFLOW];
+        //dist2receivers(l.nodes[INFLOW]) = d8_distances[detail::get_d8_distance_id(l.nodes[INFLOW], l.nodes[OUTFLOW], ncols)];
 
 
-        receivers[l.nodes[INFLOW]] = l.nodes[OUTFLOW];
-        dist2receivers(l.nodes[INFLOW]) = d8_distances[detail::get_d8_distance_id(l.nodes[INFLOW], l.nodes[OUTFLOW], ncols)];
-
-//        if (level[l.nodes[INFLOW]] != -1)
-//        {
-//            std::cout << basins << std::endl;
-//            std::cout << elevation << std::endl;
-//            for(int i = 0; i< 8; ++i)
-//            {
-//                for(int j = 0; j<8; ++j)
-//                    std::cout << parent_basins[basins[j+8*i]] << ' ';
-//                std::cout << std::endl;
-//            }
-//            for(int i = 0; i< 8; ++i)
-//            {
-//                for(int j = 0; j<8; ++j)
-//                    std::cout << j+8*i << ' ';
-//                std::cout << std::endl;
-//            }
-//        }
-
-        assert(level[l.nodes[INFLOW]] == -1);
-
-
+        assert(tag[l.nodes[INFLOW]] == Tag::UnParsed);
 
         queue.push(l.nodes[INFLOW]);
-        level[l.nodes[INFLOW]] = cur_level;
+		tag[l.nodes[OUTFLOW]] = Tag::WithRcv;
+		tag[l.nodes[INFLOW]] = Tag::InQueue;
         const Basin_T parsed_basin = l.basins[INFLOW];
         assert(parsed_basin == parent_basins[parsed_basin]);
 
-		//std::cout << "Parsed b: " << parsed_basin << std::endl;
+		auto outflow_coords = detail::coords(l.nodes[OUTFLOW], ncols);
+
+		
 
         const Elevation_T elev = l.weight;
 
-        while(!queue.empty())
-        {
-			// flag if a neighboor has been found in "+" directions 
-            bool found_plus = false;
+		while (!queue.empty())
+		{
+			Node_T node = queue.front();
 
-			// parse all first nodes of the queue tagged as "cur_level"
-            while(!queue.empty() && level[queue.front()] == cur_level)
-            {
-                const Node_T node = queue.front();
+			queue.pop();
 
-                // std::cout << "Parse Queue node " << node << '(' << level[node]<<'/' << cur_level<< ')' << std::endl;
+			const auto coords = detail::coords(node, ncols);
 
-                queue.pop();
+			Node_T rcv = -1;
+			double rcv_cost = std::numeric_limits<double>::lowest();
+			double cost_r = double(outflow_coords.first - coords.first);
+			double cost_c = double(outflow_coords.second - coords.second);
 
-				// add the node to the stack for checking the "x" neighbors
-                stack.push(node);
 
-                const auto coords = detail::coords(node, ncols);
+			// parse neighbors
+			for (int k = 1; k < 9; ++k)
+			{
+				index_t rr = coords.first + fs::consts::d8_row_offsets[k];
+				index_t cc = coords.second + fs::consts::d8_col_offsets[k];
 
-                for(int i = 1; i<5; ++i)
-                {
-                    const index_t rr = coords.first + consts::d4_row_offsets[i];
-                    const index_t cc = coords.second + consts::d4_col_offsets[i];
-                    if(detail::in_bounds(elev_shape, rr, cc))
-                    {
-                        const Node_T ineighbor = detail::index(rr, cc, ncols);
+				if (detail::in_bounds(elev_shape, rr, cc))
+				{
+					const Node_T ineighbor = detail::index(rr, cc, ncols);
+					
 
-						//std::cout << "See " << ineighbor << " level " << level[ineighbor] << ", pb " << parent_basins[basins(ineighbor)]
-						//	<< ", h " << elevation(ineighbor) << std::endl;
+					if ((ineighbor != l.nodes[OUTFLOW] && parent_basins[basins(ineighbor)] != parsed_basin) || elevation(ineighbor) > elev)
+						continue;
 
 						
-                        if(level[ineighbor] == -1 // unparsed neighbor
-							&& parent_basins[basins(ineighbor)] == parsed_basin // same basin
-							&&  elevation(ineighbor) <= elev) // bellow water level
-                        {
-                             //std::cout << "Add " << ineighbor << " to queue " <<tag_level << std::endl;
 
-							// add nieghbor to parse queue
-                            queue.push(ineighbor);
-                            level[ineighbor] = tag_level;
-							found_plus = true;
-                            receivers(ineighbor) = node;
-                            dist2receivers(ineighbor) = d8_distances[detail::get_d8_distance_id(coords.first, coords.second, rr, cc)];
-                        }
-                    }
-                }
-            }
-            if(found_plus)
-                ++tag_level;
+					// neighbor is already parsed, in the same basin. Could be a receiver
+					if (tag[ineighbor] == Tag::WithRcv)
+					{
+						double cost = cost_r * double(fs::consts::d8_row_offsets[k]) + cost_c * double(fs::consts::d8_col_offsets[k]);
+						cost *= d8_distances_inv[detail::get_d8_distance_id(coords.first, coords.second, rr, cc)];
 
-			// flag if a neighboor has been found in "x" directions 
-            bool found_diag = false;
+						if (cost > rcv_cost)
+						{
+							rcv = ineighbor;
+							rcv_cost = cost;
+						}
+					}
+					else if (tag[ineighbor] == Tag::UnParsed)
+					{
+						queue.push(ineighbor);
+						tag[ineighbor] = Tag::InQueue;
+					}
+				}
+			}
 
-            while(!stack.empty())
-            {
-                const Node_T node = stack.top();
-                stack.pop();
+			assert(rcv != -1);
 
-                //std::cout << "Parse Stack node " << node << std::endl;
-
-
-                const auto coords = detail::coords(node, ncols);
-
-                for(int i = 1; i<5; ++i)
-                {
-                    const index_t rr = coords.first + consts::d4_row_offsets_cross[i];
-                    const index_t cc = coords.second + consts::d4_col_offsets_cross[i];
-                    if(detail::in_bounds(elev_shape, rr, cc))
-                    {
-                        const Node_T ineighbor = detail::index(rr, cc, ncols);
-                        if(level[ineighbor] == -1 && parent_basins[basins(ineighbor)] == parsed_basin && elevation(ineighbor) <= elev)
-                        {
-                            //std::cout << "Add " << ineighbor << " to queue " <<tag_level << std::endl;
-                            queue.push(ineighbor);
-                            level[ineighbor] = tag_level;
-							found_diag = true;
-                            receivers(ineighbor) = node;
-                            dist2receivers(ineighbor) = d8_distances[detail::get_d8_distance_id(coords.first, coords.second, rr, cc)];
-                        }
-                    }
-                }
-            }
-            if(found_diag)
-                ++tag_level;
-
-            ++cur_level;
-        }
-        ++tag_level;
+			receivers(node) = rcv;
+			dist2receivers(node) = d8_distances[detail::get_d8_distance_id(node, rcv, ncols)];
+			tag[node] = Tag::WithRcv;
+		}
     }
 
     //    std::cout << std::endl;

@@ -28,15 +28,18 @@ namespace fs = fastscapelib;
 namespace fastscapelib
 {
 
-template<class Erosion_XT, class Elevation_XT, class Stack_XT,
-         class Receivers_XT, class Dist2Receivers_XT,
-         class Area_XT,
-         class Float_T = typename Erosion_XT::value_type>
+	template<class Erosion_XT, class Elevation_XT, class Stack_XT,
+		class Receivers_XT, class Dist2Receivers_XT,
+		class Area_XT,
+		class Float_T>
 void erode_spower(Erosion_XT& erosion, const Elevation_XT& elevation, const Stack_XT&stack,
                   const Receivers_XT& receivers, const Dist2Receivers_XT& dist2receivers,
                  const Area_XT& area, Float_T k, Float_T m, Float_T n, Float_T dt, Float_T tolerance)
 {
 
+		using Scalar_T = std::common_type_t<Float_T, typename Erosion_XT::value_type, typename Elevation_XT::value_type, typename Area_XT::value_type>;
+
+	std::vector<Scalar_T> water(stack.size());
 
     for (const auto istack : stack)
     {
@@ -46,6 +49,7 @@ void erode_spower(Erosion_XT& erosion, const Elevation_XT& elevation, const Stac
         {
             // no erosion at basin outlets
             erosion(istack) = 0.0;
+			water[istack] = elevation(istack);
             continue;
         }
 
@@ -59,6 +63,7 @@ void erode_spower(Erosion_XT& erosion, const Elevation_XT& elevation, const Stac
 		if (s0 >= 0.0)
 		{
 			erosion(istack) = 0.0;
+			water[istack] = std::max(node_elevation, water[irec]);
 			continue;
 		}
 
@@ -87,8 +92,13 @@ void erode_spower(Erosion_XT& erosion, const Elevation_XT& elevation, const Stac
 				break;
 		} 
 
+		auto elev = rcv_elevation + s;
 
-        erosion(istack) = node_elevation - rcv_elevation - s;
+		if (elev < water[irec])
+			elev = std::min(node_elevation, water[irec]);
+
+        erosion(istack) = node_elevation - elev;
+		water[istack] = std::max(elev, water[irec]);
     }
 }
 

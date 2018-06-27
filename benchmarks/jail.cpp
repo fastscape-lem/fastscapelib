@@ -6,8 +6,8 @@
 #include "examples.hpp"
 
 
-template <fs::ConnectType connect, class Elev_T, class Angle_T, class Active_T>
-void fastscape(Elev_T& elevation, Angle_T& angles, const Active_T& active_nodes)
+template <fs::ConnectType connect, class Elev_T, class Water_T, class Angle_T, class Active_T>
+void fastscape(Elev_T& elevation, Water_T& water, Angle_T& angles, const Active_T& active_nodes)
 {
 	auto shape = elevation.shape();
 	int nrows = (int)shape[0];
@@ -26,7 +26,7 @@ void fastscape(Elev_T& elevation, Angle_T& angles, const Active_T& active_nodes)
 	xt::xtensor<double, 1> area(shape1D);
 	xt::xtensor<double, 1> erosion(shape1D);
 
-	int num_iter = 3;
+	int num_iter = 2;
 
 	for (int s = 0; s < num_iter; ++s)
 	{
@@ -46,7 +46,7 @@ void fastscape(Elev_T& elevation, Angle_T& angles, const Active_T& active_nodes)
 			area = xt::ones<index_t>({ nrows*ncols }) * dx*dy;
 			fs::compute_drainage_area(area, stack, receivers);
 			fs::erode_spower(erosion, elevation, stack, receivers, dist2receivers, area,
-				7.0e-4f, 0.4f, 1.0f, 1000.0f, 1.0e-4f);
+				7.0e-4, 0.4, 1.0, 5000.0, 1.0e-4);
 
 			for (size_t k = 0; k < nrows*ncols; ++k)
 				elevation(k) = elevation(k) - erosion(k);
@@ -61,12 +61,14 @@ void fastscape(Elev_T& elevation, Angle_T& angles, const Active_T& active_nodes)
 
 		angles[i] = std::atan2(double(y), double(x));
 	}
+
+	fs::fill_sinks_flat(water, elevation, stack, receivers);
 }
 
 void example_jail()
 {
 
-	int nrows = 500, ncols = 500;
+	int nrows = 100, ncols = 100;
 	
 	std::array<size_t, 2> shape = { (size_t)nrows, (size_t)ncols };
 
@@ -85,11 +87,14 @@ void example_jail()
 	xt::xtensor<double, 2> angles(shape);
 
 	xt::xtensor<double, 2> elev_simple = elevation;
-	fastscape<fs::ConnectType::Simple>(elev_simple, angles, active_nodes);
+	xt::xtensor<double, 2> water_simple(shape);
+	fastscape<fs::ConnectType::Simple>(elev_simple, water_simple, angles, active_nodes);
 	xt::xtensor<double, 2> elev_carved = elevation;
-	fastscape<fs::ConnectType::Carved>(elev_carved, angles, active_nodes);
+	xt::xtensor<double, 2> water_carved(shape);
+	fastscape<fs::ConnectType::Carved>(elev_carved, water_carved, angles, active_nodes);
 	xt::xtensor<double, 2> elev_sloped = elevation;
-	fastscape<fs::ConnectType::Sloped>(elev_sloped, angles, active_nodes);
+	xt::xtensor<double, 2> water_sloped(shape);
+	fastscape<fs::ConnectType::Sloped>(elev_sloped, water_sloped, angles, active_nodes);
 
 
 	dbg_out("results/jail/elevation-", 0, elevation, shape);
@@ -97,5 +102,9 @@ void example_jail()
 	dbg_out("results/jail/carved-", 0, elev_carved, shape);
 	dbg_out("results/jail/sloped-", 0, elev_sloped, shape);
 	dbg_out("results/jail/angles-", 0, angles, shape);
+
+	dbg_out("results/jail/wsimple-", 0, water_simple, shape);
+	dbg_out("results/jail/wcarved-", 0, water_carved, shape);
+	dbg_out("results/jail/wsloped-", 0, water_sloped, shape);
 
 }
