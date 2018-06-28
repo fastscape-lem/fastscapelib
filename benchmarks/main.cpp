@@ -13,7 +13,9 @@ using namespace std::literals;
 int main(int , char* [])
 {
 	//example_vornoi();
-	example_jail();
+	//example_jail();
+	//generate_mountain();
+	example_mountain();
 
 	std::system("pause");
 

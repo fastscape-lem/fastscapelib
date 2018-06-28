@@ -54,6 +54,7 @@ set(FASTSCAPELIB_BENCHMARK
   examples.hpp
   voronoi.cpp
   jail.cpp
+  mountain.cpp
 )
 
 set(FASTSCAPELIB_BENCH_TARGET benchmark_fastscapelib)
