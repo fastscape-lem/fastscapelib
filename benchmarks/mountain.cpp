@@ -2,10 +2,13 @@
 #include "fastscapelib/basin_graph.hpp"
 #include "fastscapelib/flow_routing.hpp"
 #include "fastscapelib/bedrock_chanel.hpp"
+#include "benchmark_basin_graph.hpp"
+#include "benchmark_sinks.hpp"
 
 #include <xtensor/xrandom.hpp>
 
 #include "examples.hpp"
+#include <map>
 
 template <class Elev_T, class Active_T>
 void fastscape(Elev_T& elevation, const Active_T& active_nodes, double dx, double dt, int num_iter)
@@ -167,12 +170,39 @@ void example_mountain()
 {
 	xt::xtensor<double, 1> h_prop = { 0, .015625, .03125, .0625, .125, .25, .5, 1.0 };
 	xt::xtensor<int, 1> m_size = { 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+	//xt::xtensor<int, 1> m_size = { 32, 64, 128, 256 };
 
 	xt::xtensor<double, 2> results({ m_size.size(), h_prop.size() });
 
 	xt::xtensor<double, 2> elevation;
+
+	using FastscapeFunctionType = std::function<void(
+		xt::xtensor<index_t, 1>&      /*stack*/,
+		xt::xtensor<index_t, 1>&      /*receivers*/,
+		xt::xtensor<double, 1>&       /*dist2receviers*/,
+		const xt::xtensor<double, 2>& /*elevation*/,
+		const xt::xtensor<bool, 2>&   /*active nodes  */,
+		double dx, double dy)>;
+
+	std::map<std::string, FastscapeFunctionType> funcs;
+	funcs["Kruskal simple"] = benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Simple>;
+	funcs["Boruvka simple"] = benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Simple>;
+	funcs["Kruskal carved"] = benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Carved>;
+	funcs["Boruvka carved"] = benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Carved>;
+	funcs["Kruskal sloped"] = benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Sloped>;
+	funcs["Boruvka sloped"] = benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Sloped>;
+	funcs["Sinks"] = benchmark_fastscape_sinks;
+
+	
+
+	std::stringstream out;
+	out << "bench = {";
+
 	for (int s : m_size)
 	{
+
+		out << s << ":{";
+
 		dbg_in("results/mountain/bedrock-", s, elevation);
 
 		auto holes_id = holes(elevation.shape());
@@ -182,12 +212,65 @@ void example_mountain()
 		{
 			int target_holes = (int)(hp *  double(holes_id.size()));
 
+			out << hp << ":{'numholes':"<<target_holes<<',';
+
 			for (int i = num_holes; i < target_holes; ++i)
 				dig_hole(elevation, holes_id[i]);
 			num_holes = target_holes;
 
 			std::cerr << s << ' ' << num_holes << std::endl;
+
+			std::array<size_t, 1> shape1D = { elevation.size() };
+
+			xt::xtensor<index_t, 1> stack(shape1D);
+			xt::xtensor<index_t, 1> receivers(shape1D);
+			xt::xtensor<double, 1> dist2receivers(shape1D);
+			xt::xtensor<bool, 2> active_nodes(elevation.shape());
+			for (size_t i = 0; i<active_nodes.shape()[0]; ++i)
+				for (size_t j = 0; j<active_nodes.shape()[1]; ++j)
+					active_nodes(i, j) = i != 0 && j != 0
+					&& i != active_nodes.shape()[0] - 1
+					&& j != active_nodes.shape()[1] - 1;
+
+			for (auto f : funcs)
+			{
+				std::vector<int64_t> times;
+				int64_t times_sum = 0;
+
+				for (int i = 0; i < 10; ++i)
+				{
+
+					xt::xtensor<double, 2> elev = elevation;
+
+					auto start = std::chrono::high_resolution_clock::now();
+
+					f.second(stack, receivers, dist2receivers, elev, active_nodes, 10.0,10.0);
+
+					auto stop = std::chrono::high_resolution_clock::now();
+					times.push_back((stop - start).count());
+					times_sum += times.back();
+				}
+				double times_avg = (double)times_sum / (double)times.size();
+				double time_variance = 0;
+				for (int64_t time : times)
+					time_variance += ((double)time - times_avg) * ((double)time - times_avg);
+				time_variance /= (double)(times.size() - 1);
+
+				double time_sdev = std::sqrt(time_variance);
+
+				out << "'" << f.first<<"':(" << times_avg << ',' << time_sdev << "),";
+			}
+
+			out << "},"; //hp
 		}
+		out << "},"; // s
 	}
 
+	out << "}";
+
+	std::ofstream file("results/mountain/bench.py");
+	if (!file)
+		std::cerr << "Impossible to open file results/mountain/bench.py\n";
+	else
+		file << out.str();
 }
