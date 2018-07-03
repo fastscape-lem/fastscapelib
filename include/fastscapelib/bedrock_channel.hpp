@@ -63,8 +63,8 @@ void erode_stream_power_impl(Er&& erosion,
                        std::pow(drainage_area_flat(istack), m_exp) /
                        std::pow(dist2receivers(istack), n_exp));
 
-        T istack_elevation = elevation_flat(istack);                   // at current step
-        T irec_elevation = elevation_flat(irec) - erosion_flat(irec);  // at next step
+        T istack_elevation = elevation_flat(istack);                   // at time t
+        T irec_elevation = elevation_flat(irec) - erosion_flat(irec);  // at time t+dt
 
         if (irec_elevation >= istack_elevation)
         {
@@ -90,9 +90,7 @@ void erode_stream_power_impl(Er&& erosion,
             }
         }
 
-        auto istack_new_elevation = irec_elevation + delta_k;
-        erosion_flat(istack) = istack_elevation - istack_new_elevation;
-
+        erosion_flat(istack) = delta_0 - delta_k;
     }
 }
 
