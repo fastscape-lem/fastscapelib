@@ -21,6 +21,12 @@ namespace detail
 
 /**
  * erode_stream_power implementation.
+ *
+ * The implementation here slightly differs from the one described in
+ * Braun & Willet (2013). The problem is reformulated so that the
+ * Newton-Raphson method is applied on the difference of elevation
+ * between a node and those of its receiver, rather than on the node's
+ * elevation itself. This allows to save some operations.
  */
 template<class Er, class El, class S, class R, class Di, class Dr>
 void erode_stream_power_impl(Er&& erosion,
@@ -35,46 +41,58 @@ void erode_stream_power_impl(Er&& erosion,
                              double dt,
                              double tolerance)
 {
-    using T = typename std::decay_t<El>::value_type;;
+    using T = std::common_type_t<typename std::decay_t<Er>::value_type,
+                                 typename std::decay_t<El>::value_type>;
 
     auto erosion_flat = xt::flatten(erosion);
     const auto elevation_flat = xt::flatten(elevation);
     const auto drainage_area_flat = xt::flatten(drainage_area);
 
-    for (auto&& istack : stack)
+    for (const auto& istack : stack)
     {
-        const index_t irec = receivers(istack);
+        index_t irec = receivers(istack);
 
         if (irec == istack)
         {
             // no erosion at basin outlets
-            erosion(istack) = 0.0;
+            erosion_flat(istack) = 0.;
             continue;
         }
 
-        const double factor = (k_coef * dt *
-                               std::pow(drainage_area_flat(istack), m_exp) /
-                               std::pow(dist2receivers(istack), n_exp));
+        auto factor = (k_coef * dt *
+                       std::pow(drainage_area_flat(istack), m_exp) /
+                       std::pow(dist2receivers(istack), n_exp));
 
-        const T istack_elevation = elevation_flat(istack);
-        const T irec_elevation = elevation_flat(irec) - erosion(irec);
+        T istack_elevation = elevation_flat(istack);                   // at current step
+        T irec_elevation = elevation_flat(irec) - erosion_flat(irec);  // at next step
 
-        // iterate: lower elevation until convergence
-        T elevation_k = istack_elevation;
-        T elevation_prev = std::numeric_limits<T>::max();
-
-        while (std::abs(elevation_k - elevation_prev) > tolerance)
+        if (irec_elevation >= istack_elevation)
         {
-            const auto slope = elevation_k - irec_elevation;
-            const auto diff = (
-                (elevation_k - istack_elevation + factor * std::pow(slope, n_exp)) /
-                (1. + factor * n_exp * std::pow(slope, n_exp - 1)));
-
-            elevation_k -= diff;
-            elevation_prev = elevation_k;
+            // no erosion for corrected receivers within a depression or flat area
+            erosion_flat(istack) = 0.;
+            continue;
         }
 
-        erosion_flat(istack) = istack_elevation - elevation_k;
+        // 1st order Newton-Raphson iterations on different (k)
+        T delta_0 = istack_elevation - irec_elevation;
+        T delta_k = delta_0;
+
+        while (true)
+        {
+            auto delta_f = factor * std::pow(delta_k, n_exp);
+            auto diff = (delta_k + delta_f - delta_0) / (1 + n_exp * delta_f / delta_k);
+
+            delta_k -= diff;
+
+            if (diff <= tolerance)
+            {
+                break;
+            }
+        }
+
+        auto istack_new_elevation = irec_elevation + delta_k;
+        erosion_flat(istack) = istack_elevation - istack_new_elevation;
+
     }
 }
 

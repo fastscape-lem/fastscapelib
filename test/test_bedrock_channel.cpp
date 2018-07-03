@@ -1,3 +1,4 @@
+#include <cmath>
 #include <limits>
 
 #include "gtest/gtest.h"
@@ -6,6 +7,7 @@
 #include "xtensor/xmath.hpp"
 
 #include "fastscapelib/bedrock_channel.hpp"
+#include "fastscapelib/utils.hpp"
 
 
 using namespace xt::placeholders;
@@ -48,7 +50,7 @@ auto get_steady_slope_numerical(double k_coef,
     dist2receivers(0) = 0.;
     uplift(0) = 0.;
 
-    // iterate until steady state is reached
+    // run model until steady state is reached
     double elevation_diff = std::numeric_limits<double>::max();
 
     while (elevation_diff > 1e-3)
@@ -97,6 +99,7 @@ auto get_steady_slope_analytical(double k_coef,
     auto _slope = (std::pow(u_rate / k_coef, 1. / n_exp) *
                    xt::pow(drainage_area, -m_exp / n_exp));
 
+    // don't return 1st item for comparison with numerical solution
     xt::xtensor<double, 1> slope = xt::view(_slope, xt::range(1, _));
 
     return slope;
@@ -136,28 +139,26 @@ TEST(bedrock_channel, erode_stream_power)
                                                    u_rate, hack_coef, hack_exp,
                                                    nnodes, spacing, x0);
 
-        EXPECT_TRUE(xt::allclose(slope_n, slope_a, 1e-5, 1e-6));
+        EXPECT_TRUE(xt::allclose(slope_n, slope_a, 1e-5, 1e-5));
     }
 
-    // {
-    //     // TODO: (regression test: fix bug)
-    //     // Test against analytical solution of slope at steady state for
-    //     // 1d river profile ( n != 1, check for Newton iterations)
-    //     SCOPED_TRACE("steady-state analytical 1d n!=1");
+    {
+        // TODO: refactor here and above to loop over more n_exp values
+        SCOPED_TRACE("steady-state analytical 1d n!=1");
 
-    //     double n_exp = 1.5;
+        double n_exp = 2.;
 
-    //     auto slope_n = get_steady_slope_numerical(k_coef, m_exp, n_exp,
-    //                                               u_rate, hack_coef, hack_exp,
-    //                                               nnodes, spacing, x0,
-    //                                               dt, tolerance);
+        auto slope_n = get_steady_slope_numerical(k_coef, m_exp, n_exp,
+                                                  u_rate, hack_coef, hack_exp,
+                                                  nnodes, spacing, x0,
+                                                  dt, tolerance);
 
-    //     auto slope_a = get_steady_slope_analytical(k_coef, m_exp, n_exp,
-    //                                                u_rate, hack_coef, hack_exp,
-    //                                                nnodes, spacing, x0);
+        auto slope_a = get_steady_slope_analytical(k_coef, m_exp, n_exp,
+                                                   u_rate, hack_coef, hack_exp,
+                                                   nnodes, spacing, x0);
 
-    //     EXPECT_TRUE(xt::allclose(slope_n, slope_a, 1e-5, 1e-6));
-    // }
+        EXPECT_TRUE(xt::allclose(slope_n, slope_a, 1e-5, 1e-5));
+    }
 
     // TODO: test for 2D (maybe just simple dumb test to ensure no
     //       error at compile/runtime is raised when using 2-d arrays)
