@@ -101,13 +101,20 @@ void erode_stream_power_impl(Er&& erosion,
  * Compute bedrock channel erosion during a single time step using the
  * Stream Power Law.
  *
- * It uses an implicit scheme detailed in Braun and Willet's (2013).
+ * It numerically solves the Stream Power Law [dh/dt = K A^m (dh/dx)^n]
+ * using an implicit finite difference scheme 1st order in space and time.
+ * The method is detailed in Braun and Willet's (2013) and has been
+ * slightly reformulated/optimized.
  *
- * It supports both unstructured mesh and 2-d grid.
+ * It requires as input some information about the flow tree topology
+ * (e.g., flow receivers and stack order) and geometry (e.g., distance
+ * to receivers). This generic function is thus grid/mesh agnostic and
+ * can be applied in both 1-d (river profile) and 2-d (river network)
+ * cases.
  *
  * @param erosion : ``[intent=out, shape=(nrows, ncols)||(nnodes)]``
  *     Erosion at grid node.
- * @param elevation : ``[intent=out, shape=(nrows, ncols)||(nnodes)]``
+ * @param elevation : ``[intent=in, shape=(nrows, ncols)||(nnodes)]``
  *     Elevation at grid node.
  * @param stack :``[intent=in, shape=(nnodes)]``
  *     Stack position at grid node.
@@ -122,19 +129,19 @@ void erode_stream_power_impl(Er&& erosion,
  * @param m_exp : ``[intent=in]``
  *     Stream Power Law drainage area exponent.
  * @param n_exp : ``[intent=in]``
- *     Stream Power Law drainage slope exponent.
+ *     Stream Power Law slope exponent.
  * @param dt : ``[intent=in]``
  *     Time step duration.
  * @param tolerance : ``[intent=in]``
- *     Tolerance used for convergence of Newton's iterations.
+ *     Tolerance used for Newton's iterations.
  */
 template<class Er, class El, class S, class R, class Di, class Dr>
 void erode_stream_power(xtensor_t<Er>& erosion,
-                        xtensor_t<El>& elevation,
-                        xtensor_t<S>& stack,
-                        xtensor_t<R>& receivers,
-                        xtensor_t<Di>& dist2receivers,
-                        xtensor_t<Dr>& drainage_area,
+                        const xtensor_t<El>& elevation,
+                        const xtensor_t<S>& stack,
+                        const xtensor_t<R>& receivers,
+                        const xtensor_t<Di>& dist2receivers,
+                        const xtensor_t<Dr>& drainage_area,
                         double k_coef,
                         double m_exp,
                         double n_exp,
