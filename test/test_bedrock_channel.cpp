@@ -18,7 +18,8 @@ namespace fs = fastscapelib;
 
 /**
  * Get slope of 1-d bedrock channel profile at steady state from
- * numerical simulation.
+ * numerical simulation of uplift vs erosion using the stream-power
+ * law.
  *
  * Drainage area is estimated using Hack's law.
  */
@@ -79,7 +80,8 @@ auto get_steady_slope_numerical(double k_coef,
 
 /**
  * Get slope of 1-d bedrock channel profile at steady state from
- * analytical solution.
+ * analytical solution of uplift vs. erosion using the stream-power
+ * law.
  *
  * Drainage area is estimated using Hack's law.
  */
@@ -110,12 +112,13 @@ auto get_steady_slope_analytical(double k_coef,
 
 TEST(bedrock_channel, erode_stream_power)
 {
-    // Test against analytical solution of slope at steady state for
-    // 1d river profile and for multiple values of n_exp
+    // Test numerical vs. analytical solution of the slope of a 1-d
+    // river profile at steady state.
+    // Test for multiple n_exp values
     // TODO: add test for n_exp < 1 (not working currently)
     double k_coef = 1e-3;
     double m_exp = 0.5;
-    std::array<double, 4> n_exp_vals {1., 1.5, 2., 4.};
+    std::array<double, 3> n_exp_vals {1., 2., 4.};
 
     double u_rate = 0.001;
 
@@ -131,7 +134,7 @@ TEST(bedrock_channel, erode_stream_power)
 
     for (const auto& n_exp : n_exp_vals)
     {
-        SCOPED_TRACE("steady-state analytical 1d with n=" + std::to_string(n_exp));
+        SCOPED_TRACE("steady-state analytical 1-d with n=" + std::to_string(n_exp));
 
         auto slope_n = get_steady_slope_numerical(k_coef, m_exp, n_exp,
                                                   u_rate, hack_coef, hack_exp,
@@ -145,22 +148,34 @@ TEST(bedrock_channel, erode_stream_power)
         EXPECT_TRUE(xt::allclose(slope_n, slope_a, 1e-5, 1e-5));
     }
 
-    // TODO: test for 2D (maybe just simple dumb test to ensure no
-    //       error at compile/runtime is raised when using 2-d arrays)
+    // Test on a tiny (2x2) 2-d square grid with a planar surface
+    // tilted in y (rows) and with all outlets on the 1st row.
+    {
+        SCOPED_TRACE("simple 2-d test");
 
-    // Example in Braun and Willet, 2013 as a test case
-    // - fixed drainage area = 2 for all cells
-    // - fixed dist2receivers = 1 for all nodes (except outlet)
-    /*xt::xtensor<index_t, 1> receivers {1, 4, 1, 6, 4, 4, 5, 4, 6, 7};
-    xt::xtensor<double, 1> dist2receivers = xt::ones<double>({10}) * 2.;
-    xt::xtensor<index_t, 1> stack {4, 1, 0, 2, 5, 6, 3, 8, 7, 9};
-    xt::xtensor<double, 1> drainage_area = xt::ones<double>({10}) * 2.;
-    xt::xtensor<double, 1> elevation = xt::zeros<double>({10});
-    xt::xtensor<double, 1> erosion = xt::zeros<double>({10});
+        xt::xtensor<index_t, 1> receivers {0, 1, 0, 1};
+        xt::xtensor<double, 1> dist2receivers = {0., 0., spacing, spacing};
+        xt::xtensor<index_t, 1> stack {0, 2, 1, 3};
 
-    fs::erode_stream_power(erosion, elevation, stack,
-                           receivers, dist2receivers, drainage_area,
-                           1e-7, 0.4, 1., 1000., 1e-3);
-    */
-    //EXPECT_EQ(arr(1, 1), arr(0, 0));
+        double a = spacing * spacing;
+        xt::xtensor<double, 2> drainage_area {{2*a, 2*a}, {a, a}};
+
+        double h = 1.;
+        xt::xtensor<double, 2> elevation {{0., 0.}, {h, h}};
+
+        xt::xtensor<double, 2> erosion = xt::empty<double>({2, 2});
+
+        double n_exp = 1.;
+        double dt = 1.;  // use small time step (compare with explicit scheme)
+
+        fs::erode_stream_power(erosion, elevation, stack,
+                               receivers, dist2receivers, drainage_area,
+                               k_coef, m_exp, n_exp, dt, tolerance);
+
+        double slope = h / spacing;
+        double err = dt * k_coef * std::pow(a, m_exp) * std::pow(slope, n_exp);
+        xt::xtensor<double, 2> expected_erosion = {{0., 0.}, {err, err}};
+
+        EXPECT_TRUE(xt::allclose(erosion, expected_erosion, 1e-5, 1e-5));
+    }
 }
