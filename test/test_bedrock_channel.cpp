@@ -68,10 +68,10 @@ auto get_steady_slope_numerical(double k_coef,
         elevation_diff = std::sqrt(sum_squares);
     }
 
-    // compute slope
-    auto elevation_right = xt::view(elevation, xt::range(1, _));
-    auto elevation_left = xt::view(elevation, xt::range(_, nnodes - 1));
-    xt::xtensor<double, 1> slope = (elevation_right - elevation_left) / spacing;
+    // compute slope using backward finite difference scheme
+    auto elevation_node = xt::view(elevation, xt::range(1, _));
+    auto elevation_downstream = xt::view(elevation, xt::range(_, nnodes - 1));
+    xt::xtensor<double, 1> slope = (elevation_node - elevation_downstream) / spacing;
 
     return slope;
 }
@@ -98,11 +98,11 @@ auto get_steady_slope_analytical(double k_coef,
 
     auto drainage_area = hack_coef * xt::pow(x, hack_exp);
 
-    auto _slope = (std::pow(u_rate / k_coef, 1. / n_exp) *
-                   xt::pow(drainage_area, -m_exp / n_exp));
+    // exclude 1st node for comparison with numerical solution
+    auto drainage_area_ = xt::view(drainage_area, xt::range(1, _));
 
-    // don't return 1st item for comparison with numerical solution
-    xt::xtensor<double, 1> slope = xt::view(_slope, xt::range(1, _));
+    xt::xtensor<double, 1> slope = (std::pow(u_rate / k_coef, 1. / n_exp) *
+                                    xt::pow(drainage_area_, -m_exp / n_exp));
 
     return slope;
 }
