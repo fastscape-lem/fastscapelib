@@ -59,10 +59,6 @@ void erode_stream_power_impl(Er&& erosion,
             continue;
         }
 
-        auto factor = (k_coef * dt *
-                       std::pow(drainage_area_flat(istack), m_exp) /
-                       std::pow(dist2receivers(istack), n_exp));
-
         T istack_elevation = elevation_flat(istack);                   // at time t
         T irec_elevation = elevation_flat(irec) - erosion_flat(irec);  // at time t+dt
 
@@ -73,20 +69,36 @@ void erode_stream_power_impl(Er&& erosion,
             continue;
         }
 
-        // 1st order Newton-Raphson iterations (k)
+        auto factor = k_coef * dt * std::pow(drainage_area_flat(istack), m_exp);
+
         T delta_0 = istack_elevation - irec_elevation;
-        T delta_k = delta_0;
+        T delta_k;
 
-        while (true)
+        if (n_exp == 1)
         {
-            auto delta_f = factor * std::pow(delta_k, n_exp);
-            auto diff = (delta_k + delta_f - delta_0) / (1 + n_exp * delta_f / delta_k);
+            // fast path for n_exp = 1 (common use case)
+            factor /= dist2receivers(istack);
+            delta_k = delta_0 / (1. + factor);
+        }
 
-            delta_k -= diff;
+        else
+        {
+            // 1st order Newton-Raphson iterations (k)
+            factor /= std::pow(dist2receivers(istack), n_exp);
+            delta_k = delta_0;
 
-            if (diff <= tolerance)
+            while (true)
             {
-                break;
+                auto factor_delta_exp = factor * std::pow(delta_k, n_exp);
+                auto func = delta_k + factor_delta_exp - delta_0;
+
+                if (func <= tolerance)
+                {
+                    break;
+                }
+
+                auto func_deriv = 1 + n_exp * factor_delta_exp / delta_k;
+                delta_k -= func / func_deriv;
             }
         }
 
