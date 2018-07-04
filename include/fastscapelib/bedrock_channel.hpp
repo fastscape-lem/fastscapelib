@@ -25,8 +25,8 @@ namespace detail
  * The implementation here slightly differs from the one described in
  * Braun & Willet (2013). The problem is reformulated so that the
  * Newton-Raphson method is applied on the difference of elevation
- * between a node and those of its receiver, rather than on the node's
- * elevation itself. This allows to save some operations.
+ * between a node and its receiver, rather than on the node's
+ * elevation itself. This allows saving some operations.
  */
 template<class Er, class El, class S, class R, class Di, class Dr>
 void erode_stream_power_impl(Er&& erosion,
@@ -73,7 +73,7 @@ void erode_stream_power_impl(Er&& erosion,
             continue;
         }
 
-        // 1st order Newton-Raphson iterations on different (k)
+        // 1st order Newton-Raphson iterations (k)
         T delta_0 = istack_elevation - irec_elevation;
         T delta_k = delta_0;
 

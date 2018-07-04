@@ -1,5 +1,7 @@
 #include <cmath>
 #include <limits>
+#include <array>
+#include <string>
 
 #include "gtest/gtest.h"
 #include "xtensor/xtensor.hpp"
@@ -108,8 +110,12 @@ auto get_steady_slope_analytical(double k_coef,
 
 TEST(bedrock_channel, erode_stream_power)
 {
+    // Test against analytical solution of slope at steady state for
+    // 1d river profile and for multiple values of n_exp
+    // TODO: add test for n_exp < 1 (not working currently)
     double k_coef = 1e-3;
     double m_exp = 0.5;
+    std::array<double, 4> n_exp_vals {1., 1.5, 2., 4.};
 
     double u_rate = 0.001;
 
@@ -123,30 +129,9 @@ TEST(bedrock_channel, erode_stream_power)
     double dt = 1e4;
     double tolerance = 1e-3;
 
+    for (const auto& n_exp : n_exp_vals)
     {
-        // Test against analytical solution of slope at steady state for
-        // 1d river profile (n == 1)
-        SCOPED_TRACE("steady-state analytical 1d n=1");
-
-        double n_exp = 1.;
-
-        auto slope_n = get_steady_slope_numerical(k_coef, m_exp, n_exp,
-                                                  u_rate, hack_coef, hack_exp,
-                                                  nnodes, spacing, x0,
-                                                  dt, tolerance);
-
-        auto slope_a = get_steady_slope_analytical(k_coef, m_exp, n_exp,
-                                                   u_rate, hack_coef, hack_exp,
-                                                   nnodes, spacing, x0);
-
-        EXPECT_TRUE(xt::allclose(slope_n, slope_a, 1e-5, 1e-5));
-    }
-
-    {
-        // TODO: refactor here and above to loop over more n_exp values
-        SCOPED_TRACE("steady-state analytical 1d n!=1");
-
-        double n_exp = 2.;
+        SCOPED_TRACE("steady-state analytical 1d with n=" + std::to_string(n_exp));
 
         auto slope_n = get_steady_slope_numerical(k_coef, m_exp, n_exp,
                                                   u_rate, hack_coef, hack_exp,
