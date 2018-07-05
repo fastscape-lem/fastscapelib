@@ -27,9 +27,10 @@ def test_erode_stream_power():
     dt = 1   # use small time step (compare with explicit scheme)
     tolerance = 1e-3
 
-    fastscapelib.erode_stream_power_d(erosion, elevation, stack,
-                                      receivers, dist2receivers, drainage_area,
-                                      k_coef, m_exp, n_exp, dt, tolerance)
+    n_corr = fastscapelib.erode_stream_power_d(
+        erosion, elevation, stack,
+        receivers, dist2receivers, drainage_area,
+        k_coef, m_exp, n_exp, dt, tolerance)
 
     slope = h / spacing
     err = dt * k_coef * a**m_exp * slope**n_exp

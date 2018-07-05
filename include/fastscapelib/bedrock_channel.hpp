@@ -29,17 +29,17 @@ namespace detail
  * elevation itself. This allows saving some operations.
  */
 template<class Er, class El, class S, class R, class Di, class Dr>
-void erode_stream_power_impl(Er&& erosion,
-                             El&& elevation,
-                             S&& stack,
-                             R&& receivers,
-                             Di&& dist2receivers,
-                             Dr&& drainage_area,
-                             double k_coef,
-                             double m_exp,
-                             double n_exp,
-                             double dt,
-                             double tolerance)
+index_t erode_stream_power_impl(Er&& erosion,
+                                El&& elevation,
+                                S&& stack,
+                                R&& receivers,
+                                Di&& dist2receivers,
+                                Dr&& drainage_area,
+                                double k_coef,
+                                double m_exp,
+                                double n_exp,
+                                double dt,
+                                double tolerance)
 {
     using T = std::common_type_t<typename std::decay_t<Er>::value_type,
                                  typename std::decay_t<El>::value_type>;
@@ -47,6 +47,8 @@ void erode_stream_power_impl(Er&& erosion,
     auto erosion_flat = xt::flatten(erosion);
     const auto elevation_flat = xt::flatten(elevation);
     const auto drainage_area_flat = xt::flatten(drainage_area);
+
+    index_t n_corr = 0.;
 
     for (const auto& istack : stack)
     {
@@ -99,11 +101,26 @@ void erode_stream_power_impl(Er&& erosion,
 
                 auto func_deriv = 1 + n_exp * factor_delta_exp / delta_k;
                 delta_k -= func / func_deriv;
+
+                if (delta_k <= 0)
+                {
+                    break;
+                }
             }
+        }
+
+        if (delta_k <= 0)
+        {
+            // prevent the creation of new depressions / flat channels
+            // by arbitrarily limiting erosion
+            ++n_corr;
+            delta_k = std::numeric_limits<T>::min();
         }
 
         erosion_flat(istack) = delta_0 - delta_k;
     }
+
+    return n_corr;
 }
 
 }  // namespace detail
@@ -123,6 +140,14 @@ void erode_stream_power_impl(Er&& erosion,
  * to receivers). This generic function is thus grid/mesh agnostic and
  * can be applied in both 1-d (river profile) and 2-d (river network)
  * cases.
+ *
+ * The implicit scheme ensure numerical stability but doesn't totally
+ * prevent erosion lowering the elevation of a node below that of its
+ * receiver. If this occurs, erosion will be arbitrarily limited so
+ * that the node is almost lowered down to the level of its receiver
+ * after erosion. In general it is better to adjust input values
+ * (e.g., ``dt``) so that this doesn't occur. The value returned by
+ * this function allows to detect and track these occurrences.
  *
  * @param erosion : ``[intent=out, shape=(nrows, ncols)||(nnodes)]``
  *     Erosion at grid node.
@@ -146,28 +171,32 @@ void erode_stream_power_impl(Er&& erosion,
  *     Time step duration.
  * @param tolerance : ``[intent=in]``
  *     Tolerance used for Newton's iterations.
+ *
+ * @returns
+ *     Total number of nodes for which erosion has been
+ *     arbitrarily limited to ensure consistency.
  */
 template<class Er, class El, class S, class R, class Di, class Dr>
-void erode_stream_power(xtensor_t<Er>& erosion,
-                        const xtensor_t<El>& elevation,
-                        const xtensor_t<S>& stack,
-                        const xtensor_t<R>& receivers,
-                        const xtensor_t<Di>& dist2receivers,
-                        const xtensor_t<Dr>& drainage_area,
-                        double k_coef,
-                        double m_exp,
-                        double n_exp,
-                        double dt,
-                        double tolerance)
+index_t erode_stream_power(xtensor_t<Er>& erosion,
+                           const xtensor_t<El>& elevation,
+                           const xtensor_t<S>& stack,
+                           const xtensor_t<R>& receivers,
+                           const xtensor_t<Di>& dist2receivers,
+                           const xtensor_t<Dr>& drainage_area,
+                           double k_coef,
+                           double m_exp,
+                           double n_exp,
+                           double dt,
+                           double tolerance)
 {
-    detail::erode_stream_power_impl(erosion.derived_cast(),
-                                    elevation.derived_cast(),
-                                    stack.derived_cast(),
-                                    receivers.derived_cast(),
-                                    dist2receivers.derived_cast(),
-                                    drainage_area.derived_cast(),
-                                    k_coef, m_exp, n_exp,
-                                    dt, tolerance);
+    return detail::erode_stream_power_impl(erosion.derived_cast(),
+                                           elevation.derived_cast(),
+                                           stack.derived_cast(),
+                                           receivers.derived_cast(),
+                                           dist2receivers.derived_cast(),
+                                           drainage_area.derived_cast(),
+                                           k_coef, m_exp, n_exp,
+                                           dt, tolerance);
 }
 
 }  // namespace fastscapelib

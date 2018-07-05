@@ -60,9 +60,12 @@ auto get_steady_slope_numerical(double k_coef,
     {
         xt::xtensor<double, 1> elevation_prev = elevation;
         elevation += uplift * dt;
-        fs::erode_stream_power(erosion, elevation, stack,
-                               receivers, dist2receivers, drainage_area,
-                               k_coef, m_exp, n_exp, dt, tolerance);
+
+        index_t n_corr = fs::erode_stream_power(
+            erosion, elevation, stack,
+            receivers, dist2receivers, drainage_area,
+            k_coef, m_exp, n_exp, dt, tolerance);
+
         elevation -= erosion;
 
         auto sum_squares = xt::sum(xt::pow(elevation - elevation_prev, 2))();
@@ -148,6 +151,8 @@ TEST(bedrock_channel, erode_stream_power)
         EXPECT_TRUE(xt::allclose(slope_n, slope_a, 1e-5, 1e-5));
     }
 
+    // TODO: Test arbitrary limitation of erosion
+
     // Test on a tiny (2x2) 2-d square grid with a planar surface
     // tilted in y (rows) and with all outlets on the 1st row.
     {
@@ -168,9 +173,10 @@ TEST(bedrock_channel, erode_stream_power)
         double n_exp = 1.;
         double dt = 1.;  // use small time step (compare with explicit scheme)
 
-        fs::erode_stream_power(erosion, elevation, stack,
-                               receivers, dist2receivers, drainage_area,
-                               k_coef, m_exp, n_exp, dt, tolerance);
+        index_t n_corr = fs::erode_stream_power(
+            erosion, elevation, stack,
+            receivers, dist2receivers, drainage_area,
+            k_coef, m_exp, n_exp, dt, tolerance);
 
         double slope = h / spacing;
         double err = dt * k_coef * std::pow(a, m_exp) * std::pow(slope, n_exp);

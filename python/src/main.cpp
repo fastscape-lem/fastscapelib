@@ -111,17 +111,17 @@ void compute_drainage_area_grid_py(xt::pytensor<T, 2>& drainage_area,
 
 
 template<class T>
-void erode_stream_power_py(xt::pyarray<T>& erosion,
-                           const xt::pyarray<T>& elevation,
-                           const xt::pytensor<index_t, 1>& stack,
-                           const xt::pytensor<index_t, 1>& receivers,
-                           const xt::pytensor<T, 1>& dist2receivers,
-                           const xt::pyarray<T>& drainage_area,
-                           double k_coef,
-                           double m_exp,
-                           double n_exp,
-                           double dt,
-                           double tolerance)
+index_t erode_stream_power_py(xt::pyarray<T>& erosion,
+                              const xt::pyarray<T>& elevation,
+                              const xt::pytensor<index_t, 1>& stack,
+                              const xt::pytensor<index_t, 1>& receivers,
+                              const xt::pytensor<T, 1>& dist2receivers,
+                              const xt::pyarray<T>& drainage_area,
+                              double k_coef,
+                              double m_exp,
+                              double n_exp,
+                              double dt,
+                              double tolerance)
 {
     py::gil_scoped_release release;
     fs::erode_stream_power(erosion, elevation,
