@@ -56,7 +56,7 @@ index_t erode_stream_power_impl(Er&& erosion,
 
         if (irec == istack)
         {
-            // no erosion at basin outlets
+            // at basin outlet or pit
             erosion_flat(istack) = 0.;
             continue;
         }
@@ -66,7 +66,7 @@ index_t erode_stream_power_impl(Er&& erosion,
 
         if (irec_elevation >= istack_elevation)
         {
-            // no erosion for corrected receivers within a depression or flat area
+            // may happen if flow is routed outside of a depression / flat area
             erosion_flat(istack) = 0.;
             continue;
         }
@@ -135,19 +135,20 @@ index_t erode_stream_power_impl(Er&& erosion,
  * The method is detailed in Braun and Willet's (2013) and has been
  * slightly reformulated/optimized.
  *
- * It requires as input some information about the flow tree topology
+ * As it requires some input information on the flow tree topology
  * (e.g., flow receivers and stack order) and geometry (e.g., distance
- * to receivers). This generic function is thus grid/mesh agnostic and
- * can be applied in both 1-d (river profile) and 2-d (river network)
+ * to receivers), this generic function is grid/mesh agnostic and can
+ * be applied in both 1-d (river profile) and 2-d (river network)
  * cases.
  *
  * The implicit scheme ensure numerical stability but doesn't totally
- * prevent erosion lowering the elevation of a node below that of its
- * receiver. If this occurs, erosion will be arbitrarily limited so
- * that the node is almost lowered down to the level of its receiver
- * after erosion. In general it is better to adjust input values
- * (e.g., ``dt``) so that this doesn't occur. The value returned by
- * this function allows to detect and track these occurrences.
+ * prevent erosion from lowering the elevation of a node below that of
+ * its receiver. If this occurs, erosion will be limited so that the
+ * node will be lowered (nearly) down to the level of its receiver. In
+ * general it is better to adjust input values (e.g., ``dt``) so that
+ * such arbitrary limitation doesn't occur. The value returned by this
+ * function allows to detect and track the number of these
+ * occurrences.
  *
  * @param erosion : ``[intent=out, shape=(nrows, ncols)||(nnodes)]``
  *     Erosion at grid node.
@@ -170,7 +171,7 @@ index_t erode_stream_power_impl(Er&& erosion,
  * @param dt : ``[intent=in]``
  *     Time step duration.
  * @param tolerance : ``[intent=in]``
- *     Tolerance used for Newton's iterations.
+ *     Tolerance used for Newton's iterations (``n_exp`` != 1).
  *
  * @returns
  *     Total number of nodes for which erosion has been
