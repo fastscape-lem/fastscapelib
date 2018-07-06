@@ -9,8 +9,8 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(FASTSCAPELIB_INCLUDE_DIR ${fastscapelib_INCLUDE_DIRS})
 endif ()
 
-message(STATUS "Forcing tests build type to Release")
-set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+#message(STATUS "Forcing tests build type to Release")
+#set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 
 include(CheckCXXCompilerFlag)
 
@@ -87,6 +87,7 @@ set(FASTSCAPELIB_TEST_SRC
   main.cpp
   test_flow_routing.cpp
   test_sinks.cpp
+  test_bedrock_channel.cpp
 )
 
 set(FASTSCAPELIB_TEST_TARGET test_fastscapelib)
