@@ -113,7 +113,7 @@ index_t erode_stream_power_impl(Er&& erosion,
         {
             // prevent the creation of new depressions / flat channels
             // by arbitrarily limiting erosion
-            ++n_corr;
+            n_corr++;
             delta_k = std::numeric_limits<T>::min();
         }
 

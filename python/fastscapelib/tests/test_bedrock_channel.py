@@ -22,7 +22,7 @@ def test_erode_stream_power():
 
     k_coef = 1e-3
     m_exp = 0.5
-    n_exp = 1
+    n_exp = 1.
 
     dt = 1   # use small time step (compare with explicit scheme)
     tolerance = 1e-3
@@ -37,3 +37,4 @@ def test_erode_stream_power():
     expected_erosion = np.array([[0., 0.], [err, err]], dtype='d')
 
     np.testing.assert_allclose(erosion, expected_erosion, atol=1e-5)
+    assert n_corr == 0

@@ -124,11 +124,11 @@ index_t erode_stream_power_py(xt::pyarray<T>& erosion,
                               double tolerance)
 {
     py::gil_scoped_release release;
-    fs::erode_stream_power(erosion, elevation,
-                           stack, receivers,
-                           dist2receivers, drainage_area,
-                           k_coef, m_exp, n_exp,
-                           dt, tolerance);
+    return fs::erode_stream_power(erosion, elevation,
+                                  stack, receivers,
+                                  dist2receivers, drainage_area,
+                                  k_coef, m_exp, n_exp,
+                                  dt, tolerance);
 }
 
 
