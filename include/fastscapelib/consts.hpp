@@ -11,6 +11,7 @@ namespace fastscapelib
 namespace consts
 {
 
+
 /**
  * @brief Row index offsets (from a central grid point) of D8
  *  neighbour directions.
@@ -90,7 +91,6 @@ const short d4_row_offsets_cross[5] = {0, -1, -1, 1, 1};
  * The first element correspond to the central grid point itself.
  */
 const short d4_col_offsets_cross[5] = {0, -1, 1, -1, 1};
-
 
 }  // namespace consts
 

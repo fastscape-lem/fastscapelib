@@ -7,6 +7,9 @@
 #include "fastscapelib/flow_routing.hpp"
 
 
+namespace fs = fastscapelib;
+
+
 TEST(flow_routing, get_d8_distances)
 {
     auto d8_dist = fs::detail::get_d8_distances_inv(2., 1.);
@@ -140,7 +143,7 @@ TEST(flow_routing, compute_basins)
 }
 
 
-TEST(flow_routing, compute_pits)
+TEST(flow_routing, find_pits)
 {
     // simple 4x4 test case with fixed boundaries and pit located at (2, 1)
     // 12 boundary nodes (i.e., 1-node open basin) + 1 pit = 13 basins
@@ -159,7 +162,7 @@ TEST(flow_routing, compute_pits)
     xt::xtensor<index_t, 1> expected_pits
     {9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
-    index_t npits = fs::compute_pits(pits, outlets, active_nodes, nbasins);
+    index_t npits = fs::find_pits(pits, outlets, active_nodes, nbasins);
 
     EXPECT_EQ(npits, 1);
     EXPECT_TRUE(xt::all(xt::equal(pits, expected_pits)));
@@ -176,19 +179,41 @@ TEST(flow_routing, compute_drainage_area)
     xt::xtensor<double, 1> expected_area
         {2., 6., 2., 2., 20., 8., 6., 4., 2., 2.};
 
-    {
-        SCOPED_TRACE("generic flow tree");
-        xt::xtensor<double, 1> area = xt::ones<double>({10}) * 2;
-        fs::compute_drainage_area(area, stack, receivers);
+    xt::xtensor<double, 2> expected_area_2d
+        {{2., 6., 2., 2., 20.},
+         {8., 6., 4., 2., 2. }};
 
-        EXPECT_TRUE(xt::all(xt::equal(area, expected_area)));
+    {
+        SCOPED_TRACE("generic mesh");
+        xt::xtensor<double, 1> drainage_area = xt::ones<double>({10}) * -1;
+        xt::xtensor<double, 1> cell_area = xt::ones<double>({10}) * 2;
+        fs::compute_drainage_area(drainage_area, cell_area, stack, receivers);
+
+        EXPECT_TRUE(xt::all(xt::equal(drainage_area, expected_area)));
+    }
+
+    {
+        SCOPED_TRACE("2d grid flattened");
+        xt::xtensor<double, 1> drainage_area = xt::ones<double>({10}) * -1;
+        fs::compute_drainage_area(drainage_area, stack, receivers, 1., 2.);
+
+        EXPECT_TRUE(xt::all(xt::equal(drainage_area, expected_area)));
     }
 
     {
         SCOPED_TRACE("2d grid");
-        xt::xtensor<double, 1> area = xt::ones<double>({10}) * -1;
-        fs::compute_drainage_area(area, stack, receivers, 1., 2.);
+        xt::xtensor<double, 2> drainage_area = xt::ones<double>({2, 5}) * -1;
+        fs::compute_drainage_area(drainage_area, stack, receivers, 1., 2.);
 
-        EXPECT_TRUE(xt::all(xt::equal(area, expected_area)));
+        EXPECT_TRUE(xt::all(xt::equal(drainage_area, expected_area_2d)));
+    }
+
+    {
+        SCOPED_TRACE("2d grid -- 2d cell_area");
+        xt::xtensor<double, 2> drainage_area = xt::ones<double>({2, 5}) * -1;
+        xt::xtensor<double, 2> cell_area = xt::ones<double>({2, 5}) * 2;
+        fs::compute_drainage_area(drainage_area, cell_area, stack, receivers);
+
+        EXPECT_TRUE(xt::all(xt::equal(drainage_area, expected_area_2d)));
     }
 }
