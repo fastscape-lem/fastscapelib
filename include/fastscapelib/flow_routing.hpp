@@ -264,9 +264,10 @@ void compute_drainage_area_impl(D&& drainage_area,
 {
     // reset drainage area values (must use a view to prevent resizing
     // drainage_area to 0-d when cell_area is 0-d!)
-	// gc: flatten returns a view.
-    auto drainage_area_flat = xt::flatten(drainage_area);
+    auto drainage_area_ = xt::view(drainage_area, xt::all());
+    drainage_area_ = cell_area;
 
+    auto drainage_area_flat = xt::flatten(drainage_area_);
 
     for(auto inode=stack.crbegin(); inode!=stack.crend(); ++inode)
     {
