@@ -33,14 +33,7 @@ if(MSVC)
 endif()
 
 
-
-find_package(xtensor REQUIRED)
-
-include_directories(${XTENSOR_INCLUDE_DIR})
-include_directories(${FASTSCAPELIB_INCLUDE_DIR})
-
-
-set(FASTSCAPELIB_BENCHMARK
+set(FASTSCAPELIB_BENCHMARK_SRC
   main.cpp
   benchmark.cpp
   benchmark.hpp
@@ -59,5 +52,11 @@ set(FASTSCAPELIB_BENCHMARK
 
 set(FASTSCAPELIB_BENCH_TARGET benchmark_fastscapelib)
 
-add_executable(${FASTSCAPELIB_BENCH_TARGET} ${FASTSCAPELIB_BENCHMARK} ${FASTSCAPELIB_HEADERS} ${XTENSOR_HEADERS})
+add_executable(${FASTSCAPELIB_BENCH_TARGET}
+  EXCLUDE_FROM_ALL ${FASTSCAPELIB_BENCHMARK_SRC})
 
+target_link_libraries(${FASTSCAPELIB_BENCH_TARGET} fastscapelib)
+
+add_custom_target(run_benchmarks
+    COMMAND benchmark_fastscapelib
+    DEPENDS ${FASTSCAPELIB_BENCHMARK_TARGET})

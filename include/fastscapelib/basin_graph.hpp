@@ -663,7 +663,7 @@ auto get_d8_distances_sep(double dx, double dy) -> std::array<double, 9>
 {
     std::array<double, 9> d8_dists;
 
-    for(int k=0; k<9; ++k)
+    for(size_t k=0; k<9; ++k)
     {
         double d8_dx = dx * double(k % 3 -1);
         double d8_dy = dy * double(k / 3 -1);
@@ -795,9 +795,13 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_carve(Rcv_X
 
 template<class Basin_T, class Node_T, class Elevation_T>
 template<class Rcv_XT, class DistRcv_XT, class Elevation_XT, class Basins_XT>
-void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_XT& receivers, DistRcv_XT& dist2receivers,
-                                                                            const Elevation_XT& elevation, const Basins_XT& basins,
-                                                                            double dx, double dy)
+void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(
+    Rcv_XT& receivers,
+    DistRcv_XT& dist2receivers,
+    const Elevation_XT& elevation,
+    const Basins_XT& basins,
+    double dx,
+    double dy)
 {
 
     const auto elev_shape = elevation.shape();
@@ -805,16 +809,14 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
     const index_t ncols = (index_t) elev_shape[1];
 
     const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
-	std::array<double, 9> d8_distances_inv;
-	for (int i = 0; i < 9; ++i)
-		d8_distances_inv[i] = 1.0 / d8_distances[i];
+    std::array<double, 9> d8_distances_inv;
+    for (size_t i = 0; i < 9; ++i)
+        d8_distances_inv[i] = 1.0 / d8_distances[i];
 
     std::queue<Node_T> queue;
 
-	enum class Tag : char { UnParsed = 0, InQueue = 1, WithRcv = 2};
+    enum class Tag : char { UnParsed = 0, InQueue = 1, WithRcv = 2};
     std::vector<Tag> tag (nrows * ncols, Tag::UnParsed);
-
-	
 
     // parse in basin order
     for(const index_t pass : pass_stack)
@@ -823,91 +825,81 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(Rcv_
 #define OUTFLOW 0 // to
 #define INFLOW  1 // from
 
-
         if (l.nodes[OUTFLOW] == -1)
         {
             continue;
         }
 
-		//receivers[l.nodes[INFLOW]] = l.nodes[OUTFLOW];
+        //receivers[l.nodes[INFLOW]] = l.nodes[OUTFLOW];
         //dist2receivers(l.nodes[INFLOW]) = d8_distances[detail::get_d8_distance_id(l.nodes[INFLOW], l.nodes[OUTFLOW], ncols)];
-
 
         assert(tag[l.nodes[INFLOW]] == Tag::UnParsed);
 
         queue.push(l.nodes[INFLOW]);
-		tag[l.nodes[OUTFLOW]] = Tag::WithRcv;
-		tag[l.nodes[INFLOW]] = Tag::InQueue;
+        tag[l.nodes[OUTFLOW]] = Tag::WithRcv;
+        tag[l.nodes[INFLOW]] = Tag::InQueue;
         const Basin_T parsed_basin = l.basins[INFLOW];
         assert(parsed_basin == parent_basins[parsed_basin]);
 
-		auto outflow_coords = detail::coords(l.nodes[OUTFLOW], ncols);
-
-		
+        auto outflow_coords = detail::coords(l.nodes[OUTFLOW], ncols);
 
         const Elevation_T elev = l.weight;
 
-		while (!queue.empty())
-		{
-			Node_T node = queue.front();
+        while (!queue.empty())
+        {
+            Node_T node = queue.front();
 
-			queue.pop();
+            queue.pop();
 
-			const auto coords = detail::coords(node, ncols);
+            const auto coords = detail::coords(node, ncols);
 
-			Node_T rcv = -1;
-			double rcv_cost = std::numeric_limits<double>::lowest();
-			double cost_r = double(outflow_coords.first - coords.first);
-			double cost_c = double(outflow_coords.second - coords.second);
+            Node_T rcv = -1;
+            double rcv_cost = std::numeric_limits<double>::lowest();
+            double cost_r = double(outflow_coords.first - coords.first);
+            double cost_c = double(outflow_coords.second - coords.second);
 
+            // parse neighbors
+            for (int k = 1; k < 9; ++k)
+            {
+                index_t rr = coords.first + fastscapelib::consts::d8_row_offsets[k];
+                index_t cc = coords.second + fastscapelib::consts::d8_col_offsets[k];
 
-			// parse neighbors
-			for (int k = 1; k < 9; ++k)
-			{
-				index_t rr = coords.first + fs::consts::d8_row_offsets[k];
-				index_t cc = coords.second + fs::consts::d8_col_offsets[k];
+                if (detail::in_bounds(elev_shape, rr, cc))
+                {
+                    const Node_T ineighbor = detail::index(rr, cc, ncols);
 
-				if (detail::in_bounds(elev_shape, rr, cc))
-				{
-					const Node_T ineighbor = detail::index(rr, cc, ncols);
-					
+                    if ((ineighbor != l.nodes[OUTFLOW]
+                         && parent_basins[basins(ineighbor)] != parsed_basin)
+                        || elevation(ineighbor) > elev)
+                        continue;
 
-					if ((ineighbor != l.nodes[OUTFLOW] && parent_basins[basins(ineighbor)] != parsed_basin) || elevation(ineighbor) > elev)
-						continue;
+                    // neighbor is already parsed, in the same basin. Could be a receiver
+                    if (tag[ineighbor] == Tag::WithRcv)
+                    {
+                        double cost = cost_r * double(fastscapelib::consts::d8_row_offsets[k]) + cost_c * double(fastscapelib::consts::d8_col_offsets[k]);
+                        cost *= d8_distances_inv[detail::get_d8_distance_id(coords.first, coords.second, rr, cc)];
 
-						
+                        if (cost > rcv_cost)
+                        {
+                            rcv = ineighbor;
+                            rcv_cost = cost;
+                        }
+                    }
 
-					// neighbor is already parsed, in the same basin. Could be a receiver
-					if (tag[ineighbor] == Tag::WithRcv)
-					{
-						double cost = cost_r * double(fs::consts::d8_row_offsets[k]) + cost_c * double(fs::consts::d8_col_offsets[k]);
-						cost *= d8_distances_inv[detail::get_d8_distance_id(coords.first, coords.second, rr, cc)];
+                    else if (tag[ineighbor] == Tag::UnParsed)
+                    {
+                        queue.push(ineighbor);
+                        tag[ineighbor] = Tag::InQueue;
+                    }
+                }
+            }
 
-						if (cost > rcv_cost)
-						{
-							rcv = ineighbor;
-							rcv_cost = cost;
-						}
-					}
-					else if (tag[ineighbor] == Tag::UnParsed)
-					{
-						queue.push(ineighbor);
-						tag[ineighbor] = Tag::InQueue;
-					}
-				}
-			}
-
-			assert(rcv != -1);
-
-			receivers(node) = rcv;
-			dist2receivers(node) = d8_distances[detail::get_d8_distance_id(node, rcv, ncols)];
-			tag[node] = Tag::WithRcv;
-		}
+            assert(rcv != -1);
+            receivers(node) = rcv;
+            dist2receivers(node) = d8_distances[detail::get_d8_distance_id(node, rcv, ncols)];
+            tag[node] = Tag::WithRcv;
+        }
     }
-
-    //    std::cout << std::endl;
-
-
 }
 
 template<class Basin_T, class Node_T, class Elevation_T>

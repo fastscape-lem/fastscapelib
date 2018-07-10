@@ -14,9 +14,10 @@ namespace consts
 
 /**
  * @brief Row index offsets (from a central grid point) of D8
- *  neighbour directions.
+ * neighbour directions.
  *
- *  The first element correspond to the central grid point itself.
+ * The first element correspond to the central grid point itself.
+ * Next elements are ordered following the row-major layout.
  */
 const short d8_row_offsets[9] = {0, -1, -1, -1, 0, 0, 1, 1, 1};
 
@@ -26,6 +27,7 @@ const short d8_row_offsets[9] = {0, -1, -1, -1, 0, 0, 1, 1, 1};
  * neighbour directions.
  *
  * The first element correspond to the central grid point itself.
+ * Next elements are ordered following the row-major layout.
  */
 const short d8_col_offsets[9] = {0, -1, 0, 1, -1, 1, -1, 0, 1};
 

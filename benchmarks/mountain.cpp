@@ -47,8 +47,7 @@ void fastscape(Elev_T& elevation, const Active_T& active_nodes, double dx, doubl
 		fastscapelib::correct_flowrouting<fs::BasinAlgo::Boruvka, fs::ConnectType::Carved>(bg, basins, receivers, dist2receivers,
 			ndonors, donors, stack, active_nodes, elevation, dx, dy);
 
-		area = xt::ones<index_t>({ nrows*ncols }) * dx*dy;
-		fs::compute_drainage_area(area, stack, receivers);
+		fs::compute_drainage_area(area, stack, receivers, dx, dy);
 		fs::erode_spower(erosion, elevation, stack, receivers, dist2receivers, area,
 			7.0e-4, 0.4, 1.0, dt, 1.0e-4);
 
@@ -61,7 +60,7 @@ template <class T>
 typename std::decay_t<T>::value_type fetch(const T& a, double r, double c)
 {
 
-	using F = std::decay_t<T>::value_type;
+	using F = typename std::decay_t<T>::value_type;
 
 	auto shape = a.shape();
 
@@ -121,7 +120,7 @@ void generate_mountain()
 		dbg_out("results/mountain/bedrock-", n, elevation, elevation.shape());
 
 		xt::xtensor<double, 2> tmp({ (size_t)(2 * n), (size_t)(2 * n) }, -1);
-		
+
 		// linear upsampling
 		sample(elevation, tmp);
 
@@ -193,7 +192,7 @@ void example_mountain()
 	funcs["Boruvka sloped"] = benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Sloped>;
 	funcs["Sinks"] = benchmark_fastscape_sinks;
 
-	
+
 
 	std::stringstream out;
 	out << "bench = {";

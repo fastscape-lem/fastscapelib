@@ -1,26 +1,38 @@
 #include <cmath>
 
 #include "gtest/gtest.h"
+#include "xtensor/xadapt.hpp"
 #include "xtensor/xtensor.hpp"
 
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/flow_routing.hpp"
 
+#include <iostream>
+#include "xtensor/xio.hpp"
 
 namespace fs = fastscapelib;
 
 
 TEST(flow_routing, get_d8_distances)
 {
-    auto d8_dist = fs::detail::get_d8_distances_inv(2., 1.);
-
     double ddiag = std::sqrt(4 + 1);
+    xt::xtensor<double, 1> expected {0., ddiag, 1., ddiag, 2., 2., ddiag,  1., ddiag};
 
-    std::array<double, 9> expected
-        {0., 1., 1.0/ddiag, 1.0/2., 1.0/ddiag,  1., 1.0/ddiag, 1.0/2., 1.0/ddiag};
+    {
+        SCOPED_TRACE("d8 distances");
+        auto d8_dist = xt::adapt(fs::detail::get_d8_distances(2., 1.),
+                                 expected.shape());
 
-    EXPECT_TRUE(std::equal(d8_dist.begin(), d8_dist.end(),
-                           expected.begin(), expected.end()));
+        EXPECT_TRUE(xt::all(xt::equal(d8_dist, expected)));
+    }
+
+    {
+        SCOPED_TRACE("d8 distances inverse");
+        auto d8_dist_inv = xt::adapt(fs::detail::get_d8_distances_inv(2., 1.),
+                                     expected.shape());
+
+        EXPECT_TRUE(xt::all(xt::equal(d8_dist_inv, 1. / expected)));
+    }
 
     //TODO: consider using google mock which gives more details about failure
     //EXPECT_THAT(d8_dist, ::testing::ContainerEq(expected));
@@ -101,7 +113,7 @@ TEST(flow_routing, compute_donors)
 
 TEST(flow_routing, compute_stack)
 {
-    // Example in Braun and Willet, 2013 as a test case.
+    // Example in Braun and Willet, 2013 (fig. 1) as a test case.
     xt::xtensor<index_t, 1> receivers {1, 4, 1, 6, 4, 4, 5, 4, 6, 7};
     xt::xtensor<index_t, 1> ndonors   {0, 2, 0, 0, 3, 1, 2, 1, 0, 0};
     xt::xtensor<index_t, 2> donors
@@ -117,7 +129,11 @@ TEST(flow_routing, compute_stack)
          {-1, -1, -1, -1, -1, -1, -1, -1}};
 
     xt::xtensor<index_t, 1> stack = xt::ones<index_t>({10}) * -1;
-    xt::xtensor<index_t, 1> expected_stack {4, 1, 0, 2, 5, 6, 3, 8, 7, 9};
+
+    // stack is computed here using a non-recursive approach
+    // -> results are different than in Braun's paper (fig. 2)
+    //    but still consistent and deterministic
+    xt::xtensor<index_t, 1> expected_stack {4, 1, 5, 7, 9, 6, 3, 8, 0, 2};
 
     fs::compute_stack(stack, ndonors, donors, receivers);
 
@@ -132,14 +148,18 @@ TEST(flow_routing, compute_basins)
     xt::xtensor<index_t, 1> receivers {1, 4, 1, 6, 4, 4, 5, 4, 6, 7};
     xt::xtensor<index_t, 1> stack {4, 1, 0, 2, 5, 6, 3, 8, 7, 9};
     xt::xtensor<index_t, 1> basins = xt::ones<index_t>({10}) * -1;
+    xt::xtensor<index_t, 1> outlets_or_pits = xt::ones<index_t>({10}) * -1;
 
     xt::xtensor<index_t, 1> expected_basins
         {0,  0,  0,  0,  0,  0,  0,  0,  0,  0};
+    xt::xtensor<index_t, 1> expected_outlets_or_pits
+        {4, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
-    index_t nbasins = fs::compute_basins(basins, stack, receivers);
+    index_t nbasins = fs::compute_basins(basins, outlets_or_pits, stack, receivers);
 
     EXPECT_EQ(nbasins, 1);
     EXPECT_TRUE(xt::all(xt::equal(basins, expected_basins)));
+    EXPECT_TRUE(xt::all(xt::equal(outlets_or_pits, expected_outlets_or_pits)));
 }
 
 

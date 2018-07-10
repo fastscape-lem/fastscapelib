@@ -5,6 +5,10 @@
 
 #include "benchmark_basin_graph.hpp"
 
+
+namespace fs = fastscapelib;
+
+
 void benchmark_basin_flat_kruskal_simple(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>& active_nodes)
 {
 

@@ -43,8 +43,7 @@ void fastscape(Elev_T& elevation, Water_T& water, Angle_T& angles, const Active_
 
 		if (s != num_iter - 1)
 		{
-			area = xt::ones<index_t>({ nrows*ncols }) * dx*dy;
-			fs::compute_drainage_area(area, stack, receivers);
+                    fs::compute_drainage_area(area, stack, receivers, dx, dy);
 			fs::erode_spower(erosion, elevation, stack, receivers, dist2receivers, area,
 				7.0e-4, 0.4, 1.0, 5000.0, 1.0e-4);
 
@@ -69,7 +68,7 @@ void example_jail()
 {
 
 	int nrows = 100, ncols = 100;
-	
+
 	std::array<size_t, 2> shape = { (size_t)nrows, (size_t)ncols };
 
 	xt::xtensor<double, 2> elevation(shape);
@@ -80,7 +79,7 @@ void example_jail()
 			elevation(y, x) = (double)std::max( std::abs(x - (ncols / 2)), std::abs(y - (nrows / 2)));
 
 	elevation(0, ncols / 2) = 0.0;
-	
+
 	xt::xtensor<bool, 2> active_nodes = xt::ones<bool>(elevation.shape());
 	active_nodes(0, ncols / 2) = false;
 

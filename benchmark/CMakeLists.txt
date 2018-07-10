@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-  project(xtensor-benchmark)
+  project(fastscapelib-benchmark)
 
   find_package(xtensor REQUIRED CONFIG)
   set(XTENSOR_INCLUDE_DIR ${xtensor_INCLUDE_DIR})

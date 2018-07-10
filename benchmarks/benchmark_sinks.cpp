@@ -6,6 +6,8 @@
 #include "fastscapelib/flow_routing.hpp"
 
 
+namespace fs = fastscapelib;
+
 
 void benchmark_sinks_flat(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>&)
 {

@@ -89,7 +89,8 @@ void fastscape_run(size_t nrows, size_t ncols, FastscapeFunctionType func)
             fs::compute_stack(stack, ndonors, donors, receivers);
 
             basin_graph.compute_basins(basins, stack, receivers);
-            auto npits   = fs::compute_pits(pits, basin_graph.outlets(), active_nodes, basin_graph.basin_count());
+            auto outlets = xt::adapt(basin_graph.outlets(), shape1D);
+            auto npits   = fs::find_pits(pits, outlets, active_nodes, basin_graph.basin_count());
 
 			std::cout << npits << ' ';
 
@@ -117,9 +118,9 @@ void fastscape_run(size_t nrows, size_t ncols, FastscapeFunctionType func)
 						if (j + 44 * i == 1800)
 							std::cout << ']';
 						std::cout << ' ';
-						
+
 					}
-						
+
 					std::cout << std::endl;
 				}
 			}*/
@@ -182,8 +183,7 @@ void fastscape_run(size_t nrows, size_t ncols, FastscapeFunctionType func)
 		}
 
         // update drainage area
-        area = xt::ones<index_t>({ nrows*ncols }) * cell_area;
-        fs::compute_drainage_area(area, stack, receivers);
+        fs::compute_drainage_area(area, stack, receivers, dx, dy);
 		if (nrows<1025)
 			dbg_out(ssd.str(), step_count, area, shape);
 

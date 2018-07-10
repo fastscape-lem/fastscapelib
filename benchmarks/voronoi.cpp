@@ -1,11 +1,12 @@
-#include "dbg_output.hpp"
-#include "fastscapelib\basin_graph.hpp"
-#include "fastscapelib\flow_routing.hpp"
-#include "fastscapelib/bedrock_chanel.hpp"
+#include <iostream>
 
-#include <xtensor/xrandom.hpp>
+#include "fastscapelib/basin_graph.hpp"
+#include "fastscapelib/flow_routing.hpp"
+#include "fastscapelib/bedrock_chanel.hpp"
+#include "xtensor/xrandom.hpp"
 
 #include "examples.hpp"
+#include "dbg_output.hpp"
 
 void example_vornoi()
 {
@@ -126,8 +127,7 @@ void example_vornoi()
 	for (int s = 0; s < 10; ++s)
 	{
 
-		area = xt::ones<index_t>({ nrows*ncols }) * dx*dy;
-		fs::compute_drainage_area(area, stack, receivers);
+		fs::compute_drainage_area(area, stack, receivers, dx, dy);
 		fs::erode_spower(erosion, elevation, stack, receivers, dist2receivers, area,
 			7.0e-4, 0.4, 1.0, 10.0, 1.0e-4);
 

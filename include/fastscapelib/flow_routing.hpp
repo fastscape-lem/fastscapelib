@@ -11,6 +11,7 @@
 #include <array>
 #include <type_traits>
 
+#include "xtensor/xadapt.hpp"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"
 #include "xtensor/xstrided_view.hpp"
@@ -52,17 +53,13 @@ inline auto get_d8_distances_inv(double dx, double dy) -> std::array<double, 9>
 
     for(size_t k=0; k<9; ++k)
     {
-        double d8_dx = dx * fs::consts::d8_col_offsets[k];
-        double d8_dy = dy * fs::consts::d8_row_offsets[k];
+        double d8_dx = dx * fastscapelib::consts::d8_col_offsets[k];
+        double d8_dy = dy * fastscapelib::consts::d8_row_offsets[k];
         d8_dists[k] = 1.0/std::sqrt(d8_dy*d8_dy + d8_dx*d8_dx);
     }
-}
 
     return d8_dists;
 }
-
-
-}  // namespace detail
 
 
 /**
@@ -122,8 +119,8 @@ void compute_receivers_d8_impl(R&& receivers,
                 }
             }
 
-            index_t kr = r + fs::consts::d8_row_offsets[k_found];
-            index_t kc = c + fs::consts::d8_col_offsets[k_found];
+            index_t kr = r + fastscapelib::consts::d8_row_offsets[k_found];
+            index_t kc = c + fastscapelib::consts::d8_col_offsets[k_found];
 
             receivers(inode) = kr * ncols + kc;
             dist2receivers(inode) = d8_dists[k_found];
@@ -157,7 +154,7 @@ void compute_donors_impl(N&& ndonors,
 
 
 /**
- * compute_stack implementation.
+ * non-recursive compute_stack implementation.
  */
 template<class S, class N, class D, class R>
 void compute_stack_impl(S&& stack,
@@ -176,10 +173,12 @@ void compute_stack_impl(S&& stack,
         {
             tmp.push(inode);
             stack(nstack++) = inode;
+
             while(!tmp.empty())
             {
                 index_t istack = tmp.top();
                 tmp.pop();
+
                 for(unsigned short k=0; k<ndonors(istack); ++k)
                 {
                     index_t idonor = donors(istack, k);
@@ -193,20 +192,35 @@ void compute_stack_impl(S&& stack,
 }
 
 
-template <class Basins_XT, class Stack_XT, class Rcv_XT>
-auto compute_basins(Basins_XT& basins,
-                    const Stack_XT& stack,
-                    const Rcv_XT& receivers)
--> typename Basins_XT::value_type         // returns last basin +1
+/**
+ * compute_basins implementation.
+ *
+ * TODO: maybe return outlets as a new xtensor instead of nbasins?
+ * TODO: maybe rename to `get_basin_ids` ? maybe not if return outlets
+ */
+template <class B, class O, class S, class R>
+index_t compute_basins_impl(B&& basins,
+                            O&& outlets_or_pits,
+                            S&& stack,
+                            R&& receivers)
 {
 
-    using Basin_T = typename Basins_XT::value_type;
-    using Node_T  = typename Stack_XT::value_type;
-    BasinGraph<Basin_T, Node_T> basin_graph;
+    using Basin_T = typename std::decay_t<B>::value_type;
+    using Node_T = typename std::decay_t<S>::value_type;
+
+    fastscapelib::BasinGraph<Basin_T, Node_T> basin_graph;
 
     basin_graph.compute_basins(basins, stack, receivers);
-    return basin_graph.basin_count();
 
+    index_t nbasins = basin_graph.basin_count();
+    auto bg_outlets = basin_graph.outlets();
+
+    for (index_t i=0; i<nbasins; ++i)
+    {
+        outlets_or_pits(i) = bg_outlets[i];
+    }
+
+    return (nbasins);
 }
 
 
@@ -576,10 +590,10 @@ bool check_fill_flat(const Elevation_XT& elevation, const Water_XT& water, const
 
             for(size_t k=1; k<=8; ++k)
             {
-                index_t kr = r + fs::consts::d8_row_offsets[k];
-                index_t kc = c + fs::consts::d8_col_offsets[k];
+                index_t kr = r + fastscapelib::consts::d8_row_offsets[k];
+                index_t kc = c + fastscapelib::consts::d8_col_offsets[k];
 
-                if(!fs::detail::in_bounds(elev_shape, kr, kc))
+                if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc))
                     continue;
 
                 index_t ineighbor = kr * ncols + kc;

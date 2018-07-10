@@ -1,6 +1,9 @@
 #pragma once
 
 #include <fstream>
+#include <sstream>
+#include <iostream>
+
 
 template <class T, class S>
 void dbg_out(std::string fname, int num, T& array, const S& shape)
@@ -21,7 +24,7 @@ void dbg_out(std::string fname, int num, T& array, const S& shape)
     file.write((char*)&ncols, sizeof(size_t));
 
     size_t count = 1;
-    for(size_t i = 0; i<shape.size(); ++i)	
+    for(size_t i = 0; i<shape.size(); ++i)
         count*=shape[i];
 
     for(size_t i = 0; i< count; ++i)

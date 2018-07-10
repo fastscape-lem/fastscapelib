@@ -9,6 +9,9 @@
 #include "fastscapelib/basin_graph.hpp"
 
 
+namespace fs = fastscapelib;
+
+
 class BasinGraph_Test
 {
 public:
@@ -63,7 +66,8 @@ public:
         EXPECT_EQ(outlets.size(), expected_outlets.shape()[0]);
         EXPECT_TRUE(xt::all(xt::equal(basins, expected_basins)));
 
-        EXPECT_TRUE(xt::all(xt::equal(xt::adapt(outlets, expected_outlets.shape()), expected_outlets)));
+        EXPECT_TRUE(xt::all(xt::equal(xt::adapt(outlets, expected_outlets.shape()),
+                                      expected_outlets)));
     }
 
     void test_connect()
@@ -105,7 +109,11 @@ public:
     bool is_links_eq(std::vector<Link_T>& oth)
     {
         if (oth.size() != basin_graph._links.size())
+        {
+            std::cout << "expected link size: " << oth.size();
+            std::cout << " -- actual link size: " << basin_graph._links.size() << std::endl;
             return false;
+        }
         for (size_t i = 0; i< basin_graph._links.size(); ++i)
             if (!(basin_graph._links[i] == oth[i]))
             {
