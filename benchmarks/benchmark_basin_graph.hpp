@@ -1,5 +1,7 @@
 #pragma once
 
+extern int boruvka_perf;
+
 template<fs::BasinAlgo algo, fs::ConnectType connect>
 void benchmark_fastscape_basin(
 	xt::xtensor<index_t, 1>&      stack,
@@ -28,6 +30,8 @@ void benchmark_fastscape_basin(
 	fs::compute_donors(ndonors, donors, receivers);
 	fs::compute_stack(stack, ndonors, donors, receivers);
 
+	boruvka_perf = -1;
 	fs::correct_flowrouting<algo, connect>(basin_graph, basins, receivers, dist2receivers,
 		ndonors, donors, stack, active_nodes, elevation, dx, dy);
+	boruvka_perf = (int)basin_graph.getPerfBoruvka();
 }
