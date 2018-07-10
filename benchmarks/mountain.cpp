@@ -10,6 +10,8 @@
 #include "examples.hpp"
 #include <map>
 
+int boruvka_perf = -1;
+
 template <class Elev_T, class Active_T>
 void fastscape(Elev_T& elevation, const Active_T& active_nodes, double dx, double dt, int num_iter)
 {
@@ -168,7 +170,7 @@ void dig_hole(T& a, size_t hid)
 void example_mountain()
 {
 	xt::xtensor<double, 1> h_prop = { 0, .015625, .03125, .0625, .125, .25, .5, 1.0 };
-	xt::xtensor<int, 1> m_size = { 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+	xt::xtensor<int, 1> m_size = { 32, 64, 128, 256, 512, 1024, 2048/*, 4096*/ };
 	//xt::xtensor<int, 1> m_size = { 32, 64, 128, 256 };
 
 	xt::xtensor<double, 2> results({ m_size.size(), h_prop.size() });
@@ -236,6 +238,8 @@ void example_mountain()
 				std::vector<int64_t> times;
 				int64_t times_sum = 0;
 
+				boruvka_perf = -1;
+
 				for (int i = 0; i < 10; ++i)
 				{
 
@@ -257,7 +261,7 @@ void example_mountain()
 
 				double time_sdev = std::sqrt(time_variance);
 
-				out << "'" << f.first<<"':(" << times_avg << ',' << time_sdev << "),";
+				out << "'" << f.first<<"':(" << times_avg << ',' << time_sdev << ","<< boruvka_perf <<"),";
 			}
 
 			out << "},"; //hp

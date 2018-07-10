@@ -3,6 +3,7 @@
 #include "fastscapelib/basin_graph.hpp"
 #include "fastscapelib/flow_routing.hpp"
 
+extern int boruvka_perf;
 
 template<fastscapelib::BasinAlgo algo, fastscapelib::ConnectType connect>
 void benchmark_fastscape_basin(
@@ -32,6 +33,7 @@ void benchmark_fastscape_basin(
     fastscapelib::compute_donors(ndonors, donors, receivers);
     fastscapelib::compute_stack(stack, ndonors, donors, receivers);
 
+	boruvka_perf = -1;
     fastscapelib::correct_flowrouting<algo, connect>(
         basin_graph, basins, receivers, dist2receivers,
         ndonors, donors, stack, active_nodes, elevation, dx, dy);
