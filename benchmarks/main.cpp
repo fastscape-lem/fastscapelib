@@ -10,14 +10,22 @@
 using namespace std::literals;
 
 
-int main(int , char* [])
+int main(int i, char* p[])
 {
-	//example_vornoi();
-	//example_jail();
-	//generate_mountain();
-	example_mountain();
 
-	std::system("pause");
+	std::string param = i > 1 ? p[1] : "all";
+
+	if (param == "vornoi" || param == "all")
+		example_vornoi();
+	if (param == "jail" || param == "all")
+		example_jail();
+	if (param == "gen_mountain" || param == "all")
+		generate_mountain();
+	if (param == "mountain" || param == "all")
+		example_mountain();
+
+	std::cout << "Press enter to continue ...";
+	std::cin.get();
 
 	return 0;
 
