@@ -32,3 +32,7 @@ pybind11_add_module(${FASTSCAPELIB_PYTHON_TARGET} src/main.cpp)
 
 target_link_libraries(${FASTSCAPELIB_PYTHON_TARGET}
   INTERFACE xtensor xtensor-python fastscapelib)
+
+if(DOWNLOAD_RICHDEM)
+  add_dependencies(${FASTSCAPELIB_PYTHON_TARGET} richdem)
+endif()

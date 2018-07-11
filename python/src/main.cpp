@@ -132,6 +132,18 @@ index_t erode_stream_power_py(xt::pyarray<T>& erosion,
 }
 
 
+#ifdef ENABLE_RICHDEM
+
+template<class T>
+void fill_sinks_wei2018_py(xt::pytensor<T, 2>& elevation)
+{
+    py::gil_scoped_release release;
+    fs::fill_sinks_wei2018(elevation);
+}
+
+#endif
+
+
 PYBIND11_MODULE(_fastscapelib_py, m)
 {
     m.doc() = "A collection of efficient algorithms"
@@ -172,4 +184,11 @@ PYBIND11_MODULE(_fastscapelib_py, m)
     m.def("erode_stream_power_d", &erode_stream_power_py<double>,
           "Compute bedrock channel erosion during a single time step "
           "using the Stream Power Law.");
+
+#ifdef ENABLE_RICHDEM
+
+    m.def("fill_sinks_wei2018_d", &fill_sinks_wei2018_py<double>,
+          "Fill depressions in elevation data (flat surfaces - Wei2018).");
+
+#endif
 }

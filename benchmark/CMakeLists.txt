@@ -109,8 +109,6 @@ else()
     find_package(benchmark REQUIRED)
 endif()
 
-include_directories(${GBENCHMARK_INCLUDE_DIRS})
-
 set(FASTSCAPELIB_BENCHMARK_SRC
   benchmark_sinks.cpp
   main.cpp
@@ -121,8 +119,15 @@ set(FASTSCAPELIB_BENCHMARK_TARGET benchmark_fastscapelib)
 add_executable(${FASTSCAPELIB_BENCHMARK_TARGET}
   EXCLUDE_FROM_ALL ${FASTSCAPELIB_BENCHMARK_SRC})
 
+target_include_directories(${FASTSCAPELIB_BENCHMARK_TARGET}
+  INTERFACE ${GBENCHMARK_INCLUDE_DIRS})
+
 target_link_libraries(${FASTSCAPELIB_BENCHMARK_TARGET}
   fastscapelib ${GBENCHMARK_LIBRARIES})
+
+if(DOWNLOAD_RICHDEM)
+  add_dependencies(${FASTSCAPELIB_BENCHMARK_TARGET} richdem)
+endif()
 
 add_custom_target(run_benchmark
     COMMAND benchmark_fastscapelib

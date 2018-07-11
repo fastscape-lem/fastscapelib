@@ -8,6 +8,10 @@
 
 #include "fastscapelib/sinks.hpp"
 
+#ifdef ENABLE_RICHDEM
+#include "fastscapelib/richdem.hpp"
+#endif
+
 
 namespace fastscapelib
 {
@@ -145,6 +149,29 @@ namespace benchmark_sinks
             fastscapelib::fill_sinks_sloped(elev);
         }
     }
+
+#ifdef ENABLE_RICHDEM
+    template<class Surface>
+    inline auto fill_sinks_wei2018(benchmark::State& state)
+    {
+        auto elev = Surface()(state.range(0));
+
+        for (auto _ : state)
+        {
+            fastscapelib::fill_sinks_wei2018(elev);
+        }
+    }
+#endif
+
+#ifdef ENABLE_RICHDEM
+    BENCHMARK_TEMPLATE(fill_sinks_wei2018, conic_surface<double>)
+    ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
+    ->Unit(benchmark::kMillisecond);
+
+    BENCHMARK_TEMPLATE(fill_sinks_wei2018, conic_surface_inv<double>)
+    ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
+    ->Unit(benchmark::kMillisecond);
+#endif
 
     BENCHMARK_TEMPLATE(fill_sinks_flat, conic_surface<double>)
     ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)

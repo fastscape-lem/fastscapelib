@@ -53,6 +53,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/union_find.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/Profile.h
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/bedrock_channel.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/richdem.hpp
 )
 
 set(FASTSCAPELIB_TARGET fastscapelib)
@@ -73,18 +74,48 @@ OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
 OPTION(BUILD_BENCHMARKS "fastscapelib benchmarks local-mininma" OFF)
 OPTION(DOWNLOAD_GBENCHMARK "download google benchmark and build from source" ON)
 OPTION(BUILD_PYTHON_MODULE "build fastscapelib Python bindings" OFF)
+OPTION(ENABLE_RICHDEM "enable richdem features" OFF)
+OPTION(DOWNLOAD_RICHDEM "download richdem" OFF)
+
+include(ExternalProject)
+
+if(ENABLE_RICHDEM)
+  if(DOWNLOAD_RICHDEM)
+    ExternalProject_Add(richdem
+      GIT_REPOSITORY    "https://github.com/r-barnes/richdem.git"
+      GIT_TAG           "v2.2.8"
+      GIT_SHALLOW       1
+      GIT_PROGRESS      1
+      SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/richdem-src"
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND     ""
+      INSTALL_COMMAND   ""
+      TEST_COMMAND      ""
+      )
+
+    ExternalProject_Get_Property(richdem SOURCE_DIR)
+    set(richdem_INCLUDE_DIRS ${SOURCE_DIR}/include)
+    message(STATUS "Will download richdem during build")
+  else()
+    # TODO: write Findrichdem.cmake
+    find_package(richdem REQUIRED)
+    message(STATUS "Found richdem: ${richdem_INCLUDE_DIRS}/richdem")
+  endif()
+
+  add_definitions(-DENABLE_RICHDEM)
+  include_directories(${richdem_INCLUDE_DIRS})
+endif()
 
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
   set(BUILD_TESTS ON)
 endif()
 
 if(BUILD_TESTS)
-  include_directories(${FASTSCAPELIB_INCLUDE_DIR})
   add_subdirectory(test)
 endif()
 
 if(BUILD_BENCHMARK)
-    add_subdirectory(benchmark)
+  add_subdirectory(benchmark)
 endif()
 
 if(BUILD_PYTHON_MODULE)
@@ -93,8 +124,8 @@ if(BUILD_PYTHON_MODULE)
 endif()
 
 if(BUILD_BENCHMARKS)
-    include_directories(${FASTSCAPELIB_INCLUDE_DIR})
-    add_subdirectory(benchmarks)
+  include_directories(${FASTSCAPELIB_INCLUDE_DIR})
+  add_subdirectory(benchmarks)
 endif()
 
 

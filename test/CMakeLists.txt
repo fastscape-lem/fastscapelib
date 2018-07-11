@@ -4,9 +4,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   project(fastscapelib-test)
 
   find_package(xtensor REQUIRED CONFIG)
-  set(XTENSOR_INCLUDE_DIR ${xtensor_INCLUDE_DIR})
   find_package(fastscapelib REQUIRED CONFIG)
-  set(FASTSCAPELIB_INCLUDE_DIR ${fastscapelib_INCLUDE_DIRS})
 endif ()
 
 #message(STATUS "Forcing tests build type to Release")
@@ -81,8 +79,6 @@ endif()
 
 find_package(Threads)
 
-include_directories(${GTEST_INCLUDE_DIRS})
-
 set(FASTSCAPELIB_TEST_SRC
   main.cpp
   test_flow_routing.cpp
@@ -98,6 +94,13 @@ add_executable(${FASTSCAPELIB_TEST_TARGET} ${FASTSCAPELIB_TEST_SRC})
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
     add_dependencies(${FASTSCAPELIB_TEST_TARGET} gtest_main)
 endif()
+
+if(DOWNLOAD_RICHDEM)
+  add_dependencies(${FASTSCAPELIB_TEST_TARGET} richdem)
+endif()
+
+target_include_directories(${FASTSCAPELIB_TEST_TARGET}
+  INTERFACE ${GTEST_INCLUDE_DIRS})
 
 target_link_libraries(${FASTSCAPELIB_TEST_TARGET}
   fastscapelib ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

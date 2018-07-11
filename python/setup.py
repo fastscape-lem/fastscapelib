@@ -81,7 +81,9 @@ class CMakeBuild(build_ext):
 ext_modules = [
     CMakeExtension('_fastscapelib_py',
                    source_dir='..',
-                   cmake_options={'BUILD_PYTHON_MODULE': 'ON'})
+                   cmake_options={'BUILD_PYTHON_MODULE': 'ON',
+                                  'ENABLE_RICHDEM': 'ON',
+                                  'DOWNLOAD_RICHDEM': 'ON'})
 ]
 
 
