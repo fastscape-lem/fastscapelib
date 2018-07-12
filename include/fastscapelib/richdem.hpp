@@ -17,7 +17,6 @@ namespace detail
 template<class A, class T = typename std::decay_t<A>::value_type>
 auto to_array2d(A&& xt_array) -> richdem::Array2D<T>
 {
-    //auto xt_array_d = xt_array.derived_cast();
     auto data = xt_array.data();
     auto shape = xt_array.shape();
 
