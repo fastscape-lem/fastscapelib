@@ -1,4 +1,5 @@
 #include <array>
+#include <functional>
 #include <math.h>
 
 #include <benchmark/benchmark.h>
@@ -13,6 +14,11 @@
 
 #include "fixtures.hpp"
 
+#include <iostream>
+
+
+using namespace fixtures;
+
 
 namespace fastscapelib
 {
@@ -20,79 +26,79 @@ namespace fastscapelib
 namespace benchmark_sinks
 {
 
+    enum class Method {flat, sloped, wei2018};
 
-    template<fixtures::SurfaceType surf_type, class T>
-    inline auto fill_sinks_flat(benchmark::State& state)
-    {
-        auto topo = fixtures::SyntheticTopography<surf_type, T>(state.range(0));
-        auto elev = topo.get_elevation();
 
-        for (auto _ : state)
+    static void grid_sizes(benchmark::internal::Benchmark* bench) {
+        std::array<int, 4> sizes {500, 1000, 2000, 5000};
+
+        for (int s : sizes)
         {
-            fastscapelib::fill_sinks_flat(elev);
+            bench->Args({s})->Unit(benchmark::kMillisecond);
         }
     }
 
 
-    template<fixtures::SurfaceType surf_type, class T>
-    static void fill_sinks_sloped(benchmark::State& state)
+    template<Method sink_func, SurfaceType surf_type, class T>
+    inline auto bm_sinks(benchmark::State& state)
     {
-        auto topo = fixtures::SyntheticTopography<surf_type, T>(state.range(0));
-        auto elev = topo.get_elevation();
+        auto topo = SyntheticTopography<surf_type, T>(state.range(0));
+        auto elevation = topo.get_elevation();
 
-        for (auto _ : state)
-        {
-            fastscapelib::fill_sinks_sloped(elev);
-        }
-    }
+        std::function<void(void)> fill_sinks;
+
+        switch (sink_func) {
+        case Method::flat:
+            fill_sinks = [&](){ fastscapelib::fill_sinks_flat(elevation); };
+            break;
+
+        case Method::sloped:
+            fill_sinks = [&](){ fastscapelib::fill_sinks_sloped(elevation); };
+            break;
 
 #ifdef ENABLE_RICHDEM
-    template<fixtures::SurfaceType surf_type, class T>
-    inline auto fill_sinks_wei2018(benchmark::State& state)
-    {
-        auto topo = fixtures::SyntheticTopography<surf_type, T>(state.range(0));
-        auto elev = topo.get_elevation();
+        case Method::wei2018:
+            fill_sinks = [&](){ fastscapelib::fill_sinks_wei2018(elevation); };
+            break;
+#endif
+        }
 
         for (auto _ : state)
         {
-            fastscapelib::fill_sinks_wei2018(elev);
+            fill_sinks();
         }
     }
-#endif
+
 
 #ifdef ENABLE_RICHDEM
-    BENCHMARK_TEMPLATE(fill_sinks_wei2018, fixtures::SurfaceType::cone, double)
-    ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMillisecond);
+    BENCHMARK_TEMPLATE(bm_sinks, Method::wei2018, SurfaceType::cone, double)
+    ->Apply(grid_sizes);
 
-    BENCHMARK_TEMPLATE(fill_sinks_wei2018, fixtures::SurfaceType::cone_inv, double)
-    ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMillisecond);
+    BENCHMARK_TEMPLATE(bm_sinks, Method::wei2018, SurfaceType::cone_inv, double)
+    ->Apply(grid_sizes);
+
+    BENCHMARK_TEMPLATE(bm_sinks, Method::wei2018, SurfaceType::cone_noise, double)
+    ->Apply(grid_sizes);
 #endif
 
-    BENCHMARK_TEMPLATE(fill_sinks_flat, fixtures::SurfaceType::cone, double)
-    ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMillisecond);
 
-    BENCHMARK_TEMPLATE(fill_sinks_flat, fixtures::SurfaceType::cone_inv, double)
-    ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMillisecond);
+    BENCHMARK_TEMPLATE(bm_sinks, Method::flat, SurfaceType::cone, double)
+    ->Apply(grid_sizes);
 
-    BENCHMARK_TEMPLATE(fill_sinks_flat, fixtures::SurfaceType::cone_noise, double)
-    ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMillisecond);
+    BENCHMARK_TEMPLATE(bm_sinks, Method::flat, SurfaceType::cone_inv, double)
+    ->Apply(grid_sizes);
 
-    BENCHMARK_TEMPLATE(fill_sinks_sloped, fixtures::SurfaceType::cone, double)
-    ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMillisecond);
+    BENCHMARK_TEMPLATE(bm_sinks, Method::flat, SurfaceType::cone_noise, double)
+    ->Apply(grid_sizes);
 
-    BENCHMARK_TEMPLATE(fill_sinks_sloped, fixtures::SurfaceType::cone_inv, double)
-    ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMillisecond);
+    BENCHMARK_TEMPLATE(bm_sinks, Method::sloped, SurfaceType::cone, double)
+    ->Apply(grid_sizes);
 
-    BENCHMARK_TEMPLATE(fill_sinks_sloped, fixtures::SurfaceType::cone_noise, double)
-    ->Arg(100)->Arg(200)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMillisecond);
+    BENCHMARK_TEMPLATE(bm_sinks, Method::sloped, SurfaceType::cone_inv, double)
+    ->Apply(grid_sizes);
+
+    BENCHMARK_TEMPLATE(bm_sinks, Method::sloped, SurfaceType::cone_noise, double)
+    ->Apply(grid_sizes);
 
 } // namespace benchmark_sinks
 
