@@ -110,8 +110,9 @@ else()
 endif()
 
 set(FASTSCAPELIB_BENCHMARK_SRC
-  fixtures.hpp
+  benchmark_setup.hpp
   benchmark_sinks.cpp
+  benchmark_resolve_sinks.cpp
   main.cpp
 )
 
