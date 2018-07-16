@@ -3,9 +3,10 @@
  */
 #pragma once
 
-#ifdef ENABLE_RICHDEM
-
-#include "richdem/richdem.hpp"
+#include "richdem/common/Array2D.hpp"
+#include "richdem/depressions/Wei2018.hpp"
+#include "richdem/flats/flats.hpp"
+//#include "richdem/richdem.hpp"
 
 
 namespace fastscapelib
@@ -35,6 +36,13 @@ void fill_sinks_wei2018(xtensor_t<E>& elevation)
 }
 
 
-}  // namespace fastscapelib
+template<class E>
+void resolve_flats_sloped(xtensor_t<E>& elevation)
+{
+    auto elevation_a2d = detail::to_array2d(elevation.derived_cast());
 
-#endif
+    richdem::ResolveFlatsEpsilon(elevation_a2d);
+}
+
+
+}  // namespace fastscapelib
