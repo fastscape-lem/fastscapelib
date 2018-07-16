@@ -18,6 +18,8 @@
 namespace bms = benchmark_setup;
 namespace fs = fastscapelib;
 
+using SurfaceType = bms::SurfaceType;
+
 
 namespace fastscapelib
 {
@@ -28,7 +30,7 @@ namespace benchmark_sinks
 enum class Method {flat, sloped, wei2018};
 
 
-template<Method sink_func, bms::SurfaceType surf_type, class T>
+template<Method sink_func, SurfaceType surf_type, class T>
 inline auto bm_sinks(benchmark::State& state)
 {
     auto topo = bms::SyntheticTopography<surf_type, T>(state.range(0));
@@ -60,32 +62,32 @@ inline auto bm_sinks(benchmark::State& state)
 
 
 #ifdef ENABLE_RICHDEM
-BENCHMARK_TEMPLATE(bm_sinks, Method::wei2018, bms::SurfaceType::cone, double)
+BENCHMARK_TEMPLATE(bm_sinks, Method::wei2018, SurfaceType::cone, double)
 ->Apply(bms::grid_sizes);
 
-BENCHMARK_TEMPLATE(bm_sinks, Method::wei2018, bms::SurfaceType::cone_inv, double)
+BENCHMARK_TEMPLATE(bm_sinks, Method::wei2018, SurfaceType::cone_inv, double)
 ->Apply(bms::grid_sizes);
 
-BENCHMARK_TEMPLATE(bm_sinks, Method::wei2018, bms::SurfaceType::cone_noise, double)
+BENCHMARK_TEMPLATE(bm_sinks, Method::wei2018, SurfaceType::cone_noise, double)
 ->Apply(bms::grid_sizes);
 #endif
 
-BENCHMARK_TEMPLATE(bm_sinks, Method::flat, bms::SurfaceType::cone, double)
+BENCHMARK_TEMPLATE(bm_sinks, Method::flat, SurfaceType::cone, double)
 ->Apply(bms::grid_sizes);
 
-BENCHMARK_TEMPLATE(bm_sinks, Method::flat, bms::SurfaceType::cone_inv, double)
+BENCHMARK_TEMPLATE(bm_sinks, Method::flat, SurfaceType::cone_inv, double)
 ->Apply(bms::grid_sizes);
 
-BENCHMARK_TEMPLATE(bm_sinks, Method::flat, bms::SurfaceType::cone_noise, double)
+BENCHMARK_TEMPLATE(bm_sinks, Method::flat, SurfaceType::cone_noise, double)
 ->Apply(bms::grid_sizes);
 
-BENCHMARK_TEMPLATE(bm_sinks, Method::sloped, bms::SurfaceType::cone, double)
+BENCHMARK_TEMPLATE(bm_sinks, Method::sloped, SurfaceType::cone, double)
 ->Apply(bms::grid_sizes);
 
-BENCHMARK_TEMPLATE(bm_sinks, Method::sloped, bms::SurfaceType::cone_inv, double)
+BENCHMARK_TEMPLATE(bm_sinks, Method::sloped, SurfaceType::cone_inv, double)
 ->Apply(bms::grid_sizes);
 
-BENCHMARK_TEMPLATE(bm_sinks, Method::sloped, bms::SurfaceType::cone_noise, double)
+BENCHMARK_TEMPLATE(bm_sinks, Method::sloped, SurfaceType::cone_noise, double)
 ->Apply(bms::grid_sizes);
 
 } // namespace benchmark_sinks

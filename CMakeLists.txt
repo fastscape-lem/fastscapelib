@@ -83,10 +83,12 @@ if(ENABLE_RICHDEM)
   if(DOWNLOAD_RICHDEM)
     ExternalProject_Add(richdem
       GIT_REPOSITORY    "https://github.com/r-barnes/richdem.git"
-      GIT_TAG           "v2.2.8"
+      GIT_TAG           "v2.2.9"
       GIT_SHALLOW       1
       GIT_PROGRESS      1
       SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/richdem-src"
+      # TODO: remove when fixed upstream
+      PATCH_COMMAND     git apply -v ${CMAKE_CURRENT_SOURCE_DIR}/cmake/richdem_fix_duplicate_symbols.patch
       CONFIGURE_COMMAND ""
       BUILD_COMMAND     ""
       INSTALL_COMMAND   ""
@@ -104,6 +106,14 @@ if(ENABLE_RICHDEM)
 
   add_definitions(-DENABLE_RICHDEM)
   include_directories(${richdem_INCLUDE_DIRS})
+  # TODO: use cmake target/properties for richdem options
+  string(TIMESTAMP COMPILE_TIME "\"%Y-%m-%d %H:%M:%S\"")
+  add_definitions(
+    -DRICHDEM_GIT_HASH="v2.2.9"
+    -DRICHDEM_COMPILE_TIME=${COMPILE_TIME}
+    -DNOPROGRESS
+    -DNDEBUG
+    )
 endif()
 
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)

@@ -125,14 +125,14 @@ void set_fixed_boundary_faces(A&& active_nodes)
     auto active_nodes_ = xt::view(active_nodes, xt::all(), xt::all());
     active_nodes_ = true;
 
-    auto shape = active_nodes.shape();
-    const std::array<size_t, 2> row_bounds_idx {0, shape[0] - 1};
-    const std::array<size_t, 2> col_bounds_idx {0, shape[0] - 1};
+    const auto shape = active_nodes.shape();
+    const std::array<size_t, 2> rows_idx {0, shape[0] - 1};
+    const std::array<size_t, 2> cols_idx {0, shape[1] - 1};
 
-    auto row_bounds = xt::view(active_nodes, xt::islice(row_bounds_idx), xt::all());
+    auto row_bounds = xt::view(active_nodes, xt::islice(rows_idx), xt::all());
     row_bounds = false;
 
-    auto col_bounds = xt::view(active_nodes, xt::all(), xt::islice(col_bounds_idx));
+    auto col_bounds = xt::view(active_nodes, xt::all(), xt::islice(cols_idx));
     col_bounds = false;
 }
 
@@ -153,6 +153,7 @@ struct FastscapeSetupBase
     xt::xtensor<index_t, 1> ndonors;
     xt::xtensor<index_t, 2> donors;
     xt::xtensor<index_t, 1> stack;
+    xt::xtensor<index_t, 1> basins;
 
     FastscapeSetupBase(int n)
     {
@@ -166,10 +167,11 @@ struct FastscapeSetupBase
         nnodes = n * n;
 
         receivers = xt::empty<index_t>({nnodes});
-        dist2receivers = xt::empty<double>({nnodes});
+        dist2receivers = xt::empty<T>({nnodes});
         ndonors = xt::empty<index_t>({nnodes});
         donors = xt::empty<index_t>({nnodes, 8});
         stack = xt::empty<index_t>({nnodes});
+        basins = xt::empty<index_t>({nnodes});
     }
 };
 
