@@ -88,7 +88,7 @@ if(ENABLE_RICHDEM)
       GIT_PROGRESS      1
       SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/richdem-src"
       # TODO: remove when fixed upstream
-      PATCH_COMMAND     git apply -v ${CMAKE_CURRENT_SOURCE_DIR}/cmake/richdem_fix_duplicate_symbols.patch
+      PATCH_COMMAND     git apply -v --whitespace=fix ${CMAKE_CURRENT_SOURCE_DIR}/cmake/richdem_fix_duplicate_symbols.patch
       CONFIGURE_COMMAND ""
       BUILD_COMMAND     ""
       INSTALL_COMMAND   ""

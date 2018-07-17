@@ -30,6 +30,7 @@ endif()
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP /bigobj")
     set(CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO)
+	add_definitions(-D_USE_MATH_DEFINES)
 endif()
 
 

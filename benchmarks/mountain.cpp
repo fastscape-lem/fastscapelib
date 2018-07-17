@@ -170,7 +170,7 @@ void dig_hole(T& a, size_t hid)
 void example_mountain()
 {
 	xt::xtensor<double, 1> h_prop = { 0, .015625, .03125, .0625, .125, .25, .5, 1.0 };
-	xt::xtensor<int, 1> m_size = { 32, 64, 128, 256, 512, 1024, 2048/*, 4096*/ };
+	xt::xtensor<int, 1> m_size = { 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 	//xt::xtensor<int, 1> m_size = { 32, 64, 128, 256 };
 
 	xt::xtensor<double, 2> results({ m_size.size(), h_prop.size() });
@@ -193,7 +193,9 @@ void example_mountain()
 	funcs["Kruskal sloped"] = benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Sloped>;
 	funcs["Boruvka sloped"] = benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Sloped>;
 	funcs["Sinks"] = benchmark_fastscape_sinks;
-
+#ifdef ENABLE_RICHDEM
+	funcs["Wei2018"] = benchmark_fastscape_wei2018;
+#endif
 
 
 	std::stringstream out;

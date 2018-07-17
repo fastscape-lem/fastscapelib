@@ -60,3 +60,51 @@ void benchmark_fastscape_sinks(
 }
 
 RegisterFastscape register_fastscape_sinks("Sinks", benchmark_fastscape_sinks);
+
+
+#ifdef ENABLE_RICHDEM
+
+#include "fastscapelib/richdem.hpp"
+
+void benchmark_wei2018_flat(xt::xtensor<double, 2>& elevation, xt::xtensor<bool, 2>&)
+{
+	fs::fill_sinks_wei2018(elevation);
+}
+
+RegisterRandom register_sinks_wei2018("Wei2018 Flat", benchmark_wei2018_flat);
+
+
+//WARNING: the following algorithm does not solve depression with a slight slope, as it would be excpected for fastscape.
+// I still added the fastscape function for comparison with our methods on a single step.
+// Although the results is not assumed to be correct, the timing should be consistent.
+
+void benchmark_fastscape_wei2018(
+	xt::xtensor<index_t, 1>&      stack,
+	xt::xtensor<index_t, 1>&      receivers,
+	xt::xtensor<double, 1>&       dist2receviers,
+	const xt::xtensor<double, 2>& elevation,
+	const xt::xtensor<bool, 2>&   active_nodes,
+	double dx, double dy)
+{
+
+	xt::xtensor<double, 2> tmp_elevation = elevation;
+	xt::xtensor<index_t, 1> ndonors(stack.shape());
+	xt::xtensor<index_t, 2> donors(std::array<size_t, 2>{stack.shape()[0], 8});
+
+	
+	fs::fill_sinks_wei2018(tmp_elevation);
+
+
+	fs::compute_receivers_d8(receivers, dist2receviers, tmp_elevation, active_nodes, dx, dy);
+
+
+	fs::compute_donors(ndonors, donors, receivers);
+
+
+	fs::compute_stack(stack, ndonors, donors, receivers);
+
+
+
+}
+
+#endif
