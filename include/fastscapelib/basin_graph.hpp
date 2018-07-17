@@ -688,7 +688,7 @@ auto get_d8_distances_sep(double dx, double dy) -> std::array<double, 9>
 {
     std::array<double, 9> d8_dists;
 
-    for(size_t k=0; k<9; ++k)
+    for(int k=0; k<9; ++k)
     {
         double d8_dx = dx * double(k % 3 -1);
         double d8_dy = dy * double(k / 3 -1);
@@ -798,6 +798,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_carve(Rcv_X
         receivers(cur_node) = link.nodes[OUTFLOW];
         //std::cerr << "+ [" << cur_node << "]" << dist2receivers(cur_node);
         dist2receivers(cur_node) = d8_distances[detail::get_d8_distance_id(cur_node, link.nodes[OUTFLOW], ncols)];
+		
         //std::cerr << "->" << dist2receivers(cur_node)<< std::endl;
 
         //std::cout << "Pass " << cur_node << " -> " << link.nodes[OUTFLOW] << std::endl;

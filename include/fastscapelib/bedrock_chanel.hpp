@@ -63,7 +63,7 @@ void erode_spower(Erosion_XT& erosion, const Elevation_XT& elevation, const Stac
 		if (s0 >= 0.0)
 		{
 			erosion(istack) = 0.0;
-			water[istack] = std::max(node_elevation, water[irec]);
+			water[istack] = water[irec];
 			continue;
 		}
 
