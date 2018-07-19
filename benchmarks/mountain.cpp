@@ -6,14 +6,72 @@
 #include "benchmark_sinks.hpp"
 
 #include <xtensor/xrandom.hpp>
+#include <algorithm>
+#include <atomic>
+#include <thread>
 
 #include "examples.hpp"
 #include <map>
 
 int boruvka_perf = -1;
 
-template <class Elev_T, class Active_T>
-void fastscape(Elev_T& elevation, const Active_T& active_nodes, double dx, double dt, int num_iter)
+class FastScapeProgress
+{
+public:
+	FastScapeProgress()
+	{
+		fast_scape_progress = 0.0;
+		print_thread = std::thread(&FastScapeProgress::print_progress, this);
+	}
+	virtual ~FastScapeProgress()
+	{
+		fast_scape_progress = 1.0;
+		print_thread.join();
+	}
+
+	static void update(float p) { fast_scape_progress = p; }
+
+private:
+	static std::atomic<double> fast_scape_progress;
+	std::thread print_thread;
+
+	void print_progress()
+	{
+		const int len = 50;
+
+		std::cout << std::unitbuf << "[";
+		for (int i = 0; i < len; ++i)
+			std::cout << '-';
+		std::cout << "]";
+		for (int i = 0; i < len+1; ++i)
+			std::cout << '\b';
+
+		int c = 0;
+		double progress = 0.0;
+
+		do
+		{
+			progress = fast_scape_progress.load();
+
+			int nc = int(float(len) * progress);
+			while (c < nc)
+			{
+				std::cout << '#';
+				++c;
+			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+		} while (progress != 1.0);
+
+		std::cout << std::endl;
+	}
+};
+
+std::atomic<double> FastScapeProgress::fast_scape_progress = 0.0;
+
+template <class Elev_T, class Active_T, class Uplift_XT>
+std::vector<size_t> fastscape(Elev_T& elevation, const Active_T& active_nodes, double dx, double dt, int num_iter, Uplift_XT&& uplift, bool correct_flow = true)
 {
 	auto shape = elevation.shape();
 	int nrows = (int)shape[0];
@@ -32,12 +90,16 @@ void fastscape(Elev_T& elevation, const Active_T& active_nodes, double dx, doubl
 	xt::xtensor<double, 1> area(shape1D);
 	xt::xtensor<double, 1> erosion(shape1D);
 
+	std::vector<size_t> basin_count;
+
 
 	for (int s = 0; s < num_iter; ++s)
 	{
 
+		FastScapeProgress::update(float(s) / float(num_iter-1));
+
 		// uplift
-		elevation += xt::cast<double>(active_nodes) * 5e-3 *dt;
+		elevation += xt::cast<double>(active_nodes) *uplift *dt;
 
 		fastscapelib::compute_receivers_d8(receivers, dist2receivers,
 			elevation, active_nodes,
@@ -46,8 +108,9 @@ void fastscape(Elev_T& elevation, const Active_T& active_nodes, double dx, doubl
 		fastscapelib::compute_donors(ndonors, donors, receivers);
 		fastscapelib::compute_stack(stack, ndonors, donors, receivers);
 
-		fastscapelib::correct_flowrouting<fs::BasinAlgo::Boruvka, fs::ConnectType::Carved>(bg, basins, receivers, dist2receivers,
-			ndonors, donors, stack, active_nodes, elevation, dx, dy);
+		if (correct_flow)
+			fastscapelib::correct_flowrouting<fs::BasinAlgo::Boruvka, fs::ConnectType::Carved>(bg, basins, receivers, dist2receivers,
+				ndonors, donors, stack, active_nodes, elevation, dx, dy);
 
 		fs::compute_drainage_area(area, stack, receivers, dx, dy);
 		fs::erode_spower(erosion, elevation, stack, receivers, dist2receivers, area,
@@ -55,7 +118,11 @@ void fastscape(Elev_T& elevation, const Active_T& active_nodes, double dx, doubl
 
 		for (size_t k = 0; k < nrows*ncols; ++k)
 			elevation(k) = elevation(k) - erosion(k);
+
+		basin_count.push_back(bg.basin_count());
 	}
+
+	return basin_count;
 }
 
 template <class T>
@@ -117,7 +184,7 @@ void generate_mountain()
 
 		int num_iter = n == 32 ? 100 : 4;
 
-		fastscape(elevation, active_nodes, dx, dt, num_iter);
+		fastscape(elevation, active_nodes, dx, dt, num_iter, 5e-3);
 
 		dbg_out("results/mountain/bedrock-", n, elevation, elevation.shape());
 
@@ -169,7 +236,11 @@ void dig_hole(T& a, size_t hid)
 
 void example_mountain()
 {
-	xt::xtensor<double, 1> h_prop = { 0, .015625, .03125, .0625, .125, .25, .5, 1.0 };
+
+	double prop_multiplier = 0.1;
+
+	xt::xtensor<double, 1> h_prop = { 0, 0.0078125, .015625, 0.5*(.015625 + .03125), .03125,
+		0.5*(.03125 + .0625),.0625,  0.5*(.0625 + .125),.125, 0.5*(.125 + .25), .25,  0.5*(.25 + .5),.5,  0.5*(.5 + 1.0),1.0 };
 	xt::xtensor<int, 1> m_size = { 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 	//xt::xtensor<int, 1> m_size = { 32, 64, 128, 256 };
 
@@ -213,7 +284,7 @@ void example_mountain()
 		int num_holes = 0;
 		for (double hp : h_prop)
 		{
-			int target_holes = (int)(hp *  double(holes_id.size()));
+			int target_holes = (int)(prop_multiplier * hp *  double(holes_id.size()));
 
 			out << hp << ":{'numholes':"<<target_holes<<',';
 
@@ -278,4 +349,90 @@ void example_mountain()
 		std::cerr << "Impossible to open file results/mountain/bench.py\n";
 	else
 		file << out.str();
+}
+
+
+void fastscape_pits()
+{
+	int n = 1024;
+	double dx = 100;
+	double dt = 10000;
+	int niter = 30;
+
+	xt::xtensor<double, 1> noise_ampl = xt::linspace(0.0, 0.1, 4);
+
+	xt::xtensor<double, 2> elevation_init = xt::random::rand({ (size_t)n, (size_t)n }, 0.0, 1e-3);
+
+	xt::xtensor<bool, 2> active_nodes(elevation_init.shape());
+
+	for (size_t i = 0; i<active_nodes.shape()[0]; ++i)
+		for (size_t j = 0; j<active_nodes.shape()[1]; ++j)
+			active_nodes(i, j) = i != 0 && j != 0
+			&& i != active_nodes.shape()[0] - 1
+			&& j != active_nodes.shape()[1] - 1;
+
+	std::stringstream out;
+	out << "pits = {";
+
+	size_t c = 0;
+	for (auto ampl : noise_ampl)
+	{
+		xt::xtensor<double, 2> elevation = elevation_init;
+
+		std::cout << "Pits: " << 100 * c++ / (noise_ampl.size()-1) << "% ";
+		FastScapeProgress progress;
+
+		xt::xtensor<double, 2> uplift = xt::random::rand(elevation.shape(), 1.0-ampl, 1.0+ampl) * 5e-2;
+		auto basin_count = fastscape(elevation, active_nodes, dx, dt, niter, uplift);
+
+		out << ampl << ": [";
+		std::for_each(basin_count.begin(), basin_count.end(), [&out](auto c) {out << c << ","; });
+		out << "],";
+	}
+	out << "}";
+	
+	std::ofstream file("results/mountain/pits.py");
+	if (!file)
+		std::cerr << "Impossible to open file results/mountain/pits.py\n";
+	else
+		file << out.str();
+}
+
+void escarpment()
+{
+	int nx = 1024;
+	int ny = 256;
+	double dx = 100;
+	double dt = 1000;
+	int niter = 70;
+
+	double global_height = 500;
+
+
+	xt::xtensor<double, 2> elevation = xt::random::rand({ (size_t)ny, (size_t)nx }, 0.0, 1e-3) + global_height;
+
+	xt::xtensor<bool, 2> active_nodes(elevation.shape(), true);
+
+	for (size_t i = 0; i < active_nodes.shape()[0]; ++i)
+	{
+		active_nodes(i, 0) = false;
+		elevation(i, 0) = 0.0;
+	}
+
+
+	xt::xtensor<double, 2> elev0 = elevation;
+	{
+		std::cout << "Loc min: false ";
+		FastScapeProgress progress;
+		fastscape(elevation, active_nodes, dx, dt, niter, 0.0, false);
+
+	}
+	{
+		std::cout << "Loc min: true ";
+		FastScapeProgress progress;
+		fastscape(elev0, active_nodes, dx, dt, niter, 0.0);
+	}
+
+	dbg_out("results/mountain/escarp", 0, elevation, elevation.shape());
+	dbg_out("results/mountain/escarp", 1, elev0, elev0.shape());
 }

@@ -13,7 +13,7 @@ using namespace std::literals;
 int main(int i, char* p[])
 {
 
-	std::string param = i > 1 ? p[1] : "all";
+	std::string param = i > 1 ? p[1] : "escarpment";
 
 	if (param == "vornoi" || param == "all")
 		example_vornoi();
@@ -23,6 +23,10 @@ int main(int i, char* p[])
 		generate_mountain();
 	if (param == "mountain" || param == "all")
 		example_mountain();
+	if (param == "fastscape_pits" || param == "all")
+		fastscape_pits();
+	if (param == "escarpment" || param == "all")
+		escarpment();
 
 	std::cout << "Press enter to continue ...";
 	std::cin.get();
