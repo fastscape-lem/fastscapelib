@@ -1,10 +1,34 @@
 cmake_minimum_required(VERSION 3.1)
 project(fastscapelib)
 
+set(CMAKE_MODULE_PATH
+  ${PROJECT_SOURCE_DIR}/cmake
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules
+  ${CMAKE_MODULE_PATH})
+
 set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Versionning
 # ===========
+
+include(GetGitRevisionDescription)
+git_describe(GIT_REV_DESCRIPTION --tags --always --dirty=.dirty)
+
+string(FIND ${GIT_REV_DESCRIPTION} "-" GIT_HAS_TAG)
+
+if(GIT_HAS_TAG EQUAL -1)
+  set(VERSION_MAJOR "0")
+  set(VERSION_MINOR "0")
+  set(VERSION_PATCH "0")
+  git_get_commit_count(GIT_COMMIT_COUNT)
+  message(STATUS "nb commits " ${GIT_COMMIT_COUNT})
+else()
+  string(REGEX REPLACE "^v([0-9]+)\\..*" "\\1" VERSION_MAJOR "${GIT_REV_DESCRIPTION}")
+  string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${GIT_REV_DESCRIPTION}")
+endif()
+
+message(STATUS "version " ${VERSION_MINOR})
+#message(STATUS "Building fastscapelib version " ${VERSION})
 
 file(
   STRINGS
@@ -27,8 +51,6 @@ message(STATUS "Building fastscapelib v${${PROJECT_NAME}_VERSION}")
 
 # Dependencies
 # ============
-
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 # TODO: xtl should be found by xtensor config.
 # fix upstream"find_dependency(xtl REQUIRED)" in xtensorConfig.cmake?
