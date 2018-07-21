@@ -1,0 +1,29 @@
+#pragma once
+
+#define FASTSCAPELIB_VERSION_MAJOR "@VERSION_MAJOR@"
+#define FASTSCAPELIB_VERSION_MINOR "@VERSION_MINOR@"
+#define FASTSCAPELIB_VERSION_PATCH "@VERSION_PATCH@"
+
+#define FASTSCAPELIB_VERSION "@VERSION_STR@"
+
+#define FASTSCAPELIB_GIT_HASH_FULL "@GIT_HASH_FULL@"
+
+#include <string>
+
+
+namespace fastscapelib
+{
+
+namespace version
+{
+
+    static const std::string version_major = FASTSCAPELIB_VERSION_MAJOR;
+    static const std::string version_minor = FASTSCAPELIB_VERSION_MINOR;
+    static const std::string version_patch = FASTSCAPELIB_VERSION_PATCH;
+
+    static const std::string version = FASTSCAPELIB_VERSION;
+    static const std::string git_hash_full = FASTSCAPELIB_GIT_HASH_FULL;
+
+}  // namespace version
+
+}  // namespace fastscapelib
