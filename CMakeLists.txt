@@ -8,46 +8,63 @@ set(CMAKE_MODULE_PATH
 
 set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# Versionning
-# ===========
+# Versioning
+# ==========
 
 include(GetGitRevisionDescription)
-git_describe(GIT_REV_DESCRIPTION --tags --always --dirty=.dirty)
 
-string(FIND ${GIT_REV_DESCRIPTION} "-" GIT_HAS_TAG)
+get_git_head_revision(_ GIT_HASH_FULL)
+git_describe(GIT_REV_DESCRIPTION --tags --always --dirty)
 
-if(GIT_HAS_TAG EQUAL -1)
+if(${GIT_REV_DESCRIPTION} MATCHES
+    "^[v]*([0-9\\.]+)\\-([0-9]+)\\-g([A-Za-z0-9]+)([dirty\\-]*).*")
+  # found tag + additional commits
+  set(GIT_CLOSEST_TAG ${CMAKE_MATCH_1})
+  set(GIT_COMMIT_COUNT ${CMAKE_MATCH_2})
+  set(GIT_HASH_SHORT ${CMAKE_MATCH_3})
+  set(GIT_LOCAL_CHANGES ${CMAKE_MATCH_4})
+
+elseif(${GIT_REV_DESCRIPTION} MATCHES
+    "^[v]*([0-9]+\\.[0-9]+\\.[0-9]+)([dirty\\-]*).*")
+  # HEAD is a tag
+  set(GIT_CLOSEST_TAG ${CMAKE_MATCH_1})
+  set(GIT_COMMIT_COUNT "")
+  set(GIT_HASH_SHORT "")
+  set(GIT_LOCAL_CHANGES ${CMAKE_MATCH_2})
+
+elseif(${GIT_REV_DESCRIPTION} MATCHES
+    "^([A-Za-z0-9]+)([dirty\\-]*).*")
+  # no tag found
+  set(GIT_CLOSEST_TAG "0+untagged")
+  git_get_commit_count(GIT_COMMIT_COUNT)
+  set(GIT_HASH_SHORT ${CMAKE_MATCH_1})
+  set(GIT_LOCAL_CHANGES ${CMAKE_MATCH_2})
+
+else()
+  message(FATAL_ERROR
+    "Could not parse version correctly. Output of git describe: "
+    ${GIT_REV_DESCRIPTION})
+
+endif()
+
+if(${GIT_CLOSEST_TAG} MATCHES "([0-9]+)\\.([0-9]+)\\.([0-9]+)")
+  set(VERSION_MAJOR ${CMAKE_MATCH_1})
+  set(VERSION_MINOR ${CMAKE_MATCH_2})
+  set(VERSION_PATCH ${CMAKE_MATCH_3})
+else()
   set(VERSION_MAJOR "0")
   set(VERSION_MINOR "0")
   set(VERSION_PATCH "0")
-  git_get_commit_count(GIT_COMMIT_COUNT)
-  message(STATUS "nb commits " ${GIT_COMMIT_COUNT})
-else()
-  string(REGEX REPLACE "^v([0-9]+)\\..*" "\\1" VERSION_MAJOR "${GIT_REV_DESCRIPTION}")
-  string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${GIT_REV_DESCRIPTION}")
 endif()
 
-message(STATUS "version " ${VERSION_MINOR})
-#message(STATUS "Building fastscapelib version " ${VERSION})
+if(NOT GIT_HASH_SHORT)
+  set(VERSION_GIT_INFO "")
+else()
+  set(VERSION_GIT_INFO +${GIT_COMMIT_COUNT}.g${GIT_HASH_SHORT})
+endif()
 
-file(
-  STRINGS
-    "${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/config.hpp"
-    fastscapelib_version_defines
-  REGEX
-    "#define FASTSCAPELIB_VERSION_(MAJOR|MINOR|PATCH)"
-)
-
-foreach(ver ${fastscapelib_version_defines})
-  if(ver MATCHES "#define FASTSCAPELIB_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
-    set(FASTSCAPELIB_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
-  endif()
-endforeach()
-
-set(${PROJECT_NAME}_VERSION
-    ${FASTSCAPELIB_VERSION_MAJOR}.${FASTSCAPELIB_VERSION_MINOR}.${FASTSCAPELIB_VERSION_PATCH})
-
-message(STATUS "Building fastscapelib v${${PROJECT_NAME}_VERSION}")
+set(VERSION_STR ${GIT_CLOSEST_TAG}${VERSION_GIT_INFO}${GIT_LOCAL_CHANGES})
+message(STATUS "Building ${PROJECT_NAME} version ${VERSION_STR}")
 
 # Dependencies
 # ============
@@ -148,7 +165,7 @@ configure_package_config_file(${PROJECT_NAME}Config.cmake.in
 set(_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 unset(CMAKE_SIZEOF_VOID_P)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-  VERSION ${${PROJECT_NAME}_VERSION}
+  VERSION ${VERSION_STR}
   COMPATIBILITY AnyNewerVersion
 )
 set(CMAKE_SIZEOF_VOID_P ${_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P})
