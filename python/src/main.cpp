@@ -14,7 +14,16 @@
 
 
 namespace py = pybind11;
+using namespace pybind11::literals;  // use the `_a` literal
+
 namespace fs = fastscapelib;
+
+
+py::dict get_versions()
+{
+    return py::dict("version"_a=fs::version::version,
+                    "git_hash_full"_a=fs::version::git_hash_full);
+}
 
 
 template<class T>
@@ -138,6 +147,9 @@ PYBIND11_MODULE(_fastscapelib_py, m)
         "for processing topographic data and landscape evolution modeling.";
 
     xt::import_numpy();
+
+    m.def("get_versions", &get_versions,
+          "Get version info.");
 
     m.def("compute_receivers_d8_d", &compute_receivers_d8_py<double>,
           "Compute D8 flow receivers, a single receiver for each grid node.");

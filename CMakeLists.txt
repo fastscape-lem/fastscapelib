@@ -67,9 +67,13 @@ set(VERSION_STR ${GIT_CLOSEST_TAG}${VERSION_GIT_INFO}${GIT_LOCAL_CHANGES})
 message(STATUS "Building ${PROJECT_NAME} version ${VERSION_STR}")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/version.hpp.in
-  ${CMAKE_CURRENT_BINARY_DIR}/version.hpp)
+  ${CMAKE_CURRENT_BINARY_DIR}/include/fastscapelib/version.hpp
+  @ONLY)
 
-set(VERSION_HEADER_FILE "${CMAKE_CURRENT_BINARY_DIR}/version.hpp")
+set(VERSION_HEADER_FILE
+  "${CMAKE_CURRENT_BINARY_DIR}/include/fastscapelib/version.hpp")
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 # Dependencies
 # ============

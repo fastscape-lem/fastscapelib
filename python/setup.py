@@ -9,8 +9,10 @@ from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
 
-# TODO: get version from parsing include/fastscapelib/config.hpp
-__version__ = '0.1.0'
+def get_version():
+    """Get version using git, formatted following pep440."""
+    # TODO
+    return '0.1.0'
 
 
 class CMakeExtension(Extension):
@@ -87,7 +89,7 @@ ext_modules = [
 
 setup(
     name='fastscapelib',
-    version=__version__,
+    version=get_version(),
     maintainer='Benoit Bovy',
     maintainer_email='benbovy@gmail.com',
     url='https://github.com/fastscape-lem/fastscapelib',
