@@ -1,34 +1,40 @@
 cmake_minimum_required(VERSION 3.1)
 project(fastscapelib)
 
+set(CMAKE_MODULE_PATH
+  ${PROJECT_SOURCE_DIR}/cmake
+  ${PROJECT_SOURCE_DIR}/cmake/modules
+  ${CMAKE_MODULE_PATH})
+
 set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# Versionning
-# ===========
+# Versioning
+# ==========
 
-file(
-  STRINGS
-    "${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/config.hpp"
-    fastscapelib_version_defines
-  REGEX
-    "#define FASTSCAPELIB_VERSION_(MAJOR|MINOR|PATCH)"
-)
+include(GetGitRevisionAddons)
 
-foreach(ver ${fastscapelib_version_defines})
-  if(ver MATCHES "#define FASTSCAPELIB_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
-    set(FASTSCAPELIB_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
-  endif()
-endforeach()
+get_git_version_pieces(GIT_VERSION_PIECES)
 
-set(${PROJECT_NAME}_VERSION
-    ${FASTSCAPELIB_VERSION_MAJOR}.${FASTSCAPELIB_VERSION_MINOR}.${FASTSCAPELIB_VERSION_PATCH})
+format_version_pep440(VERSION_STR GIT_VERSION_PIECES)
 
-message(STATUS "Building fastscapelib v${${PROJECT_NAME}_VERSION}")
+get_version_numbers(VERSION_MAJOR VERSION_MINOR VERSION_PATCH
+  GIT_VERSION_PIECES)
+
+list(GET GIT_VERSION_PIECES 0 GIT_HASH_FULL)
+
+message(STATUS "Building ${PROJECT_NAME} version ${VERSION_STR}")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/version.hpp.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/fastscapelib/version.hpp
+  @ONLY)
+
+set(VERSION_HEADER_FILE
+  "${CMAKE_CURRENT_BINARY_DIR}/include/fastscapelib/version.hpp")
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 # Dependencies
 # ============
-
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 # TODO: xtl should be found by xtensor config.
 # fix upstream"find_dependency(xtl REQUIRED)" in xtensorConfig.cmake?
@@ -42,8 +48,8 @@ message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 # =====
 
 set(FASTSCAPELIB_HEADERS
+  ${VERSION_HEADER_FILE}
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/fastscapelib.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/config.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/consts.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sinks.hpp
@@ -126,7 +132,7 @@ configure_package_config_file(${PROJECT_NAME}Config.cmake.in
 set(_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 unset(CMAKE_SIZEOF_VOID_P)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-  VERSION ${${PROJECT_NAME}_VERSION}
+  VERSION ${VERSION_STR}
   COMPATIBILITY AnyNewerVersion
 )
 set(CMAKE_SIZEOF_VOID_P ${_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P})

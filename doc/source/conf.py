@@ -17,6 +17,7 @@
 # sys.path.insert(0, os.path.abspath('.'))
 import os
 import subprocess
+import platform
 
 import sphinx_rtd_theme
 
@@ -35,10 +36,44 @@ project = 'fastscapelib'
 copyright = '2018, Benoit Bovy'
 author = 'Benoit Bovy'
 
+
+# -- Version -----------------------------------------------------------------
+
+def check_cmake_version():
+    try:
+        out = subprocess.check_output(['cmake', '--version'])
+    except OSError:
+        raise RuntimeError(
+            "CMake must be installed to build this project")
+
+    if platform.system() == "Windows":
+        cmake_version = LooseVersion(
+            re.search(r'version\s*([\d.]+)', out.decode()).group(1))
+        if cmake_version < '3.1.0':
+            raise RuntimeError("CMake >= 3.1.0 is required on Windows")
+
+
+def get_version():
+    """Get version string using git, formatted according to pep440
+    (call cmake script).
+
+    """
+    check_cmake_version()
+
+    cmake_script = os.path.join(os.pardir, os.pardir, 'cmake', 'modules',
+                                'print_version.cmake')
+    out = subprocess.check_output(['cmake', '-P', cmake_script],
+                                  stderr=subprocess.STDOUT)
+    version_str = out.decode().strip()
+    return version_str
+
+
+_version_str = get_version()
+
 # The short X.Y version
-version = ''
+version = _version_str
 # The full version, including alpha/beta/rc tags
-release = ''
+release = _version_str
 
 
 # -- General configuration ---------------------------------------------------

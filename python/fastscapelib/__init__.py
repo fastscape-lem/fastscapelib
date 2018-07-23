@@ -1,3 +1,6 @@
 from _fastscapelib_py import *
 
-__version__ = "0.1.0"
+versions = get_versions()
+__version__ = versions['version']
+__git_revision__ = versions['git_hash_full']
+del get_versions, versions
