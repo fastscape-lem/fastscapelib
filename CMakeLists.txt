@@ -11,59 +11,17 @@ set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Versioning
 # ==========
 
-include(GetGitRevisionDescription)
+include(GetGitRevisionAddons)
 
-get_git_head_revision(_ GIT_HASH_FULL)
-git_describe(GIT_REV_DESCRIPTION --tags --always --dirty)
+get_git_version_pieces(GIT_VERSION_PIECES)
 
-if(${GIT_REV_DESCRIPTION} MATCHES
-    "^[v]*([0-9\\.]+)\\-([0-9]+)\\-g([A-Za-z0-9]+)([dirty\\-]*).*")
-  # found tag + additional commits
-  set(GIT_CLOSEST_TAG ${CMAKE_MATCH_1})
-  set(GIT_COMMIT_COUNT ${CMAKE_MATCH_2})
-  set(GIT_HASH_SHORT ${CMAKE_MATCH_3})
-  set(GIT_LOCAL_CHANGES ${CMAKE_MATCH_4})
+format_version_pep440(VERSION_STR GIT_VERSION_PIECES)
 
-elseif(${GIT_REV_DESCRIPTION} MATCHES
-    "^[v]*([0-9]+\\.[0-9]+\\.[0-9]+)([dirty\\-]*).*")
-  # HEAD is a tag
-  set(GIT_CLOSEST_TAG ${CMAKE_MATCH_1})
-  set(GIT_COMMIT_COUNT "")
-  set(GIT_HASH_SHORT "")
-  set(GIT_LOCAL_CHANGES ${CMAKE_MATCH_2})
+get_version_numbers(VERSION_MAJOR VERSION_MINOR VERSION_PATCH
+  GIT_VERSION_PIECES)
 
-elseif(${GIT_REV_DESCRIPTION} MATCHES
-    "^([A-Za-z0-9]+)([dirty\\-]*).*")
-  # no tag found
-  set(GIT_CLOSEST_TAG "0+untagged")
-  git_get_commit_count(GIT_COMMIT_COUNT)
-  set(GIT_HASH_SHORT ${CMAKE_MATCH_1})
-  set(GIT_LOCAL_CHANGES ${CMAKE_MATCH_2})
+list(GET GIT_VERSION_PIECES 0 GIT_HASH_FULL)
 
-else()
-  message(FATAL_ERROR
-    "Could not parse version correctly. Output of git describe: "
-    ${GIT_REV_DESCRIPTION})
-
-endif()
-
-if(${GIT_CLOSEST_TAG} MATCHES "([0-9]+)\\.([0-9]+)\\.([0-9]+)")
-  set(VERSION_MAJOR ${CMAKE_MATCH_1})
-  set(VERSION_MINOR ${CMAKE_MATCH_2})
-  set(VERSION_PATCH ${CMAKE_MATCH_3})
-else()
-  set(VERSION_MAJOR "0")
-  set(VERSION_MINOR "0")
-  set(VERSION_PATCH "0")
-endif()
-
-if(NOT GIT_HASH_SHORT)
-  set(VERSION_GIT_INFO "")
-else()
-  set(VERSION_GIT_INFO +${GIT_COMMIT_COUNT}.g${GIT_HASH_SHORT})
-endif()
-
-set(VERSION_STR ${GIT_CLOSEST_TAG}${VERSION_GIT_INFO}${GIT_LOCAL_CHANGES})
 message(STATUS "Building ${PROJECT_NAME} version ${VERSION_STR}")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/version.hpp.in
