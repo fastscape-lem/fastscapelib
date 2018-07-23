@@ -9,7 +9,7 @@ function(get_git_version_pieces _version_pieces)
   git_describe(GIT_REV_DESCRIPTION --tags --always --dirty)
 
   if(${GIT_REV_DESCRIPTION} MATCHES
-      "^[v]*([0-9\\.]+)\\-([0-9]+)\\-g([A-Za-z0-9]+)([dirty\\-]*).*")
+      "^[v]*([0-9\\.]+)\\-([0-9]+)\\-g([A-Za-z0-9]+)\\-*([dirty]*).*")
     # found tag + additional commits
     set(_closest_tag ${CMAKE_MATCH_1})
     set(_commit_count ${CMAKE_MATCH_2})
@@ -17,7 +17,7 @@ function(get_git_version_pieces _version_pieces)
     set(_local_changes ${CMAKE_MATCH_4})
 
   elseif(${GIT_REV_DESCRIPTION} MATCHES
-      "^[v]*([0-9]+\\.[0-9]+\\.[0-9]+)([dirty\\-]*).*")
+      "^[v]*([0-9]+\\.[0-9]+\\.[0-9]+)\\-*([dirty]*).*")
     # HEAD is a tag
     set(_closest_tag ${CMAKE_MATCH_1})
     set(_commit_count "")
@@ -25,9 +25,9 @@ function(get_git_version_pieces _version_pieces)
     set(_local_changes ${CMAKE_MATCH_2})
 
   elseif(${GIT_REV_DESCRIPTION} MATCHES
-      "^([A-Za-z0-9]+)([dirty\\-]*).*")
+      "^([A-Za-z0-9]+)\\-*([dirty]*).*")
     # no tag found
-    set(_closest_tag "0+untagged")
+    set(_closest_tag "0")
     git_get_commit_count(_commit_count)
     set(_hash_short ${CMAKE_MATCH_1})
     set(_local_changes ${CMAKE_MATCH_2})
@@ -40,8 +40,7 @@ function(get_git_version_pieces _version_pieces)
   endif()
 
   set(${_version_pieces}
-    ${hash_full_} ${_hash_short}
-    ${_closest_tag} ${_commit_count} ${_local_changes}
+    "${hash_full_};${_hash_short};${_closest_tag};${_commit_count};${_local_changes}"
     PARENT_SCOPE)
 endfunction()
 
@@ -51,15 +50,29 @@ function(format_version_pep440 _version_str _version_pieces)
   list(GET ${_version_pieces} 3 _commit_count)
   list(GET ${_version_pieces} 4 _local_changes)
 
-  if(NOT _hash_short)
-    set(_version_git_info "")
-  else()
-    set(_version_git_info +${_commit_count}.g${_hash_short})
+  set(_local_version_items "")
+
+  if(_closest_tag EQUAL "0")
+    list(APPEND _local_version_items "untagged")
+  endif()
+  if(_commit_count)
+    list(APPEND _local_version_items ${_commit_count})
+  endif()
+  if(_hash_short)
+    list(APPEND _local_version_items "g${_hash_short}")
+  endif()
+  if(_local_changes)
+    list(APPEND _local_version_items ${_local_changes})
   endif()
 
-  set(${_version_str}
-    ${_closest_tag}${_version_git_info}${_local_changes}
-    PARENT_SCOPE)
+  if(_local_version_items)
+    string(REPLACE ";" "." _items_str "${_local_version_items}")
+    set(_local_version_label "+${_items_str}")
+  else()
+    set(_local_version_label "")
+  endif()
+
+  set(${_version_str} ${_closest_tag}${_local_version_label} PARENT_SCOPE)
 endfunction()
 
 function(get_version_numbers
