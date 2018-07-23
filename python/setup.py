@@ -9,10 +9,33 @@ from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
 
+def check_cmake_version():
+    try:
+        out = subprocess.check_output(['cmake', '--version'])
+    except OSError:
+        raise RuntimeError(
+            "CMake must be installed to build this project")
+
+    if platform.system() == "Windows":
+        cmake_version = LooseVersion(
+            re.search(r'version\s*([\d.]+)', out.decode()).group(1))
+        if cmake_version < '3.1.0':
+            raise RuntimeError("CMake >= 3.1.0 is required on Windows")
+
+
 def get_version():
-    """Get version using git, formatted following pep440."""
-    # TODO
-    return '0.1.0'
+    """Get version string using git, formatted according to pep440
+    (call cmake script).
+
+    """
+    check_cmake_version()
+
+    cmake_script = os.path.join(os.pardir, 'cmake', 'modules',
+                                'print_version.cmake')
+    out = subprocess.check_output(['cmake', '-P', cmake_script],
+                                  stderr=subprocess.STDOUT)
+    version_str = out.decode().strip()
+    return version_str
 
 
 class CMakeExtension(Extension):
@@ -25,18 +48,7 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def run(self):
-        try:
-            out = subprocess.check_output(['cmake', '--version'])
-        except OSError:
-            raise RuntimeError(
-                "CMake must be installed to build the following extensions: " +
-                ", ".join(e.name for e in self.extensions))
-
-        if platform.system() == "Windows":
-            cmake_version = LooseVersion(
-                re.search(r'version\s*([\d.]+)', out.decode()).group(1))
-            if cmake_version < '3.1.0':
-                raise RuntimeError("CMake >= 3.1.0 is required on Windows")
+        check_cmake_version()
 
         for ext in self.extensions:
             self.build_extension(ext)

@@ -3,7 +3,7 @@ project(fastscapelib)
 
 set(CMAKE_MODULE_PATH
   ${PROJECT_SOURCE_DIR}/cmake
-  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules
+  ${PROJECT_SOURCE_DIR}/cmake/modules
   ${CMAKE_MODULE_PATH})
 
 set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
