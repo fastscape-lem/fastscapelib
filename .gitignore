@@ -38,6 +38,9 @@
 # Build directory
 build/
 
+# cmake modules temp files
+CMakeFiles/
+
 # Test build artefacts
 test/test_xtensor
 test/CMakeCache.txt
