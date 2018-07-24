@@ -12,8 +12,22 @@ using namespace std::literals;
 
 int main(int i, char* p[])
 {
+	/*
+	auto now = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < 100000; ++i)
+		volatile int a = i;
+	auto tmp = std::chrono::high_resolution_clock::now();
 
-	std::string param = i > 1 ? p[1] : "escarpment";
+	double ticks = (tmp - now).count();
+	double secs = std::chrono::duration_cast<std::chrono::duration<double>>(tmp - now).count();
+
+	std::cout << 10.0e10 / ticks * secs << std::endl;
+	
+
+		std::cin.get();
+	return 0;*/
+
+	std::string param = i > 1 ? p[1] : "mountain";
 
 	if (param == "vornoi" || param == "all")
 		example_vornoi();
@@ -27,6 +41,8 @@ int main(int i, char* p[])
 		fastscape_pits();
 	if (param == "escarpment" || param == "all")
 		escarpment();
+	if (param == "locmin2" || param == "all")
+		locmin2();
 
 	std::cout << "Press enter to continue ...";
 	std::cin.get();

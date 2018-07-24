@@ -93,7 +93,7 @@ void benchmark_fastscape_wei2018(
 
 	
 	fs::fill_sinks_wei2018(tmp_elevation);
-	fs::resolve_flats_sloped(tmp_elevation);
+	//fs::resolve_flats_sloped(tmp_elevation);
 
 
 	fs::compute_receivers_d8(receivers, dist2receviers, tmp_elevation, active_nodes, dx, dy);
