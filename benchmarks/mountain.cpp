@@ -68,7 +68,7 @@ private:
 	}
 };
 
-std::atomic<double> FastScapeProgress::fast_scape_progress = 0.0;
+std::atomic<double> FastScapeProgress::fast_scape_progress(0.0);
 
 template <class Elev_T, class Active_T, class Uplift_XT>
 std::vector<size_t> fastscape(Elev_T& elevation, const Active_T& active_nodes, double dx, double dt, int num_iter, Uplift_XT&& uplift, bool correct_flow = true)
@@ -390,7 +390,7 @@ void fastscape_pits()
 		out << "],";
 	}
 	out << "}";
-	
+
 	std::ofstream file("results/mountain/pits.py");
 	if (!file)
 		std::cerr << "Impossible to open file results/mountain/pits.py\n";
