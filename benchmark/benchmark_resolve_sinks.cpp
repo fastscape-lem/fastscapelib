@@ -144,6 +144,12 @@ BENCHMARK_TEMPLATE(bm_resolve_sinks,
 ->Apply(bms::grid_sizes);
 
 BENCHMARK_TEMPLATE(bm_resolve_sinks,
+                   Method::barnes2014_sloped,
+                   SurfaceType::flat_noise,
+                   double)
+->Apply(bms::grid_sizes);
+
+BENCHMARK_TEMPLATE(bm_resolve_sinks,
                    Method::kruskal_sloped,
                    SurfaceType::cone,
                    double)
@@ -152,6 +158,13 @@ BENCHMARK_TEMPLATE(bm_resolve_sinks,
 BENCHMARK_TEMPLATE(bm_resolve_sinks,
                    Method::kruskal_sloped,
                    SurfaceType::cone_noise,
+                   double)
+->Apply(bms::grid_sizes);
+
+
+BENCHMARK_TEMPLATE(bm_resolve_sinks,
+                   Method::kruskal_sloped,
+                   SurfaceType::flat_noise,
                    double)
 ->Apply(bms::grid_sizes);
 
@@ -167,6 +180,13 @@ BENCHMARK_TEMPLATE(bm_resolve_sinks,
                    double)
 ->Apply(bms::grid_sizes);
 
+
+BENCHMARK_TEMPLATE(bm_resolve_sinks,
+                   Method::boruvka_sloped,
+                   SurfaceType::flat_noise,
+                   double)
+->Apply(bms::grid_sizes);
+
 BENCHMARK_TEMPLATE(bm_resolve_sinks,
                    Method::flats_then_sloped,
                    SurfaceType::cone,
@@ -176,6 +196,12 @@ BENCHMARK_TEMPLATE(bm_resolve_sinks,
 BENCHMARK_TEMPLATE(bm_resolve_sinks,
                    Method::flats_then_sloped,
                    SurfaceType::cone_noise,
+                   double)
+->Apply(bms::grid_sizes);
+
+BENCHMARK_TEMPLATE(bm_resolve_sinks,
+                   Method::flats_then_sloped,
+                   SurfaceType::flat_noise,
                    double)
 ->Apply(bms::grid_sizes);
 
