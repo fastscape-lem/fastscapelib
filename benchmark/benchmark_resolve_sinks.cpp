@@ -3,6 +3,7 @@
 #include "xtensor/xbuilder.hpp"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"
+#include "xtensor/xnpy.hpp"
 
 #include "fastscapelib/flow_routing.hpp"
 #include "fastscapelib/sinks.hpp"
@@ -39,6 +40,11 @@ class ResolveSinks
 public:
     ResolveSinks(int n) : s(256) {
         s = bms::FastscapeSetupBase<surf_type, T>(n);
+
+        if (surf_type == SurfaceType::custom)
+        {
+            s.elevation = xt::load_npy<T>("bedrock_4096.npy");
+        }
     }
 
     void resolve_barnes2014_sloped()
@@ -130,6 +136,30 @@ inline auto bm_resolve_sinks(benchmark::State& state)
     }
 }
 
+
+BENCHMARK_TEMPLATE(bm_resolve_sinks,
+                   Method::barnes2014_sloped,
+                   SurfaceType::custom,
+                   double)
+->Args({4096})->Unit(benchmark::kMillisecond);
+
+    BENCHMARK_TEMPLATE(bm_resolve_sinks,
+                       Method::kruskal_sloped,
+                       SurfaceType::custom,
+                       double)
+    ->Args({4096})->Unit(benchmark::kMillisecond);
+
+    BENCHMARK_TEMPLATE(bm_resolve_sinks,
+                       Method::boruvka_sloped,
+                       SurfaceType::custom,
+                       double)
+    ->Args({4096})->Unit(benchmark::kMillisecond);
+
+    BENCHMARK_TEMPLATE(bm_resolve_sinks,
+                       Method::flats_then_sloped,
+                       SurfaceType::custom,
+                       double)
+    ->Args({4096})->Unit(benchmark::kMillisecond);
 
 BENCHMARK_TEMPLATE(bm_resolve_sinks,
                    Method::barnes2014_sloped,
