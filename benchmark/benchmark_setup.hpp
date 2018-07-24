@@ -31,7 +31,7 @@ static void grid_sizes(benchmark::internal::Benchmark* bench) {
 }
 
 
-enum class SurfaceType {cone, cone_inv, cone_noise, flat_noise, gauss};
+enum class SurfaceType {cone, cone_inv, cone_noise, flat_noise, gauss, custom};
 
 
 /*
