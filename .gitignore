@@ -61,7 +61,6 @@ doc/*.tmp
 *.pc
 
 # emacs
-.dir-locals.el
 .projectile
 
 # Python Byte-compiled / optimized / DLL files
