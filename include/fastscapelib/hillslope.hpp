@@ -33,7 +33,7 @@ auto solve_tridiagonal(L& lower,
                        U& upper,
                        V& vec)
 {
-    auto n = vec.size();
+    auto n = static_cast<sshape_t>(vec.size());
 
     auto result = xt::empty_like(vec);
     auto gam = xt::empty_like(vec);
@@ -77,8 +77,8 @@ auto get_adi_factors(T k_coef,
                      double dt,
                      double dx,
                      double dy,
-                     size_t nrows,
-                     size_t ncols,
+                     sshape_t nrows,
+                     sshape_t ncols,
                      typename std::enable_if_t<std::is_arithmetic<T>::value>* = 0)
 {
     auto fr = xt::empty<double>({ncols});
@@ -87,7 +87,7 @@ auto get_adi_factors(T k_coef,
     fr.fill(k_coef * 0.5 * dt / (dy * dy));
     fc.fill(k_coef * 0.5 * dt / (dx * dx));
 
-    std::array<size_t, 3> f_shape {3, nrows, ncols};
+    std::array<size_t, 3> f_shape {3, static_cast<size_t>(nrows), static_cast<size_t>(ncols)};
 
     // TODO: don't use eval when xbroadcast will have strides
     //       (required for transpose views: see xtensor #917)
@@ -107,11 +107,11 @@ auto get_adi_factors(K&& k_coef,
                      double dt,
                      double dx,
                      double dy,
-                     size_t nrows,
-                     size_t ncols,
+                     sshape_t nrows,
+                     sshape_t ncols,
                      typename std::enable_if_t<xt::is_xexpression<K>::value>* = 0)
 {
-    std::array<size_t, 3> f_shape {3, nrows, ncols};
+    std::array<size_t, 3> f_shape {3, static_cast<size_t>(nrows), static_cast<size_t>(ncols)};
 
     auto factors_row = xt::empty<double>(f_shape);
     auto factors_col = xt::empty<double>(f_shape);
@@ -144,8 +144,8 @@ template<class Ei, class Fr, class Fc>
 auto solve_diffusion_adi_row(Ei&& elevation,
                              Fr&& factors_row,
                              Fc&& factors_col,
-                             size_t nrows,
-                             size_t ncols)
+                             sshape_t nrows,
+                             sshape_t ncols)
 {
     xt::xtensor<double, 2> elevation_out = elevation;
 
@@ -201,8 +201,8 @@ void erode_linear_diffusion_impl(Er&& erosion,
                                  double dy)
 {
     auto shape = elevation.shape();
-    auto nrows = shape[0];
-    auto ncols = shape[1];
+    auto nrows = static_cast<sshape_t>(shape[0]);
+    auto ncols = static_cast<sshape_t>(shape[1]);
 
     // TODO: optimize 0-d xexpression or xcalar using static_cast<double>?
     //       and/or assert k_coef.shape == elevation.shape?

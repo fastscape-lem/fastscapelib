@@ -5,15 +5,19 @@
 #pragma once
 
 #include <cstddef>
+#include <type_traits>
 
 #include "xtensor/xcontainer.hpp"
 
 
-// type used for indexing arrays and array sizes.
-// TODO: use xt::index_t directly if/when xtensor #661 is merged.
+// type used for array indexers
 using index_t = std::ptrdiff_t;
 
+// type used when working with both shapes or sizes (unsigned) and indexers (signed)
+using sshape_t = std::make_signed_t<size_t>;
 
+// type used as an alias to xtensor's xexpression
+// TODO: use xexpression shaped when it's ready (see xtensor GH #994)
 template<class E>
 using xtensor_t = xt::xexpression<E>;
 
