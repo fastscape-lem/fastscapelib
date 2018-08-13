@@ -38,7 +38,7 @@ auto solve_diffusion_analytical(X&& x, Y&& y, K&& k_coef, double t)
 template<class E1, class E2>
 double compute_l2_norm(E1&& e1, E2&& e2)
 {
-    return 1. / e1.size() * xt::sum(xt::pow<2>(e2 - e1))();
+    return 1. / static_cast<double>(e1.size()) * xt::sum(xt::pow<2>(e2 - e1))();
 }
 
 
@@ -67,7 +67,7 @@ TEST(hillslope, erode_linear_diffusion)
     // these are chosen arbitrarily after manual inspection (small enough values)
     std::array<double, 4> l2_norm_thresholds {1e-9, 1e-6, 1e-5, 1e-5};
 
-    for (size_t k=0; k<=4; ++k)
+    for (size_t k=0; k<4; ++k)
     {
         auto dt = dt_values[k];
 
@@ -82,7 +82,7 @@ TEST(hillslope, erode_linear_diffusion)
         EXPECT_TRUE(l2_norm < l2_norm_thresholds[k]);
     }
 
-    for (size_t k=0; k<=4; ++k)
+    for (size_t k=0; k<4; ++k)
     {
         auto dt = dt_values[k];
 
