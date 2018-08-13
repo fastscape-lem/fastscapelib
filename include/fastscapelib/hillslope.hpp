@@ -226,8 +226,35 @@ void erode_linear_diffusion_impl(Er&& erosion,
     erosion = elevation - xt::transpose(elevation_next);
 }
 
-
-
 }  // namespace detail
+
+
+template<class Er, class El>
+void erode_linear_diffusion(xtensor_t<Er>& erosion,
+                            const xtensor_t<El>& elevation,
+                            double k_coef,
+                            double dt,
+                            double dx,
+                            double dy)
+{
+    detail::erode_linear_diffusion_impl(erosion.derived_cast(),
+                                        elevation.derived_cast(),
+                                        k_coef, dt, dx, dy);
+}
+
+
+template<class Er, class El, class K>
+void erode_linear_diffusion(xtensor_t<Er>& erosion,
+                            const xtensor_t<El>& elevation,
+                            const xtensor_t<K>& k_coef,
+                            double dt,
+                            double dx,
+                            double dy)
+{
+    detail::erode_linear_diffusion_impl(erosion.derived_cast(),
+                                        elevation.derived_cast(),
+                                        k_coef.derived_cast(),
+                                        dt, dx, dy);
+}
 
 }  // namespace fastscapelib
