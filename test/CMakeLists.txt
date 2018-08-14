@@ -103,6 +103,7 @@ target_link_libraries(${FASTSCAPELIB_TEST_TARGET}
   fastscapelib ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_custom_target(run_tests
+  ALL
   COMMAND ${FASTSCAPELIB_TEST_TARGET}
   DEPENDS ${FASTSCAPELIB_TEST_TARGET}
 )

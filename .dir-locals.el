@@ -4,8 +4,7 @@
 
 ((nil
   (c-file-style . "bsd")
-  (cmake-ide-cmake-opts . "-DBUILD_TESTS=ON -DBUILD_PYTHON_MODULE=ON")
-  (cmake-ide-make-command . "make run_tests"))
+  (cmake-ide-cmake-opts . "-DBUILD_TESTS=ON -DBUILD_PYTHON_MODULE=ON"))
  (c-mode
   (mode . c++)
   (flycheck-gcc-language-standard . "c++14")
