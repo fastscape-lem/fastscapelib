@@ -96,3 +96,16 @@ Defined in ``fastscapelib/bedrock_channel.hpp``.
 
 .. doxygenfunction:: fastscapelib::erode_stream_power
    :project: fastscapelib
+
+Hillslope
+---------
+
+Functions used to drive the evolution of hillslopes.
+
+Defined in ``fastscapelib/hillslope.hpp``.
+
+.. doxygenfunction:: fastscapelib::erode_linear_diffusion(xtensor_t<Er>&, const xtensor_t<El>&, double, double, double, double)
+   :project: fastscapelib
+
+.. doxygenfunction:: fastscapelib::erode_linear_diffusion(xtensor_t<Er>&, const xtensor_t<El>&, const xtensor_t<K>&, double, double, double)
+   :project: fastscapelib

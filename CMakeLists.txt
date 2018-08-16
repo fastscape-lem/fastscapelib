@@ -55,6 +55,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sinks.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_routing.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/bedrock_channel.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/hillslope.hpp
 )
 
 set(FASTSCAPELIB_TARGET fastscapelib)

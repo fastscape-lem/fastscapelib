@@ -85,6 +85,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 
 set(FASTSCAPELIB_TEST_SRC
   main.cpp
+  test_hillslope.cpp
   test_flow_routing.cpp
   test_sinks.cpp
   test_bedrock_channel.cpp
@@ -102,6 +103,7 @@ target_link_libraries(${FASTSCAPELIB_TEST_TARGET}
   fastscapelib ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_custom_target(run_tests
+  ALL
   COMMAND ${FASTSCAPELIB_TEST_TARGET}
   DEPENDS ${FASTSCAPELIB_TEST_TARGET}
 )

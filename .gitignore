@@ -89,6 +89,7 @@ wheels/
 
 # Python tests
 .pytest_cache
+.cache
 
 # Installer logs
 pip-log.txt
