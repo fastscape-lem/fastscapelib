@@ -278,9 +278,9 @@ void compute_drainage_area_impl(D&& drainage_area,
  *     Topographic elevation at grid node
  * @param active_nodes : ``[intent=in, shape=(nrows, ncols)]``
  *     Boolean array for boundaries
- * @param dx : ``[intent=out]``
+ * @param dx : ``[intent=in]``
  *     Grid spacing in x
- * @param dy : ``[intent=out]``
+ * @param dy : ``[intent=in]``
  *     Grid spacing in y
  */
 template<class R, class D, class E, class A>

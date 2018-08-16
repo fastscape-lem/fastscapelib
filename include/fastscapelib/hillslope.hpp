@@ -188,7 +188,7 @@ auto solve_diffusion_adi_row(Ei&& elevation,
 
 
 /*
- * Hillslope erosion by linear diffusion implementation.
+ * Hillslope erosion by linear diffusion (ADI) implementation.
  *
  * Note: this assumes row-major layout.
  */
@@ -229,6 +229,31 @@ void erode_linear_diffusion_impl(Er&& erosion,
 }  // namespace detail
 
 
+/**
+ * Compute hillslope erosion by linear diffusion on a 2-d regular grid
+ * using finite differences with an Alternating Direction Implicit
+ * (ADI) scheme.
+ *
+ * This numerical scheme is implicit and unconditionally stable. It is
+ * second order in time and space (its accuracy still depends on the
+ * values chosen for step duration, grid resolution and diffusivity).
+ *
+ * This implementation assumes fixed (Dirichlet) boundary conditions
+ * on the four sides of the grid.
+ *
+ * @param erosion : ``[intent=out, shape=(nrows, ncols)]``
+ *     Erosion at grid node.
+ * @param elevation : ``[intent=in, shape=(nrows, ncols)]``
+ *     Elevation at grid node.
+ * @param k_coef : ``[intent=in]``
+ *     Diffusion coefficient.
+ * @param dt : ``[intent=in]``
+ *     Time step duration.
+ * @param dx : ``[intent=in]``
+ *     Grid spacing in x
+ * @param dy : ``[intent=in]``
+ *     Grid spacing in y
+ */
 template<class Er, class El>
 void erode_linear_diffusion(xtensor_t<Er>& erosion,
                             const xtensor_t<El>& elevation,
@@ -243,6 +268,26 @@ void erode_linear_diffusion(xtensor_t<Er>& erosion,
 }
 
 
+/**
+ * Compute hillslope erosion by linear diffusion on a 2-d regular grid
+ * using finite differences with an Alternating Direction Implicit
+ * (ADI) scheme.
+ *
+ * This version accepts a spatially variable diffusion coefficient.
+ *
+ * @param erosion : ``[intent=out, shape=(nrows, ncols)]``
+ *     Erosion at grid node.
+ * @param elevation : ``[intent=in, shape=(nrows, ncols)]``
+ *     Elevation at grid node.
+ * @param k_coef : ``[intent=in, shape=(nrows, ncols)]``
+ *     Diffusion coefficient.
+ * @param dt : ``[intent=in]``
+ *     Time step duration.
+ * @param dx : ``[intent=in]``
+ *     Grid spacing in x
+ * @param dy : ``[intent=in]``
+ *     Grid spacing in y
+ */
 template<class Er, class El, class K>
 void erode_linear_diffusion(xtensor_t<Er>& erosion,
                             const xtensor_t<El>& elevation,
