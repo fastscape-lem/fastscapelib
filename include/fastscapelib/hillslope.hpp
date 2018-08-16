@@ -223,7 +223,8 @@ void erode_linear_diffusion_impl(Er&& erosion,
         xt::transpose(factors.first, {0, 2, 1}),
         ncols, nrows);
 
-    erosion = elevation - xt::transpose(elevation_next);
+    auto erosion_v = xt::view(erosion, xt::all(), xt::all());
+    erosion_v = elevation - xt::transpose(elevation_next);
 }
 
 }  // namespace detail

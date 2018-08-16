@@ -141,6 +141,19 @@ index_t erode_stream_power_py(xt::pyarray<T>& erosion,
 }
 
 
+template<class K, class T>
+void erode_linear_diffusion_py(xt::pytensor<T, 2>& erosion,
+                               const xt::pytensor<T, 2>& elevation,
+                               const K k_coef,
+                               double dt,
+                               double dx,
+                               double dy)
+{
+    py::gil_scoped_release release;
+    fs::erode_linear_diffusion(erosion, elevation, k_coef, dt, dx, dy);
+}
+
+
 PYBIND11_MODULE(_fastscapelib_py, m)
 {
     m.doc() = "A collection of efficient algorithms"
@@ -184,4 +197,16 @@ PYBIND11_MODULE(_fastscapelib_py, m)
     m.def("erode_stream_power_d", &erode_stream_power_py<double>,
           "Compute bedrock channel erosion during a single time step "
           "using the Stream Power Law.");
+
+    m.def("erode_linear_diffusion_d", &erode_linear_diffusion_py<double, double>,
+          "Compute hillslope erosion by linear diffusion on a 2-d regular "
+          "grid using finite differences with an Alternating Direction"
+          "Implicit (ADI) scheme.");
+
+    m.def("erode_linear_diffusion_var_d",
+          &erode_linear_diffusion_py<xt::pytensor<double, 2>&, double>,
+          "Compute hillslope erosion by linear diffusion on a 2-d regular "
+          "grid using finite differences with an Alternating Direction"
+          "Implicit (ADI) scheme.\n\n"
+          "Version with spatially variable diffusion coefficient.");
 }
