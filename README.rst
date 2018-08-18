@@ -1,7 +1,7 @@
 Fastscapelib
 ============
 
-|Build Status| |Doc Status|
+|Build Status| |Win Build Status| |Doc Status|
 
 A C++ library of efficient algorithms for processing topographic data
 and landscape evolution modeling.
@@ -12,6 +12,9 @@ other languages.
 .. |Build Status| image:: https://travis-ci.org/fastscape-lem/fastscapelib.svg?branch=master
    :target: https://travis-ci.org/fastscape-lem/fastscapelib
    :alt: Build Status
+.. |Win Build Status| image:: https://ci.appveyor.com/api/projects/status/4gm51wb8knpvq0rp/branch/master?svg=true
+   :target: https://ci.appveyor.com/project/benbovy/fastscapelib
+   :alt: Win Build Status
 .. |Doc Status| image:: http://readthedocs.org/projects/fastscapelib/badge/?version=latest
    :target: http://fastscapelib.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
