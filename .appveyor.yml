@@ -34,9 +34,17 @@ install:
   - conda update -q conda
   - conda info -a
   - conda install gtest cmake xtensor -c conda-forge
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2015" conda install xtensor-python pybind11 numpy pytest -c conda-forge
   - cmake -G "NMake Makefiles" -D CMAKE_INSTALL_PREFIX=%MINICONDA%\\LIBRARY -DBUILD_TESTS=ON -DDISABLE_VS2017=ON -DCMAKE_BUILD_TYPE=Release .
   - nmake test_fastscapelib
-  - cd test
+  - "set PYTHONHOME=%MINICONDA%"
+  - cd python
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2015" pip install -e . -v
+  - cd ..
 
 build_script:
-- .\test_fastscapelib
+  - cd test
+  - .\test_fastscapelib
+  - cd ..
+  - cd python
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2015" pytest fastscapelib -vv
