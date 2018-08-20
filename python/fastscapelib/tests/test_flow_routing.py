@@ -12,9 +12,9 @@ def braun_example():
     """
     network = {}
     network['receivers'] = np.array([1, 4, 1, 6, 4, 4, 5, 4, 6, 7],
-                                    dtype='int')
+                                    dtype=np.intp)
     network['ndonors'] = np.array([0, 2, 0, 0, 3, 1, 2, 1, 0, 0],
-                                  dtype='int')
+                                  dtype=np.intp)
     network['donors'] = np.array([[-1, -1, -1, -1, -1, -1, -1, -1],
                                   [ 0,  2, -1, -1, -1, -1, -1, -1],
                                   [-1, -1, -1, -1, -1, -1, -1, -1],
@@ -25,7 +25,7 @@ def braun_example():
                                   [ 9, -1, -1, -1, -1, -1, -1, -1],
                                   [-1, -1, -1, -1, -1, -1, -1, -1],
                                   [-1, -1, -1, -1, -1, -1, -1, -1]],
-                                 dtype='int')
+                                 dtype=np.intp)
     network['stack'] = np.array([4, 1, 0, 2, 5, 6, 3, 8, 7, 9])
 
     return network
@@ -44,11 +44,11 @@ def test_compute_receivers_d8():
                              [False, False, False, False]],
                             dtype='bool')
 
-    receivers = np.ones((16), dtype='int') * -1
+    receivers = np.ones((16), dtype=np.intp) * -1
     expected_receivers = np.array([0,  1,  2,  3,
                                    4,  9,  7,  7,
                                    8,  9,  9,  11,
-                                   12, 13, 14, 15], dtype='int')
+                                   12, 13, 14, 15], dtype=np.intp)
 
     dist2receivers = np.ones((16), dtype='d') * -1
     expected_dist2receivers = np.array([0., 0., 0., 0.,
@@ -65,8 +65,8 @@ def test_compute_receivers_d8():
 
 
 def test_compute_donors(braun_example):
-    ndonors = np.empty(10, dtype='int')
-    donors = np.ones((10, 8), dtype='int') * -1
+    ndonors = np.empty(10, dtype=np.intp)
+    donors = np.ones((10, 8), dtype=np.intp) * -1
 
     fastscapelib.compute_donors(ndonors, donors, braun_example['receivers'])
 
@@ -75,7 +75,7 @@ def test_compute_donors(braun_example):
 
 
 def test_compute_stack(braun_example):
-    stack = np.empty(10, dtype='int')
+    stack = np.empty(10, dtype=np.intp)
     fastscapelib.compute_stack(stack,
                                braun_example['ndonors'],
                                braun_example['donors'],
@@ -85,12 +85,12 @@ def test_compute_stack(braun_example):
 
 
 def test_compute_basins(braun_example):
-    basins = np.empty(10, dtype='int')
-    outlets_or_pits = np.ones(10, dtype='int') * -1
+    basins = np.empty(10, dtype=np.intp)
+    outlets_or_pits = np.ones(10, dtype=np.intp) * -1
 
     expected_basins = np.zeros_like(basins)
     expected_outlets_or_pits = np.array([4, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-                                        dtype='int')
+                                        dtype=np.intp)
 
     nbasins = fastscapelib.compute_basins(basins, outlets_or_pits,
                                           braun_example['stack'],
@@ -108,19 +108,19 @@ def test_find_pits():
     outlets_or_pits = np.array([0,  1,  2,  3,
                                 4,  7,  8,  11,
                                 12, 13, 14, 15,
-                                9,  -1, -1, -1], dtype='int')
+                                9,  -1, -1, -1], dtype=np.intp)
     active_nodes = np.array([[False, False, False, False],
                              [False, True,  True,  False],
                              [False, True,  True,  False],
                              [False, False, False, False]],
                             dtype='bool')
-    pits = np.ones(16, dtype='int') * -1
+    pits = np.ones(16, dtype=np.intp) * -1
 
     expected_pits = np.array([9,  -1, -1, -1,
                               -1, -1, -1, -1,
                               -1, -1, -1, -1,
                               -1, -1, -1, -1],
-                             dtype='int')
+                             dtype=np.intp)
 
     npits = fastscapelib.find_pits(pits, outlets_or_pits,
                                    active_nodes, nbasins)
