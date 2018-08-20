@@ -48,7 +48,7 @@ index_t erode_stream_power_impl(Er&& erosion,
     const auto elevation_flat = xt::flatten(elevation);
     const auto drainage_area_flat = xt::flatten(drainage_area);
 
-    index_t n_corr = 0.;
+    index_t n_corr = 0;
 
     for (const auto& istack : stack)
     {
