@@ -34,7 +34,7 @@ install:
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2015" conda install xtensor-python pybind11 numpy pytest pip -c conda-forge
   - mkdir build
   - cd build
-  - cmake -G "NMake Makefiles" -D CMAKE_INSTALL_PREFIX=%MINICONDA%\\LIBRARY -DBUILD_TESTS=ON -DDISABLE_VS2017=ON -DCMAKE_BUILD_TYPE=Release ..
+  - cmake -G "NMake Makefiles" -D CMAKE_INSTALL_PREFIX=%MINICONDA%\\LIBRARY -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release ..
   - nmake test_fastscapelib
   - "set PYTHONHOME=%MINICONDA%"
   - cd ..\\python
