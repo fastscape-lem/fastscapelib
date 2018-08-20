@@ -1,9 +1,11 @@
+import pytest
 import numpy as np
 
 import fastscapelib
 
 
-def test_erode_stream_power():
+@pytest.mark.parametrize("k_coef_type", ["constant", "variable"])
+def test_erode_stream_power(k_coef_type):
     # Test on a tiny (2x2) 2-d square grid with a planar surface
     # tilted in y (rows) and with all outlets on the 1st row.
     spacing = 300.
@@ -27,10 +29,16 @@ def test_erode_stream_power():
     dt = 1   # use small time step (compare with explicit scheme)
     tolerance = 1e-3
 
-    n_corr = fastscapelib.erode_stream_power_d(
-        erosion, elevation, stack,
-        receivers, dist2receivers, drainage_area,
-        k_coef, m_exp, n_exp, dt, tolerance)
+    if k_coef_type == 'constant':
+        func = fastscapelib.erode_stream_power_d
+        k = k_coef
+    elif k_coef_type == 'variable':
+        func = fastscapelib.erode_stream_power_var_d
+        k = np.full_like(elevation, k_coef)
+
+    n_corr = func(erosion, elevation, stack,
+                  receivers, dist2receivers, drainage_area,
+                  k, m_exp, n_exp, dt, tolerance)
 
     slope = h / spacing
     err = dt * k_coef * a**m_exp * slope**n_exp
