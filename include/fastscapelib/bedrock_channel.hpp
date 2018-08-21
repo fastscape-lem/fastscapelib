@@ -38,6 +38,7 @@ auto k_coef_as_array(K&& k_coef,
     auto k_coef_arr = xt::flatten(k_coef);
 
     assert(k_coef_arr.shape() == shape);
+    (void) shape;   // TODO: still unused parameter warning despite assert?
 
     return k_coef_arr;
 }
