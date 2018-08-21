@@ -4,6 +4,9 @@
 #include <string>
 #include <type_traits>
 
+#include <iostream>
+#include "xtensor/xio.hpp"
+
 #include "gtest/gtest.h"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"
@@ -65,7 +68,7 @@ struct ChannelProfile1D
                                                     static_cast<size_t>(nnodes));
 
     xt::xtensor<double, 1> drainage_area = hack_coef * xt::pow(x, hack_exp);
-    xt::xtensor<double, 1> elevation = (x - (length + x0)) * 0.001;
+    xt::xtensor<double, 1> elevation = (length + x0 - x) * 1e-4;
 
     xt::xtensor<index_t, 1> receivers = xt::arange<index_t>(-1, nnodes - 1);
     xt::xtensor<double, 1> dist2receivers = xt::ones<double>({nnodes}) * spacing;
