@@ -9,8 +9,11 @@
 
 #include "fastscapelib/hillslope.hpp"
 
+#include "benchmark_setup.hpp"
+
 
 namespace fs = fastscapelib;
+namespace bms = benchmark_setup;
 
 
 namespace fastscapelib
@@ -18,10 +21,29 @@ namespace fastscapelib
 
 namespace benchmark_hillslope
 {
-    enum class KCoefType {scalar, array};
+
+    template<class K, class S>
+    typename std::enable_if_t<std::is_floating_point<K>::value, K>
+    get_k_coef(S&& shape)
+    {
+        (void) shape;  // do not show warning
+        return 1e-3;
+    }
 
 
-    template<class T, KCoefType k_coef_type>
+    template<class K, class S>
+    typename std::enable_if_t<xt::is_xexpression<K>::value, K>
+    get_k_coef(S&& shape)
+    {
+        using T = typename K::value_type;
+
+        K k_coef_arr = xt::empty<T>(shape);
+        k_coef_arr.fill(1e-3);
+
+        return k_coef_arr;
+    }
+
+    template<class T, class K>
     void bm_erode_linear_diffusion(benchmark::State& state)
     {
         auto ns = static_cast<size_t>(state.range(0));
@@ -32,17 +54,9 @@ namespace benchmark_hillslope
 
         double dx = 0.4;
         double dy = 0.4;
-        double k_coef = 1e-3;
         double dt = 1e4;
 
-        if (k_coef_type == KCoefType::scalar)
-        {
-            double k_coef = 1e-3;
-        }
-        else if (k_coef_type == KCoefType::array)
-        {
-            auto k_coef = xt::full_like(elevation, 1e-3);
-        }
+        K k_coef = get_k_coef<K>(elevation.shape());
 
         for (auto _ : state)
         {
@@ -52,13 +66,11 @@ namespace benchmark_hillslope
     }
 
 
-    BENCHMARK_TEMPLATE(bm_erode_linear_diffusion, double, KCoefType::scalar)
-    ->Arg(256)->Arg(512)->Arg(1024)->Arg(2048)->Arg(4096)
-    ->Unit(benchmark::kMillisecond);
+    BENCHMARK_TEMPLATE(bm_erode_linear_diffusion, double, double)
+    ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
 
-    BENCHMARK_TEMPLATE(bm_erode_linear_diffusion, double, KCoefType::array)
-    ->Arg(256)->Arg(512)->Arg(1024)->Arg(2048)->Arg(4096)
-    ->Unit(benchmark::kMillisecond);
+    BENCHMARK_TEMPLATE(bm_erode_linear_diffusion, double, xt::xtensor<double, 2>)
+    ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
 
 }  // namespace benchmark_hillslope
 
