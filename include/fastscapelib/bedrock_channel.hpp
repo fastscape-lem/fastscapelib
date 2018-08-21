@@ -3,8 +3,10 @@
  */
 #pragma once
 
+#include <cassert>
 #include <cmath>
 #include <limits>
+#include <type_traits>
 
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xstrided_view.hpp"
@@ -19,6 +21,29 @@ namespace detail
 {
 
 
+template<class T, class S>
+auto k_coef_as_array(T k_coef,
+                     S&& shape,
+                     typename std::enable_if_t<std::is_floating_point<T>::value>* = 0)
+{
+    return xt::broadcast(std::forward<T>(k_coef), shape);
+}
+
+
+template<class K, class S>
+auto k_coef_as_array(K&& k_coef,
+                     S&& shape,
+                     typename std::enable_if_t<xt::is_xexpression<K>::value>* = 0)
+{
+    auto k_coef_arr = xt::flatten(k_coef);
+
+    assert(k_coef_arr.shape() == shape);
+    (void) shape;   // TODO: still unused parameter warning despite assert?
+
+    return k_coef_arr;
+}
+
+
 /**
  * erode_stream_power implementation.
  *
@@ -28,14 +53,14 @@ namespace detail
  * between a node and its receiver, rather than on the node's
  * elevation itself. This allows saving some operations.
  */
-template<class Er, class El, class S, class R, class Di, class Dr>
+template<class Er, class El, class S, class R, class Di, class Dr, class K>
 index_t erode_stream_power_impl(Er&& erosion,
                                 El&& elevation,
                                 S&& stack,
                                 R&& receivers,
                                 Di&& dist2receivers,
                                 Dr&& drainage_area,
-                                double k_coef,
+                                K&& k_coef,
                                 double m_exp,
                                 double n_exp,
                                 double dt,
@@ -47,6 +72,8 @@ index_t erode_stream_power_impl(Er&& erosion,
     auto erosion_flat = xt::flatten(erosion);
     const auto elevation_flat = xt::flatten(elevation);
     const auto drainage_area_flat = xt::flatten(drainage_area);
+
+    const auto k_coef_arr = k_coef_as_array(k_coef, elevation_flat.shape());
 
     index_t n_corr = 0;
 
@@ -71,7 +98,8 @@ index_t erode_stream_power_impl(Er&& erosion,
             continue;
         }
 
-        auto factor = k_coef * dt * std::pow(drainage_area_flat(istack), m_exp);
+        auto factor = (k_coef_arr(istack) * dt *
+                       std::pow(drainage_area_flat(istack), m_exp));
 
         T delta_0 = istack_elevation - irec_elevation;
         T delta_k;
@@ -197,6 +225,64 @@ index_t erode_stream_power(xtensor_t<Er>& erosion,
                                            dist2receivers.derived_cast(),
                                            drainage_area.derived_cast(),
                                            k_coef, m_exp, n_exp,
+                                           dt, tolerance);
+}
+
+
+/**
+ * Compute bedrock channel erosion during a single time step using the
+ * Stream Power Law.
+ *
+ * This version accepts a spatially variable stream-power law coefficient.
+ *
+ * @param erosion : ``[intent=out, shape=(nrows, ncols)||(nnodes)]``
+ *     Erosion at grid node.
+ * @param elevation : ``[intent=in, shape=(nrows, ncols)||(nnodes)]``
+ *     Elevation at grid node.
+ * @param stack :``[intent=in, shape=(nnodes)]``
+ *     Stack position at grid node.
+ * @param receivers : ``[intent=in, shape=(nnodes)]``
+ *     Index of flow receiver at grid node.
+ * @param dist2receivers : ``[intent=out, shape=(nnodes)]``
+ *     Distance to receiver at grid node.
+ * @param drainage_area : ``[intent=out, shape=(nrows, ncols)||(nnodes)]``
+ *     Drainage area at grid node.
+ * @param k_coef : ``[intent=in, shape=(nrows, ncols)||(nnodes)]``
+ *     Stream Power Law coefficient.
+ * @param m_exp : ``[intent=in]``
+ *     Stream Power Law drainage area exponent.
+ * @param n_exp : ``[intent=in]``
+ *     Stream Power Law slope exponent.
+ * @param dt : ``[intent=in]``
+ *     Time step duration.
+ * @param tolerance : ``[intent=in]``
+ *     Tolerance used for Newton's iterations (``n_exp`` != 1).
+ *
+ * @returns
+ *     Total number of nodes for which erosion has been
+ *     arbitrarily limited to ensure consistency.
+ */
+template<class Er, class El, class S, class R, class Di, class Dr, class K>
+index_t erode_stream_power(xtensor_t<Er>& erosion,
+                           const xtensor_t<El>& elevation,
+                           const xtensor_t<S>& stack,
+                           const xtensor_t<R>& receivers,
+                           const xtensor_t<Di>& dist2receivers,
+                           const xtensor_t<Dr>& drainage_area,
+                           const xtensor_t<K>& k_coef,
+                           double m_exp,
+                           double n_exp,
+                           double dt,
+                           double tolerance)
+{
+    return detail::erode_stream_power_impl(erosion.derived_cast(),
+                                           elevation.derived_cast(),
+                                           stack.derived_cast(),
+                                           receivers.derived_cast(),
+                                           dist2receivers.derived_cast(),
+                                           drainage_area.derived_cast(),
+                                           k_coef.derived_cast(),
+                                           m_exp, n_exp,
                                            dt, tolerance);
 }
 

@@ -112,6 +112,8 @@ endif()
 include_directories(${GBENCHMARK_INCLUDE_DIRS})
 
 set(FASTSCAPELIB_BENCHMARK_SRC
+  benchmark_setup.hpp
+  benchmark_bedrock_channel.cpp
   benchmark_hillslope.cpp
   benchmark_sinks.cpp
   main.cpp

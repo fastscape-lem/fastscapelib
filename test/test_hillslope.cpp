@@ -7,8 +7,6 @@
 
 #include "fastscapelib/hillslope.hpp"
 
-#include <iostream>
-
 
 namespace fs = fastscapelib;
 
