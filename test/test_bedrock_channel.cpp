@@ -4,9 +4,6 @@
 #include <string>
 #include <type_traits>
 
-#include <iostream>
-#include "xtensor/xio.hpp"
-
 #include "gtest/gtest.h"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"

@@ -1,13 +1,12 @@
 #include <array>
-#include <math.h>
-#include <iostream>
+#include <cmath>
+#include <type_traits>
 
 #include <benchmark/benchmark.h>
 
 #include "xtensor/xbuilder.hpp"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xrandom.hpp"
-#include "xtensor/xio.hpp"
 
 #include "fastscapelib/flow_routing.hpp"
 #include "fastscapelib/bedrock_channel.hpp"

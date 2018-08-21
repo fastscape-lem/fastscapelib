@@ -1,5 +1,6 @@
 #include <array>
-#include <math.h>
+#include <cmath>
+#include <type_traits>
 
 #include <benchmark/benchmark.h>
 
