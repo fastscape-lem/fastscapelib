@@ -175,8 +175,11 @@ auto solve_diffusion_adi_row(Ei&& elevation,
         diag_bounds = 1;
         auto upper_bounds = xt::view(upper, xt::keep(0, -1));
         upper_bounds = 0;
-        auto vec_bounds = xt::view(vec, xt::keep(0, -1));
-        vec_bounds = xt::view(elevation, r, xt::keep(0, -1));
+        vec(0) = elevation(r, 0);
+        vec(ncols - 1) = elevation(r, ncols - 1);
+        // TODO: the code below works with xtensor 0.17.1 but not with 0.17.2
+        // auto vec_bounds = xt::view(vec, xt::keep(0, -1));
+        // vec_bounds = xt::view(elevation, r, xt::keep(0, -1));
 
         auto elevation_out_r = xt::view(elevation_out, r, xt::all());
 
