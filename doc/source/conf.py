@@ -60,9 +60,10 @@ def get_version():
     """
     check_cmake_version()
 
-    cmake_script = os.path.join(os.pardir, os.pardir, 'cmake', 'modules',
+    cmake_script = os.path.join('cmake', 'modules',
                                 'print_version.cmake')
     out = subprocess.check_output(['cmake', '-P', cmake_script],
+                                  cwd=os.path.join(os.pardir, os.pardir),
                                   stderr=subprocess.STDOUT)
     version_str = out.decode().strip()
     return version_str
@@ -86,6 +87,7 @@ release = _version_str
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'breathe'
