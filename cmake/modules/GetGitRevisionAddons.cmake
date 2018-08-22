@@ -4,9 +4,8 @@
 include(GetGitRevisionDescription)
 
 function(get_git_version_pieces _version_pieces)
-
   get_git_head_revision(_ hash_full_)
-  git_describe(GIT_REV_DESCRIPTION --tags --always --dirty)
+  git_describe(GIT_REV_DESCRIPTION --tags --always --dirty --long)
 
   if(${GIT_REV_DESCRIPTION} MATCHES
       "^[v]*([0-9\\.]+)\\-([0-9]+)\\-g([A-Za-z0-9]+)\\-*([dirty]*).*")
@@ -18,7 +17,7 @@ function(get_git_version_pieces _version_pieces)
 
   elseif(${GIT_REV_DESCRIPTION} MATCHES
       "^[v]*([0-9]+\\.[0-9]+\\.[0-9]+)\\-*([dirty]*).*")
-    # HEAD is a tag
+    # HEAD is a tag (normally not needed if --long is used for git describe)
     set(_closest_tag ${CMAKE_MATCH_1})
     set(_commit_count "")
     set(_hash_short "")
@@ -44,6 +43,41 @@ function(get_git_version_pieces _version_pieces)
     PARENT_SCOPE)
 endfunction()
 
+
+function(get_source_dir_version_pieces _version_pieces)
+  set(hash_full_ "NOTFOUND")
+  set(_commit_count "0")
+  set(_hash_short "")
+  set(_local_changes "")
+
+  get_filename_component(_dirname ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+
+  if(${_dirname} MATCHES "^.*\\-[v]*([0-9\\.]+)")
+    set(_closest_tag ${CMAKE_MATCH_1})
+  else()
+    set(_closest_tag "VERSION-NOTFOUND")
+  endif()
+
+  set(${_version_pieces}
+    "${hash_full_};${_hash_short};${_closest_tag};${_commit_count};${_local_changes}"
+    PARENT_SCOPE)
+endfunction()
+
+
+function(get_version_pieces _version_pieces)
+  # TODO: proper version/error handling when git is not installed
+  get_git_head_revision(_ hash_full_)
+
+  if(hash_full_ STREQUAL "GITDIR-NOTFOUND")
+    get_source_dir_version_pieces(_pieces)
+  else()
+    get_git_version_pieces(_pieces)
+  endif()
+
+  set(${_version_pieces} "${_pieces}" PARENT_SCOPE)
+endfunction()
+
+
 function(format_version_pep440 _version_str _version_pieces)
   list(GET ${_version_pieces} 1 _hash_short)
   list(GET ${_version_pieces} 2 _closest_tag)
@@ -57,9 +91,9 @@ function(format_version_pep440 _version_str _version_pieces)
   endif()
   if(_commit_count)
     list(APPEND _local_version_items ${_commit_count})
-  endif()
-  if(_hash_short)
-    list(APPEND _local_version_items "g${_hash_short}")
+    if(_hash_short)
+      list(APPEND _local_version_items "g${_hash_short}")
+    endif()
   endif()
   if(_local_changes)
     list(APPEND _local_version_items ${_local_changes})
@@ -74,6 +108,7 @@ function(format_version_pep440 _version_str _version_pieces)
 
   set(${_version_str} ${_closest_tag}${_local_version_label} PARENT_SCOPE)
 endfunction()
+
 
 function(get_version_numbers
     _version_major _version_minor _version_patch
