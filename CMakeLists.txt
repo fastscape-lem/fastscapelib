@@ -13,7 +13,7 @@ set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 include(VersionUtils)
 
-get_version_pieces(VERSION_PIECES "")
+get_version_pieces(VERSION_PIECES "${VERSION_TAG}")
 
 format_version_pep440(VERSION_STR VERSION_PIECES)
 
