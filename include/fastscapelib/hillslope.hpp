@@ -227,10 +227,12 @@ void erode_linear_diffusion_impl(Er&& erosion,
         nrows, ncols);
 
     // solve for cols (i.e., transpose)
+    auto tranposed_dims = std::array<std::size_t, 3> {0, 2, 1};
+
     auto elevation_next = solve_diffusion_adi_row(
         xt::transpose(elevation_tmp),
-        xt::transpose(factors.second, {0, 2, 1}),
-        xt::transpose(factors.first, {0, 2, 1}),
+        xt::transpose(factors.second, tranposed_dims),
+        xt::transpose(factors.first, tranposed_dims),
         ncols, nrows);
 
     auto erosion_v = xt::view(erosion, xt::all(), xt::all());
