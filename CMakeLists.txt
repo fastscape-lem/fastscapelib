@@ -24,7 +24,7 @@ list(GET VERSION_PIECES 2 GIT_HASH_FULL)
 
 message(STATUS "Building ${PROJECT_NAME} version ${VERSION_STR}")
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/version.hpp.in
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/version.hpp.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/fastscapelib/version.hpp
   @ONLY)
 
