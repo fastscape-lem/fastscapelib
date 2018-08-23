@@ -74,14 +74,15 @@ matrix:
             - libstdc++-6-dev
       env: COMPILER=clang CLANG=6.0
     - os: osx
-      osx_image: xcode6.4
-      compiler: clang
-    - os: osx
       osx_image: xcode8
       compiler: clang
     - os: osx
       osx_image: xcode9
       compiler: clang
+    - os: osx
+      osx_image: xcode6.4
+      compiler: clang
+      env: PYTEST=3.6
     - os: linux
       addons:
         apt:
@@ -103,6 +104,11 @@ matrix:
     - python: 3.5
       language: python
       env: DOCS=yes
+  allow_failures:
+    - os: osx
+      osx_image: xcode6.4
+      compiler: clang
+      env: PYTEST=3.6
 
 env:
   global:

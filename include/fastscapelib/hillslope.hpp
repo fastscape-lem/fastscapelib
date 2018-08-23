@@ -82,8 +82,10 @@ auto get_adi_factors(T k_coef,
                      sshape_t ncols,
                      typename std::enable_if_t<std::is_arithmetic<T>::value>* = 0)
 {
-    auto fr = xt::empty<double>({ncols});
-    auto fc = xt::empty<double>({ncols});
+    std::array<std::size_t, 1> shape_cols {static_cast<std::size_t>(ncols)};
+
+    auto fr = xt::empty<double>(shape_cols);
+    auto fc = xt::empty<double>(shape_cols);
 
     fr.fill(k_coef * 0.5 * dt / (dy * dy));
     fc.fill(k_coef * 0.5 * dt / (dx * dx));
@@ -225,10 +227,12 @@ void erode_linear_diffusion_impl(Er&& erosion,
         nrows, ncols);
 
     // solve for cols (i.e., transpose)
+    auto tranposed_dims = std::array<std::size_t, 3> {0, 2, 1};
+
     auto elevation_next = solve_diffusion_adi_row(
         xt::transpose(elevation_tmp),
-        xt::transpose(factors.second, {0, 2, 1}),
-        xt::transpose(factors.first, {0, 2, 1}),
+        xt::transpose(factors.second, tranposed_dims),
+        xt::transpose(factors.first, tranposed_dims),
         ncols, nrows);
 
     auto erosion_v = xt::view(erosion, xt::all(), xt::all());
