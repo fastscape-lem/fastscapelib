@@ -1,4 +1,5 @@
 #include <array>
+#include <cstddef>
 #include <math.h>
 
 #include <benchmark/benchmark.h>
@@ -67,8 +68,8 @@ namespace benchmark_sinks
     {
         xt::xtensor<T, 2> operator()(int n)
         {
-            auto ns = static_cast<size_t>(n);
-            std::array<size_t, 2> shape = { ns, ns };
+            auto ns = static_cast<std::size_t>(n);
+            std::array<std::size_t, 2> shape = { ns, ns };
 
             xt::random::seed(0);
             xt::xtensor<T, 2> elev = (conic_surface<T>()(n) +
@@ -90,8 +91,8 @@ namespace benchmark_sinks
     {
         xt::xtensor<T, 2> operator()(int n)
         {
-            auto ns = static_cast<size_t>(n);
-            std::array<size_t, 2> shape = { ns, ns };
+            auto ns = static_cast<std::size_t>(n);
+            std::array<std::size_t, 2> shape = { ns, ns };
 
             xt::random::seed(0);
             xt::xtensor<T, 2> elev = xt::random::rand<T>(shape);

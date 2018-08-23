@@ -88,7 +88,8 @@ auto get_adi_factors(T k_coef,
     fr.fill(k_coef * 0.5 * dt / (dy * dy));
     fc.fill(k_coef * 0.5 * dt / (dx * dx));
 
-    std::array<size_t, 3> f_shape {3, static_cast<size_t>(nrows), static_cast<size_t>(ncols)};
+    std::array<std::size_t, 3> f_shape
+        {3, static_cast<std::size_t>(nrows), static_cast<std::size_t>(ncols)};
 
     // TODO: don't use eval when xbroadcast will have strides
     //       (required for transpose views: see xtensor #917)
@@ -112,7 +113,8 @@ auto get_adi_factors(K&& k_coef,
                      sshape_t ncols,
                      typename std::enable_if_t<xt::is_xexpression<K>::value>* = 0)
 {
-    std::array<size_t, 3> f_shape {3, static_cast<size_t>(nrows), static_cast<size_t>(ncols)};
+    std::array<size_t, 3> f_shape
+        {3, static_cast<std::size_t>(nrows), static_cast<std::size_t>(ncols)};
 
     auto factors_row = xt::empty<double>(f_shape);
     auto factors_col = xt::empty<double>(f_shape);

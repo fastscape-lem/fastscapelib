@@ -1,7 +1,8 @@
 #pragma once
 
-#include <math.h>
 #include <array>
+#include <cmath>
+#include <cstddef>
 #include <tuple>
 
 #include "xtensor/xmath.hpp"
@@ -62,7 +63,7 @@ public:
     SyntheticTopography(int n)
     {
         nnodes_side = n;
-        auto n_ = static_cast<size_t>(n);
+        auto n_ = static_cast<std::size_t>(n);
         shape = {n_, n_};
 
         grid = xt::meshgrid(xt::linspace<double>(-1, 1, n),
@@ -106,7 +107,7 @@ public:
 
 private:
     int nnodes_side;
-    std::array<size_t, 2> shape;
+    std::array<std::size_t, 2> shape;
     std::tuple<xt::xtensor<double, 2>, xt::xtensor<double, 2>> grid;
     xt::xtensor<T, 2> elevation;
 
@@ -128,8 +129,8 @@ void set_fixed_boundary_faces(A&& active_nodes)
     active_nodes_ = true;
 
     const auto shape = active_nodes.shape();
-    const std::array<size_t, 2> rows_idx {0, shape[0] - 1};
-    const std::array<size_t, 2> cols_idx {0, shape[1] - 1};
+    const std::array<std::size_t, 2> rows_idx {0, shape[0] - 1};
+    const std::array<std::size_t, 2> cols_idx {0, shape[1] - 1};
 
     auto row_bounds = xt::view(active_nodes, xt::keep(rows_idx), xt::all());
     row_bounds = false;

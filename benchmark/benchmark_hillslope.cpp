@@ -1,5 +1,6 @@
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <type_traits>
 
 #include <benchmark/benchmark.h>
@@ -47,8 +48,8 @@ namespace benchmark_hillslope
     template<class T, class K>
     void bm_erode_linear_diffusion(benchmark::State& state)
     {
-        auto ns = static_cast<size_t>(state.range(0));
-        std::array<size_t, 2> shape = { ns, ns };
+        auto ns = static_cast<std::size_t>(state.range(0));
+        std::array<std::size_t, 2> shape = { ns, ns };
 
         xt::xtensor<double, 2> elevation = xt::random::rand<T>(shape);
         auto erosion = xt::empty_like(elevation);
