@@ -1,7 +1,7 @@
 Fastscapelib
 ============
 
-|Build Status| |Win Build Status| |Doc Status|
+|Build Status| |Win Build Status| |Doc Status| |Zenodo|
 
 A C++ library of efficient algorithms for processing topographic data
 and landscape evolution modeling.
@@ -18,6 +18,9 @@ other languages.
 .. |Doc Status| image:: http://readthedocs.org/projects/fastscapelib/badge/?version=latest
    :target: http://fastscapelib.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
+.. |Zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1402642.svg
+   :target: https://doi.org/10.5281/zenodo.1402642
+   :alt: Citation
 
 Documentation
 -------------
@@ -43,3 +46,12 @@ This project is supported by the `Earth Surface Process Modelling`_
 group of the GFZ Helmholtz Centre Potsdam.
 
 .. _`Earth Surface Process Modelling`: http://www.gfz-potsdam.de/en/section/earth-surface-process-modelling/
+
+
+Citing fastscapelib
+-------------------
+
+If you use fastscapelib in a scientific publication, we would
+appreciate a `citation`_.
+
+.. _`citation`: http://fastscapelib.readthedocs.io/en/latest/citation.html
