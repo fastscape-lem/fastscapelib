@@ -4,6 +4,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -149,7 +150,9 @@ auto solve_diffusion_adi_row(Ei&& elevation,
 {
     xt::xtensor<double, 2> elevation_out = elevation;
 
-    auto vec = xt::empty<double>({ncols});
+    std::array<std::size_t, 1> shape_cols {static_cast<std::size_t>(ncols)};
+
+    auto vec = xt::empty<double>(shape_cols);
     auto lower = xt::empty_like(vec);
     auto diag = xt::empty_like(vec);
     auto upper = xt::empty_like(vec);
