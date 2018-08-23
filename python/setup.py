@@ -30,7 +30,7 @@ def get_version():
     """
     check_cmake_version()
 
-    cmake_script = os.path.join('cmake', 'modules', 'print_version.cmake')
+    cmake_script = os.path.join('cmake', 'modules', 'PrintVersion.cmake')
     out = subprocess.check_output(['cmake', '-P', cmake_script],
                                   cwd=os.pardir,
                                   stderr=subprocess.STDOUT)

@@ -11,7 +11,7 @@ set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Versioning
 # ==========
 
-include(GetGitRevisionAddons)
+include(VersionUtils)
 
 get_version_pieces(VERSION_PIECES)
 

@@ -1,5 +1,5 @@
-# - Some addons to GetGitRevisionDescription, mostly inspired by
-#   Python versioneer
+# Some utilities for handling versions
+# (mostly inspired by Python versioneer).
 
 include(GetGitRevisionDescription)
 
