@@ -1,5 +1,6 @@
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <type_traits>
 
 #include <benchmark/benchmark.h>
@@ -49,7 +50,7 @@ namespace benchmark_bedrock_channel
     template<class T, class K, int Nd>
     void bm_erode_stream_power(benchmark::State& state)
     {
-        auto ns = static_cast<size_t>(state.range(0));
+        auto ns = static_cast<std::size_t>(state.range(0));
 
         xt::xtensor<double, Nd> erosion;
         xt::xtensor<double, Nd> elevation;

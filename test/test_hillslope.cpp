@@ -1,4 +1,5 @@
 #include <array>
+#include <cstddef>
 
 #include "gtest/gtest.h"
 #include "xtensor/xbuilder.hpp"
@@ -65,7 +66,7 @@ TEST(hillslope, erode_linear_diffusion)
     // these are chosen arbitrarily after manual inspection (small enough values)
     std::array<double, 4> l2_norm_thresholds {1e-9, 1e-6, 1e-5, 1e-5};
 
-    for (size_t k=0; k<4; ++k)
+    for (std::size_t k=0; k<4; ++k)
     {
         auto dt = dt_values[k];
 
@@ -80,7 +81,7 @@ TEST(hillslope, erode_linear_diffusion)
         EXPECT_TRUE(l2_norm < l2_norm_thresholds[k]);
     }
 
-    for (size_t k=0; k<4; ++k)
+    for (std::size_t k=0; k<4; ++k)
     {
         auto dt = dt_values[k];
 

@@ -62,7 +62,7 @@ struct ChannelProfile1D
 
     double length = (nnodes - 1) * spacing;
     xt::xtensor<double, 1> x = xt::linspace<double>(length + x0, x0,
-                                                    static_cast<size_t>(nnodes));
+                                                    static_cast<std::size_t>(nnodes));
 
     xt::xtensor<double, 1> drainage_area = hack_coef * xt::pow(x, hack_exp);
     xt::xtensor<double, 1> elevation = (length + x0 - x) * 1e-4;

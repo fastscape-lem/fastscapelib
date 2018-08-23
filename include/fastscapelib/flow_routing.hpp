@@ -5,10 +5,11 @@
  */
 #pragma once
 
-#include <cmath>
 #include <algorithm>
-#include <limits>
 #include <array>
+#include <cmath>
+#include <cstddef>
+#include <limits>
 #include <type_traits>
 
 #include "xtensor/xtensor.hpp"
@@ -30,7 +31,7 @@ inline auto get_d8_distances(double dx, double dy) -> std::array<double, 9>
 {
     std::array<double, 9> d8_dists;
 
-    for(size_t k=0; k<9; ++k)
+    for(std::size_t k=0; k<9; ++k)
     {
         d8_dists[k] = std::sqrt(
             std::pow(dy * fastscapelib::consts::d8_row_offsets[k], 2.0) +
@@ -92,7 +93,7 @@ void compute_receivers_d8_impl(R&& receivers,
 
             double slope_max = std::numeric_limits<double>::min();
 
-            for(size_t k=1; k<=8; ++k)
+            for(std::size_t k=1; k<=8; ++k)
             {
                 const index_t kr = r + fastscapelib::consts::d8_row_offsets[k];
                 const index_t kc = c + fastscapelib::consts::d8_col_offsets[k];

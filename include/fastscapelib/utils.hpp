@@ -14,7 +14,7 @@
 using index_t = std::ptrdiff_t;
 
 // type used when working with both shapes or sizes (unsigned) and indexers (signed)
-using sshape_t = std::make_signed_t<size_t>;
+using sshape_t = std::make_signed_t<std::size_t>;
 
 // type used as an alias to xtensor's xexpression
 // TODO: use xexpression shaped when it's ready (see xtensor GH #994)
