@@ -15,9 +15,11 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+from __future__ import print_function
 import os
-import subprocess
 import platform
+import re
+import subprocess
 
 import sphinx_rtd_theme
 
@@ -61,7 +63,7 @@ def get_version():
     check_cmake_version()
 
     cmake_script = os.path.join('cmake', 'modules',
-                                'print_version.cmake')
+                                'PrintVersion.cmake')
     out = subprocess.check_output(['cmake', '-P', cmake_script],
                                   cwd=os.path.join(os.pardir, os.pardir),
                                   stderr=subprocess.STDOUT)
@@ -70,6 +72,7 @@ def get_version():
 
 
 _version_str = get_version()
+print("building doc for fastscapelib version ", _version_str)
 
 # The short X.Y version
 version = _version_str

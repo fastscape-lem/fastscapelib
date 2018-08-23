@@ -11,20 +11,20 @@ set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Versioning
 # ==========
 
-include(GetGitRevisionAddons)
+include(VersionUtils)
 
-get_version_pieces(VERSION_PIECES)
+get_version_pieces(VERSION_PIECES "${VERSION_TAG}")
 
 format_version_pep440(VERSION_STR VERSION_PIECES)
 
 get_version_numbers(VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   VERSION_PIECES)
 
-list(GET VERSION_PIECES 0 GIT_HASH_FULL)
+list(GET VERSION_PIECES 2 GIT_HASH_FULL)
 
 message(STATUS "Building ${PROJECT_NAME} version ${VERSION_STR}")
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/version.hpp.in
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/version.hpp.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/fastscapelib/version.hpp
   @ONLY)
 
