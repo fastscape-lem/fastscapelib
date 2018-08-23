@@ -4,7 +4,7 @@
 include(GetGitRevisionDescription)
 
 function(get_git_version_pieces _version_pieces)
-  get_git_head_revision(_ hash_full_)
+  get_git_head_revision(_ _hash_full)
   git_describe(GIT_REV_DESCRIPTION --tags --always --dirty --long)
 
   if(${GIT_REV_DESCRIPTION} MATCHES
@@ -38,17 +38,12 @@ function(get_git_version_pieces _version_pieces)
   endif()
 
   set(${_version_pieces}
-    "${hash_full_};${_hash_short};${_version_tag};${_commit_count};${_local_changes}"
+    "${_version_tag};${_commit_count};${_hash_full};${_hash_short};${_local_changes}"
     PARENT_SCOPE)
 endfunction()
 
 
 function(get_source_dir_version_pieces _version_pieces)
-  set(hash_full_ "NOTFOUND")
-  set(_commit_count "0")
-  set(_hash_short "")
-  set(_local_changes "")
-
   get_filename_component(_dirname ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
   if(${_dirname} MATCHES "^.*\\-[v]*([0-9\\.]+)")
@@ -57,20 +52,24 @@ function(get_source_dir_version_pieces _version_pieces)
     set(_version_tag "VERSION-NOTFOUND")
   endif()
 
-  set(${_version_pieces}
-    "${hash_full_};${_hash_short};${_version_tag};${_commit_count};${_local_changes}"
-    PARENT_SCOPE)
+  set(${_version_pieces} "${_version_tag};0;NOHASH;;" PARENT_SCOPE)
 endfunction()
 
 
-function(get_version_pieces _version_pieces)
-  # TODO: proper version/error handling when git is not installed
-  get_git_head_revision(_ hash_full_)
+function(get_version_pieces _version_pieces _version_tag)
+  if(_version_tag)
+    set(_pieces "${_version_tag};0;NOHASH;;")
 
-  if(hash_full_ STREQUAL "GITDIR-NOTFOUND")
-    get_source_dir_version_pieces(_pieces)
   else()
-    get_git_version_pieces(_pieces)
+    # TODO: proper version/error handling when git is not installed
+    get_git_head_revision(_ _hash_full)
+
+    if(_hash_full STREQUAL "GITDIR-NOTFOUND")
+      get_source_dir_version_pieces(_pieces)
+    else()
+      get_git_version_pieces(_pieces)
+    endif()
+
   endif()
 
   set(${_version_pieces} "${_pieces}" PARENT_SCOPE)
@@ -78,9 +77,9 @@ endfunction()
 
 
 function(format_version_pep440 _version_str _version_pieces)
-  list(GET ${_version_pieces} 1 _hash_short)
-  list(GET ${_version_pieces} 2 _version_tag)
-  list(GET ${_version_pieces} 3 _commit_count)
+  list(GET ${_version_pieces} 0 _version_tag)
+  list(GET ${_version_pieces} 1 _commit_count)
+  list(GET ${_version_pieces} 3 _hash_short)
   list(GET ${_version_pieces} 4 _local_changes)
 
   set(_local_version_items "")
@@ -112,7 +111,7 @@ endfunction()
 function(get_version_numbers
     _version_major _version_minor _version_patch
     _version_pieces)
-  list(GET ${_version_pieces} 2 _version_tag)
+  list(GET ${_version_pieces} 0 _version_tag)
 
   if(${_version_tag} MATCHES "([0-9]+)\\.([0-9]+)\\.([0-9]+)")
     set(${_version_major} ${CMAKE_MATCH_1} PARENT_SCOPE)
