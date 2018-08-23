@@ -103,6 +103,10 @@ matrix:
     - python: 3.5
       language: python
       env: DOCS=yes
+  allow_failures:
+    - os: osx
+      osx_image: xcode6.4
+      compiler: clang
 
 env:
   global:
