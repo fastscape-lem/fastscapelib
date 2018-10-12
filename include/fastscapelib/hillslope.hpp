@@ -163,10 +163,9 @@ auto solve_diffusion_adi_row(Ei&& elevation,
 
     for (index_t r=1; r<nrows-1; ++r)
     {
-        // TODO use xt::view with xbroadcast (check xtensor #1036 #917)
-        xt::noalias(lower) = -1 * xt::strided_view(factors_col, {0, r, xt::all()});
-        xt::noalias(diag) = 1 + 2 * xt::strided_view(factors_col, {1, r, xt::all()});
-        xt::noalias(upper) = -1 * xt::strided_view(factors_col, {2, r, xt::all()});
+        xt::noalias(lower) = -1 * xt::view(factors_col, 0, r, xt::all());
+        xt::noalias(diag) = 1 + 2 * xt::view(factors_col, 1, r, xt::all());
+        xt::noalias(upper) = -1 * xt::view(factors_col, 2, r, xt::all());
 
         for (index_t c=1; c<ncols-1; ++c)
         {
