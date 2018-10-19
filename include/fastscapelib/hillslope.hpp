@@ -13,7 +13,7 @@
 #include "xtensor/xbuilder.hpp"
 #include "xtensor/xnoalias.hpp"
 #include "xtensor/xview.hpp"
-#include "xtensor/xstrided_view.hpp"
+#include "xtensor/xmanipulation.hpp"
 
 #include "fastscapelib/utils.hpp"
 

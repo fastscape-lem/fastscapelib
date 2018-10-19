@@ -9,7 +9,7 @@
 #include <type_traits>
 
 #include "xtensor/xtensor.hpp"
-#include "xtensor/xstrided_view.hpp"
+#include "xtensor/xmanipulation.hpp"
 
 #include "fastscapelib/utils.hpp"
 
