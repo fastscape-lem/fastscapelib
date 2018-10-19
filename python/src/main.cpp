@@ -5,7 +5,6 @@
 #include <cstdint>
 
 #include "pybind11/pybind11.h"
-#include "xtl/xmeta_utils.hpp"   // TODO: remove when xtensor 0.18 is released
 #define FORCE_IMPORT_ARRAY
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
