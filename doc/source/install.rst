@@ -4,7 +4,7 @@ Install Fastscapelib
 ====================
 
 This library is header only and uses C++14 standards. It depends on
-xtensor_.
+xtensor_ (>0.18).
 
 .. _xtensor: https://github.com/QuantStack/xtensor
 
