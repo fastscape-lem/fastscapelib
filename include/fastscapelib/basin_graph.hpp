@@ -902,6 +902,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(
                     // neighbor is already parsed, in the same basin. Could be a receiver
                     if (tag[ineighbor] == Tag::WithRcv)
                     {
+						// cost is an angular distance to the outflow - node line.
                         double cost = cost_r * double(fastscapelib::consts::d8_row_offsets[k]) + cost_c * double(fastscapelib::consts::d8_col_offsets[k]);
                         cost *= d8_distances_inv[detail::get_d8_distance_id(coords.first, coords.second, rr, cc)];
 
