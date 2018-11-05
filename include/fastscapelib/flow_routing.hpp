@@ -14,7 +14,7 @@
 
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"
-#include "xtensor/xstrided_view.hpp"
+#include "xtensor/xmanipulation.hpp"
 
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/consts.hpp"

@@ -13,7 +13,7 @@
 #include "xtensor/xbuilder.hpp"
 #include "xtensor/xnoalias.hpp"
 #include "xtensor/xview.hpp"
-#include "xtensor/xstrided_view.hpp"
+#include "xtensor/xmanipulation.hpp"
 
 #include "fastscapelib/utils.hpp"
 
@@ -163,10 +163,9 @@ auto solve_diffusion_adi_row(Ei&& elevation,
 
     for (index_t r=1; r<nrows-1; ++r)
     {
-        // TODO use xt::view with xbroadcast (check xtensor #1036 #917)
-        xt::noalias(lower) = -1 * xt::strided_view(factors_col, {0, r, xt::all()});
-        xt::noalias(diag) = 1 + 2 * xt::strided_view(factors_col, {1, r, xt::all()});
-        xt::noalias(upper) = -1 * xt::strided_view(factors_col, {2, r, xt::all()});
+        xt::noalias(lower) = -1 * xt::view(factors_col, 0, r, xt::all());
+        xt::noalias(diag) = 1 + 2 * xt::view(factors_col, 1, r, xt::all());
+        xt::noalias(upper) = -1 * xt::view(factors_col, 2, r, xt::all());
 
         for (index_t c=1; c<ncols-1; ++c)
         {
@@ -176,15 +175,23 @@ auto solve_diffusion_adi_row(Ei&& elevation,
         }
 
         // boundary conditions
-        auto lower_bounds = xt::view(lower, xt::keep(0, -1));
-        lower_bounds = 0;
-        auto diag_bounds = xt::view(diag, xt::keep(0, -1));
-        diag_bounds = 1;
-        auto upper_bounds = xt::view(upper, xt::keep(0, -1));
-        upper_bounds = 0;
+        auto ilast = ncols - 1;
+
+        lower(0) = 0;
+        lower(ilast) = 0;
+        diag(0) = 1;
+        diag(ilast) = 1;
+        upper(0) = 0;
+        upper(ilast) = 0;
         vec(0) = elevation(r, 0);
-        vec(ncols - 1) = elevation(r, ncols - 1);
-        // TODO: the code below works with xtensor 0.17.1 but not with 0.17.2
+        vec(ilast) = elevation(r, ilast);
+        // TODO: the code below works with xtensor 0.17.1 but not with later versions
+        // auto lower_bounds = xt::view(lower, xt::keep(0, -1));
+        // lower_bounds = 0;
+        // auto diag_bounds = xt::view(diag, xt::keep(0, -1));
+        // diag_bounds = 1;
+        // auto upper_bounds = xt::view(upper, xt::keep(0, -1));
+        // upper_bounds = 0;
         // auto vec_bounds = xt::view(vec, xt::keep(0, -1));
         // vec_bounds = xt::view(elevation, r, xt::keep(0, -1));
 
