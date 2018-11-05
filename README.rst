@@ -18,8 +18,8 @@ other languages.
 .. |Doc Status| image:: http://readthedocs.org/projects/fastscapelib/badge/?version=latest
    :target: http://fastscapelib.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
-.. |Zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1402642.svg
-   :target: https://doi.org/10.5281/zenodo.1402642
+.. |Zenodo| image:: https://zenodo.org/badge/133639708.svg
+   :target: https://zenodo.org/badge/latestdoi/133639708
    :alt: Citation
 
 Documentation
