@@ -3,6 +3,11 @@
 Release Notes
 =============
 
+v0.1.3 (5 November 2018)
+------------------------
+
+- Update to xtensor latest version (0.18) (:issue:`35`).
+
 v0.1.2 (23 August 2018)
 -----------------------
 
