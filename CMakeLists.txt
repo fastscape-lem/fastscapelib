@@ -36,13 +36,60 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 # Dependencies
 # ============
 
-# TODO: xtl should be found by xtensor config.
-# fix upstream"find_dependency(xtl REQUIRED)" in xtensorConfig.cmake?
-find_package(xtl REQUIRED)
-message(STATUS "Found xtl: ${xtl_INCLUDE_DIRS}/xtl")
+OPTION(DOWNLOAD_XTENSOR "Download xtensor from github (master)" OFF)
 
-find_package(xtensor REQUIRED)
-message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
+if(DOWNLOAD_XTENSOR)
+  configure_file(downloadXTensor.cmake.in
+    xtensor-download/CMakeLists.txt)
+
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xtensor-download
+    )
+
+  if(result)
+    message(FATAL_ERROR "CMake step for xtensor failed: ${result}")
+  endif()
+
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} --build .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xtensor-download
+    )
+
+  if(result)
+    message(FATAL_ERROR "Build step for xtensor failed: ${result}")
+  endif()
+
+  # Add xtensor directly to our build
+  # temporarily disable conflicting options
+  # (we don't want to build xtensor's test/benchmark suites here)
+  SET(TEMP_BUILD_TESTS ${BUILD_TESTS})
+  SET(BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
+  SET(TEMP_BUILD_BENCHMARK ${BUILD_BENCHMARK})
+  SET(BUILD_BENCHMARK OFF CACHE INTERNAL "" FORCE)
+  SET(TEMP_DOWNLOAD_GBENCHMARK ${DOWNLOAD_GBENCHMARK})
+  SET(DOWNLOAD_GBENCHMARK OFF CACHE INTERNAL "" FORCE)
+
+  add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/xtensor-src
+    ${CMAKE_CURRENT_BINARY_DIR}/xtensor-build)
+
+  SET(BUILD_TESTS ${TEMP_BUILD_TESTS} CACHE INTERNAL "" FORCE)
+  SET(DOWNLOAD_GBENCHMARK ${TEMP_DOWNLOAD_GBENCHMARK} CACHE INTERNAL "" FORCE)
+  SET(BUILD_BENCHMARK ${TEMP_BUILD_BENCHMARK} CACHE INTERNAL "" FORCE)
+
+  set(xtensor_INCLUDE_DIRS "${xtensor_SOURCE_DIR}/include")
+else()
+  # TODO: xtl should be found by xtensor config.
+  # fix upstream"find_dependency(xtl REQUIRED)" in xtensorConfig.cmake?
+  find_package(xtl REQUIRED)
+  message(STATUS "Found xtl: ${xtl_INCLUDE_DIRS}/xtl")
+
+  find_package(xtensor REQUIRED)
+  message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
+endif()
+
 
 # Build
 # =====
@@ -86,7 +133,7 @@ if(BUILD_TESTS)
 endif()
 
 if(BUILD_BENCHMARK)
-    add_subdirectory(benchmark)
+  add_subdirectory(benchmark)
 endif()
 
 if(BUILD_PYTHON_MODULE)
