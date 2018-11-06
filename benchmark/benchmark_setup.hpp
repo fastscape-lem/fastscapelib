@@ -131,14 +131,9 @@ void set_fixed_boundary_faces(A&& active_nodes)
     auto active_nodes_ = xt::view(active_nodes, xt::all(), xt::all());
     active_nodes_ = true;
 
-    const auto shape = active_nodes.shape();
-    const std::array<std::size_t, 2> rows_idx {0, shape[0] - 1};
-    const std::array<std::size_t, 2> cols_idx {0, shape[1] - 1};
-
-    auto row_bounds = xt::view(active_nodes, xt::keep(rows_idx), xt::all());
+    auto row_bounds = xt::view(active_nodes, xt::keep(0, -1), xt::all());
     row_bounds = false;
-
-    auto col_bounds = xt::view(active_nodes, xt::all(), xt::keep(cols_idx));
+    auto col_bounds = xt::view(active_nodes, xt::all(), xt::keep(0, -1));
     col_bounds = false;
 }
 
