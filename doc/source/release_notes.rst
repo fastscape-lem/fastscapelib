@@ -3,6 +3,12 @@
 Release Notes
 =============
 
+v0.2.0 (Unreleased)
+-------------------
+
+- Add a cmake option that allows downloading/using xtensor development
+  version (:issue:`37`).
+
 v0.1.3 (5 November 2018)
 ------------------------
 
