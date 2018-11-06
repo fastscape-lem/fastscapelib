@@ -17,6 +17,10 @@ default). See below for more explanations.
   instead of downloading them.
 - ``BUILD_PYTHON_MODULE``: enables building fastscapelib as a Python
   extension.
+- ``DOWNLOAD_XTENSOR``: downloads xtensor development version (master
+  branch on github) and uses it to build fastscapelib (useful for
+  testing - might be needed for building fastscapelib development
+  version).
 
 Build and run tests
 -------------------
