@@ -38,6 +38,14 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env: COMPILER=gcc GCC=7 XTENSOR=dev
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-3.9
           packages:
             - clang-3.9
@@ -105,6 +113,14 @@ matrix:
       language: python
       env: DOCS=yes
   allow_failures:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env: COMPILER=gcc GCC=7 XTENSOR=dev
     - os: osx
       osx_image: xcode6.4
       compiler: clang
@@ -158,7 +174,8 @@ install:
   - source activate test_env
   - conda list
   # Maybe build tests or build/install Python bindings
-  - if [[ "$DOCS" == "yes" ]]; then
+  - |
+    if [[ "$DOCS" == "yes" ]]; then
       cd doc;
     elif [[ "$PYTEST" == "2.7" || "$PYTEST" == "3.6" ]]; then
       cd python;
@@ -166,7 +183,11 @@ install:
     else
       mkdir build;
       cd build;
-      cmake -DBUILD_TESTS=ON ..;
+      if [[ "$XTENSOR" == "dev" ]]; then
+        cmake -DBUILD_TESTS=ON -DDOWNLOAD_XTENSOR=ON ..;
+      else
+        cmake -DBUILD_TESTS=ON ..;
+      fi
       make -j2 test_fastscapelib;
       cd test;
     fi
