@@ -5,10 +5,14 @@
 #include <cstddef>
 #include <tuple>
 
+#include <benchmark/benchmark.h>
+
 #include "xtensor/xmath.hpp"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xrandom.hpp"
 #include "xtensor/xview.hpp"
+
+#include "fastscapelib/utils.hpp"
 
 
 namespace benchmark_setup
@@ -129,14 +133,22 @@ void set_fixed_boundary_faces(A&& active_nodes)
     active_nodes_ = true;
 
     const auto shape = active_nodes.shape();
-    const std::array<std::size_t, 2> rows_idx {0, shape[0] - 1};
-    const std::array<std::size_t, 2> cols_idx {0, shape[1] - 1};
 
-    auto row_bounds = xt::view(active_nodes, xt::keep(rows_idx), xt::all());
-    row_bounds = false;
+    auto first_row = xt::view(active_nodes, 0, xt::all());
+    first_row = false;
+    auto last_row = xt::view(active_nodes, shape[0] - 1, xt::all());
+    last_row = false;
+    auto first_col = xt::view(active_nodes, xt::all(), 0);
+    first_col = false;
+    auto last_col = xt::view(active_nodes, xt::all(), shape[1] - 1);
+    last_col = false;
 
-    auto col_bounds = xt::view(active_nodes, xt::all(), xt::keep(cols_idx));
-    col_bounds = false;
+    // TODO: replace by code below when xtensor 0.18.3 is out (see #1215 and #1216)
+    // auto row_bounds = xt::view(active_nodes, xt::keep(0, -1), xt::all());
+    // row_bounds = false;
+
+    // auto col_bounds = xt::view(active_nodes, xt::all(), xt::keep(0, -1));
+    // col_bounds = false;
 }
 
 
