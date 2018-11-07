@@ -71,7 +71,7 @@ Fastscapelib has Python bindings, which can be built by enabling
    $ mkdir build
    $ cd build
    $ cmake -DBUILD_PYTHON_MODULE=ON ..
-   $ make run_tests
+   $ make _fastscapelib_py
 
 Note that the created Python library is not intended to be directly
 used within a regular Python installation. The preferred way to build
