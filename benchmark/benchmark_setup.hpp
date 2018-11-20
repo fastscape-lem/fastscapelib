@@ -7,6 +7,7 @@
 
 #include <benchmark/benchmark.h>
 
+#include "xtensor/xbuilder.hpp"
 #include "xtensor/xmath.hpp"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xrandom.hpp"

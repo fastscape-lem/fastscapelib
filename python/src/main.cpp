@@ -3,8 +3,10 @@
  * @brief Fastscapelib Python bindings.
 */
 #include <cstdint>
+#include <type_traits>
 
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 #define FORCE_IMPORT_ARRAY
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
@@ -163,6 +165,24 @@ PYBIND11_MODULE(_fastscapelib_py, m)
 
     m.def("get_versions", &get_versions,
           "Get version info.");
+
+    py::enum_<fs::NodeStatus>(m, "NodeStatus", py::arithmetic(),
+                              "grid/mesh node status")
+        .value("CORE_NODE", fs::NodeStatus::CORE_NODE)
+        .value("FIXED_VALUE_BOUNDARY", fs::NodeStatus::FIXED_VALUE_BOUNDARY)
+        .value("FIXED_GRADIENT_BOUNDARY", fs::NodeStatus::FIXED_GRADIENT_BOUNDARY)
+        .value("LOOPED_BOUNDARY", fs::NodeStatus::LOOPED_BOUNDARY);
+
+    m.def("node_status_all_core",
+          [](std::vector<size_t> shape) -> xt::pyarray<fs::NodeStatus>
+          {
+              return fs::node_status_all_core(shape);
+          },
+          "Create an array with NodeStatus.CORE_NODE set for all elements");
+
+    m.def("set_grid_boundaries",
+          &fs::set_grid_boundaries<xt::pytensor<fs::NodeStatus, 2>>,
+          "Set node status at each of the grid boundary sides.");
 
     m.def("compute_receivers_d8_d", &compute_receivers_d8_py<double>,
           "Compute D8 flow receivers, a single receiver for each grid node.");
