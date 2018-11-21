@@ -21,7 +21,7 @@ namespace fastscapelib
  * Status of grid/mesh nodes either inside the domain or on the domain
  * boundary.
  */
-enum class NodeStatus : std::int8_t
+enum class NodeStatus : std::uint8_t
 {
     CORE_NODE = 0,
     FIXED_VALUE_BOUNDARY = 1,
