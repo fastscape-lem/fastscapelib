@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <map>
+#include <stdexcept>
 
 #include "xtensor/xbuilder.hpp"
 #include "xtensor/xview.hpp"
@@ -39,6 +40,13 @@ void set_node_status_grid_boundaries(NS& node_status,
                                      NodeStatus bottom,
                                      NodeStatus left)
 {
+    // check symmetry of looped boundaries
+    if ((top == NodeStatus::LOOPED_BOUNDARY ^ bottom == NodeStatus::LOOPED_BOUNDARY) ||
+        (left == NodeStatus::LOOPED_BOUNDARY ^ right == NodeStatus::LOOPED_BOUNDARY))
+    {
+        throw std::invalid_argument("looped boundaries are not symmetrical");
+    }
+
     const auto shape = node_status.shape();
     auto last_row = static_cast<index_t>(shape[0] - 1);
     auto last_col = static_cast<index_t>(shape[1] - 1);
