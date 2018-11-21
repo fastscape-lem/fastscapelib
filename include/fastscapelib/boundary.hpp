@@ -26,18 +26,18 @@ enum class NodeStatus : std::int8_t
 
 
 template<class S>
-auto node_status_all_core(S& shape)
+auto create_node_status(S& shape)
 {
     return xt::zeros<NodeStatus>(shape);
 }
 
 
 template<class NS>
-void set_grid_boundaries(NS& node_status,
-                         NodeStatus top,
-                         NodeStatus right,
-                         NodeStatus bottom,
-                         NodeStatus left)
+void set_node_status_grid_boundaries(NS& node_status,
+                                     NodeStatus top,
+                                     NodeStatus right,
+                                     NodeStatus bottom,
+                                     NodeStatus left)
 {
     const auto shape = node_status.shape();
     auto last_row = static_cast<index_t>(shape[0] - 1);

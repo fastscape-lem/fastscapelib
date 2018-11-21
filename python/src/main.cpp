@@ -173,15 +173,15 @@ PYBIND11_MODULE(_fastscapelib_py, m)
         .value("FIXED_GRADIENT_BOUNDARY", fs::NodeStatus::FIXED_GRADIENT_BOUNDARY)
         .value("LOOPED_BOUNDARY", fs::NodeStatus::LOOPED_BOUNDARY);
 
-    m.def("node_status_all_core",
+    m.def("create_node_status",
           [](std::vector<size_t> shape) -> xt::pyarray<fs::NodeStatus>
           {
-              return fs::node_status_all_core(shape);
+              return fs::create_node_status(shape);
           },
           "Create an array with NodeStatus.CORE_NODE set for all elements");
 
-    m.def("set_grid_boundaries",
-          &fs::set_grid_boundaries<xt::pytensor<fs::NodeStatus, 2>>,
+    m.def("set_node_status_grid_boundaries",
+          &fs::set_node_status_grid_boundaries<xt::pytensor<fs::NodeStatus, 2>>,
           "Set node status at each of the grid boundary sides.");
 
     m.def("compute_receivers_d8_d", &compute_receivers_d8_py<double>,
