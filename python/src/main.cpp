@@ -166,6 +166,9 @@ PYBIND11_MODULE(_fastscapelib_py, m)
     m.def("get_versions", &get_versions,
           "Get version info.");
 
+    /*
+     * boundary
+     */
     py::enum_<fs::NodeStatus>(m, "NodeStatus", py::arithmetic(),
                               "grid/mesh node status")
         .value("CORE_NODE", fs::NodeStatus::CORE_NODE)
@@ -184,6 +187,9 @@ PYBIND11_MODULE(_fastscapelib_py, m)
           &fs::set_node_status_grid_boundaries<xt::pytensor<fs::NodeStatus, 2>>,
           "Set node status at each of the grid boundary sides.");
 
+    /*
+     * flow_routing
+     */
     m.def("compute_receivers_d8_d", &compute_receivers_d8_py<double>,
           "Compute D8 flow receivers, a single receiver for each grid node.");
 
@@ -208,12 +214,18 @@ PYBIND11_MODULE(_fastscapelib_py, m)
           &compute_drainage_area_grid_py<double>,
           "Compute drainage area on a 2D grid.");
 
+    /*
+     * sinks
+     */
     m.def("fill_sinks_flat_d", &fill_sinks_flat_py<double>,
           "Fill depressions in elevation data (flat surfaces).");
 
     m.def("fill_sinks_sloped_d", &fill_sinks_sloped_py<double>,
           "Fill depressions in elevation data (slightly sloped surfaces).");
 
+    /*
+     * bedrock_channel
+     */
     m.def("erode_stream_power_d", &erode_stream_power_py<double, double>,
           "Compute bedrock channel erosion during a single time step "
           "using the Stream Power Law.");
@@ -223,6 +235,9 @@ PYBIND11_MODULE(_fastscapelib_py, m)
           "using the Stream Power Law.\n\n"
           "Version with spatially variable stream power coefficient.");
 
+    /*
+     * hillslope
+     */
     m.def("erode_linear_diffusion_d", &erode_linear_diffusion_py<double, double>,
           "Compute hillslope erosion by linear diffusion on a 2-d regular "
           "grid using finite differences with an Alternating Direction"
