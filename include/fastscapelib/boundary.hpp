@@ -17,6 +17,10 @@ namespace fastscapelib
 {
 
 
+/**
+ * Status of grid/mesh nodes either inside the domain or on the domain
+ * boundary.
+ */
 enum class NodeStatus : std::int8_t
 {
     CORE_NODE = 0,
@@ -26,6 +30,19 @@ enum class NodeStatus : std::int8_t
 };
 
 
+/**
+ * Create an array and set all of its elements to
+ * ``NodeStatus::CORE_NODE``.
+ *
+ * This helper function ensures that the array values for node status
+ * have the right type.
+ *
+ * @param shape : ``[intent=in]``
+ *     The shape of the array to create.
+ *
+ * @returns
+ *     A new, uniform array with ``NodeStatus::CORE_NODE`` values.
+ */
 template<class S>
 auto create_node_status(S& shape)
 {
@@ -33,6 +50,30 @@ auto create_node_status(S& shape)
 }
 
 
+/**
+ * Helper function for setting node status at each side of the grid
+ * boundaries.
+ *
+ * Conflicts may arise on the grid corners if different status are set
+ * on adjacent grid sides. Those conflicts are solved using the
+ * following priority order:
+ *
+ * FIXED_VALUE_BOUNDARY > FIXED_GRADIENT_BOUNDARY > LOOPED_BOUNDARY > CORE_NODE
+ *
+ * @param node_status : ``[intent=inout, shape=(nrows, ncols)]``
+ *     Array of node status on the grid.
+ * @param top :
+ *     Node status to set on the top boundary (first row).
+ * @param right :
+ *     Node status to set on the right boundary (last col).
+ * @param bottom :
+ *     Node status to set on the bottom boundary (last row).
+ * @param left :
+ *     Node status to set on the left boundary (first col).
+ *
+ * @throws std::invalid_argument
+ *     If looped boundary conditions are not symmetrical.
+ */
 template<class NS>
 void set_node_status_grid_boundaries(NS& node_status,
                                      NodeStatus top,

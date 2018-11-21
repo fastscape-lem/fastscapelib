@@ -170,7 +170,8 @@ PYBIND11_MODULE(_fastscapelib_py, m)
      * boundary
      */
     py::enum_<fs::NodeStatus>(m, "NodeStatus", py::arithmetic(),
-                              "grid/mesh node status")
+                              "Status of grid/mesh nodes either inside the domain "
+                              "or on the domain boundary.")
         .value("CORE_NODE", fs::NodeStatus::CORE_NODE)
         .value("FIXED_VALUE_BOUNDARY", fs::NodeStatus::FIXED_VALUE_BOUNDARY)
         .value("FIXED_GRADIENT_BOUNDARY", fs::NodeStatus::FIXED_GRADIENT_BOUNDARY)
@@ -181,11 +182,12 @@ PYBIND11_MODULE(_fastscapelib_py, m)
           {
               return fs::create_node_status(shape);
           },
-          "Create an array with NodeStatus.CORE_NODE set for all elements");
+          "Create an array and set all of its elements to NodeStatus.CORE_NODE");
 
     m.def("set_node_status_grid_boundaries",
           &fs::set_node_status_grid_boundaries<xt::pytensor<fs::NodeStatus, 2>>,
-          "Set node status at each of the grid boundary sides.");
+          "Helper function for setting node status at each side of the "
+          "grid boundaries");
 
     /*
      * flow_routing

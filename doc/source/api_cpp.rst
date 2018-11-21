@@ -33,6 +33,23 @@ or include just a subset of the functions (by topic), e.g.,
 
    #include "fastscapelib/flow_routing.hpp"
 
+Boundary conditions
+-------------------
+
+Structures and helper functions for setting boundary conditions on
+grid or meshes.
+
+Defined in ``fastscapelib/boundary.hpp``
+
+.. doxygenenum:: fastscapelib::NodeStatus
+   :project: fastscapelib
+
+.. doxygenfunction:: fastscapelib::create_node_status
+   :project: fastscapelib
+
+.. doxygenfunction:: fastscapelib::set_node_status_grid_boundaries
+   :project: fastscapelib
+
 Sinks (depressions)
 -------------------
 
