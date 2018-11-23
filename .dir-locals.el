@@ -18,4 +18,6 @@
   (flycheck-clang-standard-library . "libc++")
   (flycheck-clang-warnings . ("everything" "no-pragma-once-outside-header" "no-c++98-compat"))
   (indent-tabs-mode . nil)
-  (c-basic-offset . 4)))
+  (c-basic-offset . 4)
+  (c-file-offsets
+   (innamespace . -))))
