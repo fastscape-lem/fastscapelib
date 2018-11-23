@@ -16,5 +16,6 @@
   (flycheck-gcc-language-standard . "c++14")
   (flycheck-clang-language-standard . "c++14")
   (flycheck-clang-standard-library . "libc++")
+  (flycheck-clang-warnings . ("everything" "no-pragma-once-outside-header" "no-c++98-compat"))
   (indent-tabs-mode . nil)
   (c-basic-offset . 4)))
