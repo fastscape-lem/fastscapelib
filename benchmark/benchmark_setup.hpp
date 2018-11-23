@@ -13,7 +13,12 @@
 #include "xtensor/xrandom.hpp"
 #include "xtensor/xview.hpp"
 
+#include "fastscapelib/boundary.hpp"
 #include "fastscapelib/utils.hpp"
+
+
+namespace fs = fastscapelib;
+
 
 namespace benchmark_setup
 {
@@ -149,7 +154,7 @@ struct FastscapeSetupBase
     double dx = 100.;
     double dy = 100.;
     xt::xtensor<T, 2> elevation;
-    xt::xtensor<bool, 2> active_nodes;
+    xt::xtensor<fs::NodeStatus, 2> node_status;
     xt::xtensor<index_t, 1> receivers;
     xt::xtensor<T, 1> dist2receivers;
     xt::xtensor<index_t, 1> ndonors;
@@ -163,8 +168,12 @@ struct FastscapeSetupBase
 
         elevation = topo.get_elevation();
 
-        active_nodes = xt::ones<bool>(elevation.shape());
-        set_fixed_boundary_faces(active_nodes);
+        node_status = fs::create_node_status(elevation.shape());
+        fs::set_node_status_grid_boundaries(node_status,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY);
 
         nnodes = n * n;
 

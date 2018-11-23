@@ -79,7 +79,7 @@ namespace benchmark_bedrock_channel
             auto s = bms::FastscapeSetupBase<bms::SurfaceType::cone, T>(state.range(0));
 
             fs::compute_receivers_d8(s.receivers, s.dist2receivers,
-                                     s.elevation, s.active_nodes,
+                                     s.elevation, s.node_status,
                                      s.dx, s.dy);
             fs::compute_donors(s.ndonors, s.donors, s.receivers);
             fs::compute_stack(s.stack, s.ndonors,
