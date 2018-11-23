@@ -48,13 +48,13 @@ template<class T>
 void compute_receivers_d8_py(xt::pytensor<index_t, 1>& receivers,
                              xt::pytensor<T, 1>& dist2receivers,
                              const xt::pytensor<T, 2>& elevation,
-                             const xt::pytensor<bool, 2>& active_nodes,
+                             const xt::pytensor<fs::NodeStatus, 2>& node_status,
                              double dx,
                              double dy)
 {
     py::gil_scoped_release release;
     fs::compute_receivers_d8(receivers, dist2receivers,
-                             elevation, active_nodes,
+                             elevation, node_status,
                              dx, dy);
 }
 
@@ -90,11 +90,11 @@ index_t compute_basins_py(xt::pytensor<index_t, 1>& basins,
 
 index_t find_pits_py(xt::pytensor<index_t, 1>& pits,
                      const xt::pytensor<index_t, 1>& outlets_or_pits,
-                     const xt::pytensor<bool, 2>& active_nodes,
+                     const xt::pytensor<fs::NodeStatus, 2>& node_status,
                      index_t nbasins)
 {
     py::gil_scoped_release release;
-    return fs::find_pits(pits, outlets_or_pits, active_nodes, nbasins);
+    return fs::find_pits(pits, outlets_or_pits, node_status, nbasins);
 }
 
 

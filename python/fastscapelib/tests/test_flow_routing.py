@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 import fastscapelib
+from fastscapelib import NodeStatus
 
 
 @pytest.fixture(scope='session')
@@ -38,11 +39,14 @@ def test_compute_receivers_d8():
                           [0.29,  0.82,  0.09,  0.88]],
                          dtype='d')
 
-    active_nodes = np.array([[False, False, False, False],
-                             [False, True,  True,  False],
-                             [False, True,  True,  False],
-                             [False, False, False, False]],
-                            dtype='bool')
+    node_status = fastscapelib.create_node_status(elevation.shape)
+    fastscapelib.set_node_status_grid_boundaries(
+        node_status,
+        NodeStatus.FIXED_VALUE_BOUNDARY,
+        NodeStatus.FIXED_VALUE_BOUNDARY,
+        NodeStatus.FIXED_VALUE_BOUNDARY,
+        NodeStatus.FIXED_VALUE_BOUNDARY
+    )
 
     receivers = np.ones((16), dtype=np.intp) * -1
     expected_receivers = np.array([0,  1,  2,  3,
@@ -56,8 +60,9 @@ def test_compute_receivers_d8():
                                         0., 0., 1., 0.,
                                         0., 0., 0., 0.,],
                                        dtype='d')
+
     fastscapelib.compute_receivers_d8_d(receivers, dist2receivers,
-                                        elevation, active_nodes,
+                                        elevation, node_status,
                                         1., 1.)
 
     np.testing.assert_array_equal(receivers, expected_receivers)
@@ -109,11 +114,14 @@ def test_find_pits():
                                 4,  7,  8,  11,
                                 12, 13, 14, 15,
                                 9,  -1, -1, -1], dtype=np.intp)
-    active_nodes = np.array([[False, False, False, False],
-                             [False, True,  True,  False],
-                             [False, True,  True,  False],
-                             [False, False, False, False]],
-                            dtype='bool')
+    node_status = fastscapelib.create_node_status((4, 4))
+    fastscapelib.set_node_status_grid_boundaries(
+        node_status,
+        NodeStatus.FIXED_VALUE_BOUNDARY,
+        NodeStatus.FIXED_VALUE_BOUNDARY,
+        NodeStatus.FIXED_VALUE_BOUNDARY,
+        NodeStatus.FIXED_VALUE_BOUNDARY
+    )
     pits = np.ones(16, dtype=np.intp) * -1
 
     expected_pits = np.array([9,  -1, -1, -1,
@@ -123,7 +131,7 @@ def test_find_pits():
                              dtype=np.intp)
 
     npits = fastscapelib.find_pits(pits, outlets_or_pits,
-                                   active_nodes, nbasins)
+                                   node_status, nbasins)
 
     assert npits == 1
     np.testing.assert_array_equal(pits, expected_pits)

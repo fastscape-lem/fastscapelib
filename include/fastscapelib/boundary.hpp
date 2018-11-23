@@ -119,4 +119,33 @@ void set_node_status_grid_boundaries(NS& node_status,
 
 }
 
+
+namespace detail
+{
+
+
+/**
+ * A very weak (but efficient) way to check for looped boundary
+ * conditions on rows.
+ */
+template<class N>
+bool is_rows_looped_boundaries(N&& node_status)
+{
+    return node_status(0, 1) == fastscapelib::NodeStatus::LOOPED_BOUNDARY;
+}
+
+
+/**
+ * A very weak (but efficient) way to check for looped boundary
+ * conditions on cols.
+ */
+template<class N>
+bool is_cols_looped_boundaries(N&& node_status)
+{
+    return node_status(1, 0) == fastscapelib::NodeStatus::LOOPED_BOUNDARY;
+}
+
+
+}  // namespace detail
+
 }  // namespace fastscapelib

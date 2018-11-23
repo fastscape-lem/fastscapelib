@@ -4,6 +4,7 @@
 #include "xtensor/xtensor.hpp"
 
 #include "fastscapelib/utils.hpp"
+#include "fastscapelib/boundary.hpp"
 #include "fastscapelib/flow_routing.hpp"
 
 
@@ -31,43 +32,91 @@ TEST(flow_routing, compute_receivers_d8)
 {
     xt::xtensor<double, 2> elevation
         {{0.82,  0.16,  0.14,  0.20},
-         {0.71,  0.97,  0.41,  0.09},
+         {0.71,  0.97,  0.41,  0.02},
          {0.49,  0.01,  0.19,  0.38},
-         {0.29,  0.82,  0.09,  0.88}};
+         {0.29,  0.82,  0.05,  0.88}};
 
-    xt::xtensor<bool, 2> active_nodes
-       {{false,  false,  false,  false},
-        {false,  true,   true,   false},
-        {false,  true,   true,   false},
-        {false,  false,  false,  false}};
+    xt::xtensor<fs::NodeStatus, 2> node_status = xt::zeros<fs::NodeStatus>({4, 4});
 
-    xt::xtensor<index_t, 1> receivers = xt::ones<index_t>({16}) * -1;
+    xt::xtensor<index_t, 1> receivers = xt::empty<index_t>({16});
+    xt::xtensor<double, 1> dist2receivers = xt::empty<double>({16});
 
-    xt::xtensor<index_t, 1> expected_receivers
-        { 0,  1,  2,  3,
-          4,  9,  7,  7,
-          8,  9,  9, 11,
-         12, 13, 14, 15};
+    {
+        SCOPED_TRACE("Test all fixed value grid boundaries");
 
-    xt::xtensor<double, 1> dist2receivers = xt::ones<double>({16}) * -1.;
+        fs::set_node_status_grid_boundaries(node_status,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY);
 
-    xt::xtensor<double, 1> expected_dist2receivers
-        {0.,  0.,  0.,  0.,
-         0.,  1.,  1.,  0.,
-         0.,  0.,  1.,  0.,
-         0.,  0.,  0.,  0.};
+        xt::xtensor<index_t, 1> expected_receivers
+            { 0,  1,  2,  3,
+              4,  9,  7,  7,
+              8,  9,  9,  11,
+              12, 13, 14, 15};
 
-    fs::compute_receivers_d8(receivers, dist2receivers,
-                             elevation, active_nodes,
-                             1., 1.);
+        xt::xtensor<double, 1> expected_dist2receivers
+            {0.,  0.,  0.,  0.,
+             0.,  1.,  1.,  0.,
+             0.,  0.,  1.,  0.,
+             0.,  0.,  0.,  0.};
 
-    //TODO: test with different dx, dy
-    //TODO: test case with diagonal receivers (check dist2receivers)
-    //TODO: -> ideally, test case should include all 8 directions
-    //      (maybe create fixtures with transpose)
+        fs::compute_receivers_d8(receivers, dist2receivers,
+                                 elevation, node_status,
+                                 1., 1.);
 
-    EXPECT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
-    EXPECT_TRUE(xt::allclose(dist2receivers, expected_dist2receivers));
+        //TODO: test with different dx, dy
+        //TODO: test case with diagonal receivers (check dist2receivers)
+        //TODO: -> ideally, test case should include all 8 directions
+        //      (maybe create fixtures with transpose)
+
+        EXPECT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
+        EXPECT_TRUE(xt::allclose(dist2receivers, expected_dist2receivers));
+    }
+    {
+        SCOPED_TRACE("Test looped grid boundaries on cols");
+
+        fs::set_node_status_grid_boundaries(node_status,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                            fs::NodeStatus::LOOPED_BOUNDARY,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                            fs::NodeStatus::LOOPED_BOUNDARY);
+
+        xt::xtensor<index_t, 1> expected_receivers
+            { 0,  1,  2,  3,
+              7,  9,  7,  7,
+              9,  9,  9,  7,
+              12, 13, 14, 15};
+
+        fs::compute_receivers_d8(receivers, dist2receivers,
+                                 elevation, node_status,
+                                 1., 1.);
+
+        EXPECT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
+    }
+    {
+        SCOPED_TRACE("Test looped grid boundaries on rows");
+
+        fs::set_node_status_grid_boundaries(node_status,
+                                            fs::NodeStatus::LOOPED_BOUNDARY,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                            fs::NodeStatus::LOOPED_BOUNDARY,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY);
+
+        xt::xtensor<index_t, 1> expected_receivers
+            { 0,  14, 14, 3,
+              4,  9,  7,  7,
+              8,  9,  9,  11,
+              12, 9,  9,  15};
+
+        fs::compute_receivers_d8(receivers, dist2receivers,
+                                 elevation, node_status,
+                                 1., 1.);
+
+        EXPECT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
+    }
+
 }
 
 
@@ -154,18 +203,20 @@ TEST(flow_routing, find_pits)
     xt::xtensor<index_t, 1> outlets
         {0, 1, 2, 3, 4, 7, 8, 11, 12, 13, 14, 15, 9, -1, -1, -1};
 
-    xt::xtensor<bool, 2> active_nodes
-       {{false,  false,  false,  false},
-        {false,  true,   true,   false},
-        {false,  true,   true,   false},
-        {false,  false,  false,  false}};
+    xt::xtensor<fs::NodeStatus, 2> node_status = xt::zeros<fs::NodeStatus>({4, 4});
+
+    fs::set_node_status_grid_boundaries(node_status,
+                                        fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                        fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                        fs::NodeStatus::FIXED_VALUE_BOUNDARY,
+                                        fs::NodeStatus::FIXED_VALUE_BOUNDARY);
 
     xt::xtensor<index_t, 1> pits = xt::ones<index_t>({16}) * -1;
 
     xt::xtensor<index_t, 1> expected_pits
     {9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
-    index_t npits = fs::find_pits(pits, outlets, active_nodes, nbasins);
+    index_t npits = fs::find_pits(pits, outlets, node_status, nbasins);
 
     EXPECT_EQ(npits, 1);
     EXPECT_TRUE(xt::all(xt::equal(pits, expected_pits)));

@@ -9,6 +9,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
 #include <limits>
 #include <type_traits>
 
@@ -18,6 +19,7 @@
 
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/consts.hpp"
+#include "fastscapelib/boundary.hpp"
 
 
 namespace fastscapelib
@@ -62,20 +64,22 @@ void add2stack(index_t& nstack,
 /**
  * compute_receivers_d8 implementation.
  */
-template<class R, class D, class E, class A>
+template<class R, class D, class E, class N>
 void compute_receivers_d8_impl(R&& receivers,
                                D&& dist2receivers,
                                E&& elevation,
-                               A&& active_nodes,
+                               N&& node_status,
                                double dx,
                                double dy)
 {
-    using elev_t = typename std::decay_t<E>::value_type;
     const auto d8_dists = detail::get_d8_distances(dx, dy);
 
     const auto elev_shape = elevation.shape();
-    const auto nrows = static_cast<index_t>(elev_shape[0]);
-    const auto ncols = static_cast<index_t>(elev_shape[1]);
+    const auto nrows = static_cast<sshape_t>(elev_shape[0]);
+    const auto ncols = static_cast<sshape_t>(elev_shape[1]);
+
+    bool loop_rows = fastscapelib::detail::is_rows_looped_boundaries(node_status);
+    bool loop_cols = fastscapelib::detail::is_cols_looped_boundaries(node_status);
 
     for(index_t r=0; r<nrows; ++r)
     {
@@ -86,7 +90,7 @@ void compute_receivers_d8_impl(R&& receivers,
             receivers(inode) = inode;
             dist2receivers(inode) = 0.;
 
-            if(!active_nodes(r, c))
+            if(node_status(r, c) == NodeStatus::FIXED_VALUE_BOUNDARY)
             {
                 continue;
             }
@@ -95,12 +99,30 @@ void compute_receivers_d8_impl(R&& receivers,
 
             for(std::size_t k=1; k<=8; ++k)
             {
-                const index_t kr = r + fastscapelib::consts::d8_row_offsets[k];
-                const index_t kc = c + fastscapelib::consts::d8_col_offsets[k];
+                index_t kr = r + fastscapelib::consts::d8_row_offsets[k];
+                index_t kc = c + fastscapelib::consts::d8_col_offsets[k];
 
                 if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc))
                 {
-                    continue;
+                    if(node_status(r, c) == NodeStatus::LOOPED_BOUNDARY)
+                    {
+                        if(loop_rows)
+                        {
+                            kr = fastscapelib::detail::mod(kr, nrows);
+                        }
+                        if(loop_cols)
+                        {
+                            kc = fastscapelib::detail::mod(kc, ncols);
+                        }
+                        if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc))
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
                 }
 
                 const index_t ineighbor = kr * ncols + kc;
@@ -199,20 +221,20 @@ index_t compute_basins_impl(B&& basins,
 /**
  * find_pits implementation.
  */
-template<class P, class O, class A>
+template<class P, class O, class N>
 index_t find_pits_impl(P&& pits,
                        O&& outlets_or_pits,
-                       A&& active_nodes,
+                       N&& node_status,
                        index_t nbasins)
 {
     index_t ipit = 0;
-    const auto active_nodes_flat = xt::flatten(active_nodes);
+    const auto node_status_flat = xt::flatten(node_status);
 
     for(index_t ibasin=0; ibasin<nbasins; ++ibasin)
     {
         const index_t inode = outlets_or_pits(ibasin);
 
-        if(active_nodes_flat(inode))
+        if(node_status_flat(inode) != fastscapelib::NodeStatus::FIXED_VALUE_BOUNDARY)
         {
             pits(ipit) = inode;
             ++ipit;
@@ -277,25 +299,25 @@ void compute_drainage_area_impl(D&& drainage_area,
  *     Distance to receiver at grid node.
  * @param elevation : ``[intent=in, shape=(nrows, ncols)]``
  *     Topographic elevation at grid node
- * @param active_nodes : ``[intent=in, shape=(nrows, ncols)]``
- *     Boolean array for boundaries
+ * @param node_status : ``[intent=in, shape=(nrows, ncols)]``
+ *     Node status (core or fixed/gradient/looped boundary)
  * @param dx : ``[intent=in]``
  *     Grid spacing in x
  * @param dy : ``[intent=in]``
  *     Grid spacing in y
  */
-template<class R, class D, class E, class A>
+template<class R, class D, class E, class N>
 void compute_receivers_d8(xtensor_t<R>& receivers,
                           xtensor_t<D>& dist2receivers,
                           const xtensor_t<E>& elevation,
-                          const xtensor_t<A>& active_nodes,
+                          const xtensor_t<N>& node_status,
                           double dx,
                           double dy)
 {
     detail::compute_receivers_d8_impl(receivers.derived_cast(),
                                       dist2receivers.derived_cast(),
                                       elevation.derived_cast(),
-                                      active_nodes.derived_cast(),
+                                      node_status.derived_cast(),
                                       dx, dy);
 }
 
@@ -370,7 +392,7 @@ void compute_stack(xtensor_t<S>& stack,
  * catchment outlets (or pits) and returns the total number of
  * catchments found inside the domain.
  *
- * @param basins: ``[intent=out, shape=(nnodes)]``
+ * @param basins : ``[intent=out, shape=(nnodes)]``
  *     Basin id at grid node.
  * @param outlets_or_pits : ``[intent=out, shape=(nnodes)]``
  *     Grid node index of the outlet (or pit)
@@ -400,7 +422,7 @@ index_t compute_basins(xtensor_t<B>& basins,
 /**
  * Find grid/mesh nodes that are pits.
  *
- * @param pits: ``[intent=out, shape=(nnodes)]``
+ * @param pits : ``[intent=out, shape=(nnodes)]``
  *     Grid node index of the pit for pits in [0,1,...,npits-1].
  * @param outlets_or_pits : ``[intent=in, shape=(nnodes)]``
  *     Grid node index of the outlet (or pit)

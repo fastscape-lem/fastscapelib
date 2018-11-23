@@ -45,6 +45,16 @@ bool in_bounds(const S& shape, index_t row, index_t col)
 }
 
 
+/**
+ * modulus (note: k % n is division remainder)
+ */
+template<class T>
+T mod(T k, T n)
+{
+    return ((k %= n) < 0) ? k+n : k;
+}
+
+
 }  // namespace detail
 
 }  // namespace fastscapelib
