@@ -47,7 +47,10 @@ Defined in ``fastscapelib/boundary.hpp``
 .. doxygenfunction:: fastscapelib::create_node_status
    :project: fastscapelib
 
-.. doxygenfunction:: fastscapelib::set_node_status_grid_boundaries
+.. doxygenfunction:: fastscapelib::set_node_status_grid_boundaries(N&, NodeStatus)
+   :project: fastscapelib
+
+.. doxygenfunction:: fastscapelib::set_node_status_grid_boundaries(N&, NodeStatus, NodeStatus, NodeStatus, NodeStatus)
    :project: fastscapelib
 
 Sinks (depressions)

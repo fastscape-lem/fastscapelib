@@ -74,8 +74,8 @@ auto create_node_status(S& shape)
  * @throws std::invalid_argument
  *     If looped boundary conditions are not symmetrical.
  */
-template<class NS>
-void set_node_status_grid_boundaries(NS& node_status,
+template<class N>
+void set_node_status_grid_boundaries(N& node_status,
                                      NodeStatus top,
                                      NodeStatus right,
                                      NodeStatus bottom,
@@ -117,6 +117,27 @@ void set_node_status_grid_boundaries(NS& node_status,
     if (priority[left]   < priority[bottom]) node_status(last_row, 0) = bottom;
     if (priority[left]   < priority[top])    node_status(0, 0) = top;
 
+}
+
+
+/**
+ * Helper function for setting node status at each side of the grid
+ * boundaries.
+ *
+ * @param node_status : ``[intent=inout, shape=(nrows, ncols)]``
+ *     Array of node status on the grid.
+ * @param border :
+ *     Node status to set on all grid sides.
+ */
+template<class N>
+void set_node_status_grid_boundaries(N& node_status,
+                                     NodeStatus border)
+{
+    auto row_bound = xt::view(node_status, xt::keep(0, -1), xt::all());
+    row_bound = border;
+
+    auto col_bound = xt::view(node_status, xt::all(), xt::keep(0, -1));
+    col_bound = border;
 }
 
 

@@ -27,6 +27,24 @@ TEST(boundary, set_node_status_grid_boundaries)
     auto node_status = xt::empty<fs::NodeStatus>({5, 5});
 
     {
+        SCOPED_TRACE("test basic logic single border status");
+
+        fs::set_node_status_grid_boundaries(node_status,
+                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY);
+
+        auto top_bottom_v = xt::view(node_status, xt::keep(0, -1), xt::all());
+
+        EXPECT_TRUE(
+            xt::all(xt::equal(top_bottom_v, fs::NodeStatus::FIXED_VALUE_BOUNDARY))
+            );
+
+        auto left_right_v = xt::view(node_status, xt::all(), xt::keep(0, -1));
+
+        EXPECT_TRUE(
+            xt::all(xt::equal(left_right_v, fs::NodeStatus::FIXED_VALUE_BOUNDARY))
+            );
+    }
+    {
         SCOPED_TRACE("test basic logic");
 
         fs::set_node_status_grid_boundaries(node_status,
@@ -47,7 +65,6 @@ TEST(boundary, set_node_status_grid_boundaries)
             xt::all(xt::equal(left_right_v, fs::NodeStatus::FIXED_VALUE_BOUNDARY))
             );
     }
-
     {
         SCOPED_TRACE("test exception non-symmetrical looped boundaries");
 

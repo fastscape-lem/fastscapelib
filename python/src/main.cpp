@@ -185,7 +185,15 @@ PYBIND11_MODULE(_fastscapelib_py, m)
           "Create an array and set all of its elements to NodeStatus.CORE_NODE");
 
     m.def("set_node_status_grid_boundaries",
-          &fs::set_node_status_grid_boundaries<xt::pytensor<fs::NodeStatus, 2>>,
+          [](xt::pytensor<fs::NodeStatus, 2> node_status,
+             fs::NodeStatus top,
+             fs::NodeStatus right,
+             fs::NodeStatus bottom,
+             fs::NodeStatus left)
+          {
+              return fs::set_node_status_grid_boundaries(
+                  node_status, top, right, bottom, left);
+          },
           "Helper function for setting node status at each side of the "
           "grid boundaries");
 

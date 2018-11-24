@@ -170,9 +170,6 @@ struct FastscapeSetupBase
 
         node_status = fs::create_node_status(elevation.shape());
         fs::set_node_status_grid_boundaries(node_status,
-                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
-                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
-                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
                                             fs::NodeStatus::FIXED_VALUE_BOUNDARY);
 
         nnodes = n * n;

@@ -45,9 +45,6 @@ TEST(flow_routing, compute_receivers_d8)
         SCOPED_TRACE("Test all fixed value grid boundaries");
 
         fs::set_node_status_grid_boundaries(node_status,
-                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
-                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
-                                            fs::NodeStatus::FIXED_VALUE_BOUNDARY,
                                             fs::NodeStatus::FIXED_VALUE_BOUNDARY);
 
         xt::xtensor<index_t, 1> expected_receivers
@@ -206,9 +203,6 @@ TEST(flow_routing, find_pits)
     xt::xtensor<fs::NodeStatus, 2> node_status = xt::zeros<fs::NodeStatus>({4, 4});
 
     fs::set_node_status_grid_boundaries(node_status,
-                                        fs::NodeStatus::FIXED_VALUE_BOUNDARY,
-                                        fs::NodeStatus::FIXED_VALUE_BOUNDARY,
-                                        fs::NodeStatus::FIXED_VALUE_BOUNDARY,
                                         fs::NodeStatus::FIXED_VALUE_BOUNDARY);
 
     xt::xtensor<index_t, 1> pits = xt::ones<index_t>({16}) * -1;
