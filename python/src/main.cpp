@@ -14,6 +14,8 @@
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/fastscapelib.hpp"
 
+#include "meta.hpp"
+
 
 namespace py = pybind11;
 using namespace pybind11::literals;  // use the `_a` literal
@@ -169,6 +171,12 @@ PYBIND11_MODULE(_fastscapelib_py, m)
     /*
      * boundary
      */
+    using grid_boundary_py = fs::grid_boundary<fs::rasterG, fs::pytensorC>;
+
+    py::class_<grid_boundary_py>(m, "GridBoundary")
+        .def(py::init<const std::vector<std::size_t>&>())
+        .def_readwrite("node_status", &grid_boundary_py::node_status);
+
     py::enum_<fs::NodeStatus>(m, "NodeStatus", py::arithmetic(),
                               "Status of grid/mesh nodes either inside the domain "
                               "or on the domain boundary.")

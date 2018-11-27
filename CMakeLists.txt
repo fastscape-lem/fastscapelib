@@ -99,6 +99,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/fastscapelib.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/consts.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/meta.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/boundary.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sinks.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_routing.hpp

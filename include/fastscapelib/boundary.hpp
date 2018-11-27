@@ -10,6 +10,7 @@
 #include "xtensor/xbuilder.hpp"
 #include "xtensor/xview.hpp"
 
+#include "fastscapelib/meta.hpp"
 #include "fastscapelib/utils.hpp"
 
 
@@ -27,6 +28,33 @@ enum class NodeStatus : std::uint8_t
     FIXED_VALUE_BOUNDARY = 1,
     FIXED_GRADIENT_BOUNDARY = 2,
     LOOPED_BOUNDARY = 3
+};
+
+
+template <class G, class C = xtensorC>
+class grid_boundary
+{
+private:
+
+    using T = std::underlying_type_t<NodeStatus>;
+    using X = xt_container_t<C, T, detail::grid_nodes_ndim<G>::value>;
+
+public:
+
+    X node_status;
+
+    template <class S>
+    grid_boundary(const S& shape)
+    {
+        node_status = xt::zeros<T>(shape);
+    }
+
+    grid_boundary(std::initializer_list<std::size_t> shape)
+    {
+        node_status = xt::zeros<T>(shape);
+    }
+
+    ~grid_boundary() = default;
 };
 
 
