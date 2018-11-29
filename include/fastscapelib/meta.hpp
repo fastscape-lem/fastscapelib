@@ -41,16 +41,11 @@ namespace detail
  * @tparam G Grid type selector.
  */
 template <class G>
-struct grid_nodes_ndim
-{
-    constexpr static std::size_t value = 1;
-};
+constexpr std::size_t grid_nodes_ndim = 1;
+
 
 template <>
-struct grid_nodes_ndim<rasterG>
-{
-    constexpr static std::size_t value = 2;
-};
+constexpr std::size_t grid_nodes_ndim<rasterG> = 2;
 
 
 } // namespace detail
