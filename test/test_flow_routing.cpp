@@ -3,12 +3,13 @@
 #include "gtest/gtest.h"
 #include "xtensor/xtensor.hpp"
 
-#include "fastscapelib/utils.hpp"
+#include "fastscapelib/xtensor_utils.hpp"
 #include "fastscapelib/boundary.hpp"
 #include "fastscapelib/flow_routing.hpp"
 
 
 namespace fs = fastscapelib;
+using index_t = fs::index_t;
 
 
 TEST(flow_routing, get_d8_distances)

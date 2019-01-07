@@ -10,11 +10,12 @@
 #include "xtensor/xmath.hpp"
 
 #include "fastscapelib/bedrock_channel.hpp"
-#include "fastscapelib/utils.hpp"
+#include "fastscapelib/xtensor_utils.hpp"
 
 
 using namespace xt::placeholders;
 namespace fs = fastscapelib;
+using index_t = fs::index_t;
 
 
 /**
@@ -29,7 +30,7 @@ namespace fs = fastscapelib;
 template<class K>
 struct ChannelProfile1D
 {
-    int nnodes = 101;
+    long int nnodes = 101;
     double spacing = 300.;
     double x0 = 300.;
 

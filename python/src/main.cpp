@@ -11,16 +11,17 @@
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
 
-#include "fastscapelib/utils.hpp"
+#include "fastscapelib/xtensor_utils.hpp"
 #include "fastscapelib/fastscapelib.hpp"
 
-#include "meta.hpp"
+#include "xtensor_python_utils.hpp"
 
 
 namespace py = pybind11;
 using namespace pybind11::literals;  // use the `_a` literal
 
 namespace fs = fastscapelib;
+using index_t = fs::index_t;
 
 
 py::dict get_versions()
@@ -171,7 +172,7 @@ PYBIND11_MODULE(_fastscapelib_py, m)
     /*
      * boundary
      */
-    using grid_boundary_py = fs::grid_boundary<fs::rasterG, fs::pytensorC>;
+    using grid_boundary_py = fs::grid_boundary<fs::grid_type::raster, fs::array_type::pytensor>;
 
     py::class_<grid_boundary_py>(m, "GridBoundary")
         .def(py::init<const std::vector<std::size_t>&>())

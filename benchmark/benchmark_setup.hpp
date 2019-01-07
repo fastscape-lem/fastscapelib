@@ -14,10 +14,11 @@
 #include "xtensor/xview.hpp"
 
 #include "fastscapelib/boundary.hpp"
-#include "fastscapelib/utils.hpp"
+#include "fastscapelib/xtensor_utils.hpp"
 
 
 namespace fs = fastscapelib;
+using index_t = fs::index_t;
 
 
 namespace benchmark_setup

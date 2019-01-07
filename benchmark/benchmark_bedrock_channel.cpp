@@ -9,6 +9,7 @@
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xrandom.hpp"
 
+#include "fastscapelib/xtensor_utils.hpp"
 #include "fastscapelib/flow_routing.hpp"
 #include "fastscapelib/bedrock_channel.hpp"
 
@@ -17,6 +18,7 @@
 
 namespace fs = fastscapelib;
 namespace bms = benchmark_setup;
+using index_t = fs::index_t;
 
 
 namespace fastscapelib

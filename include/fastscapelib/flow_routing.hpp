@@ -17,6 +17,7 @@
 #include "xtensor/xview.hpp"
 #include "xtensor/xmanipulation.hpp"
 
+#include "fastscapelib/xtensor_utils.hpp"
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/consts.hpp"
 #include "fastscapelib/boundary.hpp"
@@ -99,22 +100,25 @@ void compute_receivers_d8_impl(R&& receivers,
 
             for(std::size_t k=1; k<=8; ++k)
             {
+                // TODO: DRY maybe write a function
+                // tuple get_neighbor(r, c, k, shape, node_status(r, c))
+                // return (kr, kc, in_bounds)
                 index_t kr = r + fastscapelib::consts::d8_row_offsets[k];
                 index_t kc = c + fastscapelib::consts::d8_col_offsets[k];
 
-                if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc))
+                if(!fastscapelib::utils::in_bounds(elev_shape, kr, kc))
                 {
                     if(node_status(r, c) == NodeStatus::LOOPED_BOUNDARY)
                     {
                         if(loop_rows)
                         {
-                            kr = fastscapelib::detail::mod(kr, nrows);
+                            kr = fastscapelib::utils::mod(kr, nrows);
                         }
                         if(loop_cols)
                         {
-                            kc = fastscapelib::detail::mod(kc, ncols);
+                            kc = fastscapelib::utils::mod(kc, ncols);
                         }
-                        if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc))
+                        if(!fastscapelib::utils::in_bounds(elev_shape, kr, kc))
                         {
                             continue;
                         }

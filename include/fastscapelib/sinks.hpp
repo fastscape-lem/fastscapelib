@@ -12,9 +12,13 @@
 #include <type_traits>
 
 #include "xtensor/xtensor.hpp"
+#include "xtensor/xmath.hpp"
+#include "xtensor/xoperation.hpp"
 
+#include "fastscapelib/xtensor_utils.hpp"
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/consts.hpp"
+#include "fastscapelib/boundary.hpp"
 
 
 namespace fastscapelib
@@ -62,35 +66,28 @@ using node_queue = std::queue<node_container<T>>;
 /**
  * Initialize priority flood algorithms.
  *
- * Add border grid nodes to the priority queue and mark them as
+ * Add boundary grid nodes to the priority queue and mark them as
  * resolved.
  */
-template<class E, class elev_t = typename std::decay_t<E>::value_type>
+template<class E, class N, class elev_t = typename std::decay_t<E>::value_type>
 void init_pflood(E&& elevation,
+                 N&& node_status,
                  xt::xtensor<bool, 2>& closed,
                  node_pr_queue<elev_t>& open)
 {
-    auto elev_shape = elevation.shape();
-
-    index_t nrows = static_cast<index_t>(elev_shape[0]);
-    index_t ncols = static_cast<index_t>(elev_shape[1]);
-
     auto place_node = [&](index_t row, index_t col)
     {
         open.emplace(node_container<elev_t>(row, col, elevation(row, col)));
         closed(row, col) = true;
     };
 
-    for(index_t c=0; c<ncols; ++c)
-    {
-        place_node(0, c);
-        place_node(nrows-1, c);
-    }
+    auto boundary_nodes = xt::argwhere(
+        xt::equal(node_status, NodeStatus::FIXED_VALUE_BOUNDARY));
 
-    for(index_t r=1; r<nrows-1; ++r)
+    for (auto&& node : boundary_nodes)
     {
-        place_node(r, 0);
-        place_node(r, ncols-1);
+        place_node(static_cast<index_t>(node[0]),
+                   static_cast<index_t>(node[1]));
     }
 }
 
@@ -98,8 +95,8 @@ void init_pflood(E&& elevation,
 /**
  * fill_sinks_flat implementation.
  */
-template<class E>
-void fill_sinks_flat_impl(E&& elevation)
+template<class E, class N>
+void fill_sinks_flat_impl(E&& elevation, N&& node_status)
 {
     using elev_t = typename std::decay_t<E>::value_type;
     auto elev_shape = elevation.shape();
@@ -107,7 +104,7 @@ void fill_sinks_flat_impl(E&& elevation)
     node_pr_queue<elev_t> open;
     xt::xtensor<bool, 2> closed = xt::zeros<bool>(elev_shape);
 
-    init_pflood(elevation, closed, open);
+    init_pflood(elevation, node_status, closed, open);
 
     while(open.size()>0)
     {
@@ -116,10 +113,10 @@ void fill_sinks_flat_impl(E&& elevation)
 
         for(unsigned short k=1; k<=8; ++k)
         {
-            index_t kr = inode.r + fastscapelib::consts::d8_row_offsets[k];
-            index_t kc = inode.c + fastscapelib::consts::d8_col_offsets[k];
+            index_t kr = inode.r + consts::d8_row_offsets[k];
+            index_t kc = inode.c + consts::d8_col_offsets[k];
 
-            if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc)) { continue; }
+            if(!utils::in_bounds(elev_shape, kr, kc)) { continue; }
             if(closed(kr, kc)) { continue; }
 
             elevation(kr, kc) = std::max(elevation(kr, kc), inode.value);
@@ -133,8 +130,8 @@ void fill_sinks_flat_impl(E&& elevation)
 /**
  * fill_sinks_sloped implementation.
  */
-template<class E>
-void fill_sinks_sloped_impl(E&& elevation)
+template<class E, class N>
+void fill_sinks_sloped_impl(E&& elevation, N&& node_status)
 {
     using elev_t = typename std::decay_t<E>::value_type;
     auto elev_shape = elevation.shape();
@@ -143,7 +140,7 @@ void fill_sinks_sloped_impl(E&& elevation)
     node_queue<elev_t> pit;
     xt::xtensor<bool, 2> closed = xt::zeros<bool>(elev_shape);
 
-    init_pflood(elevation, closed, open);
+    init_pflood(elevation, node_status, closed, open);
 
     while(!open.empty() || !pit.empty())
     {
@@ -166,10 +163,10 @@ void fill_sinks_sloped_impl(E&& elevation)
 
         for(unsigned short k=1; k<=8; ++k)
         {
-            index_t kr = inode.r + fastscapelib::consts::d8_row_offsets[k];
-            index_t kc = inode.c + fastscapelib::consts::d8_col_offsets[k];
+            index_t kr = inode.r + consts::d8_row_offsets[k];
+            index_t kc = inode.c + consts::d8_col_offsets[k];
 
-            if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc)) { continue; }
+            if(!utils::in_bounds(elev_shape, kr, kc)) { continue; }
             if(closed(kr, kc)) { continue; }
 
             if(elevation(kr, kc) <= elev_tiny_step)
@@ -208,7 +205,15 @@ void fill_sinks_sloped_impl(E&& elevation)
 template<class E>
 void fill_sinks_flat(xtensor_t<E>& elevation)
 {
-    detail::fill_sinks_flat_impl(elevation.derived_cast());
+    auto& _elevation = elevation.derived_cast();
+
+    xt::xtensor<NodeStatus, 2> node_status = xt::zeros<NodeStatus>(
+        _elevation.shape());
+
+    fastscapelib::set_node_status_grid_boundaries(
+        node_status, NodeStatus::FIXED_VALUE_BOUNDARY);
+
+    detail::fill_sinks_flat_impl(_elevation, node_status);
 }
 
 
@@ -232,7 +237,15 @@ void fill_sinks_flat(xtensor_t<E>& elevation)
 template<class E>
 void fill_sinks_sloped(xtensor_t<E>& elevation)
 {
-    detail::fill_sinks_sloped_impl(elevation.derived_cast());
+    auto& _elevation = elevation.derived_cast();
+
+    xt::xtensor<NodeStatus, 2> node_status = xt::zeros<NodeStatus>(
+        _elevation.shape());
+
+    fastscapelib::set_node_status_grid_boundaries(
+        node_status, NodeStatus::FIXED_VALUE_BOUNDARY);
+
+    detail::fill_sinks_sloped_impl(_elevation, node_status);
 }
 
 }  // namespace fastscapelib

@@ -9,29 +9,19 @@
 
 #include "xtensor/xcontainer.hpp"
 
-
-// type used for array indexers
-using index_t = std::ptrdiff_t;
-
-// type used when working with both shapes or sizes (unsigned) and indexers (signed)
-using sshape_t = std::make_signed_t<std::size_t>;
-
-// type used as an alias to xtensor's xexpression
-// TODO: use xexpression shaped when it's ready (see xtensor GH #994)
-template<class E>
-using xtensor_t = xt::xexpression<E>;
+#include "fastscapelib/xtensor_utils.hpp"
 
 
 namespace fastscapelib
 {
 
-namespace detail
+
+namespace utils
 {
 
 
 /**
- * @brief Return true if a given (row, col) index is in bounds (false
- *        otherwise).
+ * Return true if a given (row, col) index is in bounds (false otherwise).
  */
 template<class S>
 bool in_bounds(const S& shape, index_t row, index_t col)
@@ -46,7 +36,7 @@ bool in_bounds(const S& shape, index_t row, index_t col)
 
 
 /**
- * modulus (note: k % n is division remainder)
+ * modulus (note: k % n is division remainder).
  */
 template<class T>
 T mod(T k, T n)
@@ -55,6 +45,17 @@ T mod(T k, T n)
 }
 
 
-}  // namespace detail
+/**
+ * Static cast to strongly typed enum's underlying type.
+ */
+template <typename E>
+constexpr auto cast_underlying(E e) noexcept
+{
+    return static_cast<std::underlying_type_t<E>>(e);
+}
+
+
+}  // namespace utils
+
 
 }  // namespace fastscapelib

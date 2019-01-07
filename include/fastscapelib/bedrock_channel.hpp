@@ -11,7 +11,7 @@
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xmanipulation.hpp"
 
-#include "fastscapelib/utils.hpp"
+#include "fastscapelib/xtensor_utils.hpp"
 
 
 namespace fastscapelib
