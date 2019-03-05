@@ -237,7 +237,8 @@ void profile_grid_xt<Tag>::precompute_neighbors()
 
     if (has_looped_boundaries)
     {
-        m_all_neighbors[0].push_front({m_size-1, m_spacing, m_node_status[m_size-1]});
+        m_all_neighbors[0].insert(m_all_neighbors[0].begin(),
+                                  {m_size-1, m_spacing, m_node_status[m_size-1]});
         m_all_neighbors[m_size-1].push_back({0, m_spacing, m_node_status[0]});
     }
 }
