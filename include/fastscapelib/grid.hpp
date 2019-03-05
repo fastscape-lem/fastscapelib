@@ -160,7 +160,8 @@ public:
                                           xt_container_ndims>;
     using neighbor_list = std::vector<neighbor>;
 
-    static constexpr std::array<std::ptrdiff_t, 3> offsets {0, -1, 1};
+    // TODO: make this "static" in some way? (like C++17 inline variables but in C++14)
+    const std::array<std::ptrdiff_t, 3> offsets {0, -1, 1};
 
     profile_grid_xt(std::size_t size,
                     const double spacing,
