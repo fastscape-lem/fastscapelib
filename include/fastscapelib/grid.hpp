@@ -13,7 +13,7 @@
 #include "xtensor/xarray.hpp"
 #include "xtensor/xtensor.hpp"
 
-#include "fastscapelib/consts.hpp"
+#include "fastscapelib/utils.hpp"
 #include "fastscapelib/xtensor_utils.hpp"
 
 
@@ -31,6 +31,13 @@ enum class node_status : std::uint8_t
     fixed_gradient_boundary = 2,
     looped_boundary = 3
 };
+
+using node_status_ut = std::underlying_type_t<node_status>;
+
+inline bool is_status(node_status_ut status_at_node, node_status status)
+{
+    return status_at_node == detail::cast_underlying(status);
+}
 
 struct edge_status
 {
@@ -104,31 +111,36 @@ struct border_status
 
 struct raster_node
 {
-    size_t row;
-    size_t col;
-    node_status status;
+    std::size_t row;
+    std::size_t col;
+    node_status_ut status;
 };
 
 struct node
 {
-    size_t idx;
-    node_status status;
+    std::size_t idx;
+    node_status_ut status;
+
+    node(std::size_t n_idx, node_status n_status)
+        : idx(n_idx), status(detail::cast_underlying(n_status))
+    {
+    }
 };
 
 struct raster_neighbor
 {
-    size_t flatten_idx;
-    size_t row;
-    size_t col;
-    node_status status;
+    std::size_t flatten_idx;
+    std::size_t row;
+    std::size_t col;
+    node_status_ut status;
     double distance;
 };
 
 struct neighbor
 {
-    size_t idx;
+    std::size_t idx;
     double distance;
-    node_status status;
+    node_status_ut status;
 };
 
 
@@ -182,8 +194,8 @@ inline profile_grid_xt<Tag>::profile_grid_xt(std::size_t size,
     : m_size(size), m_spacing(spacing), m_status_at_edges(status_at_edges)
 {
     m_node_status = xt::zeros<status_data_type>({size});
-    m_node_status[0] = status_at_edges.left;
-    m_node_status[size-1] = status_at_edges.right;
+    m_node_status[0] = detail::cast_underlying(status_at_edges.left);
+    m_node_status[size-1] = detail::cast_underlying(status_at_edges.right);
 
     for (const node& inode : status_at_nodes)
     {

@@ -44,7 +44,16 @@ bool in_bounds(const S& shape, index_t row, index_t col)
     return false;
 }
 
+/**
+ * Static cast to strongly typed enum's underlying type.
+ */
+template <typename E>
+constexpr auto cast_underlying(E e) noexcept
+{
+    return static_cast<std::underlying_type_t<E>>(e);
+}
 
 }  // namespace detail
+
 
 }  // namespace fastscapelib
