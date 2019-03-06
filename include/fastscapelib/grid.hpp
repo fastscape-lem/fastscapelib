@@ -32,13 +32,6 @@ enum class node_status : std::uint8_t
     looped_boundary = 3
 };
 
-using node_status_ut = std::underlying_type_t<node_status>;
-
-inline bool is_status(node_status_ut status_at_node, node_status status)
-{
-    return status_at_node == detail::cast_underlying(status);
-}
-
 struct edge_status
 {
     node_status left = node_status::core;
@@ -113,18 +106,13 @@ struct raster_node
 {
     std::size_t row;
     std::size_t col;
-    node_status_ut status;
+    node_status status;
 };
 
 struct node
 {
     std::size_t idx;
-    node_status_ut status;
-
-    node(std::size_t n_idx, node_status n_status)
-        : idx(n_idx), status(detail::cast_underlying(n_status))
-    {
-    }
+    node_status status;
 };
 
 struct raster_neighbor
@@ -132,7 +120,7 @@ struct raster_neighbor
     std::size_t flatten_idx;
     std::size_t row;
     std::size_t col;
-    node_status_ut status;
+    node_status status;
     double distance;
 };
 
@@ -140,7 +128,7 @@ struct neighbor
 {
     std::size_t idx;
     double distance;
-    node_status_ut status;
+    node_status status;
 };
 
 
@@ -155,8 +143,8 @@ public:
 
     using xt_container_tag = Tag;
     static const std::size_t xt_container_ndims = 1;
-    using status_data_type = std::underlying_type_t<fastscapelib::node_status>;
-    using status_xt_type = xt_container_t<xt_container_tag, status_data_type,
+    using status_xt_type = xt_container_t<xt_container_tag,
+                                          fastscapelib::node_status,
                                           xt_container_ndims>;
     using neighbor_list = std::vector<neighbor>;
 
@@ -194,9 +182,9 @@ inline profile_grid_xt<Tag>::profile_grid_xt(std::size_t size,
                                              const std::vector<node>& status_at_nodes)
     : m_size(size), m_spacing(spacing), m_status_at_edges(status_at_edges)
 {
-    m_node_status = xt::zeros<status_data_type>({size});
-    m_node_status[0] = detail::cast_underlying(status_at_edges.left);
-    m_node_status[size-1] = detail::cast_underlying(status_at_edges.right);
+    m_node_status = xt::zeros<fastscapelib::node_status>({size});
+    m_node_status[0] = status_at_edges.left;
+    m_node_status[size-1] = status_at_edges.right;
 
     for (const node& inode : status_at_nodes)
     {
