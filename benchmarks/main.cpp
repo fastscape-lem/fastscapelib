@@ -27,7 +27,7 @@ int main(int i, char* p[])
 		std::cin.get();
 	return 0;*/
 
-	std::string param = i > 1 ? p[1] : "mountain";
+	std::string param = i > 1 ? p[1] : "fastscape_pits";
 
 	if (param == "vornoi" || param == "all")
 		example_vornoi();

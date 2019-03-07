@@ -764,7 +764,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers(Rcv_XT& rec
             receivers[outlet_inflow] = link.nodes[INFLOW];
             receivers[link.nodes[INFLOW]] = link.nodes[OUTFLOW];
 
-            dist2receivers(link.nodes[INFLOW]) = d8_distances[detail::get_d8_distance_id(link.nodes[INFLOW], link.nodes[OUTFLOW], ncols)];
+            dist2receivers(link.nodes[INFLOW]) = d8_distances[detail::get_d8_distance_id(link.nodes[INFLOW], link.nodes[OUTFLOW], static_cast<Node_T>(ncols))];
         }
     }
 }
@@ -797,7 +797,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_carve(Rcv_X
 
         receivers(cur_node) = link.nodes[OUTFLOW];
         //std::cerr << "+ [" << cur_node << "]" << dist2receivers(cur_node);
-        dist2receivers(cur_node) = d8_distances[detail::get_d8_distance_id(cur_node, link.nodes[OUTFLOW], ncols)];
+        dist2receivers(cur_node) = d8_distances[detail::get_d8_distance_id(cur_node, link.nodes[OUTFLOW], static_cast<Node_T>(ncols))];
 		
         //std::cerr << "->" << dist2receivers(cur_node)<< std::endl;
 
@@ -867,7 +867,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(
         const Basin_T parsed_basin = l.basins[INFLOW];
         assert(parsed_basin == parent_basins[parsed_basin]);
 
-        auto outflow_coords = detail::coords(l.nodes[OUTFLOW], ncols);
+        auto outflow_coords = detail::coords(l.nodes[OUTFLOW], static_cast<Node_T>(ncols));
 
         const Elevation_T elev = l.weight;
 
@@ -877,7 +877,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(
 
             queue.pop();
 
-            const auto coords = detail::coords(node, ncols);
+            const auto coords = detail::coords(node, static_cast<Node_T>(ncols));
 
             Node_T rcv = -1;
             double rcv_cost = std::numeric_limits<double>::lowest();
@@ -904,7 +904,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(
                     {
 						// cost is an angular distance to the outflow - node line.
                         double cost = cost_r * double(fastscapelib::consts::d8_row_offsets[k]) + cost_c * double(fastscapelib::consts::d8_col_offsets[k]);
-                        cost *= d8_distances_inv[detail::get_d8_distance_id(coords.first, coords.second, rr, cc)];
+                        cost *= d8_distances_inv[detail::get_d8_distance_id(coords.first, coords.second, static_cast<Node_T>(rr), static_cast<Node_T>(cc))];
 
                         if (cost > rcv_cost)
                         {
@@ -923,7 +923,7 @@ void BasinGraph<Basin_T, Node_T, Elevation_T>::update_pits_receivers_sloped(
 
             assert(rcv != -1);
             receivers(node) = rcv;
-            dist2receivers(node) = d8_distances[detail::get_d8_distance_id(node, rcv, ncols)];
+            dist2receivers(node) = d8_distances[detail::get_d8_distance_id(node, rcv, static_cast<Node_T>(ncols))];
             tag[node] = Tag::WithRcv;
         }
     }

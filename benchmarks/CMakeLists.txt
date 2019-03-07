@@ -50,6 +50,7 @@ set(FASTSCAPELIB_BENCHMARK_SRC
   voronoi.cpp
   jail.cpp
   mountain.cpp
+  bm_types.hpp
 )
 
 set(FASTSCAPELIB_BENCH_TARGET benchmarks_fastscapelib)

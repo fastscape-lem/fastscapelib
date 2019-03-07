@@ -5,6 +5,7 @@
 
 #include "richdem/common/Array2D.hpp"
 #include "richdem/depressions/Wei2018.hpp"
+#include "richdem/depressions/Zhou2016.hpp"
 #include "richdem/flats/flats.hpp"
 //#include "richdem/richdem.hpp"
 
@@ -33,6 +34,14 @@ void fill_sinks_wei2018(xtensor_t<E>& elevation)
     auto elevation_a2d = detail::to_array2d(elevation.derived_cast());
 
     richdem::PriorityFlood_Wei2018(elevation_a2d);
+}
+
+template<class E>
+void fill_sinks_zhou2016(xtensor_t<E>& elevation)
+{
+	auto elevation_a2d = detail::to_array2d(elevation.derived_cast());
+
+	richdem::PriorityFlood_Zhou2016(elevation_a2d);
 }
 
 
