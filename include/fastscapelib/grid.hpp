@@ -119,6 +119,11 @@ struct neighbor
     node_status status;
 };
 
+inline std::size_t add_offset(std::size_t idx, std::ptrdiff_t offset)
+{
+    return static_cast<std::size_t>(static_cast<std::ptrdiff_t>(idx) + offset);
+}
+
 
 //*******************
 //* Profile grid (1D)
@@ -203,7 +208,7 @@ void profile_grid_xt<Tag>::precompute_neighbors()
     {
         for (std::size_t k=1; k<3; ++k)
         {
-            std::size_t nb_idx = idx + offsets[k];
+            std::size_t nb_idx = add_offset(idx, offsets[k]);
             neighbor nb = {nb_idx, m_spacing, m_node_status[nb_idx]};
             m_all_neighbors[idx].push_back(nb);
         }
