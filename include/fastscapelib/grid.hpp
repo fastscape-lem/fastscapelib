@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <stdexcept>
 #include <vector>
 
 #include "xtensor/xbuilder.hpp"
@@ -32,64 +33,51 @@ enum class node_status : std::uint8_t
     looped_boundary = 3
 };
 
-struct edge_status
+struct edge_nodes_status
 {
     node_status left = node_status::core;
     node_status right = node_status::core;
 
-    edge_status(node_status status)
+    edge_nodes_status(node_status status)
         : left(status), right(status)
     {
     }
 
-    edge_status(node_status status_left, node_status status_right)
-        : left(status_left), right(status_right)
+    edge_nodes_status(std::initializer_list<node_status> left_right)
     {
-    }
-
-    edge_status(std::initializer_list<node_status> edges)
-    {
-        if (edges.size() != 2)
+        if (left_right.size() != 2)
         {
-            throw std::invalid_argument("border status list must have 4 elements: "
+            throw std::invalid_argument("edge nodes status list must have 2 elements: "
                                         "{left, right}");
         }
 
-        auto iter = edges.begin();
+        auto iter = left_right.begin();
         left = *iter++;
         right = *iter++;
     }
 };
 
-struct border_status
+struct border_nodes_status
 {
     node_status top = node_status::core;
     node_status right = node_status::core;
     node_status bottom = node_status::core;
     node_status left = node_status::core;
 
-    border_status(node_status status)
+    border_nodes_status(node_status status)
         : top(status), right(status), bottom(status), left(status)
     {
     }
 
-    border_status(node_status status_top,
-                  node_status status_right,
-                  node_status status_bottom,
-                  node_status status_left)
-        : top(status_top), right(status_right), bottom(status_bottom), left(status_left)
+    border_nodes_status(std::initializer_list<node_status> top_right_bottom_left)
     {
-    }
-
-    border_status(std::initializer_list<node_status> borders)
-    {
-        if (borders.size() != 4)
+        if (top_right_bottom_left.size() != 4)
         {
-            throw std::invalid_argument("border status list must have 4 elements: "
+            throw std::invalid_argument("border nodes status list must have 4 elements: "
                                         "{top, right, bottom, left}");
         }
 
-        auto iter = borders.begin();
+        auto iter = top_right_bottom_left.begin();
         top = *iter++;
         right = *iter++;
         bottom = *iter++;
@@ -143,32 +131,32 @@ public:
 
     using xt_container_tag = Tag;
     static const std::size_t xt_container_ndims = 1;
-    using status_xt_type = xt_container_t<xt_container_tag,
-                                          fastscapelib::node_status,
-                                          xt_container_ndims>;
+    using xt_node_status_t = xt_container_t<xt_container_tag,
+                                            fastscapelib::node_status,
+                                            xt_container_ndims>;
     using neighbor_list = std::vector<neighbor>;
-
-    // TODO: make this "static" in some way? (like C++17 inline variables but in C++14)
-    const std::array<std::ptrdiff_t, 3> offsets {0, -1, 1};
 
     profile_grid_xt(std::size_t size,
                     const double spacing,
-                    const edge_status& status_at_edges,
+                    const edge_nodes_status& status_at_bounds,
                     const std::vector<node>& status_at_nodes = {});
 
     neighbor_list neighbors(std::size_t idx) const;
 
     std::size_t size() const noexcept;
     double spacing() const noexcept;
-    const status_xt_type& node_status() const;
+    const xt_node_status_t& node_status() const;
 
 private:
     std::size_t m_size;
     double m_spacing;
 
-    status_xt_type m_node_status;
-    const edge_status& m_status_at_edges;
+    xt_node_status_t m_node_status;
+    const edge_nodes_status& m_status_at_edges;
     bool has_looped_boundaries = false;
+
+    // TODO: make this "static" in some way? (like C++17 inline variables but in C++14)
+    const std::array<std::ptrdiff_t, 3> offsets {0, -1, 1};
 
     std::vector<neighbor_list> m_all_neighbors;
     void precompute_neighbors();
@@ -178,21 +166,21 @@ private:
 template <class Tag>
 inline profile_grid_xt<Tag>::profile_grid_xt(std::size_t size,
                                              const double spacing,
-                                             const edge_status& status_at_edges,
+                                             const edge_nodes_status& status_at_bounds,
                                              const std::vector<node>& status_at_nodes)
-    : m_size(size), m_spacing(spacing), m_status_at_edges(status_at_edges)
+    : m_size(size), m_spacing(spacing), m_status_at_edges(status_at_bounds)
 {
     m_node_status = xt::zeros<fastscapelib::node_status>({size});
-    m_node_status[0] = status_at_edges.left;
-    m_node_status[size-1] = status_at_edges.right;
+    m_node_status[0] = status_at_bounds.left;
+    m_node_status[size-1] = status_at_bounds.right;
 
     for (const node& inode : status_at_nodes)
     {
         m_node_status(inode.idx) = inode.status;
     }
 
-    bool left_looped = status_at_edges.left == node_status::looped_boundary;
-    bool right_looped = status_at_edges.right == node_status::looped_boundary;
+    bool left_looped = status_at_bounds.left == node_status::looped_boundary;
+    bool right_looped = status_at_bounds.right == node_status::looped_boundary;
 
     if (left_looped ^ right_looped)
     {
@@ -246,7 +234,7 @@ inline double profile_grid_xt<Tag>::spacing() const noexcept
 
 template <class Tag>
 inline auto profile_grid_xt<Tag>::node_status() const
-    -> const profile_grid_xt<Tag>::status_xt_type&
+    -> const profile_grid_xt<Tag>::xt_node_status_t&
 {
     return m_node_status;
 }
