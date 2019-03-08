@@ -97,17 +97,17 @@ TEST(grid, profile_grid_neighbors)
     auto es = fs::edge_nodes_status(fs::node_status::fixed_value_boundary);
     auto g = fs::profile_grid(10, 2, es);
 
-    auto n0 = g.neighbors(0);
+    auto& n0 = g.neighbors(0);
     EXPECT_EQ(n0.size(), 1);
     EXPECT_EQ(n0[0].idx, 1);
     EXPECT_EQ(n0[0].distance, 2);
     EXPECT_EQ(n0[0].status, fs::node_status::core);
 
-    auto n9 = g.neighbors(9);
+    auto& n9 = g.neighbors(9);
     EXPECT_EQ(n9.size(), 1);
     EXPECT_EQ(n9[0].idx, 8);
 
-    auto n5 = g.neighbors(5);
+    auto& n5 = g.neighbors(5);
     EXPECT_EQ(n5.size(), 2);
     EXPECT_EQ(n5[0].idx, 4);
     EXPECT_EQ(n5[1].idx, 6);
@@ -118,12 +118,12 @@ TEST(grid, profile_grid_neighbors)
         auto es = fs::edge_nodes_status(fs::node_status::looped_boundary);
         auto g = fs::profile_grid(10, 2, es);
 
-        auto n0 = g.neighbors(0);
+        auto& n0 = g.neighbors(0);
         EXPECT_EQ(n0.size(), 2);
         EXPECT_EQ(n0[0].idx, 9);
         EXPECT_EQ(n0[1].idx, 1);
 
-        auto n9 = g.neighbors(9);
+        auto& n9 = g.neighbors(9);
         EXPECT_EQ(n9.size(), 2);
         EXPECT_EQ(n9[0].idx, 8);
         EXPECT_EQ(n9[1].idx, 0);

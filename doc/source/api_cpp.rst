@@ -33,6 +33,56 @@ or include just a subset of the functions (by topic), e.g.,
 
    #include "fastscapelib/flow_routing.hpp"
 
+Grid
+----
+
+Grid/mesh (and related) structures.
+
+Defined in ``fastscapelib/grid.hpp``.
+
+Grid boundaries
+~~~~~~~~~~~~~~~
+
+.. doxygenenum:: fastscapelib::node_status
+   :project: fastscapelib
+
+.. doxygenstruct:: fastscapelib::edge_nodes_status
+   :project: fastscapelib
+   :members:
+
+.. doxygenstruct:: fastscapelib::border_nodes_status
+   :project: fastscapelib
+   :members:
+
+Grid elements
+~~~~~~~~~~~~~
+
+.. doxygenstruct:: fastscapelib::node
+   :project: fastscapelib
+   :members:
+
+.. doxygenstruct:: fastscapelib::raster_node
+   :project: fastscapelib
+   :members:
+
+.. doxygenstruct:: fastscapelib::neighbor
+   :project: fastscapelib
+   :members:
+
+.. doxygenstruct:: fastscapelib::raster_neighbor
+   :project: fastscapelib
+   :members:
+
+Profile grid (1D)
+~~~~~~~~~~~~~~~~~
+
+.. doxygenclass:: fastscapelib::profile_grid_xt
+   :project: fastscapelib
+   :members:
+
+.. doxygentypedef:: fastscapelib::profile_grid
+   :project: fastscapelib
+
 Sinks (depressions)
 -------------------
 
