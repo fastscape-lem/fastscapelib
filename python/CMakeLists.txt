@@ -28,7 +28,10 @@ include_directories(${NUMPY_INCLUDE_DIRS})
 
 set(FASTSCAPELIB_PYTHON_TARGET _fastscapelib_py)
 
-pybind11_add_module(${FASTSCAPELIB_PYTHON_TARGET} src/main.cpp)
+pybind11_add_module(${FASTSCAPELIB_PYTHON_TARGET}
+  src/grid.cpp
+  src/main.cpp
+  )
 
 target_link_libraries(${FASTSCAPELIB_PYTHON_TARGET}
   INTERFACE xtensor xtensor-python fastscapelib)

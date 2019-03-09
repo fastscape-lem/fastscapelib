@@ -55,7 +55,7 @@ struct edge_nodes_status
 /**
  * Set the same status at both the left and right edge nodes.
  */
-edge_nodes_status::edge_nodes_status(node_status status)
+inline edge_nodes_status::edge_nodes_status(node_status status)
     : left(status), right(status)
 {
 }
@@ -63,7 +63,7 @@ edge_nodes_status::edge_nodes_status(node_status status)
 /**
  * List constructor: status at (left, right) edge nodes.
  */
-edge_nodes_status::edge_nodes_status(std::initializer_list<node_status> left_right)
+inline edge_nodes_status::edge_nodes_status(std::initializer_list<node_status> left_right)
 {
     if (left_right.size() != 2)
     {
@@ -98,7 +98,7 @@ struct border_nodes_status
 /**
  * Set the same status at all grid border nodes.
  */
-border_nodes_status::border_nodes_status(node_status status)
+inline border_nodes_status::border_nodes_status(node_status status)
     : top(status), right(status), bottom(status), left(status)
 {
 }
@@ -106,7 +106,7 @@ border_nodes_status::border_nodes_status(node_status status)
 /**
  * List constructor: status at (top, right, left, bottom) border nodes.
  */
-border_nodes_status::border_nodes_status(
+inline border_nodes_status::border_nodes_status(
     std::initializer_list<node_status> top_right_bottom_left)
 {
     if (top_right_bottom_left.size() != 4)
