@@ -30,7 +30,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda install gtest cmake xtensor -c conda-forge
+  - conda install gtest=1.8.0 cmake xtensor -c conda-forge
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2015" conda install xtensor-python pybind11 numpy pytest pip -c conda-forge
   - mkdir build
   - cd build
