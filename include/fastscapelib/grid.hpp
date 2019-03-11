@@ -224,13 +224,13 @@ public:
 
     std::size_t size() const noexcept;
     double spacing() const noexcept;
-    const xt_node_status_t& node_status() const;
+    const xt_node_status_t& status_at_nodes() const;
 
 private:
     std::size_t m_size;
     double m_spacing;
 
-    xt_node_status_t m_node_status;
+    xt_node_status_t m_status_at_nodes;
     const edge_nodes_status& m_status_at_edges;
     bool has_looped_boundaries = false;
 
@@ -261,17 +261,17 @@ inline profile_grid_xt<X>::profile_grid_xt(std::size_t size,
                                            const std::vector<node>& status_at_nodes)
     : m_size(size), m_spacing(spacing), m_status_at_edges(status_at_bounds)
 {
-    m_node_status = xt::zeros<fastscapelib::node_status>({size});
-    m_node_status[0] = status_at_bounds.left;
-    m_node_status[size-1] = status_at_bounds.right;
+    m_status_at_nodes = xt::zeros<fastscapelib::node_status>({size});
+    m_status_at_nodes[0] = status_at_bounds.left;
+    m_status_at_nodes[size-1] = status_at_bounds.right;
 
     for (const node& inode : status_at_nodes)
     {
-        m_node_status(inode.idx) = inode.status;
+        m_status_at_nodes(inode.idx) = inode.status;
     }
 
-    bool left_looped = status_at_bounds.left == node_status::looped_boundary;
-    bool right_looped = status_at_bounds.right == node_status::looped_boundary;
+    bool left_looped = status_at_bounds.left == fastscapelib::node_status::looped_boundary;
+    bool right_looped = status_at_bounds.right == fastscapelib::node_status::looped_boundary;
 
     if (left_looped ^ right_looped)
     {
@@ -296,19 +296,23 @@ void profile_grid_xt<X>::precompute_neighbors()
         for (std::size_t k=1; k<3; ++k)
         {
             std::size_t nb_idx = detail::add_offset(idx, offsets[k]);
-            neighbor nb = {nb_idx, m_spacing, m_node_status[nb_idx]};
+            neighbor nb = {nb_idx, m_spacing, m_status_at_nodes[nb_idx]};
             m_all_neighbors[idx].push_back(nb);
         }
     }
 
-    m_all_neighbors[0].push_back({1, m_spacing, m_node_status[1]});
-    m_all_neighbors[m_size-1].push_back({m_size-2, m_spacing, m_node_status[m_size-2]});
+    m_all_neighbors[0].push_back(
+        {1, m_spacing, m_status_at_nodes[1]});
+    m_all_neighbors[m_size-1].push_back(
+        {m_size-2, m_spacing, m_status_at_nodes[m_size-2]});
 
     if (has_looped_boundaries)
     {
-        m_all_neighbors[0].insert(m_all_neighbors[0].begin(),
-                                  {m_size-1, m_spacing, m_node_status[m_size-1]});
-        m_all_neighbors[m_size-1].push_back({0, m_spacing, m_node_status[0]});
+        m_all_neighbors[0].insert(
+            m_all_neighbors[0].begin(),
+            {m_size-1, m_spacing, m_status_at_nodes[m_size-1]});
+        m_all_neighbors[m_size-1].push_back(
+            {0, m_spacing, m_status_at_nodes[0]});
     }
 }
 
@@ -338,10 +342,10 @@ inline double profile_grid_xt<X>::spacing() const noexcept
  * Returns a reference to the array of status at grid nodes.
  */
 template <class X>
-inline auto profile_grid_xt<X>::node_status() const
+inline auto profile_grid_xt<X>::status_at_nodes() const
     -> const profile_grid_xt<X>::xt_node_status_t&
 {
-    return m_node_status;
+    return m_status_at_nodes;
 }
 //@}
 

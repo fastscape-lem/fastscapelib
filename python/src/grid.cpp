@@ -47,5 +47,5 @@ void add_grid_bindings(py::module& m) {
                  }))
         .def_property_readonly("size", &profile_grid_py::size)
         .def_property_readonly("spacing", &profile_grid_py::spacing)
-        .def_property_readonly("node_status", &profile_grid_py::node_status);
+        .def_property_readonly("status_at_nodes", &profile_grid_py::status_at_nodes);
 }

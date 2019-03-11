@@ -68,10 +68,10 @@ TEST(grid, profile_grid_constructor)
 
     EXPECT_EQ(g.size(), 10);
     EXPECT_EQ(g.spacing(), 2);
-    EXPECT_EQ(g.node_status().size(), 10);
-    EXPECT_EQ(g.node_status()(0), fs::node_status::fixed_value_boundary);
-    EXPECT_EQ(g.node_status()(5), fs::node_status::core);
-    EXPECT_EQ(g.node_status()(9), fs::node_status::fixed_value_boundary);
+    EXPECT_EQ(g.status_at_nodes().size(), 10);
+    EXPECT_EQ(g.status_at_nodes()(0), fs::node_status::fixed_value_boundary);
+    EXPECT_EQ(g.status_at_nodes()(5), fs::node_status::core);
+    EXPECT_EQ(g.status_at_nodes()(9), fs::node_status::fixed_value_boundary);
 
     {
         SCOPED_TRACE("test status_at_nodes parameter");
@@ -79,7 +79,7 @@ TEST(grid, profile_grid_constructor)
         auto g = fs::profile_grid(10, 2, es,
                                   {{5, fs::node_status::fixed_value_boundary}});
 
-        EXPECT_EQ(g.node_status()(5), fs::node_status::fixed_value_boundary);
+        EXPECT_EQ(g.status_at_nodes()(5), fs::node_status::fixed_value_boundary);
     }
 
     {

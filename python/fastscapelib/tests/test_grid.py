@@ -12,5 +12,5 @@ def test_profile_grid():
 
     assert g.size == 10
     assert g.spacing == 2.
-    np.testing.assert_equal(g.node_status,
+    np.testing.assert_equal(g.status_at_nodes,
                             np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1]))
