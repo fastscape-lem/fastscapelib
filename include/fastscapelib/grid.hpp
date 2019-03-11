@@ -45,6 +45,7 @@ struct edge_nodes_status
     node_status right = node_status::core;  /**< Status at right edge node */
 
     edge_nodes_status(node_status status);
+    edge_nodes_status(std::array<node_status, 2> left_right);
     edge_nodes_status(std::initializer_list<node_status> left_right);
 };
 
@@ -57,6 +58,14 @@ struct edge_nodes_status
  */
 inline edge_nodes_status::edge_nodes_status(node_status status)
     : left(status), right(status)
+{
+}
+
+/**
+ * Array constructor: status at (left, right) edge nodes.
+ */
+inline edge_nodes_status::edge_nodes_status(std::array<node_status, 2> left_right)
+    : left(left_right[0]), right(left_right[1])
 {
 }
 
