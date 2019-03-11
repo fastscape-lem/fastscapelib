@@ -184,9 +184,9 @@ install:
       mkdir build;
       cd build;
       if [[ "$XTENSOR" == "dev" ]]; then
-        cmake -DBUILD_TESTS=ON -DDOWNLOAD_XTENSOR=ON ..;
+        cmake -DDOWNLOAD_GTEST=ON -DBUILD_TESTS=ON -DDOWNLOAD_XTENSOR=ON ..;
       else
-        cmake -DBUILD_TESTS=ON ..;
+        cmake -DDOWNLOAD_GTEST=ON -DBUILD_TESTS=ON ..;
       fi
       make -j2 test_fastscapelib;
       cd test;
