@@ -41,7 +41,7 @@ void add_grid_bindings(py::module& m) {
                      std::vector<fs::node> vec;
                      for (auto&& p : ns)
                      {
-                         vec.push_back({std::get<0>(p), std::get<1>(p)});
+                         vec.push_back({p.first, p.second});
                      }
                      return std::make_unique<profile_grid_py>(size, spacing, es, vec);
                  }))

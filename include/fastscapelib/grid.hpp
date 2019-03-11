@@ -45,7 +45,7 @@ struct edge_nodes_status
     node_status right = node_status::core;  /**< Status at right edge node */
 
     edge_nodes_status(node_status status);
-    edge_nodes_status(std::array<node_status, 2> left_right);
+    edge_nodes_status(const std::array<node_status, 2>& left_right);
     edge_nodes_status(std::initializer_list<node_status> left_right);
 };
 
@@ -64,7 +64,7 @@ inline edge_nodes_status::edge_nodes_status(node_status status)
 /**
  * Array constructor: status at (left, right) edge nodes.
  */
-inline edge_nodes_status::edge_nodes_status(std::array<node_status, 2> left_right)
+inline edge_nodes_status::edge_nodes_status(const std::array<node_status, 2>& left_right)
     : left(left_right[0]), right(left_right[1])
 {
 }
@@ -211,8 +211,7 @@ class profile_grid_xt
 public:
 
     using xt_container_selector = X;
-    using xt_node_status_t = xt_container_t<
-        xt_container_selector, fastscapelib::node_status, 1>;
+    using xt_node_status_t = xt_container_t<xt_container_selector, node_status, 1>;
     using neighbor_vec = std::vector<neighbor>;
 
     profile_grid_xt(std::size_t size,
@@ -261,7 +260,10 @@ inline profile_grid_xt<X>::profile_grid_xt(std::size_t size,
                                            const std::vector<node>& status_at_nodes)
     : m_size(size), m_spacing(spacing), m_status_at_edges(status_at_bounds)
 {
-    m_status_at_nodes = xt::zeros<fastscapelib::node_status>({size});
+    std::array<std::size_t, 1> shape {size};
+    m_status_at_nodes.resize(shape);
+    m_status_at_nodes.fill(node_status::core);
+
     m_status_at_nodes[0] = status_at_bounds.left;
     m_status_at_nodes[size-1] = status_at_bounds.right;
 
@@ -270,8 +272,8 @@ inline profile_grid_xt<X>::profile_grid_xt(std::size_t size,
         m_status_at_nodes(inode.idx) = inode.status;
     }
 
-    bool left_looped = status_at_bounds.left == fastscapelib::node_status::looped_boundary;
-    bool right_looped = status_at_bounds.right == fastscapelib::node_status::looped_boundary;
+    bool left_looped = status_at_bounds.left == node_status::looped_boundary;
+    bool right_looped = status_at_bounds.right == node_status::looped_boundary;
 
     if (left_looped ^ right_looped)
     {
