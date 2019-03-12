@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <stdexcept>
 #include <vector>
 
@@ -230,7 +231,7 @@ private:
     double m_spacing;
 
     xt_node_status_t m_status_at_nodes;
-    const edge_nodes_status& m_status_at_edges;
+    edge_nodes_status m_status_at_edges;
     bool has_looped_boundaries = false;
 
     // TODO: make this "static" in some way? (like C++17 inline variables but in C++14)
@@ -344,8 +345,7 @@ inline double profile_grid_xt<X>::spacing() const noexcept
  * Returns a reference to the array of status at grid nodes.
  */
 template <class X>
-inline auto profile_grid_xt<X>::status_at_nodes() const
-    -> const profile_grid_xt<X>::xt_node_status_t&
+inline auto profile_grid_xt<X>::status_at_nodes() const -> const xt_node_status_t&
 {
     return m_status_at_nodes;
 }
@@ -363,8 +363,7 @@ inline auto profile_grid_xt<X>::status_at_nodes() const
  * @return Reference to the vector of the neighbors of that grid node.
  */
 template <class X>
-inline auto profile_grid_xt<X>::neighbors(std::size_t idx) const
-    -> const profile_grid_xt<X>::neighbor_vec&
+inline auto profile_grid_xt<X>::neighbors(std::size_t idx) const -> const neighbor_vec&
 {
     return m_all_neighbors[idx];
 }
