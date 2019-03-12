@@ -45,6 +45,7 @@ struct edge_nodes_status
     node_status left = node_status::core;   /**< Status at left edge node */
     node_status right = node_status::core;  /**< Status at right edge node */
 
+    edge_nodes_status(const edge_nodes_status& es);
     edge_nodes_status(node_status status);
     edge_nodes_status(const std::array<node_status, 2>& left_right);
     edge_nodes_status(std::initializer_list<node_status> left_right);
@@ -54,6 +55,14 @@ struct edge_nodes_status
  * @name Constructors
  */
 //@{
+/**
+ * Copy constructor.
+ */
+inline edge_nodes_status::edge_nodes_status(const edge_nodes_status& es)
+    : left(es.left), right(es.right)
+{
+}
+
 /**
  * Set the same status at both the left and right edge nodes.
  */
