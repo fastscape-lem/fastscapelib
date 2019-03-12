@@ -9,7 +9,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(FASTSCAPELIB_INCLUDE_DIR ${fastscapelib_INCLUDE_DIRS})
 endif ()
 
-message(STATUS "Forcing tests build type to Release")
+message(STATUS "Forcing benchmark build type to Release")
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 
 include(CheckCXXCompilerFlag)
@@ -97,19 +97,18 @@ if(DOWNLOAD_GBENCHMARK OR GBENCHMARK_SRC_DIR)
     message(FATAL_ERROR "Build step for googlebenchmark failed: ${result}")
   endif()
 
-  # Add googlebenchmark directly to our build. This defines
-  # the gtest and gtest_main targets.
-  add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-src
-                   ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-build)
+  # Add googlebenchmark directly to our build.
+  add_subdirectory(
+    ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-src
+    ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-build
+    EXCLUDE_FROM_ALL
+    )
 
-  set(GBENCHMARK_INCLUDE_DIRS "${googlebenchmark_SOURCE_DIR}/include")
   set(GBENCHMARK_LIBRARIES benchmark)
 
 else()
     find_package(benchmark REQUIRED)
 endif()
-
-include_directories(${GBENCHMARK_INCLUDE_DIRS})
 
 set(FASTSCAPELIB_BENCHMARK_SRC
   benchmark_setup.hpp
@@ -122,7 +121,7 @@ set(FASTSCAPELIB_BENCHMARK_SRC
 set(FASTSCAPELIB_BENCHMARK_TARGET benchmark_fastscapelib)
 
 add_executable(${FASTSCAPELIB_BENCHMARK_TARGET}
-  EXCLUDE_FROM_ALL ${FASTSCAPELIB_BENCHMARK_SRC})
+  ${FASTSCAPELIB_BENCHMARK_SRC})
 
 target_link_libraries(${FASTSCAPELIB_BENCHMARK_TARGET}
   fastscapelib ${GBENCHMARK_LIBRARIES})

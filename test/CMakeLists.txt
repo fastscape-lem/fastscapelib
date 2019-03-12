@@ -73,19 +73,17 @@ if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
 
   # Add googletest directly to our build. This defines
   # the gtest and gtest_main targets.
-  add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
-                   ${CMAKE_CURRENT_BINARY_DIR}/googletest-build)
+  add_subdirectory(
+    ${CMAKE_CURRENT_BINARY_DIR}/googletest-src
+    ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
+    EXCLUDE_FROM_ALL
+    )
 
-  set(GTEST_INCLUDE_DIRS "${gtest_SOURCE_DIR}/include")
   set(GTEST_BOTH_LIBRARIES  gtest_main gtest)
 
 else()
   find_package(GTest REQUIRED)
 endif()
-
-find_package(Threads)
-
-include_directories(${GTEST_INCLUDE_DIRS})
 
 set(FASTSCAPELIB_TEST_SRC
   main.cpp
@@ -105,7 +103,7 @@ if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
 endif()
 
 target_link_libraries(${FASTSCAPELIB_TEST_TARGET}
-  fastscapelib ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  fastscapelib ${GTEST_BOTH_LIBRARIES})
 
 add_custom_target(run_tests
   ALL
