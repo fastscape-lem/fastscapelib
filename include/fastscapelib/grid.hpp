@@ -45,7 +45,6 @@ struct edge_nodes_status
     node_status left = node_status::core;   /**< Status at left edge node */
     node_status right = node_status::core;  /**< Status at right edge node */
 
-    edge_nodes_status(const edge_nodes_status& es);
     edge_nodes_status(node_status status);
     edge_nodes_status(const std::array<node_status, 2>& left_right);
     edge_nodes_status(std::initializer_list<node_status> left_right);
@@ -55,14 +54,6 @@ struct edge_nodes_status
  * @name Constructors
  */
 //@{
-/**
- * Copy constructor.
- */
-inline edge_nodes_status::edge_nodes_status(const edge_nodes_status& es)
-    : left(es.left), right(es.right)
-{
-}
-
 /**
  * Set the same status at both the left and right edge nodes.
  */
@@ -244,7 +235,7 @@ private:
     bool has_looped_boundaries = false;
 
     // TODO: make this "static" in some way? (like C++17 inline variables but in C++14)
-    const std::array<std::ptrdiff_t, 3> offsets {0, -1, 1};
+    const std::array<std::ptrdiff_t, 3> offsets { {0, -1, 1} };
 
     std::vector<neighbor_vec> m_all_neighbors;
     void precompute_neighbors();
