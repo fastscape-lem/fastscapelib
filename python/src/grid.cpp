@@ -35,15 +35,17 @@ void add_grid_bindings(py::module& m) {
         .def(py::init(
                  [](std::size_t size,
                     double spacing,
-                    const std::array<fs::node_status, 2>& es,
+                    const std::array<fs::node_status, 2>& bs,
                     const std::vector<std::pair<std::size_t, fs::node_status>>& ns)
                  {
-                     std::vector<fs::node> vec;
-                     for (auto&& p : ns)
+                     std::vector<fs::node> node_vec;
+                     for (auto&& node : ns)
                      {
-                         vec.push_back({p.first, p.second});
+                         node_vec.push_back({node.first, node.second});
                      }
-                     return std::make_unique<profile_grid_py>(size, spacing, es, vec);
+                     return std::make_unique<profile_grid_py>(
+                         size, spacing, fs::set_boundaries(bs),
+                         node_vec);
                  }))
         .def_property_readonly("size", &profile_grid_py::size)
         .def_property_readonly("spacing", &profile_grid_py::spacing)

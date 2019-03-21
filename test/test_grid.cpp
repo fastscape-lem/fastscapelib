@@ -5,79 +5,71 @@
 
 namespace fs = fastscapelib;
 
-TEST(grid, edge_nodes_status)
+
+TEST(grid, set_boundaries)
 {
     {
-        SCOPED_TRACE("single status constructor");
+        SCOPED_TRACE("single status");
 
-        auto es = fs::edge_nodes_status(fs::node_status::fixed_value_boundary);
+        auto bs = fs::set_boundaries(fs::node_status::fixed_value_boundary);
 
-        EXPECT_EQ(es.left, fs::node_status::fixed_value_boundary);
-        EXPECT_EQ(es.right, fs::node_status::fixed_value_boundary);
-    }
-
-    {
-        SCOPED_TRACE("initializer constructor");
-
-        fs::edge_nodes_status es2 {fs::node_status::fixed_value_boundary,
-                                   fs::node_status::fixed_gradient_boundary};
-
-        EXPECT_EQ(es2.left, fs::node_status::fixed_value_boundary);
-        EXPECT_EQ(es2.right, fs::node_status::fixed_gradient_boundary);
-
-        EXPECT_THROW(fs::edge_nodes_status es3 {fs::node_status::core},
-                     std::invalid_argument);
-    }
-}
-
-TEST(grid, border_nodes_status)
-{
-    {
-        SCOPED_TRACE("single status constructor");
-
-        auto bs = fs::border_nodes_status(fs::node_status::fixed_value_boundary);
-
-        EXPECT_EQ(bs.top, fs::node_status::fixed_value_boundary);
-        EXPECT_EQ(bs.right, fs::node_status::fixed_value_boundary);
-        EXPECT_EQ(bs.bottom, fs::node_status::fixed_value_boundary);
         EXPECT_EQ(bs.left, fs::node_status::fixed_value_boundary);
+        EXPECT_EQ(bs.right, fs::node_status::fixed_value_boundary);
+        EXPECT_EQ(bs.top, fs::node_status::fixed_value_boundary);
+        EXPECT_EQ(bs.bottom, fs::node_status::fixed_value_boundary);
     }
 
     {
-        SCOPED_TRACE("initializer constructor");
+        SCOPED_TRACE("left right status");
 
-        fs::border_nodes_status bs2 {fs::node_status::fixed_value_boundary,
-                                     fs::node_status::looped_boundary,
-                                     fs::node_status::fixed_value_boundary,
-                                     fs::node_status::looped_boundary};
+        auto bs2 = fs::set_boundaries(fs::node_status::fixed_value_boundary,
+                                      fs::node_status::fixed_gradient_boundary);
 
-        EXPECT_EQ(bs2.top, fs::node_status::fixed_value_boundary);
-        EXPECT_EQ(bs2.right, fs::node_status::looped_boundary);
-        EXPECT_EQ(bs2.bottom, fs::node_status::fixed_value_boundary);
-        EXPECT_EQ(bs2.left, fs::node_status::looped_boundary);
+        EXPECT_EQ(bs2.left, fs::node_status::fixed_value_boundary);
+        EXPECT_EQ(bs2.right, fs::node_status::fixed_gradient_boundary);
+    }
 
-        EXPECT_THROW(fs::border_nodes_status bs3 {fs::node_status::core},
-                     std::invalid_argument);
+    {
+        SCOPED_TRACE("left right top bottom status");
+
+        auto bs4 = fs::set_boundaries(fs::node_status::fixed_value_boundary,
+                                      fs::node_status::fixed_gradient_boundary,
+                                      fs::node_status::looped_boundary,
+                                      fs::node_status::looped_boundary);
+
+        EXPECT_EQ(bs4.left, fs::node_status::fixed_value_boundary);
+        EXPECT_EQ(bs4.right, fs::node_status::fixed_gradient_boundary);
+        EXPECT_EQ(bs4.top, fs::node_status::looped_boundary);
+        EXPECT_EQ(bs4.bottom, fs::node_status::looped_boundary);
     }
 }
 
 TEST(grid, profile_grid_constructor)
 {
-    auto es = fs::edge_nodes_status(fs::node_status::fixed_value_boundary);
-    auto g = fs::profile_grid(10, 2.0, es);
+    auto g = fs::profile_grid(10, 2.0,
+                              fs::set_boundaries(fs::node_status::fixed_value_boundary));
 
     EXPECT_EQ(g.size(), size_t(10));
     EXPECT_EQ(g.spacing(), 2.0);
+}
+
+TEST(grid, profile_grid_status_at_nodes)
+{
+    auto g = fs::profile_grid(10, 2.0,
+                              fs::set_boundaries(fs::node_status::fixed_value_boundary));
+
     EXPECT_EQ(g.status_at_nodes().size(), size_t(10));
     EXPECT_EQ(g.status_at_nodes()(0), fs::node_status::fixed_value_boundary);
     EXPECT_EQ(g.status_at_nodes()(5), fs::node_status::core);
     EXPECT_EQ(g.status_at_nodes()(9), fs::node_status::fixed_value_boundary);
 
     {
-        SCOPED_TRACE("test status_at_nodes parameter");
+        SCOPED_TRACE("test status_at_nodes grid constructor parameter");
 
-        auto g2 = fs::profile_grid(10, 2.0, es,
-                                   {{5, fs::node_status::fixed_value_boundary}});
+        auto g2 = fs::profile_grid(
+            10, 2.0,
+            fs::set_boundaries(fs::node_status::fixed_value_boundary),
+            {{5, fs::node_status::fixed_value_boundary}});
 
         EXPECT_EQ(g2.status_at_nodes()(5), fs::node_status::fixed_value_boundary);
     }
@@ -85,17 +77,17 @@ TEST(grid, profile_grid_constructor)
     {
         SCOPED_TRACE("test invalid looped boundary status");
 
-        fs::edge_nodes_status es2 {fs::node_status::fixed_value_boundary,
-                                   fs::node_status::looped_boundary};
+        auto bs = fs::set_boundaries(fs::node_status::fixed_value_boundary,
+                                     fs::node_status::looped_boundary);
 
-        EXPECT_THROW(fs::profile_grid(10, 2.0, es2), std::invalid_argument);
+        EXPECT_THROW(fs::profile_grid(10, 2.0, bs), std::invalid_argument);
     }
 }
 
 TEST(grid, profile_grid_neighbors)
 {
-    auto es = fs::edge_nodes_status(fs::node_status::fixed_value_boundary);
-    auto g = fs::profile_grid(10, 2.0, es);
+    auto g = fs::profile_grid(10, 2.0,
+                              fs::set_boundaries(fs::node_status::fixed_value_boundary));
 
     auto& n0 = g.neighbors(0);
     EXPECT_EQ(n0.size(), size_t(1));
@@ -115,8 +107,8 @@ TEST(grid, profile_grid_neighbors)
     {
         SCOPED_TRACE("test looped boundary neighbors");
 
-        auto es2 = fs::edge_nodes_status(fs::node_status::looped_boundary);
-        auto g2 = fs::profile_grid(10, 2.0, es2);
+        auto g2 = fs::profile_grid(
+            10, 2.0, fs::set_boundaries(fs::node_status::looped_boundary));
 
         auto& n20 = g2.neighbors(0);
         EXPECT_EQ(n20.size(), size_t(2));

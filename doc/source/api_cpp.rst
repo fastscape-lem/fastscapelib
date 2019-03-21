@@ -46,13 +46,24 @@ Grid boundaries
 .. doxygenenum:: fastscapelib::node_status
    :project: fastscapelib
 
-.. doxygenstruct:: fastscapelib::edge_nodes_status
+.. doxygenstruct:: fastscapelib::boundary_status
    :project: fastscapelib
    :members:
 
-.. doxygenstruct:: fastscapelib::border_nodes_status
+.. doxygenfunction:: fastscapelib::set_boundaries(node_status)
    :project: fastscapelib
-   :members:
+
+.. doxygenfunction:: fastscapelib::set_boundaries(node_status, node_status)
+   :project: fastscapelib
+
+.. doxygenfunction:: fastscapelib::set_boundaries(const std::array<node_status, 2>&)
+   :project: fastscapelib
+
+.. doxygenfunction:: fastscapelib::set_boundaries(node_status, node_status, node_status, node_status)
+   :project: fastscapelib
+
+.. doxygenfunction:: fastscapelib::set_boundaries(const std::array<node_status, 4>&)
+   :project: fastscapelib
 
 Grid elements
 ~~~~~~~~~~~~~
