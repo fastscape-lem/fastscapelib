@@ -46,64 +46,57 @@ struct boundary_status
     node_status right = node_status::core;   /**< Status at right edge/border node(s) */
     node_status top = node_status::core;     /**< Status at top border nodes */
     node_status bottom = node_status::core;  /**< Status at bottom border nodes */
+
+    boundary_status(node_status boundaries);
+    boundary_status(std::initializer_list<node_status> boundaries);
+    boundary_status(const std::array<node_status, 2>& edges);
+    boundary_status(const std::array<node_status, 4>& borders);
 };
 
 /**
- * Helper function to set status at profile/raster grid boundary nodes.
- *
- * @param status The same status for all boundary nodes.
+ * @name Constructors
  */
-inline boundary_status set_boundaries(node_status status)
+//@{
+/**
+ * Set the same status for all boundary nodes.
+ */
+inline boundary_status::boundary_status(node_status boundaries)
+    : left(boundaries), right(boundaries), top(boundaries), bottom(boundaries)
 {
-    return {status, status, status, status};
 }
 
 /**
- * Helper function to set status at boundary nodes of a profile grid.
- *
- * @param left Status at the left edge node.
- * @param right Status at the right edge node.
+ * Set status either at the left/right edges nodes on a profile grid (2-length list)
+ * or at the left/right/top/bottom border nodes on a raster grid (4-length list).
  */
-inline boundary_status set_boundaries(node_status left, node_status right)
+inline boundary_status::boundary_status(std::initializer_list<node_status> boundaries)
 {
-    return {left, right};
+    auto bnd = boundaries.begin();
+    left = *bnd++;
+    right = *bnd++;
+    if (boundaries.size() == 4)
+    {
+        top = *bnd++;
+        bottom = *bnd++;
+    }
 }
 
 /**
- * Helper function to set status at boundary nodes of a profile grid.
- *
- * @param edges Status at the left and right edge nodes.
+ * Set status at the left and right edge nodes of a profile grid.
  */
-inline boundary_status set_boundaries(const std::array<node_status, 2>& edges)
+inline boundary_status::boundary_status(const std::array<node_status, 2>& edges)
+    : left(edges[0]), right(edges[1])
 {
-    return {edges[0], edges[1]};
 }
 
 /**
- * Helper function to set status at boundary nodes of a raster grid.
- *
- * @param left Status at nodes on the left border.
- * @param right Status at nodes on the right border.
- * @param top Status at nodes on the top border.
- * @param bottom Status at nodes on the bottom border.
+ * Set status at the left, right, top and bottom border nodes of a raster grid.
  */
-inline boundary_status set_boundaries(node_status left,
-                                      node_status right,
-                                      node_status top,
-                                      node_status bottom)
+inline boundary_status::boundary_status(const std::array<node_status, 4>& borders)
+    : left(borders[0]), right(borders[1]), top(borders[2]), bottom(borders[3])
 {
-    return {left, right, top, bottom};
 }
-
-/**
- * Helper function to set status at boundary nodes of a raster grid.
- *
- * @param borders Status at the left, right, top and bottom border nodes.
- */
-inline boundary_status set_boundaries(const std::array<node_status, 4>& borders)
-{
-    return {borders[0], borders[1], borders[2], borders[3]};
-}
+//@}
 
 //***************
 //* Grid elements

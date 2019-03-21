@@ -16,7 +16,7 @@ namespace py = pybind11;
 namespace fs = fastscapelib;
 
 
-using profile_grid_py = fs::profile_grid_xt<fs::pytensor_selector>;
+using profile_grid = fs::profile_grid_xt<fs::pytensor_selector>;
 
 void add_grid_bindings(py::module& m);
 
@@ -31,7 +31,7 @@ void add_grid_bindings(py::module& m) {
         .value("FIXED_GRADIENT_BOUNDARY", fs::node_status::fixed_gradient_boundary)
         .value("LOOPED_BOUNDARY", fs::node_status::looped_boundary);
 
-    py::class_<profile_grid_py>(m, "ProfileGrid")
+    py::class_<profile_grid>(m, "ProfileGrid")
         .def(py::init(
                  [](std::size_t size,
                     double spacing,
@@ -43,11 +43,9 @@ void add_grid_bindings(py::module& m) {
                      {
                          node_vec.push_back({node.first, node.second});
                      }
-                     return std::make_unique<profile_grid_py>(
-                         size, spacing, fs::set_boundaries(bs),
-                         node_vec);
+                     return std::make_unique<profile_grid>(size, spacing, bs, node_vec);
                  }))
-        .def_property_readonly("size", &profile_grid_py::size)
-        .def_property_readonly("spacing", &profile_grid_py::spacing)
-        .def_property_readonly("status_at_nodes", &profile_grid_py::status_at_nodes);
+        .def_property_readonly("size", &profile_grid::size)
+        .def_property_readonly("spacing", &profile_grid::spacing)
+        .def_property_readonly("status_at_nodes", &profile_grid::status_at_nodes);
 }
