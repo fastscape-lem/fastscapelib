@@ -55,7 +55,7 @@ struct boundary_status
  */
 inline boundary_status set_boundaries(node_status status)
 {
-    return boundary_status({status, status, status, status});
+    return {status, status, status, status};
 }
 
 /**
@@ -66,7 +66,7 @@ inline boundary_status set_boundaries(node_status status)
  */
 inline boundary_status set_boundaries(node_status left, node_status right)
 {
-    return boundary_status({left, right});
+    return {left, right};
 }
 
 /**
@@ -76,7 +76,7 @@ inline boundary_status set_boundaries(node_status left, node_status right)
  */
 inline boundary_status set_boundaries(const std::array<node_status, 2>& edges)
 {
-    return boundary_status({edges[0], edges[1]});
+    return {edges[0], edges[1]};
 }
 
 /**
@@ -92,7 +92,7 @@ inline boundary_status set_boundaries(node_status left,
                                       node_status top,
                                       node_status bottom)
 {
-    return boundary_status({left, right, top, bottom});
+    return {left, right, top, bottom};
 }
 
 /**
@@ -102,7 +102,7 @@ inline boundary_status set_boundaries(node_status left,
  */
 inline boundary_status set_boundaries(const std::array<node_status, 4>& borders)
 {
-    return boundary_status({borders[0], borders[1], borders[2], borders[3]});
+    return {borders[0], borders[1], borders[2], borders[3]};
 }
 
 //***************
