@@ -63,10 +63,33 @@ TEST(grid, border_nodes_status)
 
 TEST(grid, profile_grid_constructor)
 {
-    auto g = fs::profile_grid(10, 2.0, fs::boundary_status(fs::node_status::fixed_value_boundary));
+    auto es = fs::boundary_status(fs::node_status::fixed_value_boundary);
+    auto g = fs::profile_grid(10, 2.0, es);
 
     EXPECT_EQ(g.size(), size_t(10));
     EXPECT_EQ(g.spacing(), 2.0);
+    EXPECT_EQ(g.status_at_nodes().size(), size_t(10));
+    EXPECT_EQ(g.status_at_nodes()(0), fs::node_status::fixed_value_boundary);
+    EXPECT_EQ(g.status_at_nodes()(5), fs::node_status::core);
+    EXPECT_EQ(g.status_at_nodes()(9), fs::node_status::fixed_value_boundary);
+
+    {
+        SCOPED_TRACE("test status_at_nodes parameter");
+
+        auto g2 = fs::profile_grid(10, 2.0, es,
+                                   {{5, fs::node_status::fixed_value_boundary}});
+
+        EXPECT_EQ(g2.status_at_nodes()(5), fs::node_status::fixed_value_boundary);
+    }
+
+    {
+        SCOPED_TRACE("test invalid looped boundary status");
+
+        fs::boundary_status es2 {fs::node_status::fixed_value_boundary,
+                                 fs::node_status::looped_boundary};
+
+        EXPECT_THROW(fs::profile_grid(10, 2.0, es2), std::invalid_argument);
+    }
 }
 
 // TEST(grid, profile_grid_status_at_nodes)
