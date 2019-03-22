@@ -219,10 +219,10 @@ private:
  * @param status_at_nodes Manually define the status at any node on the grid.
  */
 template <class X>
-profile_grid_xt<X>::profile_grid_xt(std::size_t size,
-                                    double spacing,
-                                    const boundary_status& status_at_bounds,
-                                    const std::vector<node>& status_at_nodes)
+inline profile_grid_xt<X>::profile_grid_xt(std::size_t size,
+                                           double spacing,
+                                           const boundary_status& status_at_bounds,
+                                           const std::vector<node>& status_at_nodes)
     : m_size(size), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
 {
     //set_status_at_nodes(std::move(status_at_nodes));
