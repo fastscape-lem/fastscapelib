@@ -73,8 +73,7 @@ TEST(grid, profile_grid_constructor)
 TEST(grid, profile_grid_status_at_nodes)
 {
     auto g = fs::profile_grid(10, 2.0,
-                              {fs::node_status::fixed_value_boundary,
-                               fs::node_status::fixed_value_boundary});
+                              fs::boundary_status(fs::node_status::fixed_value_boundary));
 
     EXPECT_EQ(g.status_at_nodes().size(), size_t(10));
     EXPECT_EQ(g.status_at_nodes()(0), fs::node_status::fixed_value_boundary);
