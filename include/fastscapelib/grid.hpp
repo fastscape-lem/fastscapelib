@@ -233,6 +233,7 @@ private:
     xt_node_status_t m_status_at_nodes;
     edge_nodes_status m_status_at_edges;
     bool has_looped_boundaries = false;
+    void set_status_at_nodes(const std::vector<node>& status_at_nodes);
 
     // TODO: make this "static" in some way? (like C++17 inline variables but in C++14)
     const std::array<std::ptrdiff_t, 3> offsets { {0, -1, 1} };
@@ -255,26 +256,34 @@ private:
  * @exception std::invalid_argument when looped boundaries are set inconsistently.
  */
 template <class X>
-inline profile_grid_xt<X>::profile_grid_xt(std::size_t size,
-                                           double spacing,
-                                           const edge_nodes_status& status_at_bounds,
-                                           const std::vector<node>& status_at_nodes)
+profile_grid_xt<X>::profile_grid_xt(std::size_t size,
+                                    double spacing,
+                                    const edge_nodes_status& status_at_bounds,
+                                    const std::vector<node>& status_at_nodes)
     : m_size(size), m_spacing(spacing), m_status_at_edges(status_at_bounds)
 {
-    std::array<std::size_t, 1> shape {size};
+    set_status_at_nodes(status_at_nodes);
+    precompute_neighbors();
+}
+//@}
+
+template <class X>
+void profile_grid_xt<X>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
+{
+    std::array<std::size_t, 1> shape {m_size};
     m_status_at_nodes.resize(shape);
     m_status_at_nodes.fill(node_status::core);
 
-    m_status_at_nodes[0] = status_at_bounds.left;
-    m_status_at_nodes[size-1] = status_at_bounds.right;
+    m_status_at_nodes[0] = m_status_at_edges.left;
+    m_status_at_nodes[m_size-1] = m_status_at_edges.right;
 
     for (const node& inode : status_at_nodes)
     {
         m_status_at_nodes(inode.idx) = inode.status;
     }
 
-    bool left_looped = status_at_bounds.left == node_status::looped_boundary;
-    bool right_looped = status_at_bounds.right == node_status::looped_boundary;
+    bool left_looped = m_status_at_edges.left == node_status::looped_boundary;
+    bool right_looped = m_status_at_edges.right == node_status::looped_boundary;
 
     if (left_looped ^ right_looped)
     {
@@ -285,9 +294,8 @@ inline profile_grid_xt<X>::profile_grid_xt(std::size_t size,
         has_looped_boundaries = true;
     }
 
-    precompute_neighbors();
 }
-//@}
+
 
 template <class X>
 void profile_grid_xt<X>::precompute_neighbors()
