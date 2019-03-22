@@ -99,7 +99,9 @@ set(FASTSCAPELIB_TEST_SRC
   test_flow_routing.cpp
   test_sinks.cpp
   test_bedrock_channel.cpp
-)
+  )
+
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(FASTSCAPELIB_TEST_TARGET test_fastscapelib)
 

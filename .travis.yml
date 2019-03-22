@@ -75,7 +75,7 @@ install:
       else
         cmake -DDOWNLOAD_GTEST=ON -DBUILD_TESTS=ON ..;
       fi
-      make -j2 -v test_fastscapelib;
+      make -j2 test_fastscapelib;
       cd test;
     fi
 
