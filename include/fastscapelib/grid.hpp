@@ -231,8 +231,8 @@ inline profile_grid_xt<X>::profile_grid_xt(std::size_t size,
     m_status_at_nodes.resize(shape);
     m_status_at_nodes.fill(node_status::core);
 
-    m_status_at_nodes[0] = m_status_at_bounds.left;
-    m_status_at_nodes[m_size-1] = m_status_at_bounds.right;
+    m_status_at_nodes[0] = status_at_bounds.left;
+    m_status_at_nodes[size-1] = status_at_bounds.right;
 
     for (const node& inode : status_at_nodes)
     {
@@ -240,7 +240,7 @@ inline profile_grid_xt<X>::profile_grid_xt(std::size_t size,
     }
 
     bool left_looped = m_status_at_nodes[0] == node_status::looped_boundary;
-    bool right_looped = m_status_at_nodes[m_size-1] == node_status::looped_boundary;
+    bool right_looped = m_status_at_nodes[size-1] == node_status::looped_boundary;
 
     if (left_looped ^ right_looped)
     {
