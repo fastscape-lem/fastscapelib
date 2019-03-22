@@ -169,7 +169,7 @@ inline std::size_t add_offset(std::size_t idx, std::ptrdiff_t offset)
  *
  * Used for modeling single channel or hillslope profiles.
  *
- * @tparam X xtensor container selector for data members.
+ * @tparam X xtensor container selector for data array members.
  */
 template <class X>
 class profile_grid_xt
@@ -219,13 +219,38 @@ private:
  * @param status_at_nodes Manually define the status at any node on the grid.
  */
 template <class X>
-inline profile_grid_xt<X>::profile_grid_xt(std::size_t size,
-                                           double spacing,
-                                           const boundary_status& status_at_bounds,
-                                           const std::vector<node>& status_at_nodes)
+profile_grid_xt<X>::profile_grid_xt(std::size_t size,
+                                    double spacing,
+                                    const boundary_status& status_at_bounds,
+                                    const std::vector<node>& status_at_nodes)
     : m_size(size), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
 {
-    set_status_at_nodes(status_at_nodes);
+    //set_status_at_nodes(status_at_nodes);
+
+    std::array<std::size_t, 1> shape {m_size};
+    m_status_at_nodes.resize(shape);
+    m_status_at_nodes.fill(node_status::core);
+
+    m_status_at_nodes[0] = m_status_at_bounds.left;
+    m_status_at_nodes[m_size-1] = m_status_at_bounds.right;
+
+    for (const node& inode : status_at_nodes)
+    {
+        m_status_at_nodes(inode.idx) = inode.status;
+    }
+
+    bool left_looped = m_status_at_nodes[0] == node_status::looped_boundary;
+    bool right_looped = m_status_at_nodes[m_size-1] == node_status::looped_boundary;
+
+    if (left_looped ^ right_looped)
+    {
+        throw std::invalid_argument("inconsistent looped boundary status at grid edges");
+    }
+    else if (left_looped && right_looped)
+    {
+        has_looped_edges = true;
+    }
+
     precompute_neighbors();
 }
 //@}
