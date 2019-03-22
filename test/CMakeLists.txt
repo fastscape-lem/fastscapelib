@@ -27,7 +27,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
   CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)
 
   if (HAS_CPP14_FLAG)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+    set(CMAKE_CXX_STANDARD 14)
+    message(STATUS "Building with -std=c++14")
     # cleaner?
     # https://pabloariasal.github.io/2018/02/19/its-time-to-do-cmake-right/
     # cmake min version: 3.8
@@ -35,6 +36,9 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
   else()
     message(FATAL_ERROR "Unsupported compiler -- fastscapelib requires C++14 support!")
   endif()
+
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
 
 if(MSVC)
@@ -104,6 +108,9 @@ add_executable(${FASTSCAPELIB_TEST_TARGET} ${FASTSCAPELIB_TEST_SRC})
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
     add_dependencies(${FASTSCAPELIB_TEST_TARGET} gtest_main)
 endif()
+
+target_include_directories(${FASTSCAPELIB_TEST_TARGET}
+  PRIVATE ${FASTSCAPELIB_INCLUDE_DIR})
 
 target_link_libraries(${FASTSCAPELIB_TEST_TARGET}
   fastscapelib ${GTEST_BOTH_LIBRARIES})
