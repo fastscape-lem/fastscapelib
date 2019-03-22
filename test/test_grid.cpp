@@ -63,7 +63,7 @@ TEST(grid, border_nodes_status)
 
 TEST(grid, profile_grid_constructor)
 {
-    auto es = fs::edge_nodes_status(fs::node_status::fixed_value_boundary);
+    auto es = fs::boundary_status(fs::node_status::fixed_value_boundary);
     auto g = fs::profile_grid(10, 2.0, es);
 
     EXPECT_EQ(g.size(), size_t(10));
@@ -85,8 +85,8 @@ TEST(grid, profile_grid_constructor)
     {
         SCOPED_TRACE("test invalid looped boundary status");
 
-        fs::edge_nodes_status es2 {fs::node_status::fixed_value_boundary,
-                                   fs::node_status::looped_boundary};
+        fs::boundary_status es2 {fs::node_status::fixed_value_boundary,
+                                 fs::node_status::looped_boundary};
 
         EXPECT_THROW(fs::profile_grid(10, 2.0, es2), std::invalid_argument);
     }
@@ -94,7 +94,7 @@ TEST(grid, profile_grid_constructor)
 
 TEST(grid, profile_grid_neighbors)
 {
-    auto es = fs::edge_nodes_status(fs::node_status::fixed_value_boundary);
+    auto es = fs::boundary_status(fs::node_status::fixed_value_boundary);
     auto g = fs::profile_grid(10, 2.0, es);
 
     auto& n0 = g.neighbors(0);
@@ -115,7 +115,7 @@ TEST(grid, profile_grid_neighbors)
     {
         SCOPED_TRACE("test looped boundary neighbors");
 
-        auto es2 = fs::edge_nodes_status(fs::node_status::looped_boundary);
+        auto es2 = fs::boundary_status(fs::node_status::looped_boundary);
         auto g2 = fs::profile_grid(10, 2.0, es2);
 
         auto& n20 = g2.neighbors(0);

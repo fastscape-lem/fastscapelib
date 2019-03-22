@@ -37,6 +37,64 @@ enum class node_status : std::uint8_t
     looped_boundary = 3
 };
 
+struct boundary_status
+{
+    node_status left = node_status::core;    /**< Status at left edge/border node(s) */
+    node_status right = node_status::core;   /**< Status at right edge/border node(s) */
+    node_status top = node_status::core;     /**< Status at top border nodes */
+    node_status bottom = node_status::core;  /**< Status at bottom border nodes */
+
+    boundary_status(node_status boundaries);
+    boundary_status(std::initializer_list<node_status> boundaries);
+    boundary_status(const std::array<node_status, 2>& edges);
+    boundary_status(const std::array<node_status, 4>& borders);
+};
+
+/**
+ * @name Constructors
+ */
+//@{
+/**
+ * Set the same status for all boundary nodes.
+ */
+inline boundary_status::boundary_status(node_status boundaries)
+    : left(boundaries), right(boundaries), top(boundaries), bottom(boundaries)
+{
+}
+
+/**
+ * Set status either at the left/right edges nodes on a profile grid (2-length list)
+ * or at the left/right/top/bottom border nodes on a raster grid (4-length list).
+ */
+inline boundary_status::boundary_status(std::initializer_list<node_status> boundaries)
+{
+    auto bnd = boundaries.begin();
+    left = *bnd++;
+    right = *bnd++;
+    if (boundaries.size() == 4)
+    {
+        top = *bnd++;
+        bottom = *bnd++;
+    }
+}
+
+/**
+ * Set status at the left and right edge nodes of a profile grid.
+ */
+inline boundary_status::boundary_status(const std::array<node_status, 2>& edges)
+    : left(edges[0]), right(edges[1])
+{
+}
+
+/**
+ * Set status at the left, right, top and bottom border nodes of a raster grid.
+ */
+inline boundary_status::boundary_status(const std::array<node_status, 4>& borders)
+    : left(borders[0]), right(borders[1]), top(borders[2]), bottom(borders[3])
+{
+}
+//@}
+
 /**
  * Node status at the edge nodes (left, right) of a 1-dimensional grid.
  */
@@ -217,7 +275,7 @@ public:
 
     profile_grid_xt(std::size_t size,
                     double spacing,
-                    const edge_nodes_status& status_at_bounds,
+                    const boundary_status& status_at_bounds,
                     const std::vector<node>& status_at_nodes = {});
 
     const neighbor_vec& neighbors(std::size_t idx) const;
@@ -231,7 +289,7 @@ private:
     double m_spacing;
 
     xt_node_status_t m_status_at_nodes;
-    edge_nodes_status m_status_at_edges;
+    boundary_status m_status_at_edges;
     bool has_looped_boundaries = false;
     void set_status_at_nodes(const std::vector<node>& status_at_nodes);
 
@@ -258,7 +316,7 @@ private:
 template <class X>
 profile_grid_xt<X>::profile_grid_xt(std::size_t size,
                                     double spacing,
-                                    const edge_nodes_status& status_at_bounds,
+                                    const boundary_status& status_at_bounds,
                                     const std::vector<node>& status_at_nodes)
     : m_size(size), m_spacing(spacing), m_status_at_edges(status_at_bounds)
 {
