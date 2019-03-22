@@ -94,8 +94,8 @@ TEST(grid, profile_grid_constructor)
 
 TEST(grid, profile_grid_neighbors)
 {
-    auto es = fs::boundary_status(fs::node_status::fixed_value_boundary);
-    auto g = fs::profile_grid(10, 2.0, es);
+    //auto es = fs::boundary_status(fs::node_status::fixed_value_boundary);
+    auto g = fs::profile_grid(10, 2.0, fs::boundary_status(fs::node_status::fixed_value_boundary));
 
     auto& n0 = g.neighbors(0);
     EXPECT_EQ(n0.size(), size_t(1));
