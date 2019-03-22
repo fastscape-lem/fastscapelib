@@ -122,6 +122,9 @@ matrix:
             - g++-7
       env: COMPILER=gcc GCC=7 XTENSOR=dev
     - os: osx
+      osx_image: xcode8
+      compiler: clang
+    - os: osx
       osx_image: xcode6.4
       compiler: clang
       env: PYTEST=3.6
