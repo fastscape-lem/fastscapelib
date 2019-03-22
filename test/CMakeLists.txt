@@ -79,11 +79,14 @@ if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
     EXCLUDE_FROM_ALL
     )
 
-  set(GTEST_BOTH_LIBRARIES  gtest_main gtest)
+  set(GTEST_INCLUDE_DIRS "${gtest_SOURCE_DIR}/include")
+  set(GTEST_BOTH_LIBRARIES gtest_main gtest)
 
 else()
   find_package(GTest REQUIRED)
 endif()
+
+include_directories(${GTEST_INCLUDE_DIRS} SYSTEM)
 
 set(FASTSCAPELIB_TEST_SRC
   main.cpp
