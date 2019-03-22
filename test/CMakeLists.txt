@@ -24,6 +24,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion -Wsign-conversion")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast -Wunused-variable")
 
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+
   CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)
 
   if (HAS_CPP14_FLAG)
