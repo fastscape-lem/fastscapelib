@@ -63,8 +63,8 @@ TEST(grid, border_nodes_status)
 
 TEST(grid, profile_grid_constructor)
 {
-    auto g = fs::profile_grid(10, 2.0,
-                              fs::boundary_status(fs::node_status::fixed_value_boundary));
+    auto bs = fs::boundary_status(fs::node_status::fixed_value_boundary);
+    auto g = fs::profile_grid(10, 2.0, bs);
 
     EXPECT_EQ(g.size(), size_t(10));
     EXPECT_EQ(g.spacing(), 2.0);
