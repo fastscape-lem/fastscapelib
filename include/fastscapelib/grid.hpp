@@ -311,8 +311,9 @@ private:
     bool has_looped_edges = false;
     void set_status_at_nodes(const std::vector<node>& status_at_nodes);
 
-    // TODO: may yield duplicate def? (-> C++17 inline variables but in C++14?)
-    static constexpr std::array<std::ptrdiff_t, 3> offsets { {0, -1, 1} };
+    // TODO: this doesn't always work? (-> C++17 inline variables but in C++14?)
+    //static constexpr std::array<std::ptrdiff_t, 3> offsets { {0, -1, 1} };
+    const std::array<std::ptrdiff_t, 3> offsets { {0, -1, 1} };
     std::vector<neighbors_type> m_all_neighbors;
     void precompute_neighbors();
 
