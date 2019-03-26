@@ -69,6 +69,13 @@ Grid elements
    :project: fastscapelib
    :members:
 
+Grid interface
+~~~~~~~~~~~~~~
+
+.. doxygenclass:: fastscapelib::grid_interface
+   :project: fastscapelib
+   :members:
+
 Profile grid (1D)
 ~~~~~~~~~~~~~~~~~
 
