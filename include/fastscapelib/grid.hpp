@@ -312,7 +312,7 @@ private:
     bool has_looped_edges = false;
     void set_status_at_nodes(const std::vector<node>& status_at_nodes);
 
-    static const std::array<std::ptrdiff_t, 3> offsets;
+    static constexpr std::array<std::ptrdiff_t, 3> offsets { {0, -1, 1} };
     std::vector<neighbors_type> m_all_neighbors;
     void precompute_neighbors();
 
@@ -322,7 +322,7 @@ private:
 };
 
 template <class XT>
-constexpr std::array<std::ptrdiff_t, 3> profile_grid_xt<XT>::offsets = { {0, -1, 1} };
+constexpr std::array<std::ptrdiff_t, 3> profile_grid_xt<XT>::offsets;
 
 /**
  * @name Constructors
