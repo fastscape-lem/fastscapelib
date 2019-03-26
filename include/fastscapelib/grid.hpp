@@ -303,6 +303,7 @@ public:
                     const std::vector<node>& status_at_nodes = {});
 
 private:
+
     std::size_t m_size;
     double m_spacing;
 
@@ -311,9 +312,7 @@ private:
     bool has_looped_edges = false;
     void set_status_at_nodes(const std::vector<node>& status_at_nodes);
 
-    // TODO: this doesn't always work? (-> C++17 inline variables but in C++14?)
-    //static constexpr std::array<std::ptrdiff_t, 3> offsets { {0, -1, 1} };
-    const std::array<std::ptrdiff_t, 3> offsets { {0, -1, 1} };
+    static const std::array<std::ptrdiff_t, 3> offsets;
     std::vector<neighbors_type> m_all_neighbors;
     void precompute_neighbors();
 
@@ -321,6 +320,9 @@ private:
 
     friend class grid_interface<self_type>;
 };
+
+template <class XT>
+constexpr std::array<std::ptrdiff_t, 3> profile_grid_xt<XT>::offsets = { {0, -1, 1} };
 
 /**
  * @name Constructors
