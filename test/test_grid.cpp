@@ -70,6 +70,48 @@ TEST(grid, boundary_status_constructors)
         EXPECT_EQ(bsa4.top, fs::node_status::looped_boundary);
         EXPECT_EQ(bsa4.bottom, fs::node_status::looped_boundary);
     }
+
+    {
+        SCOPED_TRACE("check throw looped boundaries");
+
+        EXPECT_THROW(
+            fs::boundary_status({fs::node_status::looped_boundary,
+                                 fs::node_status::core}),
+            std::invalid_argument
+        );
+
+        EXPECT_THROW(
+            fs::boundary_status({fs::node_status::looped_boundary,
+                                 fs::node_status::core,
+                                 fs::node_status::looped_boundary,
+                                 fs::node_status::core}),
+            std::invalid_argument
+        );
+
+        EXPECT_THROW(
+            fs::boundary_status({fs::node_status::core,
+                                 fs::node_status::core,
+                                 fs::node_status::looped_boundary,
+                                 fs::node_status::core}),
+            std::invalid_argument
+        );
+    }
+}
+
+TEST(grid, boundary_status_looped)
+{
+    fs::boundary_status bs4v = {fs::node_status::fixed_value_boundary,
+                                fs::node_status::fixed_gradient_boundary,
+                                fs::node_status::looped_boundary,
+                                fs::node_status::looped_boundary};
+
+    fs::boundary_status bs4h = {fs::node_status::looped_boundary,
+                                fs::node_status::looped_boundary,
+                                fs::node_status::fixed_value_boundary,
+                                fs::node_status::fixed_gradient_boundary};
+
+    EXPECT_TRUE(bs4v.is_vertical_looped());
+    EXPECT_TRUE(bs4h.is_horizontal_looped());
 }
 
 TEST(grid, profile_grid_constructor)
@@ -101,15 +143,6 @@ TEST(grid, profile_grid_status_at_nodes)
             {{5, fs::node_status::fixed_value_boundary}});
 
         EXPECT_EQ(g2.status_at_nodes()(5), fs::node_status::fixed_value_boundary);
-    }
-
-    {
-        SCOPED_TRACE("test invalid looped boundary status");
-
-        fs::boundary_status bs {fs::node_status::fixed_value_boundary,
-                                fs::node_status::looped_boundary};
-
-        EXPECT_THROW(fs::profile_grid(10, 2.0, bs), std::invalid_argument);
     }
 }
 

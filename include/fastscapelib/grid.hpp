@@ -40,8 +40,10 @@ enum class node_status : std::uint8_t
 /**
  * Status at grid boundary nodes.
  */
-struct boundary_status
+class boundary_status
 {
+public:
+
     node_status left = node_status::core;    /**< Status at left edge/border node(s) */
     node_status right = node_status::core;   /**< Status at right edge/border node(s) */
     node_status top = node_status::core;     /**< Status at top border nodes */
@@ -51,6 +53,14 @@ struct boundary_status
     boundary_status(std::initializer_list<node_status> boundaries);
     boundary_status(const std::array<node_status, 2>& edges);
     boundary_status(const std::array<node_status, 4>& borders);
+
+    bool is_horizontal_looped();
+    bool is_vertical_looped();
+
+private:
+
+    bool is_looped(node_status status);
+    void check_looped_symmetrical();
 };
 
 /**
@@ -63,6 +73,7 @@ struct boundary_status
 inline boundary_status::boundary_status(node_status boundaries)
     : left(boundaries), right(boundaries), top(boundaries), bottom(boundaries)
 {
+    check_looped_symmetrical();
 }
 
 /**
@@ -79,6 +90,8 @@ inline boundary_status::boundary_status(std::initializer_list<node_status> bound
         top = *bnd++;
         bottom = *bnd++;
     }
+
+    check_looped_symmetrical();
 }
 
 /**
@@ -87,6 +100,7 @@ inline boundary_status::boundary_status(std::initializer_list<node_status> bound
 inline boundary_status::boundary_status(const std::array<node_status, 2>& edges)
     : left(edges[0]), right(edges[1])
 {
+    check_looped_symmetrical();
 }
 
 /**
@@ -95,8 +109,38 @@ inline boundary_status::boundary_status(const std::array<node_status, 2>& edges)
 inline boundary_status::boundary_status(const std::array<node_status, 4>& borders)
     : left(borders[0]), right(borders[1]), top(borders[2]), bottom(borders[3])
 {
+    check_looped_symmetrical();
 }
 //@}
+
+inline bool boundary_status::is_looped(node_status status)
+{
+    return status == node_status::looped_boundary;
+}
+
+/**
+ * Return true if periodic (looped) conditions are set for ``left`` and ``right``.
+ */
+inline bool boundary_status::is_horizontal_looped()
+{
+    return is_looped(left) && is_looped(right);
+}
+
+/**
+ * Return true if periodic (looped) conditions are set for ``top`` and ``bottom``.
+ */
+inline bool boundary_status::is_vertical_looped()
+{
+    return is_looped(top) && is_looped(bottom);
+}
+
+inline void boundary_status::check_looped_symmetrical()
+{
+    if (is_looped(left) ^ is_looped(right) || is_looped(top) ^ is_looped(bottom))
+    {
+        throw std::invalid_argument("looped boundaries are not symmetrical");
+    }
+}
 
 //***************
 //* Grid elements
@@ -183,13 +227,16 @@ public:
 
     using derived_grid_type = G;
     using inner_types = grid_inner_types<derived_grid_type>;
+
+    using size_type = typename inner_types::size_type;
+    using shape_type = typename inner_types::shape_type;
     using spacing_type = typename inner_types::spacing_type;
-    //using shape_type = typename grid_type::shape_type;
-    using node_status_type = typename inner_types::node_status_type;
     using neighbors_type = typename inner_types::neighbors_type;
 
+    using node_status_type = typename inner_types::node_status_type;
+
     //shape_type shape() const noexcept;
-    std::size_t size() const noexcept;
+    size_type size() const noexcept;
     spacing_type spacing() const noexcept;
     const node_status_type& status_at_nodes() const;
 
@@ -216,7 +263,7 @@ inline auto grid_interface<G>::derived_grid() const & noexcept -> const derived_
  * Returns the total number of grid nodes.
  */
 template <class G>
-inline std::size_t grid_interface<G>::size() const noexcept
+inline auto grid_interface<G>::size() const noexcept -> size_type
 {
     return derived_grid().m_size;
 }
@@ -269,11 +316,17 @@ class profile_grid_xt;
 template <class XT>
 struct grid_inner_types<profile_grid_xt<XT>>
 {
+    using xt_selector = XT;
+    using xt_dummy_type = xt_container_t<xt_selector, int, 1>;
+
+    using size_type = typename xt_dummy_type::size_type;
+    using shape_type = typename xt_dummy_type::shape_type;
+
     static constexpr bool is_structured = true;
     static constexpr bool is_uniform = true;
 
     using spacing_type = double;
-    using node_status_type = xt_container_t<XT, node_status, 1>;
+    using node_status_type = xt_container_t<xt_selector, node_status, 1>;
     using neighbors_type = std::vector<neighbor>;
 };
 
@@ -290,22 +343,27 @@ class profile_grid_xt : public grid_interface<profile_grid_xt<XT>>
 {
 public:
 
+    using xt_selector = XT;
+
     using self_type = profile_grid_xt<XT>;
     using base_type = grid_interface<self_type>;
 
+    using size_type = typename base_type::size_type;
+    using shape_type = typename base_type::shape_type;
     using spacing_type = typename base_type::spacing_type;
-    using node_status_type = typename base_type::node_status_type;
     using neighbors_type = typename base_type::neighbors_type;
 
-    profile_grid_xt(std::size_t size,
-                    double spacing,
+    using node_status_type = typename base_type::node_status_type;
+
+    profile_grid_xt(size_type size,
+                    spacing_type spacing,
                     const boundary_status& status_at_bounds,
                     const std::vector<node>& status_at_nodes = {});
 
 private:
 
-    std::size_t m_size;
-    double m_spacing;
+    size_type m_size;
+    spacing_type m_spacing;
 
     node_status_type m_status_at_nodes;
     boundary_status m_status_at_bounds;
@@ -337,12 +395,13 @@ constexpr std::array<std::ptrdiff_t, 3> profile_grid_xt<XT>::offsets;
  * @param status_at_nodes Manually define the status at any node on the grid.
  */
 template <class XT>
-profile_grid_xt<XT>::profile_grid_xt(std::size_t size,
-                                     double spacing,
+profile_grid_xt<XT>::profile_grid_xt(size_type size,
+                                     spacing_type spacing,
                                      const boundary_status& status_at_bounds,
                                      const std::vector<node>& status_at_nodes)
     : base_type(), m_size(size), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
 {
+    has_looped_edges = m_status_at_bounds.is_horizontal_looped();
     set_status_at_nodes(status_at_nodes);
     precompute_neighbors();
 }
@@ -351,29 +410,24 @@ profile_grid_xt<XT>::profile_grid_xt(std::size_t size,
 template <class XT>
 void profile_grid_xt<XT>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
 {
-    std::array<std::size_t, 1> shape {m_size};
-    m_status_at_nodes.resize(shape);
-    m_status_at_nodes.fill(node_status::core);
+    shape_type shape {static_cast<typename shape_type::value_type>(m_size)};
+    node_status_type temp_status_at_nodes(shape, node_status::core);
 
-    m_status_at_nodes[0] = m_status_at_bounds.left;
-    m_status_at_nodes[m_size-1] = m_status_at_bounds.right;
-
-    for (const node& inode : status_at_nodes)
+    for (const node& n : status_at_nodes)
     {
-        m_status_at_nodes(inode.idx) = inode.status;
+        temp_status_at_nodes(n.idx) = n.status;
     }
 
-    bool left_looped = m_status_at_nodes[0] == node_status::looped_boundary;
-    bool right_looped = m_status_at_nodes[m_size-1] == node_status::looped_boundary;
+    if (xt::all(xt::equal(temp_status_at_nodes, node_status::looped_boundary)))
+    {
+        throw std::invalid_argument("node_status::looped_boundary is not allowed in "
+                                    "status_at_nodes");
+    }
 
-    if (left_looped ^ right_looped)
-    {
-        throw std::invalid_argument("inconsistent looped boundary status at grid edges");
-    }
-    else if (left_looped && right_looped)
-    {
-        has_looped_edges = true;
-    }
+    temp_status_at_nodes(0) = m_status_at_bounds.left;
+    temp_status_at_nodes(m_size-1) = m_status_at_bounds.right;
+
+    m_status_at_nodes = temp_status_at_nodes;
 }
 
 template <class XT>

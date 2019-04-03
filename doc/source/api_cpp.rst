@@ -46,7 +46,7 @@ Grid boundaries
 .. doxygenenum:: fastscapelib::node_status
    :project: fastscapelib
 
-.. doxygenstruct:: fastscapelib::boundary_status
+.. doxygenclass:: fastscapelib::boundary_status
    :project: fastscapelib
    :members:
 
