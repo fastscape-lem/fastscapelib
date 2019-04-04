@@ -4,17 +4,20 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "xtensor/xbuilder.hpp"
 #include "xtensor/xarray.hpp"
 #include "xtensor/xtensor.hpp"
+#include "xtensor/xview.hpp"
 
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/xtensor_utils.hpp"
@@ -37,6 +40,25 @@ enum class node_status : std::uint8_t
     fixed_gradient_boundary = 2,
     looped_boundary = 3
 };
+
+
+namespace detail
+{
+
+inline bool node_status_cmp(node_status a, node_status b)
+{
+    static std::unordered_map<node_status, int> priority {
+        {node_status::core, 0},
+        {node_status::looped_boundary, 1},
+        {node_status::fixed_gradient_boundary, 2},
+        {node_status::fixed_value_boundary, 3}
+    };
+
+    return priority[a] < priority[b];
+}
+
+}  // namespace detail
+
 
 /**
  * Status at grid boundary nodes.
@@ -386,6 +408,7 @@ public:
 
 private:
 
+    shape_type m_shape;
     size_type m_size;
     spacing_type m_spacing;
 
@@ -424,6 +447,7 @@ profile_grid_xt<XT>::profile_grid_xt(size_type size,
                                      const std::vector<node>& status_at_nodes)
     : base_type(), m_size(size), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
 {
+    m_shape = {static_cast<typename shape_type::value_type>(m_size)};
     set_status_at_nodes(status_at_nodes);
     precompute_neighbors();
 }
@@ -432,22 +456,27 @@ profile_grid_xt<XT>::profile_grid_xt(size_type size,
 template <class XT>
 void profile_grid_xt<XT>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
 {
-    shape_type shape {static_cast<typename shape_type::value_type>(m_size)};
-    node_status_type temp_status_at_nodes(shape, node_status::core);
-
-    for (const node& n : status_at_nodes)
-    {
-        temp_status_at_nodes(n.idx) = n.status;
-    }
-
-    if (xt::all(xt::equal(temp_status_at_nodes, node_status::looped_boundary)))
-    {
-        throw std::invalid_argument("node_status::looped_boundary is not allowed in "
-                                    "status_at_nodes");
-    }
+    node_status_type temp_status_at_nodes(m_shape, node_status::core);
 
     temp_status_at_nodes(0) = m_status_at_bounds.left;
     temp_status_at_nodes(m_size-1) = m_status_at_bounds.right;
+
+    for (const node& n : status_at_nodes)
+    {
+        if (n.status == node_status::looped_boundary)
+        {
+            throw std::invalid_argument("node_status::looped_boundary is not allowed in "
+                                        "'status_at_nodes' "
+                                        "(use 'status_at_bounds' instead)");
+        }
+        else if (temp_status_at_nodes(n.idx) == node_status::looped_boundary)
+        {
+            throw std::invalid_argument("cannot overwrite the status of a "
+                                        "looped boundary node");
+        }
+
+        temp_status_at_nodes(n.idx) = n.status;
+    }
 
     m_status_at_nodes = temp_status_at_nodes;
 }
@@ -507,7 +536,7 @@ using profile_grid = profile_grid_xt<xtensor_selector>;
 /**
  * Raster grid node connectivity.
  */
-enum class raster_connect : std::size_t
+enum class raster_connect
 {
     rook = 0,   /**< 4-connectivity (vertical or horizontal) */
     queen       /**< 8-connectivity (including diagonals) */
@@ -579,10 +608,8 @@ public:
                    const boundary_status& status_at_bounds,
                    const std::vector<raster_node>& status_at_nodes = {});
 
-    const neighbors_type& neighbors(std::size_t row, std::size_t col) const;
-    const neighbors_type& neighbors(std::size_t idx) const;
-
 private:
+
     shape_type m_shape;
     size_type m_size;
     spacing_type m_spacing;
@@ -590,6 +617,21 @@ private:
     node_status_type m_status_at_nodes;
     boundary_status m_status_at_bounds;
     void set_status_at_nodes(const std::vector<raster_node>& status_at_nodes);
+
+    struct corner_node
+    {
+        size_type row;
+        size_type col;
+        node_status row_border;
+        node_status col_border;
+    };
+
+    std::array<std::vector<std::uint8_t>, 2> m_gcode_components;
+    void compute_gcode_components();
+    std::uint8_t gcode(size_type row, size_type col) const noexcept;
+
+    const neighbors_type& neighbors_impl(std::size_t row, std::size_t col) const;
+    const neighbors_type& neighbors_impl(std::size_t idx) const;
 };
 
 /**
@@ -612,9 +654,100 @@ raster_grid_xt<XT>::raster_grid_xt(const shape_type& shape,
     : m_shape(shape), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
 {
     m_size = shape[0] * shape[1];
+    compute_gcode_components();
     set_status_at_nodes(status_at_nodes);
 }
 //@}
+
+/*
+ * Pre-store for each (row, col) dimension 1-d arrays
+ * that will be used to get the characteristic location of a node
+ * on the grid.
+ */
+template <class XT>
+void raster_grid_xt<XT>::compute_gcode_components()
+{
+    for (std::uint8_t dim=0; dim<2; ++dim)
+    {
+        std::uint8_t fill_value = dim * 2 + 1;
+        std::vector<std::uint8_t> gcode_component(m_shape[dim], fill_value);
+
+        gcode_component[0] = 0;
+        gcode_component[m_shape[dim]-1] = fill_value * 2;
+
+        m_gcode_components[dim] = gcode_component;
+    }
+}
+
+/**
+ * Given row and col indexes, return a code in the range [0,8], which
+ * corresponds to one of the following characteristic locations on the
+ * grid (i.e., inner/border/corner):
+ *
+ *   0 -- 3 -- 6
+ *   |         |
+ *   1    4    7
+ *   |         |
+ *   2 -- 5 -- 8
+ */
+template <class XT>
+inline std::uint8_t raster_grid_xt<XT>::gcode(size_type row, size_type col) const noexcept
+{
+    return m_gcode_components[0][row] + m_gcode_components[1][col];
+}
+
+template <class XT>
+void raster_grid_xt<XT>::set_status_at_nodes(const std::vector<raster_node>& status_at_nodes)
+{
+    node_status_type temp_status_at_nodes(m_shape, node_status::core);
+
+    // set border nodes
+    auto left = xt::view(temp_status_at_nodes, xt::all(), 0);
+    left = m_status_at_bounds.left;
+
+    auto right = xt::view(temp_status_at_nodes, xt::all(), xt::keep(-1));
+    right = m_status_at_bounds.right;
+
+    auto top = xt::view(temp_status_at_nodes, 0, xt::all());
+    top = m_status_at_bounds.top;
+
+    auto bottom = xt::view(temp_status_at_nodes, xt::keep(-1), xt::all());
+    bottom = m_status_at_bounds.bottom;
+
+    // set corner nodes
+    std::vector<corner_node> corners = {
+        {0, 0, m_status_at_bounds.top, m_status_at_bounds.left},
+        {0, m_shape[1]-1, m_status_at_bounds.top, m_status_at_bounds.right},
+        {m_shape[0]-1, 0, m_status_at_bounds.bottom, m_status_at_bounds.left},
+        {m_shape[0]-1, m_shape[1]-1, m_status_at_bounds.bottom, m_status_at_bounds.right}
+    };
+
+    for (const auto& c : corners)
+    {
+        node_status cs = std::max(c.row_border, c.col_border, detail::node_status_cmp);
+        temp_status_at_nodes(c.row, c.col) = cs;
+    }
+
+    // set user-defined nodes
+    for (const raster_node& n : status_at_nodes)
+    {
+        if (n.status == node_status::looped_boundary)
+        {
+            throw std::invalid_argument("node_status::looped_boundary is not allowed in "
+                                        "'status_at_nodes' "
+                                        "(use 'status_at_bounds' instead)");
+        }
+        else if (temp_status_at_nodes(n.row, n.col) == node_status::looped_boundary)
+        {
+            throw std::invalid_argument("cannot overwrite the status of a "
+                                        "looped boundary node");
+        }
+
+        temp_status_at_nodes(n.row, n.col) = n.status;
+    }
+
+    m_status_at_nodes = temp_status_at_nodes;
+}
 
 /**
  * @typedef raster_grid

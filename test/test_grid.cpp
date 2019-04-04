@@ -135,7 +135,7 @@ TEST(grid, profile_grid_status_at_nodes)
     EXPECT_EQ(g.status_at_nodes()(9), fs::node_status::fixed_value_boundary);
 
     {
-        SCOPED_TRACE("test status_at_nodes grid constructor parameter");
+        SCOPED_TRACE("test status for user-defined nodes");
 
         auto g2 = fs::profile_grid(
             10, 2.0,
@@ -144,6 +144,8 @@ TEST(grid, profile_grid_status_at_nodes)
 
         EXPECT_EQ(g2.status_at_nodes()(5), fs::node_status::fixed_value_boundary);
     }
+
+    // TODO: test exceptions
 }
 
 TEST(grid, profile_grid_neighbors)
