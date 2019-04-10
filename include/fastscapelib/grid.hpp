@@ -11,7 +11,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <type_traits>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 #include "xtensor/xbuilder.hpp"
@@ -47,7 +47,7 @@ namespace detail
 
 inline bool node_status_cmp(node_status a, node_status b)
 {
-    static std::unordered_map<node_status, int> priority = {
+    static std::map<node_status, int> priority {
         {node_status::core, 0},
         {node_status::looped_boundary, 1},
         {node_status::fixed_gradient_boundary, 2},
