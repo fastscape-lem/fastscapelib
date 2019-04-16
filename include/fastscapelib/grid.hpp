@@ -18,6 +18,7 @@
 #include "xtensor/xarray.hpp"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"
+#include "xtensor/xindex_view.hpp"
 
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/xtensor_utils.hpp"
@@ -600,6 +601,7 @@ public:
 
     using spacing_type = typename inner_types::spacing_type;
     using neighbors_type = typename inner_types::neighbors_type;
+    using neighbor_indices_type = xt::xtensor<std::array<size_type, 2>, 1>;
 
     using node_status_type = typename inner_types::node_status_type;
 
@@ -607,6 +609,13 @@ public:
                    const spacing_type& spacing,
                    const boundary_status& status_at_bounds,
                    const std::vector<raster_node>& status_at_nodes = {});
+
+    template <raster_connect RC = raster_connect::queen>
+    inline const neighbor_indices_type neighbor_indices(size_type row,
+                                                        size_type col) const noexcept;
+
+    template <class E, raster_connect RC = raster_connect::queen>
+    inline auto neighbor_view(E&& field, size_type row, size_type col) noexcept;
 
 private:
 
@@ -627,8 +636,32 @@ private:
     };
 
     std::array<std::vector<std::uint8_t>, 2> m_gcode_components;
-    void compute_gcode_components();
+    void build_gcode();
     std::uint8_t gcode(size_type row, size_type col) const noexcept;
+
+    using offset_list = xt::xtensor<std::array<std::ptrdiff_t, 2>, 1>;
+
+    template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int> = 0>
+    offset_list make_offsets_list(std::ptrdiff_t up, std::ptrdiff_t down,
+                                   std::ptrdiff_t left, std::ptrdiff_t right) const;
+
+    template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int> = 0>
+    offset_list make_offsets_list(std::ptrdiff_t up, std::ptrdiff_t down,
+                                   std::ptrdiff_t left, std::ptrdiff_t right) const;
+
+    using neighbor_offsets_type = std::array<offset_list, 9>;
+
+    neighbor_offsets_type m_neighbor_offsets_queen;
+    neighbor_offsets_type m_neighbor_offsets_rook;
+
+    template <raster_connect RC>
+    neighbor_offsets_type build_neighbor_offsets();
+
+    template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int> = 0>
+    inline const offset_list& neighbor_offsets(size_type row, size_type col) const noexcept;
+
+    template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int> = 0>
+    inline const offset_list& neighbor_offsets(size_type row, size_type col) const noexcept;
 
     const neighbors_type& neighbors_impl(std::size_t row, std::size_t col) const;
     const neighbors_type& neighbors_impl(std::size_t idx) const;
@@ -654,47 +687,15 @@ raster_grid_xt<XT>::raster_grid_xt(const shape_type& shape,
     : m_shape(shape), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
 {
     m_size = shape[0] * shape[1];
-    compute_gcode_components();
+
+    build_gcode();
+
     set_status_at_nodes(status_at_nodes);
+
+    m_neighbor_offsets_queen = build_neighbor_offsets<raster_connect::queen>();
+    m_neighbor_offsets_rook = build_neighbor_offsets<raster_connect::rook>();
 }
 //@}
-
-/*
- * Pre-store for each (row, col) dimension 1-d arrays
- * that will be used to get the characteristic location of a node
- * on the grid.
- */
-template <class XT>
-void raster_grid_xt<XT>::compute_gcode_components()
-{
-    for (std::uint8_t dim=0; dim<2; ++dim)
-    {
-        std::uint8_t fill_value = dim * 2 + 1;
-        std::vector<std::uint8_t> gcode_component(m_shape[dim], fill_value);
-
-        gcode_component[0] = 0;
-        gcode_component[m_shape[dim]-1] = fill_value * 2;
-
-        m_gcode_components[dim] = gcode_component;
-    }
-}
-
-/**
- * Given row and col indexes, return a code in the range [0,8], which
- * corresponds to one of the following characteristic locations on the
- * grid (i.e., inner/border/corner):
- *
- *   0 -- 3 -- 6
- *   |         |
- *   1    4    7
- *   |         |
- *   2 -- 5 -- 8
- */
-template <class XT>
-inline std::uint8_t raster_grid_xt<XT>::gcode(size_type row, size_type col) const noexcept
-{
-    return m_gcode_components[0][row] + m_gcode_components[1][col];
-}
 
 template <class XT>
 void raster_grid_xt<XT>::set_status_at_nodes(const std::vector<raster_node>& status_at_nodes)
@@ -747,6 +748,161 @@ void raster_grid_xt<XT>::set_status_at_nodes(const std::vector<raster_node>& sta
     }
 
     m_status_at_nodes = temp_status_at_nodes;
+}
+
+/**
+ * Pre-store for each (row, col) dimension 1-d arrays
+ * that will be used to get the characteristic location of a node
+ * on the grid.
+ */
+template <class XT>
+void raster_grid_xt<XT>::build_gcode()
+{
+    for (std::uint8_t dim=0; dim<2; ++dim)
+    {
+        std::uint8_t fill_value = dim * 2 + 1;
+        std::vector<std::uint8_t> gcode_component(m_shape[dim], fill_value);
+
+        gcode_component[0] = 0;
+        gcode_component[m_shape[dim]-1] = fill_value * 2;
+
+        m_gcode_components[dim] = gcode_component;
+    }
+}
+
+/**
+ * Given row and col indexes, return a code in the range [0,8], which
+ * corresponds to one of the following characteristic locations on the
+ * grid (i.e., inner/border/corner):
+ *
+ *   0 -- 3 -- 6
+ *   |         |
+ *   1    4    7
+ *   |         |
+ *   2 -- 5 -- 8
+ */
+template <class XT>
+inline std::uint8_t raster_grid_xt<XT>::gcode(size_type row, size_type col) const noexcept
+{
+    return m_gcode_components[0][row] + m_gcode_components[1][col];
+}
+
+template <class XT>
+template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int>>
+auto raster_grid_xt<XT>::make_offsets_list(std::ptrdiff_t up,
+                                           std::ptrdiff_t down,
+                                           std::ptrdiff_t left,
+                                           std::ptrdiff_t right)
+    const -> offset_list
+{
+    xt::xtensor<bool, 1> mask {
+        true,
+        up != 0 || left != 0, up != 0, up != 0 || right != 0,
+        left != 0, right != 0,
+        down != 0 || left != 0, down != 0, down != 0 || right != 0
+    };
+
+    offset_list full_offsets {
+        {0, 0},
+        {up, left}, {up, 0}, {up, right},
+        {0, left}, {0, right},
+        {down, left}, {down, 0}, {down, right}
+    };
+
+    return xt::filter(full_offsets, mask);
+}
+
+template <class XT>
+template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int>>
+auto raster_grid_xt<XT>::make_offsets_list(std::ptrdiff_t up,
+                                           std::ptrdiff_t down,
+                                           std::ptrdiff_t left,
+                                           std::ptrdiff_t right)
+    const -> offset_list
+{
+    xt::xtensor<bool, 1> mask {
+        true, up != 0, left != 0, right != 0, down != 0
+    };
+
+    offset_list full_offsets {
+        {0, 0}, {up, 0}, {0, left}, {0, right}, {down, 0}
+    };
+
+    return xt::filter(full_offsets, mask);
+}
+
+/**
+ * Pre-store the (row, col) index offsets of grid node neighbors for
+ * each of the 9-characteristic locations on the grid.
+ *
+ * Those offsets follow any looped conditions given on grid
+ * boundaries. First offset is zero (current node) and further offsets
+ * are stored following a row-major layout.
+ */
+template <class XT>
+template <raster_connect RC>
+auto raster_grid_xt<XT>::build_neighbor_offsets() -> neighbor_offsets_type
+{
+    auto dr = m_shape[0] - 1;
+    auto dc = m_shape[1] - 1;
+
+    if (!m_status_at_bounds.is_vertical_looped())
+    {
+        dr = 0;
+    }
+    if (!m_status_at_bounds.is_horizontal_looped())
+    {
+        dc = 0;
+    }
+
+    return {
+        make_offsets_list<RC>(dr, 1, dc, 1),      // top-left corner
+        make_offsets_list<RC>(-1, 1, dc, 1),      // left border
+        make_offsets_list<RC>(-1, -dr, dc, 1),    // bottom-left corner
+        make_offsets_list<RC>(dr, 1, -1, 1),      // top border
+        make_offsets_list<RC>(-1, 1, -1, 1),      // inner
+        make_offsets_list<RC>(-1, -dr, -1, 1),    // bottom border
+        make_offsets_list<RC>(dr, 1, -1, -dc),    // top-right corner
+        make_offsets_list<RC>(-1, 1, -1, -dc),    // right border
+        make_offsets_list<RC>(-1, -dr, -1, -dc),  // bottom-right corner
+    };
+}
+
+template <class XT>
+template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int>>
+inline auto raster_grid_xt<XT>::neighbor_offsets(size_type row,
+                                                 size_type col) const noexcept
+    -> const offset_list&
+{
+    return m_neighbor_offsets_queen(gcode(row, col));
+}
+
+template <class XT>
+template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int>>
+inline auto raster_grid_xt<XT>::neighbor_offsets(size_type row,
+                                                 size_type col) const noexcept
+    -> const offset_list&
+{
+    return m_neighbor_offsets_rook(gcode(row, col));
+}
+
+template <class XT>
+template <raster_connect RC>
+inline auto raster_grid_xt<XT>::neighbor_indices(size_type row,
+                                                 size_type col) const noexcept
+    -> const neighbor_indices_type
+{
+    auto offsets = neighbor_offsets<RC>(row, col);
+
+}
+
+template <class XT>
+template <class E, raster_connect RC>
+inline auto raster_grid_xt<XT>::neighbor_view(E&& field,
+                                              size_type row,
+                                              size_type col) noexcept
+{
+    return xt::index_view(std::forward<E>(field), neighbor_indices<RC>(row, col));
 }
 
 /**
