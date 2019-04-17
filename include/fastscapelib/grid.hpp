@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
@@ -16,6 +17,7 @@
 
 #include "xtensor/xbuilder.hpp"
 #include "xtensor/xarray.hpp"
+#include "xtensor/xfixed.hpp"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"
 #include "xtensor/xindex_view.hpp"
@@ -589,7 +591,7 @@ class raster_grid_xt : public grid_interface<raster_grid_xt<XT>>
 {
 public:
 
-    using self_type = profile_grid_xt<XT>;
+    using self_type = raster_grid_xt<XT>;
     using base_type = grid_interface<self_type>;
     using inner_types = grid_inner_types<self_type>;
 
@@ -601,11 +603,14 @@ public:
 
     using spacing_type = typename inner_types::spacing_type;
     using neighbors_type = typename inner_types::neighbors_type;
-    using neighbor_indices_type = xt::xtensor<std::array<size_type, 2>, 1>;
+    using neighbor_indices_type = xt::xtensor<
+        xt::xtensor_fixed<size_type, xt::xshape<2>>, 1>;
+    using distance_list = xt::xtensor<double, 1>;
 
     using node_status_type = typename inner_types::node_status_type;
 
-    raster_grid_xt(const shape_type& shape,
+    template <class S>
+    raster_grid_xt(S&& shape,
                    const spacing_type& spacing,
                    const boundary_status& status_at_bounds,
                    const std::vector<raster_node>& status_at_nodes = {});
@@ -614,8 +619,12 @@ public:
     inline const neighbor_indices_type neighbor_indices(size_type row,
                                                         size_type col) const noexcept;
 
-    template <class E, raster_connect RC = raster_connect::queen>
-    inline auto neighbor_view(E&& field, size_type row, size_type col) noexcept;
+    template <raster_connect RC = raster_connect::queen>
+    inline const distance_list& neighbor_distances(size_type row,
+                                                   size_type col) const noexcept;
+
+    template <raster_connect RC = raster_connect::queen, class E>
+    inline auto neighbor_view(E&& field, size_type row, size_type col) const noexcept;
 
 private:
 
@@ -639,7 +648,7 @@ private:
     void build_gcode();
     std::uint8_t gcode(size_type row, size_type col) const noexcept;
 
-    using offset_list = xt::xtensor<std::array<std::ptrdiff_t, 2>, 1>;
+    using offset_list = xt::xtensor<xt::xtensor_fixed<std::ptrdiff_t, xt::xshape<2>>, 1>;
 
     template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int> = 0>
     offset_list make_offsets_list(std::ptrdiff_t up, std::ptrdiff_t down,
@@ -658,13 +667,31 @@ private:
     neighbor_offsets_type build_neighbor_offsets();
 
     template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int> = 0>
-    inline const offset_list& neighbor_offsets(size_type row, size_type col) const noexcept;
+    inline const offset_list& neighbor_offsets(std::uint8_t code) const noexcept;
 
     template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int> = 0>
-    inline const offset_list& neighbor_offsets(size_type row, size_type col) const noexcept;
+    inline const offset_list& neighbor_offsets(std::uint8_t code) const noexcept;
+
+    using neighbor_distances_type = std::array<distance_list, 9>;
+
+    neighbor_distances_type m_neighbor_distances_queen;
+    neighbor_distances_type m_neighbor_distances_rook;
+
+    template <raster_connect RC>
+    neighbor_distances_type build_neighbor_distances();
+
+    template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int> = 0>
+    inline const distance_list& neighbor_distances_impl(size_type row,
+                                                        size_type col) const noexcept;
+
+    template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int> = 0>
+    inline const distance_list& neighbor_distances_impl(size_type row,
+                                                        size_type col) const noexcept;
 
     const neighbors_type& neighbors_impl(std::size_t row, std::size_t col) const;
     const neighbors_type& neighbors_impl(std::size_t idx) const;
+
+    friend class grid_interface<self_type>;
 };
 
 /**
@@ -680,7 +707,8 @@ private:
  * @param status_at_nodes Manually define the status at any node on the grid.
  */
 template <class XT>
-raster_grid_xt<XT>::raster_grid_xt(const shape_type& shape,
+template <class S>
+raster_grid_xt<XT>::raster_grid_xt(S&& shape,
                                    const spacing_type& spacing,
                                    const boundary_status& status_at_bounds,
                                    const std::vector<raster_node>& status_at_nodes)
@@ -694,6 +722,9 @@ raster_grid_xt<XT>::raster_grid_xt(const shape_type& shape,
 
     m_neighbor_offsets_queen = build_neighbor_offsets<raster_connect::queen>();
     m_neighbor_offsets_rook = build_neighbor_offsets<raster_connect::rook>();
+
+    m_neighbor_distances_queen = build_neighbor_distances<raster_connect::queen>();
+    m_neighbor_distances_rook = build_neighbor_distances<raster_connect::rook>();
 }
 //@}
 
@@ -796,14 +827,12 @@ auto raster_grid_xt<XT>::make_offsets_list(std::ptrdiff_t up,
     const -> offset_list
 {
     xt::xtensor<bool, 1> mask {
-        true,
-        up != 0 || left != 0, up != 0, up != 0 || right != 0,
+        (up != 0 && left != 0), up != 0, (up != 0 && right != 0),
         left != 0, right != 0,
-        down != 0 || left != 0, down != 0, down != 0 || right != 0
+        (down != 0 && left != 0), down != 0, (down != 0 && right != 0)
     };
 
     offset_list full_offsets {
-        {0, 0},
         {up, left}, {up, 0}, {up, right},
         {0, left}, {0, right},
         {down, left}, {down, 0}, {down, right}
@@ -821,11 +850,11 @@ auto raster_grid_xt<XT>::make_offsets_list(std::ptrdiff_t up,
     const -> offset_list
 {
     xt::xtensor<bool, 1> mask {
-        true, up != 0, left != 0, right != 0, down != 0
+        up != 0, left != 0, right != 0, down != 0
     };
 
     offset_list full_offsets {
-        {0, 0}, {up, 0}, {0, left}, {0, right}, {down, 0}
+        {up, 0}, {0, left}, {0, right}, {down, 0}
     };
 
     return xt::filter(full_offsets, mask);
@@ -835,9 +864,8 @@ auto raster_grid_xt<XT>::make_offsets_list(std::ptrdiff_t up,
  * Pre-store the (row, col) index offsets of grid node neighbors for
  * each of the 9-characteristic locations on the grid.
  *
- * Those offsets follow any looped conditions given on grid
- * boundaries. First offset is zero (current node) and further offsets
- * are stored following a row-major layout.
+ * Those offsets take into account looped boundary conditions (if any).
+ * The order of the returned offsets corresponds to the row-major layout.
  */
 template <class XT>
 template <raster_connect RC>
@@ -870,20 +898,70 @@ auto raster_grid_xt<XT>::build_neighbor_offsets() -> neighbor_offsets_type
 
 template <class XT>
 template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int>>
-inline auto raster_grid_xt<XT>::neighbor_offsets(size_type row,
-                                                 size_type col) const noexcept
+inline auto raster_grid_xt<XT>::neighbor_offsets(std::uint8_t code) const noexcept
     -> const offset_list&
 {
-    return m_neighbor_offsets_queen(gcode(row, col));
+    return m_neighbor_offsets_queen[code];
 }
 
 template <class XT>
 template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int>>
-inline auto raster_grid_xt<XT>::neighbor_offsets(size_type row,
-                                                 size_type col) const noexcept
+inline auto raster_grid_xt<XT>::neighbor_offsets(std::uint8_t code) const noexcept
     -> const offset_list&
 {
-    return m_neighbor_offsets_rook(gcode(row, col));
+    return m_neighbor_offsets_rook[code];
+}
+
+template <class XT>
+template <raster_connect RC>
+auto raster_grid_xt<XT>::build_neighbor_distances() -> neighbor_distances_type
+{
+    neighbor_distances_type nb_distances;
+    xt::xtensor_fixed<double, xt::xshape<2>> xspacing {m_spacing[0], m_spacing[1]};
+
+    auto to_dist = [&xspacing](auto&& offset) -> double {
+                       auto drc = xt::where(xt::equal(offset, 0), 0., 1.) * xspacing;
+                       return std::sqrt(xt::sum(xt::square(drc))(0));
+                   };
+
+    for(std::uint8_t k=0; k<9; ++k)
+    {
+        auto offsets = neighbor_offsets<RC>(k);
+        auto distances = distance_list(offsets.shape());
+
+        std::transform(offsets.cbegin(), offsets.cend(), distances.begin(), to_dist);
+
+        nb_distances[k] = distances;
+    }
+
+    return nb_distances;
+}
+
+template <class XT>
+template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int>>
+inline auto raster_grid_xt<XT>::neighbor_distances_impl(size_type row,
+                                                        size_type col) const noexcept
+    -> const distance_list&
+{
+    return m_neighbor_distances_queen[gcode(row, col)];
+}
+
+template <class XT>
+template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int>>
+inline auto raster_grid_xt<XT>::neighbor_distances_impl(size_type row,
+                                                        size_type col) const noexcept
+    -> const distance_list&
+{
+    return m_neighbor_distances_rook[gcode(row, col)];
+}
+
+template <class XT>
+template <raster_connect RC>
+inline auto raster_grid_xt<XT>::neighbor_distances(size_type row,
+                                                   size_type col) const noexcept
+    -> const distance_list&
+{
+    return neighbor_distances_impl<RC>(row, col);
 }
 
 template <class XT>
@@ -892,15 +970,22 @@ inline auto raster_grid_xt<XT>::neighbor_indices(size_type row,
                                                  size_type col) const noexcept
     -> const neighbor_indices_type
 {
-    auto offsets = neighbor_offsets<RC>(row, col);
+    xt::xtensor_fixed<size_type, xt::xshape<2>> idx {row, col};
 
+    auto offsets = neighbor_offsets<RC>(gcode(row, col));
+    auto indices = neighbor_indices_type(offsets.shape());
+
+    std::transform(offsets.cbegin(), offsets.cend(), indices.begin(),
+                   [&idx](auto&& offset){ return idx + offset; });
+
+    return indices;
 }
 
 template <class XT>
-template <class E, raster_connect RC>
+template <raster_connect RC, class E>
 inline auto raster_grid_xt<XT>::neighbor_view(E&& field,
                                               size_type row,
-                                              size_type col) noexcept
+                                              size_type col) const noexcept
 {
     return xt::index_view(std::forward<E>(field), neighbor_indices<RC>(row, col));
 }
