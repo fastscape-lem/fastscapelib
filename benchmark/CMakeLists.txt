@@ -112,6 +112,8 @@ endif()
 
 set(FASTSCAPELIB_BENCHMARK_SRC
   benchmark_setup.hpp
+  benchmark_grid.cpp
+  benchmark_flow_routing.cpp
   benchmark_bedrock_channel.cpp
   benchmark_hillslope.cpp
   benchmark_sinks.cpp
