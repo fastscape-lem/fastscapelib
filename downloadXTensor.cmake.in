@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.2)
+cmake_minimum_required(VERSION 3.1)
 
 project(xtensor-download NONE)
 
@@ -8,8 +8,8 @@ ExternalProject_Add(xtensor
     GIT_TAG           "master"
     SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/xtensor-src"
     BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/xtensor-build"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND     ""
+    CONFIGURE_COMMAND ${CMAKE_COMMAND} -DBUILD_TESTS=OFF -DDOWNLOAD_GTEST=OFF <SOURCE_DIR>
+    BUILD_COMMAND     ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
     INSTALL_COMMAND   ""
     TEST_COMMAND      ""
 )

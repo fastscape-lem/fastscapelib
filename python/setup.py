@@ -9,12 +9,7 @@ from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
 
-# maybe get version from conda-build environment variable
-PKG_VERSION = os.getenv('PKG_VERSION', '')
-
 CMAKE_OPTIONS = {'BUILD_PYTHON_MODULE': 'ON'}
-if PKG_VERSION:
-    CMAKE_OPTIONS['VERSION_TAG'] = PKG_VERSION
 
 
 def check_cmake_version():
@@ -40,12 +35,8 @@ def get_version():
     """
     check_cmake_version()
 
-    cmake_script = os.path.join('cmake', 'modules', 'PrintVersion.cmake')
-    cmake_args = ['-P', cmake_script]
-
-    # maybe get version from conda-build environment variable
-    if PKG_VERSION:
-        cmake_args = ['-DVERSION_TAG=%s' % PKG_VERSION] + cmake_args
+    cmake_script = os.path.join('cmake', 'PrintVersion.cmake')
+    cmake_args = ['-DINCLUDEDIR=include', '-P', cmake_script]
 
     out = subprocess.check_output(['cmake'] + cmake_args,
                                   cwd=os.pardir,
