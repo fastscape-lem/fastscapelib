@@ -118,18 +118,25 @@ endif()
 # Build
 # =====
 
+set(FASTSCAPELIB_BENCHMARK_HEADERS benchmark_setup.hpp)
+
 set(FASTSCAPELIB_BENCHMARK_SRC
-  benchmark_setup.hpp
   benchmark_bedrock_channel.cpp
+  benchmark_grid.cpp
   benchmark_hillslope.cpp
   benchmark_sinks.cpp
-  main.cpp
 )
 
-set(FASTSCAPELIB_BENCHMARK_TARGET benchmark_fastscapelib)
+# -- build a target for each benchmark
+foreach(filename IN LISTS FASTSCAPELIB_BENCHMARK_SRC)
+    string(REPLACE ".cpp" "" targetname ${filename})
+    add_executable(${targetname} ${filename} ${FASTSCAPELIB_BENCHMARK_HEADERS} main.cpp)
+    target_link_libraries(${targetname} PRIVATE fastscapelib ${GBENCHMARK_LIBRARIES})
+endforeach()
 
-add_executable(${FASTSCAPELIB_BENCHMARK_TARGET}
-  ${FASTSCAPELIB_BENCHMARK_SRC})
+# -- build a global target for all benchmarks
+add_executable(benchmark_fastscapelib
+        ${FASTSCAPELIB_BENCHMARK_SRC} ${FASTSCAPELIB_BENCHMARK_HEADERS} main.cpp)
 
-target_link_libraries(${FASTSCAPELIB_BENCHMARK_TARGET}
-  fastscapelib ${GBENCHMARK_LIBRARIES})
+target_link_libraries(benchmark_fastscapelib
+        PRIVATE fastscapelib ${GBENCHMARK_LIBRARIES})
