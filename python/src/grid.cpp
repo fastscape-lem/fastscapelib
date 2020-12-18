@@ -25,7 +25,7 @@ void add_grid_bindings(py::module& m) {
                .value("FIXED_GRADIENT_BOUNDARY", node_status::fixed_gradient_boundary)
                .value("LOOPED_BOUNDARY", node_status::looped_boundary);
 
-    // ==== Binding of the profile_boundary_status structure ==== //
+    // ==== Binding of the node structure ==== //
     py::class_<node> (grid_m, "Node")
         .def(py::init<std::size_t, fs::node_status>())
         .def_readwrite("idx", &fs::node::idx, "Node index.")
@@ -69,5 +69,42 @@ void add_grid_bindings(py::module& m) {
          .def_property_readonly("spacing", [](const profile_grid& g) { return g.spacing(); })
          .def_property_readonly("status_at_nodes", [](const profile_grid& g) { return g.status_at_nodes(); })
          .def("neighbors", [](const profile_grid& g, std::size_t idx) { return g.neighbors(idx); });
+
+    // ==== Binding of the raster_node structure ==== //
+    py::class_<raster_node> (grid_m, "RasterNode")
+        .def(py::init<std::size_t, std::size_t, fs::node_status>())
+        .def_readwrite("row", &fs::raster_node::row, "Node row index.")
+        .def_readwrite("col", &fs::raster_node::col, "Node column index.")
+        .def_readwrite("status", &fs::raster_node::status, "Node status.");
+
+    // ==== Binding of the raster_neighbor structure ==== //
+    py::class_<fs::raster_neighbor> (grid_m, "RasterNeighbor")
+        .def(py::init<std::size_t, std::size_t, std::size_t, double, fs::node_status>())
+        .def("__eq__", &fs::raster_neighbor::operator==)
+        .def_readwrite("flatten_idx", &fs::raster_neighbor::flatten_idx, "Neighbor flatten index.")
+        .def_readwrite("row", &fs::raster_neighbor::row, "Neighbor row index.")
+        .def_readwrite("col", &fs::raster_neighbor::col, "Neighbor col index.")
+        .def_readwrite("distance", &fs::raster_neighbor::distance, "Neighbor distance.")
+        .def_readwrite("status", &fs::raster_neighbor::status, "Neighbor status.");
+
+    // ==== Binding of the raster_boundary_status structure ==== //
+    py::class_<raster_boundary_status> (grid_m, "RasterBoundaryStatus")
+        .def(py::init<const fs::node_status>())
+        .def(py::init<const std::array<fs::node_status, 4>&>())
+
+        .def_readwrite("left", &fs::raster_boundary_status::left, "Left boundary status.")
+        .def_readwrite("right", &fs::raster_boundary_status::right, "Right boundary status.")
+        .def_readwrite("bottom", &fs::raster_boundary_status::bottom, "Bottom boundary status.")
+        .def_readwrite("top", &fs::raster_boundary_status::top, "Top boundary status.")
+        .def_property_readonly("is_horizontal_looped", &fs::raster_boundary_status::is_horizontal_looped, "Horizontal periodicity.")
+        .def_property_readonly("is_vertical_looped", &fs::raster_boundary_status::is_vertical_looped, "Vertical periodicity.");
+
+    // ==== Binding of the RasterGrid class ==== //
+    py::class_<raster_grid> rgrid(grid_m, "RasterGrid");
+    rgrid.def(py::init<std::array<std::size_t, 2>, const raster_grid::spacing_type, const raster_grid::boundary_status_type&, const std::vector<fs::raster_node>>());
+    
+    rgrid.def_property_readonly("size", [](const raster_grid& g) { return g.size(); })
+         .def_property_readonly("spacing", [](const raster_grid& g) { return g.spacing(); })
+         .def_property_readonly("status_at_nodes", [](const raster_grid& g) { return g.status_at_nodes(); });
 }
  

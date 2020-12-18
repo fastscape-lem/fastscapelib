@@ -11,6 +11,7 @@
 #include "fastscapelib/flow_routing.hpp"
 #include "fastscapelib/structured_grid.hpp"
 #include "fastscapelib/profile_grid.hpp"
+#include "fastscapelib/raster_grid.hpp"
 #include "fastscapelib/sinks.hpp"
 #include "fastscapelib/hillslope.hpp"
 #include "fastscapelib/sinks.hpp"
