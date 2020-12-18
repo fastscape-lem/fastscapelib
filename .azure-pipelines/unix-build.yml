@@ -2,7 +2,7 @@ steps:
   - script: |
       conda config --set always_yes yes --set changeps1 no
       conda update -q conda
-      conda env create -n fastscapelib gtest cmake xtensor -c conda-forge
+      conda create -n fastscapelib gtest cmake xtensor -c conda-forge
       source activate fastscapelib
     displayName: Install dependencies
   - script: |
