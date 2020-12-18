@@ -1,4 +1,4 @@
-obs:
+jobs:
   - job: 'Linux_1'
     strategy:
       matrix:
