@@ -42,10 +42,10 @@ namespace fastscapelib
                 using node_s = fs::node_status;
 
                 node_s fixed = node_s::fixed_value_boundary;
-                std::array<node_s, 4> hloop {node_s::looped_boundary, node_s::looped_boundary, node_s::fixed_value_boundary, node_s::fixed_value_boundary};
-                std::array<node_s, 4> vloop {node_s::fixed_value_boundary, node_s::fixed_value_boundary, node_s::looped_boundary, node_s::looped_boundary};
-                std::array<node_s, 4> hvloop {node_s::looped_boundary, node_s::looped_boundary, node_s::looped_boundary, node_s::looped_boundary};
-                std::array<node_s, 4> hill_formed_loop {node_s::looped_boundary, node_s::fixed_value_boundary, node_s::looped_boundary, node_s::looped_boundary};
+                std::array<node_s, 4> hloop {{node_s::looped_boundary, node_s::looped_boundary, node_s::fixed_value_boundary, node_s::fixed_value_boundary}};
+                std::array<node_s, 4> vloop {{node_s::fixed_value_boundary, node_s::fixed_value_boundary, node_s::looped_boundary, node_s::looped_boundary}};
+                std::array<node_s, 4> hvloop {{node_s::looped_boundary, node_s::looped_boundary, node_s::looped_boundary, node_s::looped_boundary}};
+                std::array<node_s, 4> hill_formed_loop {{node_s::looped_boundary, node_s::fixed_value_boundary, node_s::looped_boundary, node_s::looped_boundary}};
 
                 fs::raster_boundary_status fixed_value_status {fixed};
                 fs::raster_boundary_status hlooped_status {hloop};
@@ -113,7 +113,7 @@ namespace fastscapelib
                 using grid_type = fs::raster_grid_xt<fs::xtensor_selector>;
                 using size_type = typename grid_type::size_type;
 
-                std::array<size_type, 2> shape {5, 10};
+                std::array<size_type, 2> shape {{5, 10}};
                 grid_type fixed_grid = grid_type(shape, {1.3, 1.2}, fs::node_status::fixed_value_boundary);
                 grid_type looped_grid = grid_type(shape, {1.4, 1.8}, fs::node_status::looped_boundary);
 
@@ -311,8 +311,8 @@ namespace fastscapelib
 
         TEST_F(raster_grid, spacing)
         {
-            EXPECT_EQ(fixed_grid.spacing(), (std::array<double, 2> {1.3, 1.2}));
-            EXPECT_EQ(looped_grid.spacing(), (std::array<double, 2> {1.4, 1.8}));
+            EXPECT_EQ(fixed_grid.spacing(), (std::array<double, 2> {{1.3, 1.2}}));
+            EXPECT_EQ(looped_grid.spacing(), (std::array<double, 2> {{1.4, 1.8}}));
         }
 
         TEST_F(raster_grid, size)

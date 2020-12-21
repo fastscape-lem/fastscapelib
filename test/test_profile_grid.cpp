@@ -39,8 +39,8 @@ namespace fastscapelib
                 using node_s = fs::node_status;
 
                 node_s fixed = node_s::fixed_value_boundary;
-                std::array<node_s, 2> loop {node_s::looped_boundary, node_s::looped_boundary};
-                std::array<node_s, 2> hill_formed_loop {node_s::looped_boundary, node_s::fixed_value_boundary};
+                std::array<node_s, 2> loop {{node_s::looped_boundary, node_s::looped_boundary}};
+                std::array<node_s, 2> hill_formed_loop {{node_s::looped_boundary, node_s::fixed_value_boundary}};
 
                 fs::profile_boundary_status fixed_value_status {fixed};
                 fs::profile_boundary_status looped_status {loop};
@@ -72,8 +72,8 @@ namespace fastscapelib
                 using node_s = fs::node_status;
 
                 node_s fixed = node_s::fixed_value_boundary;
-                std::array<node_s, 2> loop {node_s::looped_boundary, node_s::looped_boundary};
-                std::array<node_s, 2> hill_formed_loop {node_s::looped_boundary, node_s::fixed_value_boundary};
+                std::array<node_s, 2> loop {{node_s::looped_boundary, node_s::looped_boundary}};
+                std::array<node_s, 2> hill_formed_loop {{node_s::looped_boundary, node_s::fixed_value_boundary}};
 
                 fs::profile_boundary_status fixed_value_status {fixed};
                 fs::profile_boundary_status looped_status {loop};
