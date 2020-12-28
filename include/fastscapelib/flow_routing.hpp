@@ -300,6 +300,52 @@ void compute_receivers_d8(xtensor_t<R>& receivers,
 }
 
 
+namespace detail
+{
+    template<class R, class D, class E, class G>
+    void compute_receivers_impl(R&& receivers,
+                                D&& dist2receivers,
+                                E&& elevation,
+                                G& grid)
+    {
+        double slope, slope_max;
+
+        for (std::size_t i=0; i<grid.size(); ++i)
+        {
+            receivers(i) = i;
+            dist2receivers(i) = 0;
+            slope_max = std::numeric_limits<double>::min();
+
+            const auto& neighbors = grid.neighbors(i);
+
+            for (auto n=neighbors.begin(); n != neighbors.end(); ++n)
+            {          
+                slope = (elevation.data()[i] - elevation.data()[n->idx]) / n->distance;
+
+                if(slope > slope_max)
+                {
+                    slope_max = slope;
+                    receivers(i) = n->idx;
+                    dist2receivers(i) = n->distance;
+                }
+            }
+        }
+    }
+}
+
+template<class R, class D, class E, class G>
+void compute_receivers(xtensor_t<R>& receivers,
+                       xtensor_t<D>& dist2receivers,
+                       const xtensor_t<E>& elevation,
+                       G& grid)
+{
+    detail::compute_receivers_impl(receivers.derived_cast(),
+                                   dist2receivers.derived_cast(),
+                                   elevation.derived_cast(),
+                                   grid);
+}
+
+
 /**
  * Compute flow donors for each grid/mesh node.
  *
