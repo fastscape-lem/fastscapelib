@@ -68,7 +68,7 @@ void add_grid_bindings(py::module& m) {
     pgrid.def_property_readonly("size", [](const profile_grid& g) { return g.size(); })
          .def_property_readonly("spacing", [](const profile_grid& g) { return g.spacing(); })
          .def_property_readonly("status_at_nodes", [](const profile_grid& g) { return g.status_at_nodes(); })
-         .def("neighbors", [](const profile_grid& g, std::size_t idx) { return g.neighbors(idx); });
+         .def("neighbors", [](profile_grid& g, std::size_t idx) { return g.neighbors(idx); });
 
     // ==== Binding of the raster_node structure ==== //
     py::class_<raster_node> (grid_m, "RasterNode")
