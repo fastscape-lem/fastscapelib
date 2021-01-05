@@ -20,7 +20,7 @@ namespace fastscapelib
 
         TEST_F(neighbor, ctor)
         {
-            EXPECT_EQ(n.idx, 3);
+            EXPECT_EQ(n.idx, 3u);
             EXPECT_EQ(n.distance, 1.35);
             EXPECT_EQ(n.status, fs::node_status::core);
         }
@@ -126,44 +126,44 @@ namespace fastscapelib
 
         TEST_F(profile_grid, neighbors__fixed_value_boundary)
         {
-            EXPECT_EQ(fixed_grid.neighbors_cache().used(), 0);
-            EXPECT_EQ(fixed_grid.neighbors_cache().size(), 5);
+            EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_used(), 0u);
+            EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_size(), 5u);
 
             EXPECT_EQ(fixed_grid.neighbors(0), 
                      (xt::xtensor<fs::neighbor, 1> { {1, 1.3, fs::node_status::core} } ));
 
             for(std::size_t i=1; i<4; ++i)
             {
-                EXPECT_EQ(fixed_grid.neighbors_cache().used(), i);
+                EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_used(), i);
                 EXPECT_EQ(fixed_grid.neighbors(i),
                           (xt::xtensor<fs::neighbor, 1> { {i-1, 1.3, status_fixed(i-1)},
                                                           {i+1, 1.3, status_fixed(i+1)} } ));
             }
-            EXPECT_EQ(fixed_grid.neighbors_cache().used(), 4);
+            EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_used(), 4u);
 
             EXPECT_EQ(fixed_grid.neighbors(4),
                       (xt::xtensor<fs::neighbor, 1> { {3, 1.3, fs::node_status::core} } ));
-            EXPECT_EQ(fixed_grid.neighbors_cache().used(), 5);
+            EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_used(), 5u);
         }
 
         TEST_F(profile_grid, neighbors__looped_boundary)
         {
-            EXPECT_EQ(looped_grid.neighbors_cache().used(), 0);
-            EXPECT_EQ(looped_grid.neighbors_cache().size(), 5);
+            EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_used(), 0u);
+            EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_size(), 5u);
 
             EXPECT_EQ(looped_grid.neighbors(0), (xt::xtensor<fs::neighbor, 1> {{4, 1.4, fs::node_status::looped_boundary},
                                                                                {1, 1.4, fs::node_status::core}}));
 
             for(std::size_t i=1; i<4; ++i)
             {
-                EXPECT_EQ(looped_grid.neighbors_cache().used(), i);
+                EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_used(), i);
                 EXPECT_EQ(looped_grid.neighbors(i), (xt::xtensor<fs::neighbor, 1> {{i-1, 1.4, status_looped(i-1)},
                                                                                    {i+1, 1.4, status_looped(i+1)}}));
             }
-            EXPECT_EQ(looped_grid.neighbors_cache().used(), 4);
+            EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_used(), 4u);
             EXPECT_EQ(looped_grid.neighbors(4), (xt::xtensor<fs::neighbor, 1> {{3, 1.4, fs::node_status::core},
                                                                                {0, 1.4, fs::node_status::looped_boundary}}));
-            EXPECT_EQ(looped_grid.neighbors_cache().used(), 5);
+            EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_used(), 5u);
         }
 
         TEST_F(profile_grid, spacing)
@@ -174,8 +174,8 @@ namespace fastscapelib
 
         TEST_F(profile_grid, size)
         {
-            EXPECT_EQ(fixed_grid.size(), 5);
-            EXPECT_EQ(looped_grid.size(), 5);
+            EXPECT_EQ(fixed_grid.size(), 5u);
+            EXPECT_EQ(looped_grid.size(), 5u);
         }
     }
 }

@@ -53,7 +53,7 @@ namespace fastscapelib
     }
 
     /**
-     * Set the same status for all boundary nodes.
+     * Set status at the left and right edge nodes of a profile grid.
      */
     inline profile_boundary_status::profile_boundary_status(node_status left_status, node_status right_status)
         : left(left_status), right(right_status)
@@ -91,39 +91,31 @@ namespace fastscapelib
     //* Profile grid (1D)
     //*******************
 
-    template <class XT>
+    template <class XT, class C>
     class profile_grid_xt;
 
-    template <class XT>
-    struct grid_inner_types<profile_grid_xt<XT>>
+    template <class XT, class C>
+    struct grid_inner_types<profile_grid_xt<XT, C>>
     {
+        static constexpr bool is_structured = true;
+        static constexpr bool is_uniform = true;
+        static constexpr int max_neighbors = 2;
+        static constexpr std::size_t xt_ndims = 1;
+
         using xt_selector = XT;
-
-        struct xt_ndims
-        {
-            static constexpr std::size_t value = 1;
-        };
-
-        using xt_type = xt_container_t<xt_selector, int, xt_ndims::value>;
+        using xt_type = xt_container_t<xt_selector, int, xt_ndims>;
 
         using size_type = typename xt_type::size_type;
         using shape_type = typename xt_type::shape_type;
-        using neighbors_count_type = std::uint8_t;
         using code_type = std::uint8_t;
-        
-        struct is_structured
-        {
-            static constexpr bool value = true;
-        };
 
-        struct is_uniform
-        {
-            static constexpr bool value = true;
-        };
+        using neighbors_indices_type = typename std::array<std::size_t, 2>;
+        using neighbors_distances_type = typename std::array<double, 2>;
+        using neighbors_count_type = std::uint8_t;
 
         using boundary_status_type = profile_boundary_status;
         using spacing_type = double;
-        using node_status_type = xt_container_t<xt_selector, node_status, xt_ndims::value>;
+        using node_status_type = xt_container_t<xt_selector, node_status, xt_ndims>;
     };
 
     /**
@@ -134,17 +126,16 @@ namespace fastscapelib
      *
      * @tparam XT xtensor container selector for data array members.
      */
-    template <class XT>
-    class profile_grid_xt : public structured_grid<profile_grid_xt<XT>, 2>
+    template <class XT, class C = detail::neighbors_cache<2>>
+    class profile_grid_xt : public structured_grid<profile_grid_xt<XT, C>, C>
     {
     public:
 
-        using self_type = profile_grid_xt<XT>;
-        using base_type = structured_grid<self_type, 2>;
+        using self_type = profile_grid_xt<XT, C>;
+        using base_type = structured_grid<self_type, C>;
         using inner_types = grid_inner_types<self_type>;
 
         using xt_selector = typename inner_types::xt_selector;
-        using xt_ndims = typename inner_types::xt_ndims;
 
         using size_type = typename inner_types::size_type;
         using shape_type = typename inner_types::shape_type;
@@ -152,8 +143,8 @@ namespace fastscapelib
         using code_type = typename inner_types::code_type;
 
         using neighbors_type = typename base_type::neighbors_type;
-        using neighbors_indices_type = typename base_type::neighbors_indices_type;
-        using neighbors_distances_type = typename base_type::neighbors_distances_type;
+        using neighbors_indices_type = typename inner_types::neighbors_indices_type;
+        using neighbors_distances_type = typename inner_types::neighbors_distances_type;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
 
         using boundary_status_type = typename inner_types::boundary_status_type;
@@ -189,19 +180,18 @@ namespace fastscapelib
 
         std::array<neighbors_count_type, 3> m_neighbors_count;
         void build_neighbors_count();
-        inline neighbors_count_type neighbors_count(const size_type& idx) const noexcept;
-        inline neighbors_count_type neighbors_count(const code_type& code) const noexcept;
+        inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
+        inline const neighbors_count_type& neighbors_count(const code_type& code) const noexcept;
 
         void neighbors_indices_impl(neighbors_indices_type& neighbors, const size_type& idx) const;
 
         const neighbors_distances_type& neighbors_distance_impl(const size_type& idx) const;
 
-        friend class structured_grid<self_type, 2>;
-        friend typename base_type::neighbors_cache_type;
+        friend class structured_grid<self_type, C>;
     };
 
-    template <class XT>
-    constexpr std::array<std::ptrdiff_t, 3> profile_grid_xt<XT>::offsets;
+    template <class XT, class C>
+    constexpr std::array<std::ptrdiff_t, 3> profile_grid_xt<XT, C>::offsets;
 
     /**
      * @name Constructors
@@ -215,8 +205,8 @@ namespace fastscapelib
      * @param status_at_bounds Status at boundary nodes (left & right grid edges).
      * @param status_at_nodes Manually define the status at any node on the grid.
      */
-    template <class XT>
-    profile_grid_xt<XT>::profile_grid_xt(size_type size,
+    template <class XT, class C>
+    profile_grid_xt<XT, C>::profile_grid_xt(size_type size,
                                         spacing_type spacing,
                                         const boundary_status_type& status_at_bounds,
                                         const std::vector<node>& status_at_nodes)
@@ -230,8 +220,8 @@ namespace fastscapelib
     }
     //@}
 
-    template <class XT>
-    void profile_grid_xt<XT>:: build_gcode()
+    template <class XT, class C>
+    void profile_grid_xt<XT, C>:: build_gcode()
     {
         m_gcode_idx.resize({m_size});
 
@@ -240,21 +230,21 @@ namespace fastscapelib
         m_gcode_idx[m_size-1] = 2;
     }
 
-    template <class XT>
-    auto profile_grid_xt<XT>::gcode(const size_type& idx) const
+    template <class XT, class C>
+    auto profile_grid_xt<XT, C>::gcode(const size_type& idx) const
     -> code_type
     {
         return m_gcode_idx[idx];
     }
 
-    template <class XT>
-    void profile_grid_xt<XT>::build_neighbors_distances()
+    template <class XT, class C>
+    void profile_grid_xt<XT, C>::build_neighbors_distances()
     {
         m_neighbors_distances.fill({m_spacing, m_spacing});
     }
 
-    template <class XT>
-    void profile_grid_xt<XT>::build_neighbors_count()
+    template <class XT, class C>
+    void profile_grid_xt<XT, C>::build_neighbors_count()
     {
         if (m_status_at_bounds.is_horizontal_looped())
         {
@@ -265,22 +255,22 @@ namespace fastscapelib
         }
     }
 
-    template <class XT>
-    auto profile_grid_xt<XT>::neighbors_count(const size_type& idx) const noexcept
-    -> neighbors_count_type
+    template <class XT, class C>
+    auto profile_grid_xt<XT, C>::neighbors_count(const size_type& idx) const noexcept
+    -> const neighbors_count_type&
     {
         return m_neighbors_count[gcode(idx)];
     }
 
-    template <class XT>
-    auto profile_grid_xt<XT>::neighbors_count(const code_type& code) const noexcept
-    -> neighbors_count_type
+    template <class XT, class C>
+    auto profile_grid_xt<XT, C>::neighbors_count(const code_type& code) const noexcept
+    -> const neighbors_count_type&
     {
         return m_neighbors_count[code];
     }
 
-    template <class XT>
-    void profile_grid_xt<XT>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
+    template <class XT, class C>
+    void profile_grid_xt<XT, C>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
     {
         node_status_type temp_status_at_nodes(m_shape, node_status::core);
 
@@ -307,15 +297,15 @@ namespace fastscapelib
         m_status_at_nodes = temp_status_at_nodes;
     }
 
-    template <class XT>
-    auto profile_grid_xt<XT>::neighbors_distance_impl(const size_type& /*idx*/) const
+    template <class XT, class C>
+    auto profile_grid_xt<XT, C>::neighbors_distance_impl(const size_type& /*idx*/) const
     -> const neighbors_distances_type&
     {
         return m_neighbors_distances[0];
     }
 
-    template <class XT>
-    inline auto profile_grid_xt<XT>::neighbors_indices_impl(neighbors_indices_type& neighbors, const size_type& idx) const
+    template <class XT, class C>
+    inline auto profile_grid_xt<XT, C>::neighbors_indices_impl(neighbors_indices_type& neighbors, const size_type& idx) const
         -> void
     {
         if (idx==0)

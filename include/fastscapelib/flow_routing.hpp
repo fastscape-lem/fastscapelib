@@ -308,15 +308,18 @@ namespace detail
                                 E&& elevation,
                                 G& grid)
     {
+        using neighbors_type = typename G::neighbors_type;
+        
         double slope, slope_max;
+        neighbors_type neighbors;
 
         for (std::size_t i=0; i<grid.size(); ++i)
         {
             receivers(i) = i;
             dist2receivers(i) = 0;
             slope_max = std::numeric_limits<double>::min();
-
-            const auto& neighbors = grid.neighbors(i);
+            
+            grid.neighbors(i, neighbors);
 
             for (auto n=neighbors.begin(); n != neighbors.end(); ++n)
             {          

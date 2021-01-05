@@ -122,96 +122,123 @@ namespace fastscapelib
         }
 
         /**
-         * Provides a cache for neighbors queries of a particular node of the grid.
+         * Provides a cache for neighbors indices queries of a particular node of the grid.
          */
-        template <class G, unsigned int N>
+        template <unsigned int N>
         class neighbors_cache
         {
-            using neighbors_type = xt::xtensor<neighbor, 1>;
-            using neighbors_shape_type = typename neighbors_type::shape_type;
-            using neighbors_indices_type = std::array<std::size_t, N>;
-            using all_neighbors_ind_type = xt::xtensor<neighbors_indices_type, 1>;
-            using all_neighbors_shape_type = typename all_neighbors_ind_type::shape_type;
-
-            const G& m_grid;
-            
-            all_neighbors_ind_type m_all_neighbors_indices;
-
-            neighbors_type m_neighbors = neighbors_type(neighbors_shape_type({N}));
-
         public:
+            static constexpr unsigned int cache_width = N;
+            using neighbors_indices_type = std::array<std::size_t, N>;
 
-            neighbors_cache(const G& grid, std::size_t size)
-                : m_grid(grid), m_all_neighbors_indices(all_neighbors_shape_type({size}))
+            neighbors_cache(std::size_t size)
+                : m_cache(cache_shape_type({size}))
             {
                 for (std::size_t i=0; i<size; ++i)
                 {
-                    m_all_neighbors_indices[i].fill(std::numeric_limits<std::size_t>::max());
+                    m_cache[i].fill(std::numeric_limits<std::size_t>::max());
                 }
             }
 
-            const neighbors_type& get_neighbors(const std::size_t idx)
+            bool has(const std::size_t& idx) const
             {
-                using neighbors_distances_type = typename G::neighbors_distances_type;
-                using neighbors_count_type = typename G::neighbors_count_type;
-            
-                neighbors_indices_type& neighbors_indices = m_all_neighbors_indices[idx];
-                if(neighbors_indices[0] == std::numeric_limits<std::size_t>::max())
-                {
-                    m_grid.neighbors_indices_impl(neighbors_indices, idx);
-                };
-                
-                std::size_t n_idx;
-                neighbors_count_type neighbors_count = m_grid.neighbors_count(idx);
-                const neighbors_distances_type& neighbors_distances = m_grid.neighbors_distance_impl(idx);
-
-                if (neighbors_count != m_neighbors.size())
-                {
-                    m_neighbors.resize({neighbors_count});
-                }
-                
-                for (neighbors_count_type i=0; i<neighbors_count; ++i)
-                {   
-                    n_idx = neighbors_indices[i];
-                    m_neighbors[i] = neighbor({n_idx, neighbors_distances[i], m_grid.m_status_at_nodes[n_idx]});
-                }
-
-                return m_neighbors;
+                return m_cache[idx][0] == std::numeric_limits<std::size_t>::max() ? false : true;
             }
 
-            void warm_up() 
+            neighbors_indices_type& get(const std::size_t& idx)
             {
-                for (std::size_t i=0; i<m_grid.size(); ++i)
-                {
-                    neighbors_indices_type& all_indices = m_all_neighbors_indices[i];
-                    m_grid.neighbors_indices_impl(all_indices, i);
-                }
+                return m_cache[idx];
+            }
+
+            neighbors_indices_type& get_storage(const std::size_t& idx)
+            {
+                return m_cache[idx];
+            }
+
+            void store(const std::size_t& idx, const neighbors_indices_type& neighbors_indices)
+            {
+                m_cache[idx] = neighbors_indices;
+            }
+
+            std::size_t cache_size() 
+            {
+                return m_cache.size();
             };
 
-            void reset()
-            {
-                for (std::size_t i=0; i<m_grid.size(); ++i)
-                {
-                    m_all_neighbors_indices[i].fill(std::numeric_limits<std::size_t>::max());
-                }
-            }
-
-            std::size_t size() 
-            {
-                return m_all_neighbors_indices.size();
-            };
-
-            std::size_t used() 
+            std::size_t cache_used() 
             {
                 std::size_t count = 0;
                 
-                for (std::size_t i=0; i < m_grid.size(); ++i)
+                for (std::size_t i=0; i < m_cache.size(); ++i)
                 {
-                    if (m_all_neighbors_indices[i][0] != std::numeric_limits<std::size_t>::max()) { count += 1; }
+                    if (m_cache[i][0] != std::numeric_limits<std::size_t>::max()) { count += 1; }
                 }
 
                 return count; 
             };
+
+            void reset()
+            {
+                for (std::size_t i=0; i < m_cache.size(); ++i)
+                {
+                    m_cache[i].fill(std::numeric_limits<std::size_t>::max());
+                }
+            }
+
+            void remove(const std::size_t& idx)
+            {
+                m_cache[idx].fill(std::numeric_limits<std::size_t>::max());
+            }
+
+        protected:
+
+            using cache_type = xt::xtensor<neighbors_indices_type, 1>;
+            using cache_shape_type = typename cache_type::shape_type;
+
+            cache_type m_cache;
+        };
+ 
+ 
+        /**
+         * A pass-through/no cache for neighbors indices queries of a particular node of the grid.
+         */
+        template <unsigned int N>
+        class neighbors_no_cache
+        {
+        public:
+            static constexpr unsigned int cache_width = N;
+            using neighbors_indices_type = std::array<std::size_t, N>;
+
+            neighbors_no_cache(std::size_t /*size*/) {}
+
+            bool has(const std::size_t& /*idx*/) const { return false; }
+
+            neighbors_indices_type& get(const std::size_t& /*idx*/)
+            {
+                return m_node_neighbors;
+            }
+
+            neighbors_indices_type& get_storage(const std::size_t& /*idx*/)
+            {
+                return m_node_neighbors;
+            }
+
+            void store(const std::size_t& /*idx*/, const neighbors_indices_type neighbors_indices)
+            {
+                m_node_neighbors = neighbors_indices;
+            }
+
+            std::size_t cache_size() const { return 0; }
+
+            std::size_t cache_used() const { return 0; }
+
+            void reset() {}
+
+            void remove(const std::size_t& /*idx*/) {}
+
+        protected:
+
+            neighbors_indices_type m_node_neighbors;
         };
     }
 
@@ -231,68 +258,78 @@ namespace fastscapelib
      * is delegated to the inheriting classes.
      *
      * @tparam G Derived grid type.
-     * @tparam N Maximum neighbors count of a node.
-     * @tparam C Neighbors cache type.
      */
-    template <class G, unsigned int N, template<class, unsigned int> class C = detail::neighbors_cache>
+    template <class G, class C>
     class structured_grid
     {
     public:
 
         using derived_grid_type = G;
         using inner_types = grid_inner_types<derived_grid_type>;
+        using neighbors_indices_cache_type = C;
 
         using size_type = typename inner_types::size_type;
         using shape_type = typename inner_types::shape_type;
         using spacing_type = typename inner_types::spacing_type;
         
-        using neighbors_indices_type = typename std::array<std::size_t, N>;
-        using neighbors_distances_type = typename std::array<double, N>;
-        using neighbors_count_type = typename inner_types::neighbors_count_type;
         using neighbors_type = typename xt::xtensor<neighbor, 1>;
-        
-        // using neighbors_distance_type = typename std::array<std::size_t, 8>;
+        using neighbors_shape_type = typename neighbors_type::shape_type;
+        using neighbors_indices_type = typename C::neighbors_indices_type;
         using neighbors_distance_type = xt::xtensor<double, 1>;
+        
+        static_assert(neighbors_indices_cache_type::cache_width >= inner_types::max_neighbors,
+                      "Cache width is too small!");
 
-        //using neighbors_type = std::array<std::size_t, 8>;
+        using neighbors_distances_type = typename inner_types::neighbors_distances_type;
+        using neighbors_count_type = typename inner_types::neighbors_count_type;
 
         using spacing_t = std::conditional_t<std::is_arithmetic<spacing_type>::value,
                                             spacing_type,
                                             const spacing_type&>;
 
         using node_status_type = typename inner_types::node_status_type;
-        using neighbors_cache_type = C<G, N>;
         
-        //shape_type shape() const noexcept;
         size_type size() const noexcept;
         spacing_t spacing() const noexcept;
         const node_status_type& status_at_nodes() const;
 
-        neighbors_count_type neighbors_count(const size_type& idx) const;
+        const neighbors_count_type& neighbors_count(const size_type& idx) const;
 
-        const neighbors_type& neighbors(std::size_t idx);
+        const neighbors_indices_type& neighbors_indices(std::size_t idx);
 
-        neighbors_cache_type neighbors_cache() { return m_neighbors_cache; };
+        neighbors_type neighbors(std::size_t idx);
+
+        void neighbors(const std::size_t idx, neighbors_type& neighbors);
+
+        neighbors_indices_cache_type neighbors_indices_cache() { return m_neighbors_indices_cache; };
 
     protected:
 
         structured_grid(std::size_t size)
-            : m_neighbors_cache(neighbors_cache_type(derived_grid(), size))
+            : m_neighbors_indices_cache(neighbors_indices_cache_type(size))
         {};
 
         ~structured_grid() = default;
 
-        neighbors_cache_type m_neighbors_cache;
+        neighbors_indices_cache_type m_neighbors_indices_cache;
 
-        const derived_grid_type& derived_grid() const & noexcept;
+        const derived_grid_type& derived_grid() const noexcept;
+        derived_grid_type& derived_grid() noexcept;
 
-        // friend C;
     };
 
-    template <class G, unsigned int N, template<class, unsigned int> class C>
-    inline auto structured_grid<G, N, C>::derived_grid() const & noexcept -> const derived_grid_type&
+    template <class G, class C>
+    inline auto structured_grid<G, C>::derived_grid() const noexcept
+        -> const derived_grid_type&
     {
         return *static_cast<const derived_grid_type*>(this);
+    }
+
+    template <class G, class C>
+    inline auto structured_grid<G, C>::derived_grid() noexcept
+        -> derived_grid_type&
+    {
+        return *static_cast<derived_grid_type*>(this);
     }
 
     /**
@@ -302,8 +339,9 @@ namespace fastscapelib
     /**
      * Returns the total number of grid nodes.
      */
-    template <class G, unsigned int N, template<class, unsigned int> class C >
-    inline auto structured_grid<G, N, C>::size() const noexcept -> size_type
+    template <class G, class C>
+    inline auto structured_grid<G, C>::size() const noexcept
+        -> size_type
     {
         return derived_grid().m_size;
     }
@@ -313,8 +351,9 @@ namespace fastscapelib
      *
      * Returns a copy of the value for 1-d grids or a constant reference otherwise.
      */
-    template <class G, unsigned int N, template<class, unsigned int> class C >
-    inline auto structured_grid<G, N, C>::spacing() const noexcept -> spacing_t
+    template <class G, class C>
+    inline auto structured_grid<G, C>::spacing() const noexcept
+        -> spacing_t
     {
         return derived_grid().m_spacing;
     }
@@ -322,10 +361,50 @@ namespace fastscapelib
     /**
      * Returns a constant reference to the array of status at grid nodes.
      */
-    template <class G, unsigned int N, template<class, unsigned int> class C >
-    inline auto structured_grid<G, N, C>::status_at_nodes() const -> const node_status_type&
+    template <class G, class C>
+    inline auto structured_grid<G, C>::status_at_nodes() const
+        -> const node_status_type&
     {
         return derived_grid().m_status_at_nodes;
+    }
+
+    /**
+     * Returns a constant reference to the neighbors count of a given grid node.
+     * 
+     * @param idx Index of the grid node.
+     */
+    template <class G, class C>
+    inline auto structured_grid<G, C>::neighbors_count(const size_type& idx) const
+        -> const neighbors_count_type&
+    {
+        return derived_grid().neighbors_count(idx);
+    }
+
+    /**
+     * Iterate over the neighbors indices of a given grid node.
+     *
+     * Returns a fixed size std::array for performance considerations,
+     * always use this method with the `neighbors_count` one.
+     * 
+     * Follows looped boundary conditions, if any.
+     *
+     * @param idx Index of the grid node.
+     * @return Reference to the array of the neighbors indices of that grid node.
+     */
+    template <class G, class C>
+    inline auto structured_grid<G, C>::neighbors_indices(std::size_t idx)
+        -> const neighbors_indices_type&
+    {
+        if (m_neighbors_indices_cache.has(idx))
+        {
+            neighbors_indices_type& n_indices = m_neighbors_indices_cache.get(idx);
+            return n_indices;
+        } else
+        {
+            neighbors_indices_type& n_indices = m_neighbors_indices_cache.get_storage(idx);
+            derived_grid().neighbors_indices_impl(n_indices, idx);
+            return n_indices;
+        } 
     }
 
     /**
@@ -337,12 +416,45 @@ namespace fastscapelib
      * Follows looped boundary conditions, if any.
      *
      * @param idx Index of the grid node.
-     * @return Reference to the vector of the neighbors of that grid node.
+     * @return The vector of the neighbors of that grid node.
      */
-    template <class G, unsigned int N, template<class, unsigned int> class C >
-    inline auto structured_grid<G, N, C>::neighbors(std::size_t idx) -> const neighbors_type&
+    template <class G, class C>
+    inline auto structured_grid<G, C>::neighbors(const std::size_t idx)
+        -> neighbors_type
     {
-        return m_neighbors_cache.get_neighbors(idx);
+        neighbors_type node_neighbors;
+        neighbors(idx, node_neighbors);
+
+        return node_neighbors;
+    }
+
+    /**
+     * Iterate over the neighbors of a given grid node.
+     *
+     * Follows looped boundary conditions, if any.
+     *
+     * @param idx Index of the grid node.
+     * @param neighbors Reference to the vector to be filled with the neighbors of that grid node.
+     */
+    template <class G, class C>
+    inline void structured_grid<G, C>::neighbors(const std::size_t idx, neighbors_type& neighbors)
+    {    
+
+        std::size_t n_idx;
+        const auto& n_count = neighbors_count(idx);
+        const auto& n_indices = neighbors_indices(idx);
+        const auto& n_distances = derived_grid().neighbors_distance_impl(idx);
+
+        if (neighbors.size() != n_count)
+        {
+            neighbors.resize({n_count});
+        }
+        
+        for (neighbors_count_type i=0; i<n_count; ++i)
+        {   
+            n_idx = n_indices[i];
+            neighbors[i] = neighbor({n_idx, n_distances[i], status_at_nodes()[n_idx]});
+        }
     }
     //@}
 }

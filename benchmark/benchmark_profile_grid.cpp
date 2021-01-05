@@ -37,15 +37,24 @@ namespace fastscapelib
         {
             using grid_type = fs::profile_grid_xt<XT>;
             using size_type = typename grid_type::size_type;
+            using neighbors_type = typename grid_type::neighbors_type;
 
             auto size = static_cast<size_type>(state.range(0));
             auto grid = grid_type(size, 1.3, fs::node_status::fixed_value_boundary);
 
+            //warm-up cache
+            for (size_type idx = 0; idx < grid.size(); ++idx)
+            {
+                auto neighbors = grid.neighbors(idx);
+            } 
+
+            neighbors_type neighbors;
+            
             for (auto _ : state)
             {
-                for (size_type idx = 0; idx < size; ++idx)
+                for (size_type idx = 0; idx < grid.size(); ++idx)
                 {
-                    auto neighbors = grid.neighbors(idx);
+                    grid.neighbors(idx, neighbors);
                 }
             }
         }

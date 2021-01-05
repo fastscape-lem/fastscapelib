@@ -375,8 +375,8 @@ namespace fastscapelib
 
         TEST_F(raster_grid, size)
         {
-            EXPECT_EQ(fixed_grid.size(), 50);
-            EXPECT_EQ(looped_grid.size(), 50);
+            EXPECT_EQ(fixed_grid.size(), 50u);
+            EXPECT_EQ(looped_grid.size(), 50u);
         }
 
         TEST_F(raster_grid, gcode)
