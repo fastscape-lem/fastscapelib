@@ -123,6 +123,6 @@ namespace fastscapelib
 
         BENCHMARK_TEMPLATE(profile_grid__size, fs::xtensor_selector)
         ->Apply(bms::grid_sizes<benchmark::kNanosecond>);
-        
+ 
     } // namespace bench
 } // namespace fastscapelib

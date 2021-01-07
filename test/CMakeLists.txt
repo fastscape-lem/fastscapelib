@@ -83,6 +83,7 @@ set(FASTSCAPELIB_TEST_SRC
     test_hillslope.cpp
     test_flow_routing.cpp
     test_profile_grid.cpp
+    test_raster_grid.cpp
     test_sinks.cpp
     test_bedrock_channel.cpp
 )
