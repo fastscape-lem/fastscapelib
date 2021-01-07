@@ -32,7 +32,7 @@ namespace fastscapelib
         profile_boundary_status(const node_status left_status, const node_status right_status);
         profile_boundary_status(const std::array<node_status, 2>& status);
 
-        bool is_horizontal_looped();
+        bool is_horizontal_looped() const;
 
     protected:
 
@@ -74,7 +74,7 @@ namespace fastscapelib
     /**
      * Return true if periodic (looped) conditions are set for ``left`` and ``right``.
      */
-    inline bool profile_boundary_status::is_horizontal_looped()
+    inline bool profile_boundary_status::is_horizontal_looped() const
     {
         return is_looped(left) && is_looped(right);
     }
@@ -108,7 +108,9 @@ namespace fastscapelib
 
         using size_type = typename xt_type::size_type;
         using shape_type = typename xt_type::shape_type;
-
+        using neighbors_count_type = std::uint8_t;
+        using code_type = std::uint8_t;
+        
         struct is_structured
         {
             static constexpr bool value = true;
@@ -122,7 +124,6 @@ namespace fastscapelib
         using boundary_status_type = profile_boundary_status;
         using spacing_type = double;
         using node_status_type = xt_container_t<xt_selector, node_status, xt_ndims::value>;
-        using neighbors_type = std::vector<neighbor>;
     };
 
     /**
@@ -134,12 +135,12 @@ namespace fastscapelib
      * @tparam XT xtensor container selector for data array members.
      */
     template <class XT>
-    class profile_grid_xt : public structured_grid<profile_grid_xt<XT>>
+    class profile_grid_xt : public structured_grid<profile_grid_xt<XT>, 2>
     {
     public:
 
         using self_type = profile_grid_xt<XT>;
-        using base_type = structured_grid<self_type>;
+        using base_type = structured_grid<self_type, 2>;
         using inner_types = grid_inner_types<self_type>;
 
         using xt_selector = typename inner_types::xt_selector;
@@ -147,9 +148,13 @@ namespace fastscapelib
 
         using size_type = typename inner_types::size_type;
         using shape_type = typename inner_types::shape_type;
-
         using spacing_type = typename inner_types::spacing_type;
-        using neighbors_type = typename inner_types::neighbors_type;
+        using code_type = typename inner_types::code_type;
+
+        using neighbors_type = typename base_type::neighbors_type;
+        using neighbors_indices_type = typename base_type::neighbors_indices_type;
+        using neighbors_distances_type = typename base_type::neighbors_distances_type;
+        using neighbors_count_type = typename inner_types::neighbors_count_type;
 
         using boundary_status_type = typename inner_types::boundary_status_type;
         using node_status_type = typename inner_types::node_status_type;
@@ -161,21 +166,38 @@ namespace fastscapelib
 
     protected:
 
+        using coded_neighbors_distances_type = std::array<neighbors_distances_type, 3>;
+
         shape_type m_shape;
         size_type m_size;
         spacing_type m_spacing;
+        xt::xtensor<code_type, 1> m_gcode_idx;
 
         node_status_type m_status_at_nodes;
         boundary_status_type m_status_at_bounds;
+
         void set_status_at_nodes(const std::vector<node>& status_at_nodes);
 
         static constexpr std::array<std::ptrdiff_t, 3> offsets { {0, -1, 1} };
         std::vector<neighbors_type> m_all_neighbors;
-        void precompute_neighbors();
 
-        const neighbors_type& neighbors_impl(std::size_t idx) const;
+        coded_neighbors_distances_type m_neighbors_distances;
+        void build_neighbors_distances();
 
-        friend class structured_grid<self_type>;
+        void build_gcode();
+        code_type gcode(const size_type& idx) const;
+
+        std::array<neighbors_count_type, 3> m_neighbors_count;
+        void build_neighbors_count();
+        inline neighbors_count_type neighbors_count(const size_type& idx) const noexcept;
+        inline neighbors_count_type neighbors_count(const code_type& code) const noexcept;
+
+        void neighbors_indices_impl(neighbors_indices_type& neighbors, const size_type& idx) const;
+
+        const neighbors_distances_type& neighbors_distance_impl(const size_type& idx) const;
+
+        friend class structured_grid<self_type, 2>;
+        friend typename base_type::neighbors_cache_type;
     };
 
     template <class XT>
@@ -198,13 +220,64 @@ namespace fastscapelib
                                         spacing_type spacing,
                                         const boundary_status_type& status_at_bounds,
                                         const std::vector<node>& status_at_nodes)
-        : base_type(), m_size(size), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
+        : base_type(size), m_size(size), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
     {
         m_shape = {static_cast<typename shape_type::value_type>(m_size)};
         set_status_at_nodes(status_at_nodes);
-        precompute_neighbors();
+        build_gcode();
+        build_neighbors_distances();
+        build_neighbors_count();
     }
     //@}
+
+    template <class XT>
+    void profile_grid_xt<XT>:: build_gcode()
+    {
+        m_gcode_idx.resize({m_size});
+
+        m_gcode_idx.fill(1);
+        m_gcode_idx[0] = 0;
+        m_gcode_idx[m_size-1] = 2;
+    }
+
+    template <class XT>
+    auto profile_grid_xt<XT>::gcode(const size_type& idx) const
+    -> code_type
+    {
+        return m_gcode_idx[idx];
+    }
+
+    template <class XT>
+    void profile_grid_xt<XT>::build_neighbors_distances()
+    {
+        m_neighbors_distances.fill({m_spacing, m_spacing});
+    }
+
+    template <class XT>
+    void profile_grid_xt<XT>::build_neighbors_count()
+    {
+        if (m_status_at_bounds.is_horizontal_looped())
+        {
+            m_neighbors_count = std::array<neighbors_count_type, 3>({2, 2, 2});
+        } else
+        {
+            m_neighbors_count = std::array<neighbors_count_type, 3>({1, 2, 1});
+        }
+    }
+
+    template <class XT>
+    auto profile_grid_xt<XT>::neighbors_count(const size_type& idx) const noexcept
+    -> neighbors_count_type
+    {
+        return m_neighbors_count[gcode(idx)];
+    }
+
+    template <class XT>
+    auto profile_grid_xt<XT>::neighbors_count(const code_type& code) const noexcept
+    -> neighbors_count_type
+    {
+        return m_neighbors_count[code];
+    }
 
     template <class XT>
     void profile_grid_xt<XT>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
@@ -213,7 +286,7 @@ namespace fastscapelib
 
         temp_status_at_nodes(0) = m_status_at_bounds.left;
         temp_status_at_nodes(m_size-1) = m_status_at_bounds.right;
-
+        
         for (const node& n : status_at_nodes)
         {
             if (n.status == node_status::looped_boundary)
@@ -235,40 +308,40 @@ namespace fastscapelib
     }
 
     template <class XT>
-    void profile_grid_xt<XT>::precompute_neighbors()
+    auto profile_grid_xt<XT>::neighbors_distance_impl(const size_type& /*idx*/) const
+    -> const neighbors_distances_type&
     {
-        m_all_neighbors.resize(m_size);
+        return m_neighbors_distances[0];
+    }
 
-        for (std::size_t idx=1; idx<m_size-1; ++idx)
+    template <class XT>
+    inline auto profile_grid_xt<XT>::neighbors_indices_impl(neighbors_indices_type& neighbors, const size_type& idx) const
+        -> void
+    {
+        if (idx==0)
+        {
+            if(m_status_at_bounds.is_horizontal_looped()) 
+            { 
+                neighbors[0] = m_size-1;
+                neighbors[1] = 1;
+            } else
+            {
+                neighbors[0] = 1;
+            }
+        } 
+        else if (idx == m_size-1)
+        {
+            neighbors[0] = m_size-2 ;
+            if(m_status_at_bounds.is_horizontal_looped()) { neighbors[1] = 0; }
+        } 
+        else
         {
             for (std::size_t k=1; k<3; ++k)
             {
                 std::size_t nb_idx = detail::add_offset(idx, offsets[k]);
-                neighbor nb {nb_idx, m_spacing, m_status_at_nodes[nb_idx]};
-                m_all_neighbors[idx].push_back(nb);
+                neighbors[k-1] = nb_idx;
             }
         }
-
-        m_all_neighbors[0].push_back(
-            {1, m_spacing, m_status_at_nodes[1]});
-        m_all_neighbors[m_size-1].push_back(
-            {m_size-2, m_spacing, m_status_at_nodes[m_size-2]});
-
-        if (m_status_at_bounds.is_horizontal_looped())
-        {
-            m_all_neighbors[0].insert(
-                m_all_neighbors[0].begin(),
-                {m_size-1, m_spacing, m_status_at_nodes[m_size-1]});
-            m_all_neighbors[m_size-1].push_back(
-                {0, m_spacing, m_status_at_nodes[0]});
-        }
-    }
-
-    template <class XT>
-    inline auto profile_grid_xt<XT>::neighbors_impl(std::size_t idx) const
-        -> const neighbors_type&
-    {
-        return m_all_neighbors.at(idx);
     }
 
     /**
