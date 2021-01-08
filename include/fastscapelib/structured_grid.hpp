@@ -270,6 +270,7 @@ namespace fastscapelib
 
         using size_type = typename inner_types::size_type;
         using shape_type = typename inner_types::shape_type;
+        using length_type = typename inner_types::length_type;
         using spacing_type = typename inner_types::spacing_type;
         
         using neighbors_type = typename xt::xtensor<neighbor, 1>;
@@ -290,7 +291,11 @@ namespace fastscapelib
         using node_status_type = typename inner_types::node_status_type;
         
         size_type size() const noexcept;
+
         spacing_t spacing() const noexcept;
+
+        length_type length() const noexcept;
+
         const node_status_type& status_at_nodes() const;
 
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
@@ -356,6 +361,16 @@ namespace fastscapelib
         -> spacing_t
     {
         return derived_grid().m_spacing;
+    }
+
+    /**
+     * Returns the length of the grid for all its dimensions.
+     */
+    template <class G, class C>
+    inline auto structured_grid<G, C>::length() const noexcept
+        -> length_type
+    {
+        return derived_grid().m_length;
     }
 
     /**

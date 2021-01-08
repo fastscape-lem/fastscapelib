@@ -89,9 +89,13 @@ namespace fastscapelib
                 fs::raster_boundary_status hvlooped_status {hvloop};
 
                 using grid_type = fs::raster_grid_xt<fs::xtensor_selector>;
-                using size_type = typename grid_type::size_type;
 
-                std::array<size_type, 2> shape {{5, 10}};
+                using size_type = typename grid_type::size_type;
+                using length_type = typename grid_type::length_type;
+                using spacing_type = typename grid_type::spacing_type;
+                using shape_type = typename grid_type::shape_type;
+
+                shape_type shape {{5, 10}};
                 grid_type fixed_grid = grid_type(shape, {1.3, 1.2}, fixed_value_status);
                 grid_type hlooped_grid = grid_type(shape, {1.3, 1.2}, hlooped_status);
                 grid_type vlooped_grid = grid_type(shape, {1.3, 1.2}, vlooped_status);
@@ -369,14 +373,28 @@ namespace fastscapelib
 
         TEST_F(raster_grid, spacing)
         {
-            EXPECT_EQ(fixed_grid.spacing(), (std::array<double, 2> {{1.3, 1.2}}));
-            EXPECT_EQ(looped_grid.spacing(), (std::array<double, 2> {{1.4, 1.8}}));
+            EXPECT_TRUE(xt::all(xt::equal(fixed_grid.spacing(), spacing_type({1.3, 1.2}))));
+            EXPECT_TRUE(xt::all(xt::equal(looped_grid.spacing(), spacing_type({1.4, 1.8}))));
         }
 
         TEST_F(raster_grid, size)
         {
             EXPECT_EQ(fixed_grid.size(), 50u);
             EXPECT_EQ(looped_grid.size(), 50u);
+        }
+
+        TEST_F(raster_grid, length)
+        {
+            EXPECT_TRUE(xt::all(xt::equal(fixed_grid.length(), length_type({6.5, 12.}))));
+            EXPECT_TRUE(xt::all(xt::equal(looped_grid.length(), length_type({7., 18.}))));
+        }
+
+        TEST_F(raster_grid, from_length)
+        {
+            auto grid_from_length = grid_type::from_length(shape_type({{150, 100}}), length_type({1500., 2000.}), fixed_value_status);
+            EXPECT_TRUE(xt::all(xt::equal(grid_from_length.length(), length_type({1500., 2000.}))));
+            EXPECT_EQ(grid_from_length.size(), 15000u);
+            EXPECT_TRUE(xt::all(xt::equal(grid_from_length.spacing(), spacing_type({10., 20.}))));
         }
 
         TEST_F(raster_grid, gcode)

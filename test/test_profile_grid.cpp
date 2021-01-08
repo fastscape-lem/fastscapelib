@@ -177,5 +177,19 @@ namespace fastscapelib
             EXPECT_EQ(fixed_grid.size(), 5u);
             EXPECT_EQ(looped_grid.size(), 5u);
         }
+
+        TEST_F(profile_grid, length)
+        {
+            EXPECT_EQ(fixed_grid.length(), 6.5);
+            EXPECT_EQ(looped_grid.length(), 7.);
+        }
+
+        TEST_F(profile_grid, from_length)
+        {
+            auto grid_from_length = grid_type::from_length(150, 1500., fs::node_status::fixed_value_boundary);
+            EXPECT_EQ(grid_from_length.length(), 1500.);
+            EXPECT_EQ(grid_from_length.size(), 150u);
+            EXPECT_EQ(grid_from_length.spacing(), 10.);
+        }
     }
 }
