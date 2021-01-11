@@ -19,10 +19,10 @@ namespace fastscapelib
     namespace bench
     {
 
-        template <class XT>
+        template <class G>
         void raster_grid__ctor(benchmark::State& state)
         {
-            using grid = fs::raster_grid_xt<XT>;
+            using grid = G;
             using size_type = typename grid::size_type;
 
             auto n = static_cast<size_type>(state.range(0));
@@ -34,10 +34,10 @@ namespace fastscapelib
             }
         }
 
-        template <fs::raster_connect RC>
+        template <class G>
         void raster_grid__neighbors(benchmark::State& state)
         {
-            using grid_type = fs::raster_grid;
+            using grid_type = G;
             using size_type = typename grid_type::size_type;
             using neighbors_type = typename grid_type::neighbors_type;
 
@@ -45,7 +45,7 @@ namespace fastscapelib
             std::array<size_type, 2> shape {n, n};
             auto grid = grid_type(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
 
-            //warm-up cache
+            // warm-up cache
             for (size_type idx = 0; idx < grid.size(); ++idx)
             {
                 auto neighbors = grid.neighbors(idx);
@@ -62,170 +62,16 @@ namespace fastscapelib
             }
         }
 
-        template <fs::raster_connect RC>
-        void raster_grid__neighbors_count(benchmark::State& state)
-        {
-            using grid_type = fs::raster_grid;
-            using size_type = typename grid_type::size_type;
-            using neighbors_type = typename grid_type::neighbors_type;
-
-            auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
-            auto grid = grid_type(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
-            
-            for (auto _ : state)
-            {
-                for (size_type idx = 0; idx < grid.size(); ++idx)
-                {
-                    auto count = grid.neighbors_count(idx);
-                    benchmark::DoNotOptimize(count);
-                }
-            }
-        }
-
-        template <fs::raster_connect RC>
-        void raster_grid__neighbors_distance(benchmark::State& state)
-        {
-            using grid_type = fs::raster_grid;
-            using size_type = typename grid_type::size_type;
-            using neighbors_type = typename grid_type::neighbors_type;
-
-            auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
-            auto grid = grid_type(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
-            
-            for (auto _ : state)
-            {
-                for (size_type idx = 0; idx < grid.size(); ++idx)
-                {
-                    auto distance = grid.neighbors_distance_impl(idx);
-                    benchmark::DoNotOptimize(distance);
-                }
-            }
-        }
-
-        template <fs::raster_connect RC>
-        void raster_grid__ref_neighbors(benchmark::State& state)
-        {
-            using grid_type = fs::raster_grid;
-            using size_type = typename grid_type::size_type;
-            using neighbors_type = typename grid_type::neighbors_type;
-
-            auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
-            auto grid = grid_type(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
-
-            for (auto _ : state)
-            {
-                for (size_type idx = 0; idx < grid.size(); ++idx)
-                {
-                    for (auto n = 0; n < 8; ++n)
-                    {
-                        fs::neighbor neighbor {0, 1., node_status::core};
-                        benchmark::DoNotOptimize(neighbor);
-                    }
-                }
-            }
-        }
-
-        template <fs::raster_connect RC>
-        void raster_grid__neighbor_indices(benchmark::State& state)
-        {
-            using size_type = typename fs::raster_grid::size_type;
-
-            auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
-
-            auto rg = fs::raster_grid(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
-
-            for (auto _ : state)
-            {
-                for (size_type r = 0; r < shape[0]; ++r)
-                {
-                    for (size_type c = 0; c < shape[1]; ++c)
-                    {
-                        auto nb_indices = rg.neighbor_indices<RC>(r, c);
-                    }
-                }
-            }
-        }
-
-        template <class XT>
-        void raster_grid__gcode_rowcol(benchmark::State& state)
-        {
-            using size_type = typename fs::raster_grid::size_type;
-
-            auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
-
-            auto rg = fs::raster_grid(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
-
-            for (auto _ : state)
-            {
-                for (size_type r = 0; r < shape[0]; ++r)
-                {
-                    for (size_type c = 0; c < shape[1]; ++c)
-                    {
-                        auto code = rg.gcode(r, c);
-                        benchmark::DoNotOptimize(code);
-                    }
-                }
-            }
-        }
-
-        template <class XT>
-        void raster_grid__gcode_index(benchmark::State& state)
-        {
-            using size_type = typename fs::raster_grid::size_type;
-
-            auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
-
-            auto rg = fs::raster_grid(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
-
-            for (auto _ : state)
-            {
-                for (size_type idx = 0; idx < rg.size(); ++idx)
-                {
-                    auto code = rg.gcode(idx);
-                    benchmark::DoNotOptimize(code);
-                }
-            }
-        }
-
-        template <fs::raster_connect RC>
-        void raster_grid__neighbor_offsets(benchmark::State& state)
-        {
-            using size_type = typename fs::raster_grid::size_type;
-
-            auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
-
-            auto rg = fs::raster_grid(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
-
-            for (auto _ : state)
-            {
-                for (size_type r = 0; r < shape[0]; ++r)
-                {
-                    for (size_type c = 0; c < shape[1]; ++c)
-                    {
-                        auto offset = rg.neighbor_offsets<RC>(0);
-
-                        benchmark::DoNotOptimize(offset);
-                    }
-                }
-            }
-        }
-
-        template <fs::raster_connect RC>
+        template <class G>
         void raster_grid__neighbor_view(benchmark::State& state)
         {
-            using size_type = typename fs::raster_grid::size_type;
+            using grid_type = G;
+            using size_type = typename grid_type::size_type;
 
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape {n, n};
 
-            auto rg = fs::raster_grid(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
+            auto rg = grid_type(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
             xt::xtensor<double, 2> field(shape, 1.);
 
             for (auto _ : state)
@@ -234,50 +80,28 @@ namespace fastscapelib
                 {
                     for (size_type c = 0; c < shape[1]; ++c)
                     {
-                        auto nb_field_view = rg.neighbor_view<RC>(field, r * shape[1] + c);
+                        auto nb_field_view = rg.neighbor_view(field, r * shape[1] + c);
                     }
                 }
             }
         }
 
-        template <fs::raster_connect RC>
-        void raster_grid__neighbor_distances(benchmark::State& state)
-        {
-            using size_type = typename fs::raster_grid::size_type;
-
-            auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
-
-            auto rg = fs::raster_grid(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
-
-            for (auto _ : state)
-            {
-                for (size_type r = 0; r < shape[0]; ++r)
-                {
-                    for (size_type c = 0; c < shape[1]; ++c)
-                    {
-                        auto nb_distances = rg.neighbor_distances<RC>(r * shape[1] + c);
-                    }
-                }
-            }
-        }
-
-        template <fs::raster_connect RC>
+        template <class G>
         void raster_grid__neighbor_classic(benchmark::State& state)
         {
-            using size_type = typename fs::raster_grid::size_type;
+            using grid_type = G;
+            using size_type = typename grid_type::size_type;
+            using neighbors_offsets_type = typename raster_neighbors<raster_connect::queen>::neighbors_offsets_type;
 
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape {n, n};
 
-            auto rg = fs::raster_grid(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
+            neighbors_offsets_type::shape_type sh0 = {grid_type::max_neighbors()};
+            neighbors_offsets_type offsets = xt::empty<xt::xtensor_fixed<std::ptrdiff_t, xt::xshape<2>>>(sh0);
 
-            auto get_neighbors_indices = [&shape](auto& r, auto& c) -> fs::raster_grid::offset_list {
+            auto get_neighbors_indices = [&shape, &offsets](auto& r, auto& c) -> neighbors_offsets_type {
 
-                fs::raster_grid::offset_list::shape_type sh0 = {8};
-                fs::raster_grid::offset_list offsets = xt::empty<xt::xtensor_fixed<std::ptrdiff_t, xt::xshape<2>>>(sh0);
-
-                for(std::size_t k=1; k<=8; ++k)
+                    for(std::size_t k=1; k<=grid_type::max_neighbors(); ++k)
                     {
                         const index_t kr = r + fs::consts::d8_row_offsets[k];
                         const index_t kc = c + fs::consts::d8_col_offsets[k];
@@ -289,7 +113,7 @@ namespace fastscapelib
                             continue;
                         }
                     }
-                return offsets;
+                    return offsets;
                 };
 
             for (auto _ : state)
@@ -304,50 +128,38 @@ namespace fastscapelib
             }
         }
 
-        BENCHMARK_TEMPLATE(raster_grid__ctor, fs::xtensor_selector)
-        ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);
+        using queen_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::queen, detail::neighbors_no_cache<8>>;
+        using queen_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::queen, detail::neighbors_cache<8>>;
 
-        BENCHMARK_TEMPLATE(raster_grid__gcode_index, fs::xtensor_selector)
-        ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);
+        using rook_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::rook, detail::neighbors_no_cache<4>>;
+        using rook_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::rook, detail::neighbors_cache<4>>;
 
-        BENCHMARK_TEMPLATE(raster_grid__gcode_rowcol, fs::xtensor_selector)
-        ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);
+        using bishop_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::bishop, detail::neighbors_no_cache<4>>;
+        using bishop_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::bishop, detail::neighbors_cache<4>>;
 
-        BENCHMARK_TEMPLATE(raster_grid__neighbors_count, fs::raster_connect::queen)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
 
-        BENCHMARK_TEMPLATE(raster_grid__neighbors_distance, fs::raster_connect::queen)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
+#define BENCH_GRID(NAME, GRID)                              \
+    BENCHMARK_TEMPLATE(NAME, GRID)                          \
+    ->Apply(bms::small_grid_sizes<benchmark::kMillisecond>);  
 
-        BENCHMARK_TEMPLATE(raster_grid__neighbors, fs::raster_connect::queen)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
+#define BENCH_RC(NAME)                \
+    BENCH_GRID(NAME, queen_nocache)   \
+    BENCH_GRID(NAME, rook_nocache)    \
+    BENCH_GRID(NAME, bishop_nocache)
 
-        BENCHMARK_TEMPLATE(raster_grid__neighbor_classic, fs::raster_connect::queen)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
+#define BENCH_ALL(NAME)               \
+    BENCH_GRID(NAME, queen_nocache)   \
+    BENCH_GRID(NAME, queen_cacheall)  \
+    BENCH_GRID(NAME, rook_nocache)    \
+    BENCH_GRID(NAME, rook_cacheall)   \
+    BENCH_GRID(NAME, bishop_nocache)  \
+    BENCH_GRID(NAME, bishop_cacheall)
 
-        BENCHMARK_TEMPLATE(raster_grid__ref_neighbors, fs::raster_connect::queen)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
 
-        BENCHMARK_TEMPLATE(raster_grid__neighbor_offsets, fs::raster_connect::queen)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
-
-        BENCHMARK_TEMPLATE(raster_grid__neighbor_indices, fs::raster_connect::queen)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
-
-        BENCHMARK_TEMPLATE(raster_grid__neighbor_indices, fs::raster_connect::rook)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
-
-        BENCHMARK_TEMPLATE(raster_grid__neighbor_view, fs::raster_connect::queen)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
-
-        BENCHMARK_TEMPLATE(raster_grid__neighbor_view, fs::raster_connect::rook)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
-
-        BENCHMARK_TEMPLATE(raster_grid__neighbor_distances, fs::raster_connect::queen)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
-
-        BENCHMARK_TEMPLATE(raster_grid__neighbor_distances, fs::raster_connect::rook)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
+        BENCH_ALL(raster_grid__ctor);
+        BENCH_ALL(raster_grid__neighbors);
+        BENCH_RC(raster_grid__neighbor_classic);
+        BENCH_ALL(raster_grid__neighbor_view);
 
     } // namespace bench
 } // namespace fastscapelib

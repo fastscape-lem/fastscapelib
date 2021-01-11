@@ -2,7 +2,8 @@
  * grids (channel, raster, etc.) hold and manage grid/mesh geometry,
  * topology and boundary conditions.
  */
-#pragma once
+#ifndef FASTSCAPELIB_STRUCTURED_GRID_H
+#define FASTSCAPELIB_STRUCTURED_GRID_H
 
 #include <algorithm>
 #include <array>
@@ -124,7 +125,7 @@ namespace fastscapelib
         /**
          * Provides a cache for neighbors indices queries of a particular node of the grid.
          */
-        template <unsigned int N>
+        template <std::uint8_t N>
         class neighbors_cache
         {
         public:
@@ -160,12 +161,12 @@ namespace fastscapelib
                 m_cache[idx] = neighbors_indices;
             }
 
-            std::size_t cache_size() 
+            std::size_t cache_size() const
             {
                 return m_cache.size();
             };
 
-            std::size_t cache_used() 
+            std::size_t cache_used() const
             {
                 std::size_t count = 0;
                 
@@ -268,25 +269,23 @@ namespace fastscapelib
         using inner_types = grid_inner_types<derived_grid_type>;
         using neighbors_indices_cache_type = C;
 
+        static_assert(neighbors_indices_cache_type::cache_width >= inner_types::max_neighbors,
+                      "Cache width is too small!");
+
         using size_type = typename inner_types::size_type;
         using shape_type = typename inner_types::shape_type;
         using length_type = typename inner_types::length_type;
         using spacing_type = typename inner_types::spacing_type;
-        
-        using neighbors_type = typename xt::xtensor<neighbor, 1>;
-        using neighbors_shape_type = typename neighbors_type::shape_type;
-        using neighbors_indices_type = typename C::neighbors_indices_type;
-        using neighbors_distance_type = xt::xtensor<double, 1>;
-        
-        static_assert(neighbors_indices_cache_type::cache_width >= inner_types::max_neighbors,
-                      "Cache width is too small!");
-
-        using neighbors_distances_type = typename inner_types::neighbors_distances_type;
-        using neighbors_count_type = typename inner_types::neighbors_count_type;
+        using distance_type = typename inner_types::distance_type;
 
         using spacing_t = std::conditional_t<std::is_arithmetic<spacing_type>::value,
                                             spacing_type,
                                             const spacing_type&>;
+
+        using neighbors_type = typename xt::xtensor<neighbor, 1>;
+        using neighbors_count_type = typename inner_types::neighbors_count_type;
+        using neighbors_indices_type = xt::xtensor<size_type, 1>;
+        using neighbors_distances_type = xt::xtensor<distance_type, 1>;
 
         using node_status_type = typename inner_types::node_status_type;
         
@@ -300,15 +299,20 @@ namespace fastscapelib
 
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
 
-        const neighbors_indices_type& neighbors_indices(std::size_t idx);
+        neighbors_distances_type neighbors_distances(const size_type& idx) const;
 
-        neighbors_type neighbors(std::size_t idx);
+        neighbors_indices_type neighbors_indices(const size_type& idx);
 
-        void neighbors(const std::size_t idx, neighbors_type& neighbors);
+        neighbors_type neighbors(const size_type& idx);
 
-        neighbors_indices_cache_type neighbors_indices_cache() { return m_neighbors_indices_cache; };
+        void neighbors(const size_type& idx, neighbors_type& neighbors);
+
+        const neighbors_indices_cache_type& neighbors_indices_cache() { return m_neighbors_indices_cache; };
 
     protected:
+
+        using neighbors_indices_impl_type = typename C::neighbors_indices_type;
+        using neighbors_distances_impl_type = typename inner_types::neighbors_distances_impl_type;
 
         structured_grid(std::size_t size)
             : m_neighbors_indices_cache(neighbors_indices_cache_type(size))
@@ -321,6 +325,9 @@ namespace fastscapelib
         const derived_grid_type& derived_grid() const noexcept;
         derived_grid_type& derived_grid() noexcept;
 
+        const neighbors_indices_impl_type& neighbors_indices_impl(const size_type& idx);
+
+        const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx) const;
     };
 
     template <class G, class C>
@@ -395,6 +402,26 @@ namespace fastscapelib
         return derived_grid().neighbors_count(idx);
     }
 
+    template <class G, class C>
+    inline auto structured_grid<G, C>::neighbors_indices(const size_type& idx)
+        -> neighbors_indices_type
+    {
+        neighbors_indices_type indices = xt::adapt(neighbors_indices_impl(idx));
+        auto view = xt::view(indices, xt::range(0, neighbors_count(idx)));
+
+        return view;
+    }
+
+    template <class G, class C>
+    inline auto structured_grid<G, C>::neighbors_distances(const size_type& idx) const
+        -> neighbors_distances_type
+    {
+        neighbors_distances_type distances = xt::adapt(neighbors_distances_impl(idx));
+        auto view = xt::view(distances, xt::range(0, neighbors_count(idx)));
+
+        return view;
+    }
+
     /**
      * Iterate over the neighbors indices of a given grid node.
      *
@@ -407,19 +434,26 @@ namespace fastscapelib
      * @return Reference to the array of the neighbors indices of that grid node.
      */
     template <class G, class C>
-    inline auto structured_grid<G, C>::neighbors_indices(std::size_t idx)
-        -> const neighbors_indices_type&
+    inline auto structured_grid<G, C>::neighbors_indices_impl(const size_type& idx)
+        -> const neighbors_indices_impl_type&
     {
         if (m_neighbors_indices_cache.has(idx))
         {
-            neighbors_indices_type& n_indices = m_neighbors_indices_cache.get(idx);
+            neighbors_indices_impl_type& n_indices = m_neighbors_indices_cache.get(idx);
             return n_indices;
         } else
         {
-            neighbors_indices_type& n_indices = m_neighbors_indices_cache.get_storage(idx);
+            neighbors_indices_impl_type& n_indices = m_neighbors_indices_cache.get_storage(idx);
             derived_grid().neighbors_indices_impl(n_indices, idx);
             return n_indices;
         } 
+    }
+
+    template <class G, class C>
+    inline auto structured_grid<G, C>::neighbors_distances_impl(const size_type& idx) const
+        -> const neighbors_distances_impl_type&
+    {
+        return derived_grid().neighbors_distances_impl(idx);
     }
 
     /**
@@ -434,7 +468,7 @@ namespace fastscapelib
      * @return The vector of the neighbors of that grid node.
      */
     template <class G, class C>
-    inline auto structured_grid<G, C>::neighbors(const std::size_t idx)
+    inline auto structured_grid<G, C>::neighbors(const size_type& idx)
         -> neighbors_type
     {
         neighbors_type node_neighbors;
@@ -452,13 +486,12 @@ namespace fastscapelib
      * @param neighbors Reference to the vector to be filled with the neighbors of that grid node.
      */
     template <class G, class C>
-    inline void structured_grid<G, C>::neighbors(const std::size_t idx, neighbors_type& neighbors)
+    inline void structured_grid<G, C>::neighbors(const size_type& idx, neighbors_type& neighbors)
     {    
-
-        std::size_t n_idx;
+        size_type n_idx;
         const auto& n_count = neighbors_count(idx);
-        const auto& n_indices = neighbors_indices(idx);
-        const auto& n_distances = derived_grid().neighbors_distance_impl(idx);
+        const auto& n_indices = neighbors_indices_impl(idx);
+        const auto& n_distances = neighbors_distances_impl(idx);
 
         if (neighbors.size() != n_count)
         {
@@ -473,3 +506,5 @@ namespace fastscapelib
     }
     //@}
 }
+
+#endif

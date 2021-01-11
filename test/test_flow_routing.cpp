@@ -118,7 +118,7 @@ TEST(flow_routing, compute_receivers__profile)
 }
 
 
-TEST(flow_routing, compute_receivers__raster)
+TEST(flow_routing, compute_receivers__queen_raster)
 {
     using grid = fs::raster_grid;
     using size_type = typename grid::size_type;
@@ -184,6 +184,136 @@ TEST(flow_routing, compute_receivers__raster)
 
     //TODO: -> ideally, test case should include all 8 directions
     //      (maybe create fixtures with transpose)
+}
+
+
+TEST(flow_routing, compute_receivers__rook_raster)
+{
+    using grid = fs::raster_grid_xt<fs::xtensor_selector, fs::raster_connect::rook>;
+    using size_type = typename grid::size_type;
+
+    auto n = static_cast<size_type>(4);
+    std::array<size_type, 2> shape {n, n};
+
+    xt::xtensor<double, 2> elevation
+        {{0.82,  0.16,  0.14,  0.20},
+         {0.71,  0.97,  0.41,  0.09},
+         {0.49,  0.01,  0.10,  0.38},
+         {0.29,  0.82,  0.09,  0.88}};
+
+    { // fixed value boundaries
+        auto raster_grid = grid(shape, {1.1, 1.2}, fs::node_status::fixed_value_boundary);
+
+        xt::xtensor<size_type, 1> receivers = xt::ones<size_type>({16}) * -1;
+        xt::xtensor<size_type, 1> expected_receivers
+            { 1,  2,  2,  7,
+              8,  9, 10,  7,
+              9,  9,  9,  7,
+              12, 9, 14, 14 };
+
+        xt::xtensor<double, 1> dist2receivers = xt::ones<double>({16}) * -1.;
+        xt::xtensor<double, 1> expected_dist2receivers
+            { 1.2,  1.2,  0.0,  1.1,
+              1.1,  1.1,  1.1,  0.0,
+              1.2,  0.0,  1.2,  1.1,
+              0.0,  1.1,  0.0,  1.2 };
+
+        fs::compute_receivers(receivers, dist2receivers,
+                              elevation, raster_grid);
+
+        EXPECT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
+        EXPECT_TRUE(xt::allclose(dist2receivers, expected_dist2receivers));
+    }
+
+    { // looped boundaries
+        auto raster_grid = grid(shape, {1.1, 1.2}, fs::node_status::looped_boundary);
+
+        xt::xtensor<size_type, 1> receivers = xt::ones<size_type>({16}) * -1;
+        xt::xtensor<size_type, 1> expected_receivers
+            { 1,  2, 14,  7,
+              7,  9, 10,  7,
+              9,  9,  9,  7,
+              12, 9, 14, 14 };
+
+        xt::xtensor<double, 1> dist2receivers = xt::ones<double>({16}) * -1.;
+        xt::xtensor<double, 1> expected_dist2receivers
+            { 1.2,  1.2,  1.1,  1.1,
+              1.2,  1.1,  1.1,  0.0,
+              1.2,  0.0,  1.2,  1.1,
+              0.0,  1.1,  0.0,  1.2 };
+
+        fs::compute_receivers(receivers, dist2receivers,
+                              elevation, raster_grid);
+
+        EXPECT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
+        EXPECT_TRUE(xt::allclose(dist2receivers, expected_dist2receivers));
+    }
+}
+
+
+TEST(flow_routing, compute_receivers__bishop_raster)
+{
+    using grid = fs::raster_grid_xt<fs::xtensor_selector, fs::raster_connect::bishop>;
+    using size_type = typename grid::size_type;
+
+    auto n = static_cast<size_type>(4);
+    std::array<size_type, 2> shape {n, n};
+
+    xt::xtensor<double, 2> elevation
+        {{0.82,  0.16,  0.14,  0.20},
+         {0.71,  0.97,  0.41,  0.09},
+         {0.49,  0.01,  0.10,  0.38},
+         {0.29,  0.82,  0.09,  0.88}};
+
+    double dia = std::sqrt(1.1*1.1 + 1.2*1.2);
+
+    { // fixed value boundaries
+        auto raster_grid = grid(shape, {1.1, 1.2}, fs::node_status::fixed_value_boundary);
+
+        xt::xtensor<size_type, 1> receivers = xt::ones<size_type>({16}) * -1;
+        xt::xtensor<size_type, 1> expected_receivers
+            { 0,  1,  7,  3,
+              9, 10,  9,  7,
+              8,  9,  7, 14,
+              9, 10,  9, 10 };
+
+        xt::xtensor<double, 1> dist2receivers = xt::ones<double>({16}) * -1.;
+        xt::xtensor<double, 1> expected_dist2receivers
+            { 0.0,  0.0,  dia,  0.0,
+              dia,  dia,  dia,  0.0,
+              0.0,  0.0,  dia,  dia,
+              dia,  dia,  dia,  dia };
+
+        fs::compute_receivers(receivers, dist2receivers,
+                              elevation, raster_grid);
+
+        EXPECT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
+        EXPECT_TRUE(xt::allclose(dist2receivers, expected_dist2receivers));
+    }
+
+    { // looped boundaries
+        auto raster_grid = grid(shape, {1.1, 1.2}, fs::node_status::looped_boundary);
+
+        xt::xtensor<size_type, 1> receivers = xt::ones<size_type>({16}) * -1;
+        xt::xtensor<size_type, 1> expected_receivers
+            { 7, 14,  7, 14,
+              9, 10,  9,  7,
+              7,  9,  7, 14,
+              9, 10,  9, 10 };
+
+        xt::xtensor<double, 1> dist2receivers = xt::ones<double>({16}) * -1.;
+        xt::xtensor<double, 1> expected_dist2receivers
+            { dia,  dia,  dia,  dia,
+              dia,  dia,  dia,  0.0,
+              dia,  0.0,  dia,  dia,
+              dia,  dia,  dia,  dia };
+
+        fs::compute_receivers(receivers, dist2receivers,
+                              elevation, raster_grid);
+
+        EXPECT_TRUE(xt::all(xt::equal(receivers, expected_receivers)));
+        EXPECT_TRUE(xt::allclose(dist2receivers, expected_dist2receivers));
+    }
 }
 
 

@@ -36,6 +36,20 @@ static void grid_sizes(benchmark::internal::Benchmark* bench) {
     }
 }
 
+/*
+ * Run benchmarks for different grid sizes.
+ * 
+ * Only use 2 different sizes to keep it simple and readable.
+ */
+template<benchmark::TimeUnit time_unit>
+static void small_grid_sizes(benchmark::internal::Benchmark* bench) {
+    std::array<int, 2> sizes {512, 2048};
+
+    for (int s : sizes)
+    {
+        bench->Args({s})->Unit(time_unit);
+    }
+}
 
 enum class SurfaceType {cone, cone_inv, cone_noise, flat_noise, gauss, custom};
 

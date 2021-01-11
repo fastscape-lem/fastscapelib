@@ -18,8 +18,6 @@ namespace bms = benchmark_setup;
 
 namespace fastscapelib
 {
-    using raster_grid_no_cache = fs::raster_grid_xt<fs::xtensor_selector, fs::detail::neighbors_no_cache<8>>;
-    
     namespace bench
     {
 
@@ -92,17 +90,41 @@ namespace fastscapelib
             }
         }
 
-        BENCHMARK_TEMPLATE(flow_routing__compute_receivers__profile, fs::profile_grid)
-        ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);
+        using profile_nocache = fs::profile_grid_xt<xtensor_selector, detail::neighbors_no_cache<2>>;
+        using profile_cacheall = fs::profile_grid;
 
-        BENCHMARK_TEMPLATE(flow_routing__compute_receivers__raster, fs::raster_grid)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>)->MinTime(2.);
+        using queen_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::queen, detail::neighbors_no_cache<8>>;
+        using queen_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::queen, detail::neighbors_cache<8>>;
 
-        BENCHMARK_TEMPLATE(flow_routing__compute_receivers__raster, fs::raster_grid_no_cache)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>)->MinTime(2.);
+        using rook_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::rook, detail::neighbors_no_cache<4>>;
+        using rook_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::rook, detail::neighbors_cache<4>>;
+
+        using bishop_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::bishop, detail::neighbors_no_cache<4>>;
+        using bishop_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::bishop, detail::neighbors_cache<4>>;
+
+
+#define BENCH_GRID(NAME, GRID)                         \
+    BENCHMARK_TEMPLATE(NAME, GRID)                     \
+    ->Apply(bms::grid_sizes<benchmark::kMillisecond>);  
+
+#define BENCH_RASTER(NAME)             \
+    BENCH_GRID(NAME, queen_nocache)    \
+    BENCH_GRID(NAME, queen_cacheall)   \
+    BENCH_GRID(NAME, rook_nocache)     \
+    BENCH_GRID(NAME, rook_cacheall)    \
+    BENCH_GRID(NAME, bishop_nocache)   \
+    BENCH_GRID(NAME, bishop_cacheall)
+
+
+        BENCHMARK_TEMPLATE(flow_routing__compute_receivers__profile, profile_nocache)
+        ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);  
+        BENCHMARK_TEMPLATE(flow_routing__compute_receivers__profile, profile_cacheall)
+        ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);  
+        
+        BENCH_RASTER(flow_routing__compute_receivers__raster)
 
         BENCHMARK(flow_routing__compute_receivers_d8)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>)->MinTime(2.);
+        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
 
     } // namespace bench
 } // namespace fastscapelib
