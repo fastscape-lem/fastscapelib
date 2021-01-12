@@ -6,3 +6,5 @@ pr:
 
 jobs:
   - template: ./.azure-pipelines/azure-pipelines-linux-gcc.yml
+  - template: ./.azure-pipelines/azure-pipelines-macos.yml
+  - template: ./.azure-pipelines/azure-pipelines-win.yml
