@@ -76,19 +76,19 @@ class TestProfileGrid():
         g = ProfileGrid(10, 2, self.bs, [(5, NodeStatus.FIXED_VALUE_BOUNDARY)])
         assert g.size == 10
         assert g.spacing == 2.
-        assert g.length == 20.
+        assert g.length == 18.
 
         g = ProfileGrid(15, 3., ProfileBoundaryStatus(self.bs), [Node(5, NodeStatus.FIXED_VALUE_BOUNDARY)])
         assert g.size == 15
         assert g.spacing == 3.
-        assert g.length == 45.
+        assert g.length == 42.
 
         with pytest.raises(IndexError):
             ProfileGrid(10, 2, self.bs, [(15, NodeStatus.FIXED_VALUE_BOUNDARY)])
 
     def test_from_length(self):
-        g = ProfileGrid.from_length(10, 20., ProfileBoundaryStatus(self.bs), [Node(5, NodeStatus.FIXED_VALUE_BOUNDARY)])
-        assert g.size == 10
+        g = ProfileGrid.from_length(11, 20., ProfileBoundaryStatus(self.bs), [Node(5, NodeStatus.FIXED_VALUE_BOUNDARY)])
+        assert g.size == 11
         assert g.spacing == 2.
         assert g.length == 20.
 
@@ -99,7 +99,7 @@ class TestProfileGrid():
         assert self.g.spacing == 2.2
 
     def test_length(self):
-        assert self.g.length == 22.
+        assert self.g.length == 19.8
 
     def test_status_at_nodes(self):
         npt.assert_equal(self.g.status_at_nodes, np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1]))

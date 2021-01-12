@@ -385,15 +385,15 @@ namespace fastscapelib
 
         TEST_F(raster_grid, length)
         {
-            EXPECT_TRUE(xt::all(xt::equal(fixed_grid.length(), length_type({6.5, 12.}))));
-            EXPECT_TRUE(xt::all(xt::equal(looped_grid.length(), length_type({7., 18.}))));
+            EXPECT_TRUE(xt::all(xt::isclose(fixed_grid.length(), length_type({5.2, 10.8}))));
+            EXPECT_TRUE(xt::all(xt::equal(looped_grid.length(), length_type({5.6, 16.2}))));
         }
 
         TEST_F(raster_grid, from_length)
         {
-            auto grid_from_length = grid_type::from_length(shape_type({{150, 100}}), length_type({1500., 2000.}), fixed_value_status);
+            auto grid_from_length = grid_type::from_length(shape_type({{151, 101}}), length_type({1500., 2000.}), fixed_value_status);
             EXPECT_TRUE(xt::all(xt::equal(grid_from_length.length(), length_type({1500., 2000.}))));
-            EXPECT_EQ(grid_from_length.size(), 15000u);
+            EXPECT_EQ(grid_from_length.size(), 15251u);
             EXPECT_TRUE(xt::all(xt::equal(grid_from_length.spacing(), spacing_type({10., 20.}))));
         }
 

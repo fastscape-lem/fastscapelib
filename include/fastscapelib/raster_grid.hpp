@@ -296,7 +296,7 @@ namespace fastscapelib
         : base_type(shape[0] * shape[1]), m_shape(shape), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
     {
         m_size = shape[0] * shape[1];
-        m_length = xt::adapt(shape) * spacing;
+        m_length = (xt::adapt(shape) - 1) * spacing;
 
         build_gcode();
         build_neighbors_count();        
@@ -329,7 +329,7 @@ namespace fastscapelib
                                                              const boundary_status_type& status_at_bounds,
                                                              const std::vector<raster_node>& status_at_nodes)
     {
-        spacing_type spacing = length / xt::adapt(shape);
+        spacing_type spacing = length / (xt::adapt(shape) - 1);
         return raster_grid_xt<XT, C>(shape, spacing, status_at_bounds, status_at_nodes);
     }
     //@}

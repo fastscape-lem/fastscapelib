@@ -99,14 +99,14 @@ class TestRasterGrid():
         g1 = RasterGrid([10, 10], [2.3, 2.1], self.bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)])
         assert g1.size == 100
         npt.assert_almost_equal(g1.spacing, [2.3, 2.1])
-        npt.assert_almost_equal(g1.length, [23., 21.])
+        npt.assert_almost_equal(g1.length, [20.7, 18.9])
 
         with pytest.raises(IndexError):
             RasterGrid([5, 10], [2.2, 2.4], self.bs, [RasterNode(20, 255, NodeStatus.FIXED_VALUE_BOUNDARY)])
 
     def test_from_length(self):
-        g = RasterGrid.from_length([10, 10], np.r_[23, 21], self.bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)])
-        assert g.size == 100
+        g = RasterGrid.from_length([11, 11], np.r_[23, 21], self.bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)])
+        assert g.size == 121
         npt.assert_almost_equal(g.spacing, [2.3, 2.1])
         npt.assert_almost_equal(g.length, [23., 21.])
 

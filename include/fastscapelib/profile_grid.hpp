@@ -223,7 +223,7 @@ namespace fastscapelib
         : base_type(size), m_size(size), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
     {
         m_shape = {static_cast<typename shape_type::value_type>(m_size)};
-        m_length = static_cast<spacing_type>(size) * spacing;
+        m_length = static_cast<spacing_type>(size - 1) * spacing;
         set_status_at_nodes(status_at_nodes);
         build_gcode();
         build_neighbors_distances();
@@ -249,7 +249,7 @@ namespace fastscapelib
                                                                const boundary_status_type& status_at_bounds,
                                                                const std::vector<node>& status_at_nodes)
     {
-        spacing_type spacing = length / static_cast<length_type>(size);
+        spacing_type spacing = length / static_cast<length_type>(size - 1);
         return profile_grid_xt<XT, C>(size, spacing, status_at_bounds, status_at_nodes);
     }
     //@}
