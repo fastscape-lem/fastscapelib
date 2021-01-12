@@ -32,7 +32,7 @@ jobs:
       - script: |
           conda install cmake ^
                         ninja ^
-                        xtensor ^
+                        xtensor
           conda list
         displayName: "Install conda packages"
       # Install LLVM
