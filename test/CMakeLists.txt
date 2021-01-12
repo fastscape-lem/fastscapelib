@@ -57,6 +57,21 @@ endif()
 # Compiler configuration
 # ======================
 
+# -- Check C++14 support
+include(CheckCXXCompilerFlag)
+
+CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)  # should work with GNU, Intel, PGI
+
+if(NOT HAS_CPP14_FLAG)
+  CHECK_CXX_COMPILER_FLAG("/std:c++14" HAS_CPP14_FLAG)  # should work with MSVC
+endif()
+
+if(NOT HAS_CPP14_FLAG)
+  message(FATAL_ERROR "Unsupported compiler -- fastscapelib requires C++14 support!")
+endif()
+
+message(STATUS "Building with C++14")
+
 # -- Set compiler flags
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
     CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR
@@ -66,13 +81,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion -Wsign-conversion")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast -Wunused-variable")
 
-    # Check C++14 support (not working with MSVC)
-    include(CheckCXXCompilerFlag)
-    CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)
-
-    if(NOT HAS_CPP14_FLAG)
-        message(FATAL_ERROR "Unsupported compiler -- fastscapelib requires C++14 support!")
-    endif()
 endif()
 
 if(MSVC)
