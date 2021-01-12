@@ -35,25 +35,6 @@ namespace fastscapelib
         }
 
         template <fs::raster_connect RC>
-        void raster_grid__neighbors_indices_cache_warm_up(benchmark::State& state)
-        {
-            using grid_type = fs::raster_grid;
-            using size_type = typename grid_type::size_type;
-            using neighbors_type = typename grid_type::neighbors_type;
-
-            auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
-            auto grid = grid_type(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
-            
-            auto cache = grid.neighbors_cache();
-            
-            for (auto _ : state)
-            {
-                cache.warm_up();
-            }
-        }
-
-        template <fs::raster_connect RC>
         void raster_grid__neighbors(benchmark::State& state)
         {
             using grid_type = fs::raster_grid;
@@ -68,14 +49,15 @@ namespace fastscapelib
             for (size_type idx = 0; idx < grid.size(); ++idx)
             {
                 auto neighbors = grid.neighbors(idx);
-            }  
+            } 
+
+            neighbors_type neighbors;
             
             for (auto _ : state)
             {
                 for (size_type idx = 0; idx < grid.size(); ++idx)
                 {
-                    const auto& neighbors = grid.neighbors(idx);
-                    benchmark::DoNotOptimize(neighbors);
+                    grid.neighbors(idx, neighbors);
                 }
             }
         }
@@ -335,9 +317,6 @@ namespace fastscapelib
         ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
 
         BENCHMARK_TEMPLATE(raster_grid__neighbors_distance, fs::raster_connect::queen)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
-
-        BENCHMARK_TEMPLATE(raster_grid__neighbors_indices_cache_warm_up, fs::raster_connect::queen)
         ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
 
         BENCHMARK_TEMPLATE(raster_grid__neighbors, fs::raster_connect::queen)

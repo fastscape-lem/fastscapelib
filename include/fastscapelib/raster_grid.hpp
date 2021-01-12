@@ -114,40 +114,31 @@ namespace fastscapelib
         // bishop   /**< 4-connectivity (only diagonals) */
     };
 
-    template <class XT>
+    template <class XT, class C>
     class raster_grid_xt;
 
-    template <class XT>
-    struct grid_inner_types<raster_grid_xt<XT>>
+    template <class XT, class C>
+    struct grid_inner_types<raster_grid_xt<XT, C>>
     {
+        static constexpr bool is_structured = true;
+        static constexpr bool is_uniform = true;
+        static constexpr int max_neighbors = 8;
+        static constexpr std::size_t xt_ndims = 2;
+        
         using xt_selector = XT;
-
-        struct xt_ndims
-        {
-            static constexpr std::size_t value = 2;
-        };
-
-        using xt_type = xt_container_t<xt_selector, int, xt_ndims::value>;
+        using xt_type = xt_container_t<xt_selector, int, xt_ndims>;
 
         using size_type = typename xt_type::size_type;
         using shape_type = typename xt_type::shape_type;
+        using spacing_type = std::array<double, 2>;
+
         using code_type = std::uint8_t;
+        using neighbors_count_type = std::uint8_t;
 
-        struct is_structured
-        {
-            static constexpr bool value = true;
-        };
-
-        struct is_uniform
-        {
-            static constexpr bool value = true;
-        };
+        using neighbors_distances_type = typename std::array<double, max_neighbors>;
 
         using boundary_status_type = raster_boundary_status;
-        using spacing_type = std::array<double, 2>;
-        using node_status_type = xt_container_t<xt_selector, node_status, xt_ndims::value>;
-
-        using neighbors_count_type = std::uint8_t;
+        using node_status_type = xt_container_t<xt_selector, node_status, xt_ndims>;        
     };
 
 
@@ -157,17 +148,16 @@ namespace fastscapelib
      *
      * @tparam XT xtensor container selector for data array members.
      */
-    template <class XT>
-    class raster_grid_xt : public structured_grid<raster_grid_xt<XT>, 8>
+    template <class XT, class C = detail::neighbors_cache<8>>
+    class raster_grid_xt : public structured_grid<raster_grid_xt<XT, C>, C>
     {
     public:
 
-        using self_type = raster_grid_xt<XT>;
-        using base_type = structured_grid<self_type, 8>;
+        using self_type = raster_grid_xt<XT, C>;
+        using base_type = structured_grid<self_type, C>;
         using inner_types = grid_inner_types<self_type>;
 
         using xt_selector = typename inner_types::xt_selector;
-        using xt_ndims = typename inner_types::xt_ndims;
 
         using size_type = typename inner_types::size_type;
         using shape_type = typename inner_types::shape_type;
@@ -176,7 +166,7 @@ namespace fastscapelib
 
         using neighbors_type = typename base_type::neighbors_type;
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
-        using neighbors_distances_type = typename base_type::neighbors_distances_type;
+        using neighbors_distances_type = typename inner_types::neighbors_distances_type;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
 
         using neighbors_indices_raster_type = xt::xtensor<xt::xtensor_fixed<size_type, xt::xshape<2>>, 1>;
@@ -213,8 +203,8 @@ namespace fastscapelib
         template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int> = 0>
         inline const offset_list& neighbor_offsets(code_type code) const noexcept;
 
-        inline neighbors_count_type neighbors_count(const size_type& idx) const noexcept;
-        inline neighbors_count_type neighbors_count(const code_type& code) const noexcept;
+        inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
+        inline const neighbors_count_type& neighbors_count(const code_type& code) const noexcept;
 
         inline const neighbors_distances_type& neighbors_distance_impl(const size_type& idx) const noexcept;
         inline const neighbors_distances_type& neighbors_distance_impl(const code_type& code) const noexcept;
@@ -275,8 +265,7 @@ namespace fastscapelib
 
         void neighbors_indices_impl(neighbors_indices_type& neighbors, const std::size_t idx) const;
 
-        friend class structured_grid<self_type, 8>;
-        friend typename base_type::neighbors_cache_type;
+        friend class structured_grid<self_type, C>;
     };
 
     /**
@@ -291,9 +280,9 @@ namespace fastscapelib
      * @param status_at_bounds Status at boundary nodes (grid borders).
      * @param status_at_nodes Manually define the status at any node on the grid.
      */
-    template <class XT>
+    template <class XT, class C>
     template <class S>
-    raster_grid_xt<XT>::raster_grid_xt(S&& shape,
+    raster_grid_xt<XT, C>::raster_grid_xt(S&& shape,
                                        const spacing_type& spacing,
                                        const boundary_status_type& status_at_bounds,
                                        const std::vector<raster_node>& status_at_nodes)
@@ -314,8 +303,8 @@ namespace fastscapelib
     }
     //@}
 
-    template <class XT>
-    void raster_grid_xt<XT>::set_status_at_nodes(const std::vector<raster_node>& status_at_nodes)
+    template <class XT, class C>
+    void raster_grid_xt<XT, C>::set_status_at_nodes(const std::vector<raster_node>& status_at_nodes)
     {
         node_status_type temp_status_at_nodes(m_shape, node_status::core);
 
@@ -372,8 +361,8 @@ namespace fastscapelib
      * that will be used to get the characteristic location of a node
      * on the grid.
      */
-    template <class XT>
-    void raster_grid_xt<XT>::build_gcode()
+    template <class XT, class C>
+    void raster_grid_xt<XT, C>::build_gcode()
     {
         std::array<std::vector<code_type>, 2> gcode_rc;
 
@@ -398,8 +387,8 @@ namespace fastscapelib
         }
     }
 
-    template <class XT>
-    void raster_grid_xt<XT>::build_neighbors_count()
+    template <class XT, class C>
+    void raster_grid_xt<XT, C>::build_neighbors_count()
     {
         if (m_status_at_bounds.is_vertical_looped() && m_status_at_bounds.is_horizontal_looped())
         {
@@ -418,16 +407,16 @@ namespace fastscapelib
         }
     }
 
-    template <class XT>
-    auto raster_grid_xt<XT>::neighbors_count(const size_type& idx) const noexcept
-    -> neighbors_count_type
+    template <class XT, class C>
+    auto raster_grid_xt<XT, C>::neighbors_count(const size_type& idx) const noexcept
+    -> const neighbors_count_type&
     {
         return m_neighbors_count[m_gcode_idx(idx)];
     }
 
-    template <class XT>
-    auto raster_grid_xt<XT>::neighbors_count(const code_type& code) const noexcept
-    -> neighbors_count_type
+    template <class XT, class C>
+    auto raster_grid_xt<XT, C>::neighbors_count(const code_type& code) const noexcept
+    -> const neighbors_count_type&
     {
         return m_neighbors_count[code];
     }
@@ -443,15 +432,15 @@ namespace fastscapelib
      *   |         |
      *   6 -- 7 -- 8
      */
-    template <class XT>
-    inline auto raster_grid_xt<XT>::gcode(const size_type& row, const size_type& col) const noexcept
+    template <class XT, class C>
+    inline auto raster_grid_xt<XT, C>::gcode(const size_type& row, const size_type& col) const noexcept
     -> code_type
     {
         return m_gcode_idx[row * m_shape[1] + col];
     }
 
-    template <class XT>
-    inline auto raster_grid_xt<XT>::gcode(const size_type& idx) const noexcept
+    template <class XT, class C>
+    inline auto raster_grid_xt<XT, C>::gcode(const size_type& idx) const noexcept
     -> code_type
     {
         return m_gcode_idx[idx];
@@ -471,9 +460,9 @@ namespace fastscapelib
      *        / | \          | \            / | \  
      *      5   6   7        3   4        2   3   4
      */
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int>>
-    auto raster_grid_xt<XT>::make_offsets_list(std::ptrdiff_t up,
+    auto raster_grid_xt<XT, C>::make_offsets_list(std::ptrdiff_t up,
                                                std::ptrdiff_t down,
                                                std::ptrdiff_t left,
                                                std::ptrdiff_t right)
@@ -508,9 +497,9 @@ namespace fastscapelib
      *        |            |                |
      *        3            2                2
      */
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int>>
-    auto raster_grid_xt<XT>::make_offsets_list(std::ptrdiff_t up,
+    auto raster_grid_xt<XT, C>::make_offsets_list(std::ptrdiff_t up,
                                                std::ptrdiff_t down,
                                                std::ptrdiff_t left,
                                                std::ptrdiff_t right)
@@ -534,9 +523,9 @@ namespace fastscapelib
      * Those offsets take into account looped boundary conditions (if any).
      * The order of the returned offsets corresponds to the row-major layout.
      */
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC>
-    auto raster_grid_xt<XT>::build_neighbor_offsets() -> neighbor_offsets_type
+    auto raster_grid_xt<XT, C>::build_neighbor_offsets() -> neighbor_offsets_type
     {
         auto dr = static_cast<std::ptrdiff_t>(m_shape[0] - 1);
         auto dc = static_cast<std::ptrdiff_t>(m_shape[1] - 1);
@@ -563,25 +552,25 @@ namespace fastscapelib
         };
     }
 
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int>>
-    inline auto raster_grid_xt<XT>::neighbor_offsets(code_type code) const noexcept
+    inline auto raster_grid_xt<XT, C>::neighbor_offsets(code_type code) const noexcept
         -> const offset_list&
     {
         return m_neighbor_offsets_queen[code];
     }
 
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int>>
-    inline auto raster_grid_xt<XT>::neighbor_offsets(code_type code) const noexcept
+    inline auto raster_grid_xt<XT, C>::neighbor_offsets(code_type code) const noexcept
         -> const offset_list&
     {
         return m_neighbor_offsets_rook[code];
     }
 
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC>
-    auto raster_grid_xt<XT>::build_neighbor_distances() -> all_distances_type
+    auto raster_grid_xt<XT, C>::build_neighbor_distances() -> all_distances_type
     {
         all_distances_type nb_distances;
         xt::xtensor_fixed<double, xt::xshape<2>> xspacing {m_spacing[0], m_spacing[1]};
@@ -604,47 +593,47 @@ namespace fastscapelib
         return nb_distances;
     }
 
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC, std::enable_if_t<RC == raster_connect::queen, int>>
-    inline auto raster_grid_xt<XT>::neighbor_distances_impl(const size_type& idx) const noexcept
+    inline auto raster_grid_xt<XT, C>::neighbor_distances_impl(const size_type& idx) const noexcept
         -> const neighbors_distances_type&
     {
         return m_neighbor_distances_queen[gcode(idx)];
     }
 
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC, std::enable_if_t<RC == raster_connect::rook, int>>
-    inline auto raster_grid_xt<XT>::neighbor_distances_impl(const size_type& idx) const noexcept
+    inline auto raster_grid_xt<XT, C>::neighbor_distances_impl(const size_type& idx) const noexcept
         -> const neighbors_distances_type&
     {
         return m_neighbor_distances_rook[gcode(idx)];
     }
 
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC>
-    inline auto raster_grid_xt<XT>::neighbor_distances(const size_type& idx) const noexcept
+    inline auto raster_grid_xt<XT, C>::neighbor_distances(const size_type& idx) const noexcept
         -> const neighbors_distances_type&
     {
         return neighbor_distances_impl<RC>(idx);
     }
 
-    template <class XT>
-    inline auto raster_grid_xt<XT>::neighbors_distance_impl(const size_type& idx) const noexcept
+    template <class XT, class C>
+    inline auto raster_grid_xt<XT, C>::neighbors_distance_impl(const size_type& idx) const noexcept
         -> const neighbors_distances_type&
     {
         return m_neighbor_distances_queen[m_gcode_idx(idx)];
     }
 
-    template <class XT>
-    inline auto raster_grid_xt<XT>::neighbors_distance_impl(const code_type& code) const noexcept
+    template <class XT, class C>
+    inline auto raster_grid_xt<XT, C>::neighbors_distance_impl(const code_type& code) const noexcept
         -> const neighbors_distances_type&
     {
         return m_neighbor_distances_queen[code];
     }
 
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC>
-    inline auto raster_grid_xt<XT>::neighbor_indices(const size_type& row,
+    inline auto raster_grid_xt<XT, C>::neighbor_indices(const size_type& row,
                                                      const size_type& col) const noexcept
         -> neighbors_indices_raster_type
     {
@@ -662,9 +651,9 @@ namespace fastscapelib
         return indices;
     }
 
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC>
-    inline auto raster_grid_xt<XT>::neighbor_indices(const size_type& idx) const noexcept
+    inline auto raster_grid_xt<XT, C>::neighbor_indices(const size_type& idx) const noexcept
         -> neighbors_indices_type
     {
         const auto& offsets = neighbor_offsets<RC>(gcode(idx));
@@ -679,8 +668,8 @@ namespace fastscapelib
         return indices;
     }
 
-    template <class XT>    
-    inline auto raster_grid_xt<XT>::neighbors_indices_impl(neighbors_indices_type& neighbors, const std::size_t idx) const
+    template <class XT, class C>    
+    inline auto raster_grid_xt<XT, C>::neighbors_indices_impl(neighbors_indices_type& neighbors, const std::size_t idx) const
         -> void
     {
         auto indices = neighbor_indices<raster_connect::queen>(idx);
@@ -691,9 +680,9 @@ namespace fastscapelib
         }
     }
 
-    template <class XT>
+    template <class XT, class C>
     template <raster_connect RC, class E>
-    inline auto raster_grid_xt<XT>::neighbor_view(E&& field,
+    inline auto raster_grid_xt<XT, C>::neighbor_view(E&& field,
                                                   size_type idx) const noexcept
     {
         return xt::index_view(std::forward<E>(field), neighbor_indices<RC>(idx));

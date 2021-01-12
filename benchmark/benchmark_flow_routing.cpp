@@ -18,6 +18,8 @@ namespace bms = benchmark_setup;
 
 namespace fastscapelib
 {
+    using raster_grid_no_cache = fs::raster_grid_xt<fs::xtensor_selector, fs::detail::neighbors_no_cache<8>>;
+    
     namespace bench
     {
 
@@ -35,7 +37,10 @@ namespace fastscapelib
             xt::xtensor<double, 1> dist2receivers = xt::ones<double>({n}) * -1.;
 
             //warm-up cache
-            profile_grid.neighbors_cache().warm_up();
+            for (size_type idx = 0; idx < profile_grid.size(); ++idx)
+            {
+                profile_grid.neighbors(idx);
+            } 
 
             for (auto _ : state)
             {
@@ -91,6 +96,9 @@ namespace fastscapelib
         ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);
 
         BENCHMARK_TEMPLATE(flow_routing__compute_receivers__raster, fs::raster_grid)
+        ->Apply(bms::grid_sizes<benchmark::kMillisecond>)->MinTime(2.);
+
+        BENCHMARK_TEMPLATE(flow_routing__compute_receivers__raster, fs::raster_grid_no_cache)
         ->Apply(bms::grid_sizes<benchmark::kMillisecond>)->MinTime(2.);
 
         BENCHMARK(flow_routing__compute_receivers_d8)
