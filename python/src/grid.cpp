@@ -54,19 +54,23 @@ void add_grid_bindings(py::module& m) {
     pgrid.def(py::init<profile_grid::size_type, profile_grid::spacing_type, const profile_grid::boundary_status_type&, const std::vector<fs::node>>());
     pgrid.def(py::init(
                 [](std::size_t size,
-                    double spacing,
+                    profile_grid::spacing_type spacing,
                     const std::array<fs::node_status, 2>& bs,
                     const std::vector<std::pair<std::size_t, fs::node_status>>& ns)
-                 {
-                     std::vector<fs::node> node_vec;
-                     for (auto&& node : ns)
-                     {
-                         node_vec.push_back({node.first, node.second});
-                     }
-                     return std::make_unique<profile_grid>(size, spacing, bs, node_vec);}));
-    
+                {
+                    std::vector<fs::node> node_vec;
+                    for (auto&& node : ns)
+                    {
+                        node_vec.push_back({node.first, node.second});
+                    }
+                    return std::make_unique<profile_grid>(size, spacing, bs, node_vec);
+                }));
+
+    pgrid.def_static("from_length", &profile_grid::from_length);
+
     pgrid.def_property_readonly("size", [](const profile_grid& g) { return g.size(); })
          .def_property_readonly("spacing", [](const profile_grid& g) { return g.spacing(); })
+         .def_property_readonly("length", [](const profile_grid& g) { return g.length(); })
          .def_property_readonly("status_at_nodes", [](const profile_grid& g) { return g.status_at_nodes(); })
          .def("neighbors", [](profile_grid& g, std::size_t idx) { return g.neighbors(idx); });
 
@@ -101,10 +105,20 @@ void add_grid_bindings(py::module& m) {
 
     // ==== Binding of the RasterGrid class ==== //
     py::class_<raster_grid> rgrid(grid_m, "RasterGrid");
-    rgrid.def(py::init<std::array<std::size_t, 2>, const raster_grid::spacing_type, const raster_grid::boundary_status_type&, const std::vector<fs::raster_node>>());
+    rgrid.def(py::init<const raster_grid::shape_type&, const xt::pytensor<double, 1>&, const raster_grid::boundary_status_type&, const std::vector<fs::raster_node>>());
+
+    rgrid.def_static("from_length", [](const raster_grid::shape_type& shape,
+                                       const xt::pytensor<double, 1>& length,
+                                       const raster_grid::boundary_status_type& boundary,
+                                       const std::vector<fs::raster_node> status)
+                                       {
+                                           return raster_grid::from_length(shape, length, boundary, status);
+                                       }
+                    );
     
     rgrid.def_property_readonly("size", [](const raster_grid& g) { return g.size(); })
-         .def_property_readonly("spacing", [](const raster_grid& g) { return g.spacing(); })
+         .def_property_readonly("spacing", [](const raster_grid& g) -> xt::pytensor<double, 1> { return g.spacing(); })
+         .def_property_readonly("length", [](const raster_grid& g) -> xt::pytensor<double, 1> { return g.length(); })
          .def_property_readonly("status_at_nodes", [](const raster_grid& g) { return g.status_at_nodes(); });
 }
  

@@ -107,14 +107,16 @@ namespace fastscapelib
 
         using size_type = typename xt_type::size_type;
         using shape_type = typename xt_type::shape_type;
+        using length_type = double;
+        using spacing_type = length_type;
+
         using code_type = std::uint8_t;
+        using neighbors_count_type = std::uint8_t;
 
         using neighbors_indices_type = typename std::array<std::size_t, 2>;
         using neighbors_distances_type = typename std::array<double, 2>;
-        using neighbors_count_type = std::uint8_t;
 
         using boundary_status_type = profile_boundary_status;
-        using spacing_type = double;
         using node_status_type = xt_container_t<xt_selector, node_status, xt_ndims>;
     };
 
@@ -139,7 +141,9 @@ namespace fastscapelib
 
         using size_type = typename inner_types::size_type;
         using shape_type = typename inner_types::shape_type;
+        using length_type = typename inner_types::length_type;
         using spacing_type = typename inner_types::spacing_type;
+
         using code_type = typename inner_types::code_type;
 
         using neighbors_type = typename base_type::neighbors_type;
@@ -155,6 +159,10 @@ namespace fastscapelib
                         const boundary_status_type& status_at_bounds,
                         const std::vector<node>& status_at_nodes = {});
 
+        static profile_grid_xt from_length(size_type size,
+                                           length_type length,
+                                           const boundary_status_type& status_at_bounds,
+                                           const std::vector<node>& status_at_nodes = {});
     protected:
 
         using coded_neighbors_distances_type = std::array<neighbors_distances_type, 3>;
@@ -162,6 +170,8 @@ namespace fastscapelib
         shape_type m_shape;
         size_type m_size;
         spacing_type m_spacing;
+        length_type m_length;
+
         xt::xtensor<code_type, 1> m_gcode_idx;
 
         node_status_type m_status_at_nodes;
@@ -207,16 +217,40 @@ namespace fastscapelib
      */
     template <class XT, class C>
     profile_grid_xt<XT, C>::profile_grid_xt(size_type size,
-                                        spacing_type spacing,
-                                        const boundary_status_type& status_at_bounds,
-                                        const std::vector<node>& status_at_nodes)
+                                            spacing_type spacing,
+                                            const boundary_status_type& status_at_bounds,
+                                            const std::vector<node>& status_at_nodes)
         : base_type(size), m_size(size), m_spacing(spacing), m_status_at_bounds(status_at_bounds)
     {
         m_shape = {static_cast<typename shape_type::value_type>(m_size)};
+        m_length = static_cast<spacing_type>(size - 1) * spacing;
         set_status_at_nodes(status_at_nodes);
         build_gcode();
         build_neighbors_distances();
         build_neighbors_count();
+    }
+    //@}
+
+    /**
+     * @name Factories
+     */
+    //@{
+   /**
+     * Creates a new profile grid.
+     *
+     * @param size Total number of grid nodes.
+     * @param length Total physical length of the grid.
+     * @param status_at_bounds Status at boundary nodes (left & right grid edges).
+     * @param status_at_nodes Manually define the status at any node on the grid.
+     */
+    template <class XT, class C>
+    profile_grid_xt<XT, C> profile_grid_xt<XT, C>::from_length(size_type size,
+                                                               length_type length,
+                                                               const boundary_status_type& status_at_bounds,
+                                                               const std::vector<node>& status_at_nodes)
+    {
+        spacing_type spacing = length / static_cast<length_type>(size - 1);
+        return profile_grid_xt<XT, C>(size, spacing, status_at_bounds, status_at_nodes);
     }
     //@}
 
