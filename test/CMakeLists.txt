@@ -36,6 +36,8 @@ if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
         message(FATAL_ERROR "CMake build step for googletest failed: ${result}")
     endif()
 
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    
     # Add googletest directly to our build. This defines the gtest and gtest_main targets.
     add_subdirectory(
         ${CMAKE_CURRENT_BINARY_DIR}/googletest-src
@@ -43,7 +45,11 @@ if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
         EXCLUDE_FROM_ALL
         )
 
-    set(GTEST_BOTH_LIBRARIES gtest_main gtest)
+    set(GTEST_INCLUDE_DIRS "${gtest_SOURCE_DIR}/include")
+    add_library(GTest::GTest INTERFACE IMPORTED)
+    target_link_libraries(GTest::GTest INTERFACE gtest)
+    add_library(GTest::Main INTERFACE IMPORTED)
+    target_link_libraries(GTest::Main INTERFACE gtest_main)
 else()
     find_package(GTest REQUIRED)
 endif()
@@ -94,7 +100,7 @@ set(FASTSCAPELIB_TEST_TARGET test_fastscapelib)
 foreach(filename IN LISTS FASTSCAPELIB_TEST_SRC)
     string(REPLACE ".cpp" "" targetname ${filename})
     add_executable(${targetname} ${filename} main.cpp)
-    target_link_libraries(${targetname} PRIVATE fastscapelib ${GTEST_BOTH_LIBRARIES})
+    target_link_libraries(${targetname} PRIVATE fastscapelib GTest::GTest GTest::Main)
 endforeach()
 
 # -- build a global target for all benchmarks
@@ -105,7 +111,7 @@ if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
 endif()
 
 target_link_libraries(${FASTSCAPELIB_TEST_TARGET} PRIVATE
-                      fastscapelib ${GTEST_BOTH_LIBRARIES})
+                      fastscapelib GTest::GTest GTest::Main)
 
 target_compile_features(${FASTSCAPELIB_TEST_TARGET} INTERFACE cxx_std_14)
 
