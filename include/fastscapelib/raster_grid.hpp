@@ -422,6 +422,8 @@ namespace fastscapelib
         using inner_types = grid_inner_types<self_type>;
 
         using xt_selector = typename inner_types::xt_selector;
+        static constexpr std::size_t xt_ndims = inner_types::xt_ndims;
+        static constexpr std::uint8_t max_neighbors(){ return inner_types::max_neighbors; };
 
         using size_type = typename inner_types::size_type;
         using shape_type = typename inner_types::shape_type;

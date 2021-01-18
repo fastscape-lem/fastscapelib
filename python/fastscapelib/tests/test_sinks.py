@@ -1,14 +1,14 @@
 import pytest
 import numpy as np
 
-from _fastscapelib_py.grid import (
+from fastscapelib.grid import (
     NodeStatus,
     RasterBoundaryStatus,
     RasterGrid,
     ProfileBoundaryStatus,
     ProfileGrid,
 )
-from _fastscapelib_py.sinks import fill_sinks_flat, fill_sinks_sloped
+from fastscapelib.sinks import fill_sinks_flat, fill_sinks_sloped
 
 
 @pytest.fixture(scope='session', params=['profile', 'raster'])

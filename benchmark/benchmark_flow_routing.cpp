@@ -54,7 +54,7 @@ namespace fastscapelib
             using size_type = typename grid::size_type;
 
             auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
+            std::array<size_type, 2> shape {{n, n}};
             auto raster_grid = grid(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
 
             xt::xtensor<double, 2> elevation = xt::random::rand<double>({n,n});

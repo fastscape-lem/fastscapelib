@@ -2,8 +2,7 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
-import fastscapelib
-from _fastscapelib_py.grid import NodeStatus, RasterBoundaryStatus, RasterNode, RasterNeighbor, RasterGrid
+from fastscapelib.grid import NodeStatus, RasterBoundaryStatus, RasterNode, RasterNeighbor, RasterGrid
 
 
 class TestRasterBoundaryStatus():
