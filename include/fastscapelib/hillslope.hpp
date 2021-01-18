@@ -1,7 +1,8 @@
 /**
  * Functions to compute hillslope erosion.
  */
-#pragma once
+#ifndef FASTSCAPELIB_HILLSLOPE_H
+#define FASTSCAPELIB_HILLSLOPE_H
 
 #include <array>
 #include <cstddef>
@@ -323,3 +324,5 @@ void erode_linear_diffusion(xtensor_t<Er>& erosion,
 }
 
 }  // namespace fastscapelib
+
+#endif

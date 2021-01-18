@@ -3,7 +3,8 @@
  * surface and compute flow path-related features or structures.
  *
  */
-#pragma once
+#ifndef FASTSCAPELIB_FLOW_ROUTING_H
+#define FASTSCAPELIB_FLOW_ROUTING_H
 
 #include <algorithm>
 #include <array>
@@ -526,3 +527,5 @@ void compute_drainage_area(xtensor_t<D>& drainage_area,
 }
 
 }  // namespace fastscapelib
+
+#endif

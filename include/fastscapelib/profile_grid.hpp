@@ -1,7 +1,8 @@
 /**
  * A profile grid is a one dimensional grid.
  */
-#pragma once
+#ifndef FASTSCAPELIB_PROFILE_GRID_H
+#define FASTSCAPELIB_PROFILE_GRID_H
 
 #include "fastscapelib/structured_grid.hpp"
 
@@ -108,13 +109,13 @@ namespace fastscapelib
         using size_type = typename xt_type::size_type;
         using shape_type = typename xt_type::shape_type;
         using length_type = double;
+        using distance_type = double;
         using spacing_type = length_type;
 
         using code_type = std::uint8_t;
-        using neighbors_count_type = std::uint8_t;
 
-        using neighbors_indices_type = typename std::array<std::size_t, 2>;
-        using neighbors_distances_type = typename std::array<double, 2>;
+        using neighbors_count_type = std::uint8_t;
+        using neighbors_distances_impl_type = typename std::array<distance_type, max_neighbors>;
 
         using boundary_status_type = profile_boundary_status;
         using node_status_type = xt_container_t<xt_selector, node_status, xt_ndims>;
@@ -143,13 +144,14 @@ namespace fastscapelib
         using shape_type = typename inner_types::shape_type;
         using length_type = typename inner_types::length_type;
         using spacing_type = typename inner_types::spacing_type;
+        using distance_type = typename inner_types::distance_type;
 
         using code_type = typename inner_types::code_type;
 
         using neighbors_type = typename base_type::neighbors_type;
-        using neighbors_indices_type = typename inner_types::neighbors_indices_type;
-        using neighbors_distances_type = typename inner_types::neighbors_distances_type;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
+        using neighbors_indices_type = typename base_type::neighbors_indices_type;
+        using neighbors_distances_type = typename base_type::neighbors_distances_type;
 
         using boundary_status_type = typename inner_types::boundary_status_type;
         using node_status_type = typename inner_types::node_status_type;
@@ -165,7 +167,10 @@ namespace fastscapelib
                                            const std::vector<node>& status_at_nodes = {});
     protected:
 
-        using coded_neighbors_distances_type = std::array<neighbors_distances_type, 3>;
+        using neighbors_distances_impl_type = typename inner_types::neighbors_distances_impl_type;
+        using neighbors_indices_impl_type = typename base_type::neighbors_indices_impl_type;
+
+        using coded_ndistances_type = std::array<neighbors_distances_impl_type, 3>;
 
         shape_type m_shape;
         size_type m_size;
@@ -182,7 +187,7 @@ namespace fastscapelib
         static constexpr std::array<std::ptrdiff_t, 3> offsets { {0, -1, 1} };
         std::vector<neighbors_type> m_all_neighbors;
 
-        coded_neighbors_distances_type m_neighbors_distances;
+        coded_ndistances_type m_neighbors_distances;
         void build_neighbors_distances();
 
         void build_gcode();
@@ -193,9 +198,9 @@ namespace fastscapelib
         inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
         inline const neighbors_count_type& neighbors_count(const code_type& code) const noexcept;
 
-        void neighbors_indices_impl(neighbors_indices_type& neighbors, const size_type& idx) const;
+        void neighbors_indices_impl(neighbors_indices_impl_type& neighbors, const size_type& idx) const;
 
-        const neighbors_distances_type& neighbors_distance_impl(const size_type& idx) const;
+        const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx) const;
 
         friend class structured_grid<self_type, C>;
     };
@@ -332,14 +337,14 @@ namespace fastscapelib
     }
 
     template <class XT, class C>
-    auto profile_grid_xt<XT, C>::neighbors_distance_impl(const size_type& /*idx*/) const
-    -> const neighbors_distances_type&
+    auto profile_grid_xt<XT, C>::neighbors_distances_impl(const size_type& /*idx*/) const
+    -> const neighbors_distances_impl_type&
     {
         return m_neighbors_distances[0];
     }
 
     template <class XT, class C>
-    inline auto profile_grid_xt<XT, C>::neighbors_indices_impl(neighbors_indices_type& neighbors, const size_type& idx) const
+    inline auto profile_grid_xt<XT, C>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors, const size_type& idx) const
         -> void
     {
         if (idx==0)
@@ -378,3 +383,5 @@ namespace fastscapelib
      */
     using profile_grid = profile_grid_xt<xtensor_selector>;
 }
+
+#endif

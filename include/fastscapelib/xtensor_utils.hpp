@@ -1,7 +1,9 @@
 /**
  * xtensor utils (container tags, etc.)
  */
-#pragma once
+#ifndef FASTSCAPELIB_XTENSOR_UTILS_H
+#define FASTSCAPELIB_XTENSOR_UTILS_H
+
 
 #include <cstddef>
 
@@ -38,3 +40,5 @@ namespace fastscapelib
     using xt_container_t = typename xt_container<X, T, N>::type;
 
 } // namespace fastscapelib
+
+#endif
