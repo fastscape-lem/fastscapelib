@@ -16,6 +16,7 @@
 
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/consts.hpp"
+#include "fastscapelib/structured_grid.hpp"
 
 
 namespace fastscapelib
@@ -33,64 +34,59 @@ namespace fastscapelib
          * The main purpose of this container is for using with
          * (priority) queues.
          */
-        template<class T>
+        template<class G, class T>
         struct node_container
         {
-            index_t r;
-            index_t c;
-            T value;
+            using size_type = typename G::size_type;
+
+            size_type m_idx;
+            T m_elevation;
+
             node_container() { }
-            node_container(index_t row, index_t col, T val) :
-                r(row), c(col), value(val) { }
-            bool operator > (const node_container<T>& other) const
+            node_container(size_type idx, T elevation) :
+                m_idx(idx), m_elevation(elevation) { }
+            bool operator > (const node_container<G, T>& other) const
             {
-                return value > other.value;
+                return m_elevation > other.m_elevation;
             }
         };
 
 
-        template<class T>
-        using node_pr_queue = std::priority_queue<node_container<T>,
-                                                std::vector<node_container<T>>,
-                                                std::greater<node_container<T>>>;
+        template<class G, class T>
+        using node_pr_queue = std::priority_queue<node_container<G, T>,
+                                                std::vector<node_container<G, T>>,
+                                                std::greater<node_container<G, T>>>;
 
 
-        template<class T>
-        using node_queue = std::queue<node_container<T>>;
+        template<class G, class T>
+        using node_queue = std::queue<node_container<G, T>>;
 
 
         /**
          * Initialize priority flood algorithms.
          *
-         * Add border grid nodes to the priority queue and mark them as
+         * Add fixed value grid nodes to the priority queue and mark them as
          * resolved.
          */
-        template<class E, class elev_t = typename std::decay_t<E>::value_type>
-        void init_pflood(E&& elevation,
-                        xt::xtensor<bool, 2>& closed,
-                        node_pr_queue<elev_t>& open)
+        template<class G, class E, class elev_t = typename std::decay_t<E>::value_type>
+        void init_pflood(G& grid,
+                         E&& elevation,
+                         xt::xtensor<bool, 1>& closed,
+                         node_pr_queue<G, elev_t>& open)
         {
-            auto elev_shape = elevation.shape();
+            using size_type = typename G::size_type;
 
-            index_t nrows = static_cast<index_t>(elev_shape[0]);
-            index_t ncols = static_cast<index_t>(elev_shape[1]);
+            // TODO: assert elevation shape match grid shape
 
-            auto place_node = [&](index_t row, index_t col)
+            const auto elevation_flat = xt::flatten(elevation);
+
+            for (size_type idx=0; idx<grid.size(); ++idx)
             {
-                open.emplace(node_container<elev_t>(row, col, elevation(row, col)));
-                closed(row, col) = true;
-            };
-
-            for(index_t c=0; c<ncols; ++c)
-            {
-                place_node(0, c);
-                place_node(nrows-1, c);
-            }
-
-            for(index_t r=1; r<nrows-1; ++r)
-            {
-                place_node(r, 0);
-                place_node(r, ncols-1);
+                if (grid.status_at_nodes()[idx] == fastscapelib::node_status::fixed_value_boundary)
+                {
+                    open.emplace(node_container<G, elev_t>(idx, elevation_flat(idx)));
+                    closed(idx) = true;
+                }
             }
         }
 
@@ -98,33 +94,35 @@ namespace fastscapelib
         /**
          * fill_sinks_flat implementation.
          */
-        template<class E>
-        void fill_sinks_flat_impl(E&& elevation)
+        template<class G, class E>
+        void fill_sinks_flat_impl(G& grid, E&& elevation)
         {
+            using size_type = typename G::size_type;
             using elev_t = typename std::decay_t<E>::value_type;
-            auto elev_shape = elevation.shape();
 
-            node_pr_queue<elev_t> open;
-            xt::xtensor<bool, 2> closed = xt::zeros<bool>(elev_shape);
+            auto elevation_flat = xt::flatten(elevation);
 
-            init_pflood(elevation, closed, open);
+            node_pr_queue<G, elev_t> open;
+            xt::xtensor<bool, 1> closed = xt::zeros<bool>({grid.size()});
+
+            init_pflood(grid, elevation, closed, open);
 
             while(open.size()>0)
             {
-                node_container<elev_t> inode = open.top();
+                node_container<G, elev_t> inode = open.top();
                 open.pop();
 
-                for(unsigned short k=1; k<=8; ++k)
+                for(auto nidx : grid.neighbors_indices(inode.m_idx))
                 {
-                    index_t kr = inode.r + fastscapelib::consts::d8_row_offsets[k];
-                    index_t kc = inode.c + fastscapelib::consts::d8_col_offsets[k];
+                    if(closed(nidx))
+                    {
+                        continue;
+                    }
 
-                    if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc)) { continue; }
-                    if(closed(kr, kc)) { continue; }
 
-                    elevation(kr, kc) = std::max(elevation(kr, kc), inode.value);
-                    open.emplace(node_container<elev_t>(kr, kc, elevation(kr, kc)));
-                    closed(kr, kc) = true;
+                    elevation_flat(nidx) = std::max(elevation_flat(nidx), inode.m_elevation);
+                    open.emplace(node_container<G, elev_t>(nidx, elevation_flat(nidx)));
+                    closed(nidx) = true;
                 }
             }
         }
@@ -133,24 +131,25 @@ namespace fastscapelib
         /**
          * fill_sinks_sloped implementation.
          */
-        template<class E>
-        void fill_sinks_sloped_impl(E&& elevation)
+        template<class G, class E>
+        void fill_sinks_sloped_impl(G& grid, E&& elevation)
         {
+            using size_type = typename G::size_type;
             using elev_t = typename std::decay_t<E>::value_type;
-            auto elev_shape = elevation.shape();
 
-            node_pr_queue<elev_t> open;
-            node_queue<elev_t> pit;
-            xt::xtensor<bool, 2> closed = xt::zeros<bool>(elev_shape);
+            auto elevation_flat = xt::flatten(elevation);
 
-            init_pflood(elevation, closed, open);
+            node_pr_queue<G, elev_t> open;
+            node_queue<G, elev_t> pit;
+            xt::xtensor<bool, 1> closed = xt::zeros<bool>({grid.size()});
+
+            init_pflood(grid, elevation, closed, open);
 
             while(!open.empty() || !pit.empty())
             {
-                node_container<elev_t> inode, knode;
+                node_container<G, elev_t> inode, knode;
 
-                if(!pit.empty() &&
-                (open.empty() || open.top().value == pit.front().value))
+                if(!pit.empty() && (open.empty() || open.top().m_elevation == pit.front().m_elevation))
                 {
                     inode = pit.front();
                     pit.pop();
@@ -162,29 +161,28 @@ namespace fastscapelib
                 }
 
                 elev_t elev_tiny_step = std::nextafter(
-                    inode.value, std::numeric_limits<elev_t>::infinity());
+                    inode.m_elevation, std::numeric_limits<elev_t>::infinity());
 
-                for(unsigned short k=1; k<=8; ++k)
+                for(auto&& nidx : grid.neighbors_indices(inode.m_idx))
                 {
-                    index_t kr = inode.r + fastscapelib::consts::d8_row_offsets[k];
-                    index_t kc = inode.c + fastscapelib::consts::d8_col_offsets[k];
-
-                    if(!fastscapelib::detail::in_bounds(elev_shape, kr, kc)) { continue; }
-                    if(closed(kr, kc)) { continue; }
-
-                    if(elevation(kr, kc) <= elev_tiny_step)
+                    if(closed(nidx))
                     {
-                        elevation(kr, kc) = elev_tiny_step;
-                        knode = node_container<elev_t>(kr, kc, elevation(kr, kc));
+                        continue;
+                    }
+
+                    if(elevation_flat(nidx) <= elev_tiny_step)
+                    {
+                        elevation_flat(nidx) = elev_tiny_step;
+                        knode = node_container<G, elev_t>(nidx, elevation_flat(nidx));
                         pit.emplace(knode);
                     }
                     else
                     {
-                        knode = node_container<elev_t>(kr, kc, elevation(kr, kc));
+                        knode = node_container<G, elev_t>(nidx, elevation_flat(nidx));
                         open.emplace(knode);
                     }
 
-                    closed(kr, kc) = true;
+                    closed(nidx) = true;
                 }
             }
         }
@@ -205,10 +203,10 @@ namespace fastscapelib
      * @param elevation : ``[intent=inout, shape=(nrows, ncols)]``
      *     Elevation at grid node.
      */
-    template<class E>
-    void fill_sinks_flat(xtensor_t<E>& elevation)
+    template<class G, class E>
+    void fill_sinks_flat(G& grid, xtensor_t<E>& elevation)
     {
-        detail::fill_sinks_flat_impl(elevation.derived_cast());
+        detail::fill_sinks_flat_impl(grid, elevation.derived_cast());
     }
 
 
@@ -229,10 +227,10 @@ namespace fastscapelib
      *
      * @sa fill_sinks_flat
      */
-    template<class E>
-    void fill_sinks_sloped(xtensor_t<E>& elevation)
+    template<class G, class E>
+    void fill_sinks_sloped(G& grid, xtensor_t<E>& elevation)
     {
-        detail::fill_sinks_sloped_impl(elevation.derived_cast());
+        detail::fill_sinks_sloped_impl(grid, elevation.derived_cast());
     }
 }  // namespace fastscapelib
 
