@@ -10,20 +10,20 @@ namespace py = pybind11;
 namespace fs = fastscapelib;
 
 
-template<class T>
-void fill_sinks_flat_py(xt::pytensor<T, 2>& elevation)
-{
-    py::gil_scoped_release release;
-    fs::fill_sinks_flat(elevation);
-}
+// template<class T>
+// void fill_sinks_flat_py(xt::pytensor<T, 2>& elevation)
+// {
+//     py::gil_scoped_release release;
+//     fs::fill_sinks_flat(elevation);
+// }
 
 
-template<class T>
-void fill_sinks_sloped_py(xt::pytensor<T, 2>& elevation)
-{
-    py::gil_scoped_release release;
-    fs::fill_sinks_sloped(elevation);
-}
+// template<class T>
+// void fill_sinks_sloped_py(xt::pytensor<T, 2>& elevation)
+// {
+//     py::gil_scoped_release release;
+//     fs::fill_sinks_sloped(elevation);
+// }
 
 
 template<class T>
@@ -163,11 +163,11 @@ void add_modelings_bindings(py::module& m)
           &compute_drainage_area_grid_py<double>,
           "Compute drainage area on a 2D grid.");
 
-    m.def("fill_sinks_flat_d", &fill_sinks_flat_py<double>,
-          "Fill depressions in elevation data (flat surfaces).");
+    // m.def("fill_sinks_flat_d", &fill_sinks_flat_py<double>,
+    //       "Fill depressions in elevation data (flat surfaces).");
 
-    m.def("fill_sinks_sloped_d", &fill_sinks_sloped_py<double>,
-          "Fill depressions in elevation data (slightly sloped surfaces).");
+    // m.def("fill_sinks_sloped_d", &fill_sinks_sloped_py<double>,
+    //       "Fill depressions in elevation data (slightly sloped surfaces).");
 
     m.def("erode_stream_power_d", &erode_stream_power_py<double, double>,
           "Compute bedrock channel erosion during a single time step "
