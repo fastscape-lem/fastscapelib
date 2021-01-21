@@ -98,9 +98,11 @@ namespace fastscapelib
         void fill_sinks_flat_impl(G& grid, E&& elevation)
         {
             using size_type = typename G::size_type;
+            using neighbors_type = typename G::neighbors_type;
             using elev_t = typename std::decay_t<E>::value_type;
 
             auto elevation_flat = xt::flatten(elevation);
+            neighbors_type neighbors;
 
             node_pr_queue<G, elev_t> open;
             xt::xtensor<bool, 1> closed = xt::zeros<bool>({grid.size()});
@@ -112,17 +114,20 @@ namespace fastscapelib
                 node_container<G, elev_t> inode = open.top();
                 open.pop();
 
-                for(auto nidx : grid.neighbors_indices(inode.m_idx))
+                // TODO: use neighbor indice view instead?
+                // https://github.com/fastscape-lem/fastscapelib/issues/71
+                grid.neighbors(inode.m_idx, neighbors);
+
+                for (auto n = neighbors.begin(); n != neighbors.end(); ++n)
                 {
-                    if(closed(nidx))
+                    if(closed(n->idx))
                     {
                         continue;
                     }
 
-
-                    elevation_flat(nidx) = std::max(elevation_flat(nidx), inode.m_elevation);
-                    open.emplace(node_container<G, elev_t>(nidx, elevation_flat(nidx)));
-                    closed(nidx) = true;
+                    elevation_flat(n->idx) = std::max(elevation_flat(n->idx), inode.m_elevation);
+                    open.emplace(node_container<G, elev_t>(n->idx, elevation_flat(n->idx)));
+                    closed(n->idx) = true;
                 }
             }
         }
@@ -135,9 +140,11 @@ namespace fastscapelib
         void fill_sinks_sloped_impl(G& grid, E&& elevation)
         {
             using size_type = typename G::size_type;
+            using neighbors_type = typename G::neighbors_type;
             using elev_t = typename std::decay_t<E>::value_type;
 
             auto elevation_flat = xt::flatten(elevation);
+            neighbors_type neighbors;
 
             node_pr_queue<G, elev_t> open;
             node_queue<G, elev_t> pit;
@@ -163,26 +170,30 @@ namespace fastscapelib
                 elev_t elev_tiny_step = std::nextafter(
                     inode.m_elevation, std::numeric_limits<elev_t>::infinity());
 
-                for(auto&& nidx : grid.neighbors_indices(inode.m_idx))
+                // TODO: use neighbor indice view instead?
+                // https://github.com/fastscape-lem/fastscapelib/issues/71
+                grid.neighbors(inode.m_idx, neighbors);
+
+                for (auto n = neighbors.begin(); n != neighbors.end(); ++n)
                 {
-                    if(closed(nidx))
+                    if(closed(n->idx))
                     {
                         continue;
                     }
 
-                    if(elevation_flat(nidx) <= elev_tiny_step)
+                    if(elevation_flat(n->idx) <= elev_tiny_step)
                     {
-                        elevation_flat(nidx) = elev_tiny_step;
-                        knode = node_container<G, elev_t>(nidx, elevation_flat(nidx));
+                        elevation_flat(n->idx) = elev_tiny_step;
+                        knode = node_container<G, elev_t>(n->idx, elevation_flat(n->idx));
                         pit.emplace(knode);
                     }
                     else
                     {
-                        knode = node_container<G, elev_t>(nidx, elevation_flat(nidx));
+                        knode = node_container<G, elev_t>(n->idx, elevation_flat(n->idx));
                         open.emplace(knode);
                     }
 
-                    closed(nidx) = true;
+                    closed(n->idx) = true;
                 }
             }
         }
