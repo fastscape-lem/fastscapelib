@@ -16,7 +16,7 @@
 
 
 namespace fs = fastscapelib;
-namespace bms = benchmark_setup;
+namespace bms = fs::bench_setup;
 
 
 namespace fastscapelib
@@ -76,7 +76,7 @@ namespace benchmark_bedrock_channel
 
         else if (Nd == 2)
         {
-            auto s = bms::FastscapeSetupBase<bms::SurfaceType::cone, T>(state.range(0));
+            auto s = bms::FastscapeSetupBase<bms::surface_type::cone, T>(state.range(0));
 
             fs::compute_receivers_d8(s.receivers, s.dist2receivers,
                                      s.elevation, s.active_nodes,

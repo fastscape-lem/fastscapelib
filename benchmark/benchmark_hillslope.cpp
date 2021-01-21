@@ -15,7 +15,7 @@
 
 
 namespace fs = fastscapelib;
-namespace bms = benchmark_setup;
+namespace bms = fs::bench_setup;
 
 
 namespace fastscapelib
