@@ -24,28 +24,28 @@ namespace fastscapelib
     namespace detail
     {
 
-
         /**
-         * A simple grid node container.
+         * Grid node structure.
          *
-         * Stores both a position (r, c) and a value at that position.
-         * Also defines  operator '>' that compares only on `value`.
+         * Stores both grid position and elevation at that position.
+         * Also defines  operator '>' that compares only on `elevation`.
          *
          * The main purpose of this container is for using with
-         * (priority) queues.
+         * priority-flood algorithms.
          */
         template<class G, class T>
-        struct node_container
+        struct pflood_node
         {
             using size_type = typename G::size_type;
 
             size_type m_idx;
             T m_elevation;
 
-            node_container() { }
-            node_container(size_type idx, T elevation) :
+            pflood_node() { }
+            pflood_node(size_type idx, T elevation) :
                 m_idx(idx), m_elevation(elevation) { }
-            bool operator > (const node_container<G, T>& other) const
+
+            bool operator > (const pflood_node<G, T>& other) const
             {
                 return m_elevation > other.m_elevation;
             }
@@ -53,13 +53,13 @@ namespace fastscapelib
 
 
         template<class G, class T>
-        using node_pr_queue = std::priority_queue<node_container<G, T>,
-                                                std::vector<node_container<G, T>>,
-                                                std::greater<node_container<G, T>>>;
+        using pflood_pr_queue = std::priority_queue<pflood_node<G, T>,
+                                                    std::vector<pflood_node<G, T>>,
+                                                    std::greater<pflood_node<G, T>>>;
 
 
         template<class G, class T>
-        using node_queue = std::queue<node_container<G, T>>;
+        using pflood_queue = std::queue<pflood_node<G, T>>;
 
 
         /**
@@ -72,7 +72,7 @@ namespace fastscapelib
         void init_pflood(G& grid,
                          E&& elevation,
                          xt::xtensor<bool, 1>& closed,
-                         node_pr_queue<G, elev_t>& open)
+                         pflood_pr_queue<G, elev_t>& open)
         {
             using size_type = typename G::size_type;
 
@@ -84,7 +84,7 @@ namespace fastscapelib
             {
                 if (grid.status_at_nodes()[idx] == fastscapelib::node_status::fixed_value_boundary)
                 {
-                    open.emplace(node_container<G, elev_t>(idx, elevation_flat(idx)));
+                    open.emplace(pflood_node<G, elev_t>(idx, elevation_flat(idx)));
                     closed(idx) = true;
                 }
             }
@@ -104,14 +104,14 @@ namespace fastscapelib
             auto elevation_flat = xt::flatten(elevation);
             neighbors_type neighbors;
 
-            node_pr_queue<G, elev_t> open;
+            pflood_pr_queue<G, elev_t> open;
             xt::xtensor<bool, 1> closed = xt::zeros<bool>({grid.size()});
 
             init_pflood(grid, elevation, closed, open);
 
             while(open.size()>0)
             {
-                node_container<G, elev_t> inode = open.top();
+                pflood_node<G, elev_t> inode = open.top();
                 open.pop();
 
                 // TODO: use neighbor indice view instead?
@@ -126,7 +126,7 @@ namespace fastscapelib
                     }
 
                     elevation_flat(n->idx) = std::max(elevation_flat(n->idx), inode.m_elevation);
-                    open.emplace(node_container<G, elev_t>(n->idx, elevation_flat(n->idx)));
+                    open.emplace(pflood_node<G, elev_t>(n->idx, elevation_flat(n->idx)));
                     closed(n->idx) = true;
                 }
             }
@@ -146,15 +146,15 @@ namespace fastscapelib
             auto elevation_flat = xt::flatten(elevation);
             neighbors_type neighbors;
 
-            node_pr_queue<G, elev_t> open;
-            node_queue<G, elev_t> pit;
+            pflood_pr_queue<G, elev_t> open;
+            pflood_queue<G, elev_t> pit;
             xt::xtensor<bool, 1> closed = xt::zeros<bool>({grid.size()});
 
             init_pflood(grid, elevation, closed, open);
 
             while(!open.empty() || !pit.empty())
             {
-                node_container<G, elev_t> inode, knode;
+                pflood_node<G, elev_t> inode, knode;
 
                 if(!pit.empty() && (open.empty() || open.top().m_elevation == pit.front().m_elevation))
                 {
@@ -184,12 +184,12 @@ namespace fastscapelib
                     if(elevation_flat(n->idx) <= elev_tiny_step)
                     {
                         elevation_flat(n->idx) = elev_tiny_step;
-                        knode = node_container<G, elev_t>(n->idx, elevation_flat(n->idx));
+                        knode = pflood_node<G, elev_t>(n->idx, elevation_flat(n->idx));
                         pit.emplace(knode);
                     }
                     else
                     {
-                        knode = node_container<G, elev_t>(n->idx, elevation_flat(n->idx));
+                        knode = pflood_node<G, elev_t>(n->idx, elevation_flat(n->idx));
                         open.emplace(knode);
                     }
 
@@ -211,8 +211,8 @@ namespace fastscapelib
      * The algorithm is based on priority queues and is detailed
      * in Barnes (2014). It fills sinks with flat areas.
      *
-     * @param elevation : ``[intent=inout, shape=(nrows, ncols)]``
-     *     Elevation at grid node.
+     * @param grid Grid object
+     * @param elevation Elevation values at grid nodes
      */
     template<class G, class E>
     void fill_sinks_flat(G& grid, xtensor_t<E>& elevation)
@@ -233,8 +233,8 @@ namespace fastscapelib
      * (i.e. elevation is increased by small amount) so that there is no
      * drainage singularities.
      *
-     * @param elevation : ``[intent=inout, shape=(nrows, ncols)]``
-     *     Elevation at grid node.
+     * @param grid Grid object
+     * @param elevation Elevation values at grid nodes
      *
      * @sa fill_sinks_flat
      */
