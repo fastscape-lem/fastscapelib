@@ -97,7 +97,6 @@ namespace fastscapelib
         template<class G, class E>
         void fill_sinks_flat_impl(G& grid, E&& elevation)
         {
-            using size_type = typename G::size_type;
             using neighbors_type = typename G::neighbors_type;
             using elev_t = typename std::decay_t<E>::value_type;
 
@@ -139,7 +138,6 @@ namespace fastscapelib
         template<class G, class E>
         void fill_sinks_sloped_impl(G& grid, E&& elevation)
         {
-            using size_type = typename G::size_type;
             using neighbors_type = typename G::neighbors_type;
             using elev_t = typename std::decay_t<E>::value_type;
 

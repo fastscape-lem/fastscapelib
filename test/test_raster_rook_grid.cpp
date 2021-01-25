@@ -200,7 +200,6 @@ namespace fastscapelib
 
         TEST_F(rook_raster_grid_looped, neighbors_distances)
         {
-            using distance_type = grid_type::distance_type;
             using neighbors_distances_type = grid_type::neighbors_distances_type;
 
             for(std::size_t r=0; r<5; ++r)

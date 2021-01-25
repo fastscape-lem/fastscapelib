@@ -71,7 +71,6 @@ void compute_receivers_d8_impl(R&& receivers,
                                double dx,
                                double dy)
 {
-    using elev_t = typename std::decay_t<E>::value_type;
     const auto d8_dists = detail::get_d8_distances(dx, dy);
 
     const auto elev_shape = elevation.shape();
