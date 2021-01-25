@@ -95,25 +95,10 @@ set(FASTSCAPELIB_TEST_SRC
     test_bedrock_channel.cpp
 )
 
-set(FASTSCAPELIB_TEST_TARGET test_fastscapelib)
-
-# -- build a target for each benchmark
+# -- build a target for each test
 foreach(filename IN LISTS FASTSCAPELIB_TEST_SRC)
     string(REPLACE ".cpp" "" targetname ${filename})
-    add_executable(${targetname} ${filename} main.cpp)
+    add_executable(${targetname} ${filename})
     target_link_libraries(${targetname} PRIVATE fastscapelib GTest::GTest GTest::Main)
+    add_test(${targetname} ${targetname})
 endforeach()
-
-# -- build a global target for all benchmarks
-add_executable(${FASTSCAPELIB_TEST_TARGET} ${FASTSCAPELIB_TEST_SRC} main.cpp)
-
-if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
-    add_dependencies(${FASTSCAPELIB_TEST_TARGET} gtest_main)
-endif()
-
-target_link_libraries(${FASTSCAPELIB_TEST_TARGET} PRIVATE
-                      fastscapelib GTest::GTest GTest::Main)
-
-target_compile_features(${FASTSCAPELIB_TEST_TARGET} INTERFACE cxx_std_14)
-
-

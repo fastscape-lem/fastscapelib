@@ -111,6 +111,7 @@ if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
 endif()
 
 if(BUILD_TESTS)
+  enable_testing()
   add_subdirectory(test)
 endif()
 

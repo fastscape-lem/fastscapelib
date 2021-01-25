@@ -15,13 +15,13 @@ steps:
 
   - script: |
       source activate fastscapelib
-      make -j2 test_fastscapelib
+      make -j2
     displayName: Build fastscapelib
     workingDirectory: $(Build.BinariesDirectory)/build
 
   - script: |
       source activate fastscapelib
       cd test
-      ./test_fastscapelib
+      cmake --build . -- test
     displayName: Test fastscapelib
     workingDirectory: $(Build.BinariesDirectory)/build/test
