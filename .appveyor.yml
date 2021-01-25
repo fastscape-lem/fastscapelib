@@ -44,5 +44,5 @@ install:
 build_script:
   - cd build
   - cmake --build . -- test
-  - cd ..\\..\\python
+  - cd ..\\python
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2015" pytest fastscapelib -vv
