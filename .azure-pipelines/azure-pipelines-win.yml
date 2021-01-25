@@ -69,4 +69,4 @@ jobs:
           setlocal EnableDelayedExpansion
           cmake --build . -- test
         displayName: "Test fastscapelib"
-        workingDirectory: $(Build.BinariesDirectory)/build/test
+        workingDirectory: $(Build.BinariesDirectory)/build
