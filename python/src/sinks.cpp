@@ -4,6 +4,7 @@
 */
 #include "xtensor-python/pytensor.hpp"
 
+#include "fastscapelib/raster_grid.hpp"
 #include "fastscapelib/sinks.hpp"
 
 #include "pybind11/pybind11.h"
