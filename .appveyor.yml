@@ -35,14 +35,14 @@ install:
   - mkdir build
   - cd build
   - cmake -G "NMake Makefiles" -D CMAKE_INSTALL_PREFIX=%MINICONDA%\\LIBRARY -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release ..
-  - nmake test_fastscapelib
+  - cmake --build .
   - "set PYTHONHOME=%MINICONDA%"
   - cd ..\\python
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2015" pip install -e . -v
   - cd ..
 
 build_script:
-  - cd build\\test
-  - .\test_fastscapelib
+  - cd build
+  - cmake --build . -- test
   - cd ..\\..\\python
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2015" pytest fastscapelib -vv
