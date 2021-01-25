@@ -99,3 +99,9 @@ pip-log.txt
 
 # misc
 .DS_Store
+
+# IDE
+.ccls
+.ccls-cache/
+.vscode/
+compile_commands.json

@@ -14,6 +14,7 @@
 
 #include "grid.cpp"
 #include "modelings.cpp"
+#include "sinks.cpp"
 
 
 namespace py = pybind11;
@@ -31,4 +32,5 @@ PYBIND11_MODULE(_fastscapelib_py, m)
 
     add_grid_bindings(m);
     add_modelings_bindings(m);
+    add_sinks_bindings(m);
 }

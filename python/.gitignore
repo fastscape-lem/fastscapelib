@@ -26,6 +26,9 @@ wheels/
 *.egg
 CMakeFiles
 
+# mypy
+.mypy_cache/
+
 # Installer logs
 pip-log.txt
 
