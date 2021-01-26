@@ -72,6 +72,8 @@ namespace fastscapelib
                 grid_type queen_hlooped = grid_type(shape, {1.3, 1.2}, hlooped_status);
                 grid_type queen_vlooped = grid_type(shape, {1.3, 1.2}, vlooped_status);
                 grid_type queen_looped = grid_type(shape, {1.4, 1.8}, hvlooped_status);
+
+                grid_type::neighbors_indices_type neighbors_idx;
         };
 
        class queen_raster_grid_fixed: public queen_raster_grid
@@ -90,6 +92,8 @@ namespace fastscapelib
                 grid_type rook_hlooped = grid_type(shape, {1.3, 1.2}, hlooped_status);
                 grid_type rook_vlooped = grid_type(shape, {1.3, 1.2}, vlooped_status);
                 grid_type rook_looped = grid_type(shape, {1.4, 1.8}, hvlooped_status);
+
+                grid_type::neighbors_indices_type neighbors_idx;
         };
         
        class rook_raster_grid_fixed: public rook_raster_grid
@@ -109,15 +113,7 @@ namespace fastscapelib
                 grid_type bishop_vlooped = grid_type(shape, {1.3, 1.2}, vlooped_status);
                 grid_type bishop_looped = grid_type(shape, {1.4, 1.8}, hvlooped_status);
 
-                fs::node_status status_fixed(std::size_t row, std::size_t col)
-                { 
-                    return ((row == 0) || (row == 4) || (col == 0) || (col == 9)) ? fs::node_status::fixed_value_boundary : fs::node_status::core; 
-                };
-
-                fs::node_status status_looped(std::size_t row, std::size_t col)
-                { 
-                    return ((row == 0) || (row == 4) || (col == 0) || (col == 9)) ? fs::node_status::looped_boundary : fs::node_status::core; 
-                };
+                grid_type::neighbors_indices_type neighbors_idx;
         };
 
        class bishop_raster_grid_fixed: public bishop_raster_grid
