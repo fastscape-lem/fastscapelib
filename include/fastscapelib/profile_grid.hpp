@@ -129,7 +129,7 @@ namespace fastscapelib
      *
      * @tparam XT xtensor container selector for data array members.
      */
-    template <class XT, class C = detail::neighbors_cache<2>>
+    template <class XT, class C = neighbors_cache<2>>
     class profile_grid_xt : public structured_grid<profile_grid_xt<XT, C>, C>
     {
     public:
