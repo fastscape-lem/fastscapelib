@@ -303,6 +303,8 @@ namespace fastscapelib
 
         neighbors_indices_type neighbors_indices(const size_type& idx);
 
+        void neighbors_indices(const size_type& idx, neighbors_indices_type& neighbors_indices);
+
         neighbors_type neighbors(const size_type& idx);
 
         void neighbors(const size_type& idx, neighbors_type& neighbors);
@@ -475,6 +477,32 @@ namespace fastscapelib
         neighbors(idx, node_neighbors);
 
         return node_neighbors;
+    }
+
+    /**
+     * Iterate over the neighbors indices of a given grid node.
+     *
+     * Follows looped boundary conditions, if any.
+     *
+     * @param idx Index of the grid node.
+     * @param neighbors_indices Reference to the vector to be filled with the neighbors 
+     *                          indices of that grid node.
+     */
+    template <class G, class C>
+    inline void structured_grid<G, C>::neighbors_indices(const size_type& idx, neighbors_indices_type& neighbors_indices)
+    {    
+        const auto& n_count = neighbors_count(idx);
+        const auto& n_indices = neighbors_indices_impl(idx);
+
+        if (neighbors_indices.size() != n_count)
+        {
+            neighbors_indices.resize({n_count});
+        }
+        
+        for (neighbors_count_type i=0; i<n_count; ++i)
+        {   
+            neighbors_indices[i] = n_indices[i];
+        }
     }
 
     /**
