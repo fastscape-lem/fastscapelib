@@ -11,27 +11,6 @@ namespace fastscapelib
     namespace testing
     {
 
-        class neighbor: public ::testing::Test
-        {
-            protected:
-
-                fs::neighbor n {3, 1.35, fs::node_status::core};
-        };
-
-        TEST_F(neighbor, ctor)
-        {
-            EXPECT_EQ(n.idx, 3u);
-            EXPECT_EQ(n.distance, 1.35);
-            EXPECT_EQ(n.status, fs::node_status::core);
-        }
-
-        TEST_F(neighbor, equal)
-        {
-            fs::neighbor other_n {3, 1.35, fs::node_status::core};
-            EXPECT_EQ(n, other_n);
-        }
-
-
         class profile_boundary_status: public ::testing::Test
         {
             protected:
@@ -190,6 +169,20 @@ namespace fastscapelib
             EXPECT_EQ(grid_from_length.length(), 1500.);
             EXPECT_EQ(grid_from_length.size(), 151u);
             EXPECT_EQ(grid_from_length.spacing(), 10.);
+        }
+
+        TEST_F(profile_grid, status_filter)
+        {
+            node_status_filter boundaries_filter(fixed_grid, fs::node_status::fixed_value_boundary);
+            EXPECT_EQ(boundaries_filter(), 0u);
+            EXPECT_EQ(boundaries_filter(), 4u);
+            EXPECT_EQ(boundaries_filter(), 5u);
+
+            node_status_filter core_filter(fixed_grid, fs::node_status::core);
+            EXPECT_EQ(core_filter(), 1u);
+            EXPECT_EQ(core_filter(), 2u);
+            EXPECT_EQ(core_filter(), 3u);
+            EXPECT_EQ(core_filter(), 5u);
         }
     }
 }

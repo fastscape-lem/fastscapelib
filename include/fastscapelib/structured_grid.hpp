@@ -24,6 +24,9 @@
 #include "xtensor/xindex_view.hpp"
 #include "xtensor/xnoalias.hpp"
 
+#include "xtl/xiterator_base.hpp"
+
+#include "fastscapelib/iterators.hpp"
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/xtensor_utils.hpp"
 
@@ -46,9 +49,34 @@ namespace fastscapelib
         looped_boundary = 3
     };
 
-
     namespace detail
     {
+
+        template <class V>
+        class node_status_filter
+        {
+        public:
+
+            node_status_filter(V ref)
+                : m_ref(ref)
+            {}
+
+            template <class G>
+            inline bool operator()(const G& grid, typename G::size_type idx) const
+            {
+                return grid.status_at_nodes()[idx] == m_ref;
+            }
+
+        private:
+
+            V m_ref;
+        };
+
+        template<class V>
+        auto make_node_status_filter(V value)
+        {
+        return node_status_filter(value);
+        }
 
         inline bool node_status_cmp(node_status a, node_status b)
         {
@@ -308,13 +336,56 @@ namespace fastscapelib
 
         neighbors_indices_type neighbors_indices(const size_type& idx);
 
-        void neighbors_indices(const size_type& idx, neighbors_indices_type& neighbors_indices);
+        neighbors_indices_type& neighbors_indices(const size_type& idx, neighbors_indices_type& neighbors_indices);
 
         neighbors_type neighbors(const size_type& idx);
 
-        void neighbors(const size_type& idx, neighbors_type& neighbors);
+        neighbors_type& neighbors(const size_type& idx, neighbors_type& neighbors);
 
         const neighbors_indices_cache_type& neighbors_indices_cache() { return m_neighbors_indices_cache; };
+
+        inline filtered_index_iterator<structured_grid, detail::node_status_filter<node_status>> nodes_indices_begin(node_status status)
+        {
+            return filtered_index_iterator(*this, detail::make_node_status_filter(status), 0);
+        }
+
+        inline filtered_index_iterator<structured_grid, detail::node_status_filter<node_status>> nodes_indices_end(node_status status)
+        {
+            return filtered_index_iterator(*this, detail::make_node_status_filter(status), size());
+        }
+
+        inline index_iterator<structured_grid> nodes_indices_begin()
+        {
+            return index_iterator(*this, 0);
+        }
+
+        inline index_iterator<structured_grid> nodes_indices_end()
+        {
+            return index_iterator(*this, size());
+        }
+
+        inline index_reverse_iterator<structured_grid> nodes_indices_rbegin()
+        {
+            return index_reverse_iterator<structured_grid>(*this, size()-1);
+        }
+
+        inline index_reverse_iterator<structured_grid> nodes_indices_rend()
+        {
+            return index_reverse_iterator<structured_grid>(*this, std::numeric_limits<size_type>::max());
+        }      
+/*
+        inline std::reverse_iterator<index_iterator<structured_grid>> nodes_indices_rbegin()
+        {
+            return std::reverse_iterator<index_iterator<structured_grid>>(nodes_indices_end());
+        }
+
+        inline std::reverse_iterator<index_iterator<structured_grid>> nodes_indices_rend()
+        {
+            return std::reverse_iterator<index_iterator<structured_grid>>(nodes_indices_begin());
+        }
+*/
+
+        inline detail::node_indices_iterator<structured_grid> nodes_indices() { return *this; };
 
     protected:
 
@@ -494,7 +565,8 @@ namespace fastscapelib
      *                          indices of that grid node.
      */
     template <class G, class C>
-    inline void structured_grid<G, C>::neighbors_indices(const size_type& idx, neighbors_indices_type& neighbors_indices)
+    inline auto structured_grid<G, C>::neighbors_indices(const size_type& idx, neighbors_indices_type& neighbors_indices)
+        -> neighbors_indices_type&
     {    
         const auto& n_count = neighbors_count(idx);
         const auto& n_indices = neighbors_indices_impl(idx);
@@ -508,6 +580,8 @@ namespace fastscapelib
         {   
             neighbors_indices[i] = n_indices[i];
         }
+
+        return neighbors_indices;
     }
 
     /**
@@ -519,7 +593,8 @@ namespace fastscapelib
      * @param neighbors Reference to the vector to be filled with the neighbors of that grid node.
      */
     template <class G, class C>
-    inline void structured_grid<G, C>::neighbors(const size_type& idx, neighbors_type& neighbors)
+    inline auto structured_grid<G, C>::neighbors(const size_type& idx, neighbors_type& neighbors)
+        -> neighbors_type& 
     {    
         size_type n_idx;
         const auto& n_count = neighbors_count(idx);
@@ -536,6 +611,8 @@ namespace fastscapelib
             n_idx = n_indices[i];
             neighbors[i] = neighbor({n_idx, n_distances[i], status_at_nodes()[n_idx]});
         }
+
+        return neighbors;
     }
     //@}
 }
