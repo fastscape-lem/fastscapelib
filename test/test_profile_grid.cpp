@@ -170,19 +170,5 @@ namespace fastscapelib
             EXPECT_EQ(grid_from_length.size(), 151u);
             EXPECT_EQ(grid_from_length.spacing(), 10.);
         }
-
-        TEST_F(profile_grid, status_filter)
-        {
-            node_status_filter boundaries_filter(fixed_grid, fs::node_status::fixed_value_boundary);
-            EXPECT_EQ(boundaries_filter(), 0u);
-            EXPECT_EQ(boundaries_filter(), 4u);
-            EXPECT_EQ(boundaries_filter(), 5u);
-
-            node_status_filter core_filter(fixed_grid, fs::node_status::core);
-            EXPECT_EQ(core_filter(), 1u);
-            EXPECT_EQ(core_filter(), 2u);
-            EXPECT_EQ(core_filter(), 3u);
-            EXPECT_EQ(core_filter(), 5u);
-        }
     }
 }
