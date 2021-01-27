@@ -346,22 +346,22 @@ namespace fastscapelib
 
         inline filtered_index_iterator<structured_grid, detail::node_status_filter<node_status>> nodes_indices_begin(node_status status)
         {
-            return filtered_index_iterator(*this, detail::make_node_status_filter(status), 0);
+            return filtered_index_iterator<structured_grid, detail::node_status_filter<node_status>>(*this, detail::make_node_status_filter(status), 0);
         }
 
         inline filtered_index_iterator<structured_grid, detail::node_status_filter<node_status>> nodes_indices_end(node_status status)
         {
-            return filtered_index_iterator(*this, detail::make_node_status_filter(status), size());
+            return filtered_index_iterator<structured_grid, detail::node_status_filter<node_status>>(*this, detail::make_node_status_filter(status), size());
         }
 
         inline index_iterator<structured_grid> nodes_indices_begin()
         {
-            return index_iterator(*this, 0);
+            return index_iterator<structured_grid>(*this, 0);
         }
 
         inline index_iterator<structured_grid> nodes_indices_end()
         {
-            return index_iterator(*this, size());
+            return index_iterator<structured_grid>(*this, size());
         }
 
         inline index_reverse_iterator<structured_grid> nodes_indices_rbegin()
