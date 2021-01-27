@@ -75,7 +75,7 @@ namespace fastscapelib
         template<class V>
         auto make_node_status_filter(V value)
         {
-        return node_status_filter(value);
+            return node_status_filter<V>(value);
         }
 
         inline bool node_status_cmp(node_status a, node_status b)
