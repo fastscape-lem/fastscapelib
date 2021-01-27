@@ -55,18 +55,10 @@ namespace fastscapelib
 
         TEST_F(structured_grid, index_iterator)
         {
-            index_iterator it(fixed_grid);
+            index_iterator<grid_type> it(fixed_grid);
 
             EXPECT_EQ(*(it++), 0u);
             EXPECT_EQ(*(it++), 1u);
-
-/*
-            int sum = 0;
-            for (auto it : index_iterator(fixed_grid))
-            {
-                sum += *it;
-            }
-*/
         }
 
         TEST_F(structured_grid, nodes_indices_begin)
