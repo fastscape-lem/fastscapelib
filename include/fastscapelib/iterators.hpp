@@ -124,7 +124,6 @@ namespace fastscapelib
             : m_idx(position), m_grid(grid), m_filter_func(filter_functor)
         {
             if ((position == 0) && !m_filter_func(grid, position)) { ++m_idx; }
-            if ((position == grid.size()) && !m_filter_func(grid, position)) { --m_idx; }
         }
 
         inline self_type& operator++()

@@ -82,11 +82,12 @@ namespace fastscapelib
         TEST_F(structured_grid, nodes_indices_end)
         {
             auto boundaries_filter = fixed_grid.nodes_indices_end(fs::node_status::fixed_value_boundary);
-            EXPECT_EQ(*boundaries_filter, 4u);
+            EXPECT_EQ(*boundaries_filter, 5u);
+            EXPECT_EQ(*(--boundaries_filter), 4u);
             EXPECT_EQ(*(--boundaries_filter), 0u);
 
             auto core_filter_end = fixed_grid.nodes_indices_end(fs::node_status::core);
-            EXPECT_EQ(*core_filter_end, 4u);
+            EXPECT_EQ(*core_filter_end, 5u);
             EXPECT_EQ(*(--core_filter_end), 3u);
         }
 
