@@ -8,12 +8,20 @@ namespace fastscapelib
 {
 
     template <class G>
-    struct index_iterator : public xtl::xbidirectional_iterator_base<index_iterator<G>, typename G::size_type>
+    struct index_iterator : public xtl::xbidirectional_iterator_base<index_iterator<G>,
+                                                                     typename G::size_type,
+                                                                     std::ptrdiff_t,
+                                                                     typename G::size_type*,
+                                                                     typename G::size_type>
     {
     public:
 
         using self_type = index_iterator<G>;
-        using base_type = xtl::xbidirectional_iterator_base<self_type, typename G::size_type>;
+        using base_type = xtl::xbidirectional_iterator_base<self_type,
+                                                            typename G::size_type,
+                                                            std::ptrdiff_t,
+                                                            typename G::size_type*,
+                                                            typename G::size_type>;
 
         using value_type = typename base_type::value_type;
         using reference = typename base_type::reference;
@@ -50,65 +58,16 @@ namespace fastscapelib
         G* m_grid;
     };
 
-
-    template <class G>
-    struct index_reverse_iterator : public xtl::xbidirectional_iterator_base<index_reverse_iterator<G>, typename G::size_type>
-    {
-    public:
-
-        using self_type = index_reverse_iterator<G>;
-        using base_type = xtl::xbidirectional_iterator_base<self_type, typename G::size_type>;
-
-        using value_type = typename base_type::value_type;
-        using reference = typename base_type::reference;
-        using pointer = typename base_type::pointer;
-        using difference_type = typename base_type::difference_type;
-
-        index_reverse_iterator() = default;
-
-        index_reverse_iterator(G& grid, value_type position = std::numeric_limits<typename G::size_type>::max())
-            : m_idx(position), m_grid(&grid)
-        {}
-
-        inline self_type& operator++()
-        {
-            --m_idx;
-            return *this;
-        }
-
-        inline self_type& operator--()
-        {
-            ++m_idx;
-            return *this;
-        }
-
-        inline reference operator*() const
-        {
-            return m_idx;
-        }
-
-        mutable value_type m_idx = std::numeric_limits<typename G::size_type>::max();
-
-    private:
-
-        G* m_grid;
-    };
-
     template <class G>
     inline bool operator==(const index_iterator<G>& lhs, const index_iterator<G>& rhs)
     {
         return lhs.m_idx == rhs.m_idx;
     }
 
-    template <class G>
-    inline bool operator==(const index_reverse_iterator<G>& lhs, const index_reverse_iterator<G>& rhs)
-    {
-        return lhs.m_idx == rhs.m_idx;
-    }
-
 
     template <class G, class F>
-    struct filtered_index_iterator : public xtl::xbidirectional_iterator_base<filtered_index_iterator<G, F>, typename G::size_type>
+    struct filtered_index_iterator : public xtl::xbidirectional_iterator_base<filtered_index_iterator<G, F>,
+                                                                              typename G::size_type>
     {
     public:
 

@@ -364,16 +364,6 @@ namespace fastscapelib
             return index_iterator<structured_grid>(*this, size());
         }
 
-        inline index_reverse_iterator<structured_grid> nodes_indices_rbegin()
-        {
-            return index_reverse_iterator<structured_grid>(*this, size()-1);
-        }
-
-        inline index_reverse_iterator<structured_grid> nodes_indices_rend()
-        {
-            return index_reverse_iterator<structured_grid>(*this, std::numeric_limits<size_type>::max());
-        }      
-/*
         inline std::reverse_iterator<index_iterator<structured_grid>> nodes_indices_rbegin()
         {
             return std::reverse_iterator<index_iterator<structured_grid>>(nodes_indices_end());
@@ -383,7 +373,6 @@ namespace fastscapelib
         {
             return std::reverse_iterator<index_iterator<structured_grid>>(nodes_indices_begin());
         }
-*/
 
         inline detail::node_indices_iterator<structured_grid> nodes_indices() { return *this; };
 
