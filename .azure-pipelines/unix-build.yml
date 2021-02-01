@@ -5,6 +5,7 @@ steps:
       conda create -n fastscapelib gtest cmake xtensor -c conda-forge
       source activate fastscapelib
     displayName: Install dependencies
+
   - script: |
       source activate fastscapelib
       mkdir build

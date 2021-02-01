@@ -14,6 +14,9 @@ jobs:
           gcc_version: '8'
         gcc_9:
           gcc_version: '9'
+        python_37:
+          gcc_version: '9'
+          python_version: '3.7'
     pool:
       vmImage: ubuntu-16.04
     variables:
@@ -33,4 +36,8 @@ jobs:
       - bash: echo "##vso[task.prependpath]$CONDA/bin"
         displayName: Add conda to PATH
 
-      - template: unix-build.yml
+      - ${{ if eq(variables['python_version'], '') }}:
+          - template: unix-build.yml
+
+      - ${{ if ne(variables['python_version'], '') }}:
+          - template: unix-python-build.yml
