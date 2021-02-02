@@ -67,6 +67,7 @@ void add_grid_bindings(py::module& m) {
     pgrid.def_static("from_length", &profile_grid::from_length);
 
     pgrid.def_property_readonly("size", [](const profile_grid& g) { return g.size(); })
+         .def_property_readonly("shape", [](const profile_grid& g) { return g.size(); })
          .def_property_readonly("spacing", [](const profile_grid& g) { return g.spacing(); })
          .def_property_readonly("length", [](const profile_grid& g) { return g.length(); })
          .def_property_readonly("status_at_nodes", [](const profile_grid& g) { return g.status_at_nodes(); })
@@ -115,6 +116,7 @@ void add_grid_bindings(py::module& m) {
                     );
     
     rgrid.def_property_readonly("size", [](const raster_grid& g) { return g.size(); })
+         .def_property_readonly("shape", &raster_grid::shape)
          .def_property_readonly("spacing", [](const raster_grid& g) -> xt::pytensor<double, 1> { return g.spacing(); })
          .def_property_readonly("length", [](const raster_grid& g) -> xt::pytensor<double, 1> { return g.length(); })
          .def_property_readonly("status_at_nodes", [](const raster_grid& g) { return g.status_at_nodes(); });
