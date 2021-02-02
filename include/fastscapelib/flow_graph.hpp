@@ -103,15 +103,18 @@ namespace fastscapelib
 
         const donors_count_type& donors_count() { return m_donors_count; };
 
+        template <class T>
+        T accumulate(const T& data) const;
+
         const stack_type& dfs_stack() { return m_dfs_stack; };
 
         const_dfs_iterator dfs_cbegin() { return m_dfs_stack.cbegin(); };
 
         const_dfs_iterator dfs_cend() { return m_dfs_stack.cend(); };
 
-        const_reverse_dfs_iterator dfs_crbegin() { return m_dfs_stack.crbegin(); };
+        const_reverse_dfs_iterator dfs_crbegin() const { return m_dfs_stack.crbegin(); };
 
-        const_reverse_dfs_iterator dfs_crend() { return m_dfs_stack.crend(); };
+        const_reverse_dfs_iterator dfs_crend() const { return m_dfs_stack.crend(); };
 
     private:
     
@@ -135,6 +138,29 @@ namespace fastscapelib
         friend class flow_router<self_type>;
         friend class sink_resolver<self_type>;
     };
+
+    template <class G, class elev_t, class S>
+    template <class T>
+    T flow_graph<G, elev_t, S>::accumulate(const T& data) const
+    {
+        T acc = xt::zeros_like(data);
+
+        for (auto inode=dfs_crbegin(); inode!=dfs_crend(); ++inode)
+        {
+            acc(*inode) += m_grid.node_area(*inode) * data.data()[*inode];
+
+            for (index_type r=0; r<m_receivers_count[*inode]; ++r)
+            {
+                index_type ireceiver = m_receivers(*inode, r);
+                if (ireceiver != *inode)
+                {
+                    acc(ireceiver) += acc(*inode) * m_receivers_weight(*inode, r);
+                }
+            }
+        }
+
+        return acc;
+    }
 }
 
 #endif

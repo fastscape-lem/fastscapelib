@@ -88,6 +88,15 @@ namespace fastscapelib
             EXPECT_TRUE(xt::all(xt::equal(looped_grid.length(), length_type({5.6, 16.2}))));
         }
 
+        TEST_F(raster_grid, node_area)
+        {
+            for (auto n : fixed_grid.nodes_indices())
+            {
+                EXPECT_EQ(fixed_grid.node_area(n), 1.56);
+                EXPECT_EQ(looped_grid.node_area(n), 2.52);
+            }
+        }
+
         TEST_F(raster_grid, from_length)
         {
             auto grid_from_length = grid_type::from_length(shape_type({{151, 101}}), length_type({1500., 2000.}), fixed_value_status);

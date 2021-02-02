@@ -178,6 +178,7 @@ namespace fastscapelib
         size_type m_size;
         spacing_type m_spacing;
         length_type m_length;
+        distance_type m_node_area;
 
         xt::xtensor<code_type, 1> m_gcode_idx;
 
@@ -231,6 +232,7 @@ namespace fastscapelib
     {
         m_shape = {static_cast<typename shape_type::value_type>(m_size)};
         m_length = static_cast<spacing_type>(size - 1) * spacing;
+        m_node_area = spacing;
         set_status_at_nodes(status_at_nodes);
         build_gcode();
         build_neighbors_distances();

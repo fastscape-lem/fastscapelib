@@ -102,5 +102,36 @@ namespace fastscapelib
 
             EXPECT_EQ(graph.grid().size(), 16u); // dummy test
         }
+
+        TEST_F(flow_graph, accumulate)
+        {
+            auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();
+            auto resolver = std::make_unique<fs::no_sink_resolver<flow_graph_type>>();
+
+            flow_graph_type graph(grid, std::move(router), std::move(resolver));
+            graph.update_routes(elevation);
+
+            xt::xtensor<double, 2> data1 = xt::ones_like(elevation);
+            xt::xtensor<double, 2> data2
+                {{1.1, 1.0, 1.1, 1.0},
+                 {1.1, 1.0, 1.1, 1.0},
+                 {1.1, 1.0, 1.1, 1.0},
+                 {1.1, 1.0, 1.1, 1.0}};
+
+            xt::xtensor<double, 2> expected1
+                {{1.32,  2.64, 3.96, 1.32},
+                 {1.32,  1.32, 1.32, 9.24},
+                 {1.32, 11.88, 1.32, 1.32},
+                 {1.32,  1.32, 2.64, 1.32}};
+
+            xt::xtensor<double, 2> expected2
+                {{1.452, 2.772, 4.224,  1.32},
+                 {1.452,  1.32, 1.452, 9.636},
+                 {1.452, 12.54, 1.452,  1.32},
+                 {1.452,  1.32, 2.772,  1.32}};
+
+            EXPECT_TRUE(xt::allclose(expected1, graph.accumulate(data1)));
+            EXPECT_TRUE(xt::allclose(expected2, graph.accumulate(data2)));
+        }
     }
 }
