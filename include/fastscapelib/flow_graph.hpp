@@ -112,9 +112,9 @@ namespace fastscapelib
 
         const_dfs_iterator dfs_cend() { return m_dfs_stack.cend(); };
 
-        const_reverse_dfs_iterator dfs_crbegin() const { return m_dfs_stack.crbegin(); };
+        const_reverse_dfs_iterator dfs_crbegin() { return m_dfs_stack.crbegin(); };
 
-        const_reverse_dfs_iterator dfs_crend() const { return m_dfs_stack.crend(); };
+        const_reverse_dfs_iterator dfs_crend() { return m_dfs_stack.crend(); };
 
     private:
     
@@ -145,7 +145,7 @@ namespace fastscapelib
     {
         T acc = xt::zeros_like(data);
 
-        for (auto inode=dfs_crbegin(); inode!=dfs_crend(); ++inode)
+        for (auto inode=m_dfs_stack.crbegin(); inode!=m_dfs_stack.crend(); ++inode)
         {
             acc(*inode) += m_grid.node_area(*inode) * data.data()[*inode];
 
