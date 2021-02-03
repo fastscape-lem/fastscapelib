@@ -41,21 +41,6 @@ namespace fastscapelib
             return d8_dists;
         }
 
-    }
-
-/**
- * compute_receivers_d8 implementation.
- */
-template<class R, class D, class E, class A>
-void compute_receivers_d8_impl(R&& receivers,
-                               D&& dist2receivers,
-                               E&& elevation,
-                               A&& active_nodes,
-                               double dx,
-                               double dy)
-{
-    const auto d8_dists = detail::get_d8_distances(dx, dy);
-
 
         template<class S, class N, class D>
         void add2stack(index_t& nstack,
@@ -323,7 +308,7 @@ void compute_receivers_d8_impl(R&& receivers,
                                     G& grid)
         {
             using neighbors_type = typename G::neighbors_type;
-            
+
             double slope, slope_max;
             neighbors_type neighbors;
 
@@ -332,11 +317,11 @@ void compute_receivers_d8_impl(R&& receivers,
                 receivers(i, 0) = i;
                 dist2receivers(i, 0) = 0;
                 slope_max = std::numeric_limits<double>::min();
-                
+
                 grid.neighbors(i, neighbors);
 
                 for (auto n=neighbors.begin(); n != neighbors.end(); ++n)
-                {          
+                {
                     slope = (elevation.data()[i] - elevation.data()[n->idx]) / n->distance;
 
                     if(slope > slope_max)
