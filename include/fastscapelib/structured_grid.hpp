@@ -328,6 +328,8 @@ namespace fastscapelib
 
         length_type length() const noexcept;
 
+        shape_type shape() const noexcept;
+
         const node_status_type& status_at_nodes() const;
 
         distance_type node_area(const size_type& idx) const noexcept;
@@ -447,6 +449,16 @@ namespace fastscapelib
         -> length_type
     {
         return derived_grid().m_length;
+    }
+
+    /**
+     * Returns the shape of the grid.
+     */
+    template <class G, class C>
+    inline auto structured_grid<G, C>::shape() const noexcept
+        -> shape_type
+    {
+        return derived_grid().m_shape;
     }
 
     /**
