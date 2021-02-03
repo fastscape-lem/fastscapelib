@@ -26,7 +26,7 @@ namespace fastscapelib
             using size_type = typename grid::size_type;
 
             auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
+            std::array<size_type, 2> shape {{n, n}};
 
             for (auto _ : state)
             {
@@ -42,7 +42,7 @@ namespace fastscapelib
             using neighbors_type = typename grid_type::neighbors_type;
 
             auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
+            std::array<size_type, 2> shape {{n, n}};
             auto grid = grid_type(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
 
             // warm-up cache
@@ -69,7 +69,7 @@ namespace fastscapelib
             using size_type = typename grid_type::size_type;
 
             auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
+            std::array<size_type, 2> shape {{n, n}};
 
             auto rg = grid_type(shape, {1., 1.}, fs::node_status::fixed_value_boundary);
             xt::xtensor<double, 2> field(shape, 1.);
@@ -94,14 +94,14 @@ namespace fastscapelib
             using neighbors_offsets_type = typename raster_neighbors<raster_connect::queen>::neighbors_offsets_type;
 
             auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape {n, n};
+            std::array<size_type, 2> shape {{n, n}};
 
-            neighbors_offsets_type::shape_type sh0 = {grid_type::max_neighbors()};
+            neighbors_offsets_type::shape_type sh0 = {grid_type::max_neighbors};
             neighbors_offsets_type offsets = xt::empty<xt::xtensor_fixed<std::ptrdiff_t, xt::xshape<2>>>(sh0);
 
             auto get_neighbors_indices = [&shape, &offsets](auto& r, auto& c) -> neighbors_offsets_type {
 
-                    for(std::size_t k=1; k<=grid_type::max_neighbors(); ++k)
+                    for(std::size_t k=1; k<=grid_type::max_neighbors; ++k)
                     {
                         const index_t kr = r + fs::consts::d8_row_offsets[k];
                         const index_t kc = c + fs::consts::d8_col_offsets[k];

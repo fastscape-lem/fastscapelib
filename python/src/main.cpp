@@ -14,7 +14,10 @@
 
 #include "grid.cpp"
 #include "modelings.cpp"
+#include "flow_router.cpp"
+#include "sink_resolver.cpp"
 #include "sinks.cpp"
+#include "flow_graph.cpp"
 
 
 namespace py = pybind11;
@@ -30,7 +33,18 @@ PYBIND11_MODULE(_fastscapelib_py, m)
 
     m.attr("__version__") = fs::version::version_str;
 
-    add_grid_bindings(m);
-    add_modelings_bindings(m);
-    add_sinks_bindings(m);
+    py::module grid_m = m.def_submodule("grid", "The grid module of Fastscapelib");
+    add_grid_bindings(grid_m);
+    
+    py::module flow_graph_m = m.def_submodule("flow_graph", "The flow graph module of Fastscapelib");
+    add_flow_routers_bindings(flow_graph_m);
+    add_sink_resolvers_bindings(flow_graph_m);
+    add_flow_graph_bindings(flow_graph_m);
+
+    // TODO: merge flow_graph and sinks modules?
+    py::module sinks_m = m.def_submodule("sinks", "Various algorithms for sink filling");
+    add_sinks_bindings(sinks_m);
+
+    py::module algo_m = m.def_submodule("algo", "The algorithm module of Fastscapelib");
+    add_modelings_bindings(algo_m);
 }

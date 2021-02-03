@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-import fastscapelib
+from _fastscapelib_py.algo import erode_linear_diffusion_d, erode_linear_diffusion_var_d
 
 
 def _solve_diffusion_analytical(x, y, k_coef, t):
@@ -31,10 +31,10 @@ def test_erode_linear_diffusion(k_coef_type):
     elevation_analytical = _solve_diffusion_analytical(x, y, k_coef, t0 + dt)
 
     if k_coef_type == 'constant':
-        func = fastscapelib.erode_linear_diffusion_d
+        func = erode_linear_diffusion_d
         k = k_coef
     elif k_coef_type == 'variable':
-        func = fastscapelib.erode_linear_diffusion_var_d
+        func = erode_linear_diffusion_var_d
         k = np.full_like(x, k_coef)
 
     func(erosion, elevation_init, k, dt, dx, dy)

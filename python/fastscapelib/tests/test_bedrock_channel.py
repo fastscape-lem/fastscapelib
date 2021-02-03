@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-import fastscapelib
+from fastscapelib.algo import erode_stream_power_d, erode_stream_power_var_d
 
 
 @pytest.mark.parametrize("k_coef_type", ["constant", "variable"])
@@ -30,10 +30,10 @@ def test_erode_stream_power(k_coef_type):
     tolerance = 1e-3
 
     if k_coef_type == 'constant':
-        func = fastscapelib.erode_stream_power_d
+        func = erode_stream_power_d
         k = k_coef
     elif k_coef_type == 'variable':
-        func = fastscapelib.erode_stream_power_var_d
+        func = erode_stream_power_var_d
         k = np.full_like(elevation, k_coef)
 
     n_corr = func(erosion, elevation, stack,
