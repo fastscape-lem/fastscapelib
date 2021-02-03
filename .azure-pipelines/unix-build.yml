@@ -5,9 +5,13 @@ parameters:
 
 steps:
   - script: |
+      echo ${{parameters.runPythonTests }}
+      echo $(python_version)
+
+  - script: |
       conda config --set always_yes yes --set changeps1 no
       conda update -q conda
-      conda create -n fastscapelib gtest cmake xtensor -c conda-forge
+      conda create -n fastscapelib cmake xtensor -c conda-forge
       source activate fastscapelib
     displayName: Install dependencies
 
