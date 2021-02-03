@@ -41,6 +41,8 @@ namespace fastscapelib
             return d8_dists;
         }
 
+    }
+
 /**
  * compute_receivers_d8 implementation.
  */
