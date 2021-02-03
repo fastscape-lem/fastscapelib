@@ -92,6 +92,9 @@ endif()
 
 set(FASTSCAPELIB_TEST_SRC
     test_hillslope.cpp
+    test_flow_graph.cpp
+    test_flow_router.cpp
+    test_single_flow_router.cpp
     test_flow_routing.cpp
     test_profile_grid.cpp
     test_raster_grid.cpp
@@ -99,6 +102,7 @@ set(FASTSCAPELIB_TEST_SRC
     test_raster_queen_grid.cpp
     test_raster_bishop_grid.cpp    
     test_sinks.cpp
+    test_sink_resolver.cpp
     test_bedrock_channel.cpp
 )
 

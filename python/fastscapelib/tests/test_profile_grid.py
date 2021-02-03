@@ -2,8 +2,7 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
-import fastscapelib
-from _fastscapelib_py.grid import NodeStatus, ProfileBoundaryStatus, ProfileGrid, Node, Neighbor
+from fastscapelib.grid import NodeStatus, ProfileBoundaryStatus, ProfileGrid, Node, Neighbor
 
 
 class TestProfileBoundaryStatus():

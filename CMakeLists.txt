@@ -87,6 +87,10 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/consts.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sinks.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_routing.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_graph.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_router.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_router_factory.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sink_resolver.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/bedrock_channel.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/hillslope.hpp
 )
