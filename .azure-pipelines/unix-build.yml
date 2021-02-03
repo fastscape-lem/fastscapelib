@@ -1,3 +1,8 @@
+parameters:
+- name: 'runPythonTests'
+  type: boolean
+  default: false
+
 steps:
   - script: |
       conda config --set always_yes yes --set changeps1 no
@@ -6,23 +11,46 @@ steps:
       source activate fastscapelib
     displayName: Install dependencies
 
-  - script: |
-      source activate fastscapelib
-      mkdir build
-      cd build
-      cmake -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX $CMAKE_EXTRA_ARGS -DDOWNLOAD_GTEST=ON $(Build.SourcesDirectory)
-    displayName: Configure fastscapelib
-    workingDirectory: $(Build.BinariesDirectory)
+  - ${{ if eq(parameters.runPythonTests, true) }}:
+      - script: |
+          source activate fsatscapelib
+          conda install python=$(python_version) xtensor-python pytest pip -c conda-forge
+        displayName: Install Python dependencies
 
-  - script: |
-      source activate fastscapelib
-      make -j2
-    displayName: Build fastscapelib
-    workingDirectory: $(Build.BinariesDirectory)/build
+  - ${{ if eq(parameters.runPythonTests, false) }}:
+      - script: |
+          source activate fastscapelib
+          mkdir build
+          cd build
+          cmake -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX $CMAKE_EXTRA_ARGS -DDOWNLOAD_GTEST=ON $(Build.SourcesDirectory)
+        displayName: Configure fastscapelib
+        workingDirectory: $(Build.BinariesDirectory)
 
-  - script: |
-      source activate fastscapelib
-      cd test
-      cmake --build . -- test
-    displayName: Test fastscapelib
-    workingDirectory: $(Build.BinariesDirectory)/build/test
+  - ${{ if eq(parameters.runPythonTests, false) }}:
+      - script: |
+          source activate fastscapelib
+          make -j2
+        displayName: Build fastscapelib
+        workingDirectory: $(Build.BinariesDirectory)/build
+
+  - ${{ if eq(parameters.runPythonTests, true) }}:
+      - script: |
+          source activate fastscapelib
+          python -m pip install -e -v .
+        displayName: Build and install fastscapelib Python bindings
+        workingDirectory: $(Build.BinariesDirectory)/python
+
+  - ${{ if eq(parameters.runPythonTests, false) }}:
+      - script: |
+          source activate fastscapelib
+          cd test
+          cmake --build . -- test
+        displayName: Test fastscapelib
+        workingDirectory: $(Build.BinariesDirectory)/build/test
+
+  - ${{ if eq(parameters.runPythonTests, true) }}:
+      - script: |
+          source activate fastscapelib
+          pytest .
+        displayName: Test fastscapelib python bindings
+        workingDirectory: $(Build.BinariesDirectory)/python/fastscapelib/tests

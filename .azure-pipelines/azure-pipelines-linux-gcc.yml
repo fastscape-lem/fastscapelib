@@ -37,7 +37,5 @@ jobs:
         displayName: Add conda to PATH
 
       - template: unix-build.yml
-        condition: and(succeeded(), eq('${{ variables.python_verosion }}', ''))
-
-      - template: unix-python-build.yml
-        condition: and(succeeded(), ne('${{ variables.python_verosion }}', ''))
+        parameters:
+          runPythonTests: ${{ ne(variables.python_version, '') }}
