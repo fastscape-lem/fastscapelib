@@ -38,4 +38,4 @@ jobs:
 
       - template: unix-build.yml
         parameters:
-          runPythonTests: ${{ ne(variables.python_version, '') }}
+          runPythonTests: $[ ne(variables.python_version, '') ]
