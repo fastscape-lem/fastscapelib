@@ -36,8 +36,8 @@ jobs:
       - bash: echo "##vso[task.prependpath]$CONDA/bin"
         displayName: Add conda to PATH
 
-      - ${{ if eq(variables['python_version'], '') }}:
-          - template: unix-build.yml
+      - template: unix-build.yml
+        condition: and(succeeded(), eq('${{ variables.python_verosion }}', ''))
 
-      - ${{ if ne(variables['python_version'], '') }}:
-          - template: unix-python-build.yml
+      - template: unix-python-build.yml
+        condition: and(succeeded(), ne('${{ variables.python_verosion }}', ''))
