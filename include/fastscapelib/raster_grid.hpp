@@ -411,7 +411,7 @@ namespace fastscapelib
      *
      * @tparam XT xtensor container selector for data array members.
      */
-    template <class XT, raster_connect RC, class C = detail::neighbors_cache<raster_neighbors<RC>::max_neighbors()>>
+    template <class XT, raster_connect RC, class C = neighbors_cache<raster_neighbors<RC>::max_neighbors()>>
     class raster_grid_xt : public structured_grid<raster_grid_xt<XT, RC, C>, C>,
                            public raster_neighbors<RC>
     {

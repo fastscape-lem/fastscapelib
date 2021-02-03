@@ -121,127 +121,132 @@ namespace fastscapelib
         {
             return static_cast<std::size_t>(static_cast<std::ptrdiff_t>(idx) + offset);
         }
-
-        /**
-         * Provides a cache for neighbors indices queries of a particular node of the grid.
-         */
-        template <std::uint8_t N>
-        class neighbors_cache
-        {
-        public:
-            static constexpr unsigned int cache_width = N;
-            using neighbors_indices_type = std::array<std::size_t, N>;
-
-            neighbors_cache(std::size_t size)
-                : m_cache(cache_shape_type({size}))
-            {
-                for (std::size_t i=0; i<size; ++i)
-                {
-                    m_cache[i].fill(std::numeric_limits<std::size_t>::max());
-                }
-            }
-
-            bool has(const std::size_t& idx) const
-            {
-                return m_cache[idx][0] == std::numeric_limits<std::size_t>::max() ? false : true;
-            }
-
-            neighbors_indices_type& get(const std::size_t& idx)
-            {
-                return m_cache[idx];
-            }
-
-            neighbors_indices_type& get_storage(const std::size_t& idx)
-            {
-                return m_cache[idx];
-            }
-
-            void store(const std::size_t& idx, const neighbors_indices_type& neighbors_indices)
-            {
-                m_cache[idx] = neighbors_indices;
-            }
-
-            std::size_t cache_size() const
-            {
-                return m_cache.size();
-            };
-
-            std::size_t cache_used() const
-            {
-                std::size_t count = 0;
-                
-                for (std::size_t i=0; i < m_cache.size(); ++i)
-                {
-                    if (m_cache[i][0] != std::numeric_limits<std::size_t>::max()) { count += 1; }
-                }
-
-                return count; 
-            };
-
-            void reset()
-            {
-                for (std::size_t i=0; i < m_cache.size(); ++i)
-                {
-                    m_cache[i].fill(std::numeric_limits<std::size_t>::max());
-                }
-            }
-
-            void remove(const std::size_t& idx)
-            {
-                m_cache[idx].fill(std::numeric_limits<std::size_t>::max());
-            }
-
-        protected:
-
-            using cache_type = xt::xtensor<neighbors_indices_type, 1>;
-            using cache_shape_type = typename cache_type::shape_type;
-
-            cache_type m_cache;
-        };
- 
- 
-        /**
-         * A pass-through/no cache for neighbors indices queries of a particular node of the grid.
-         */
-        template <unsigned int N>
-        class neighbors_no_cache
-        {
-        public:
-            static constexpr unsigned int cache_width = N;
-            using neighbors_indices_type = std::array<std::size_t, N>;
-
-            neighbors_no_cache(std::size_t /*size*/) {}
-
-            bool has(const std::size_t& /*idx*/) const { return false; }
-
-            neighbors_indices_type& get(const std::size_t& /*idx*/)
-            {
-                return m_node_neighbors;
-            }
-
-            neighbors_indices_type& get_storage(const std::size_t& /*idx*/)
-            {
-                return m_node_neighbors;
-            }
-
-            void store(const std::size_t& /*idx*/, const neighbors_indices_type neighbors_indices)
-            {
-                m_node_neighbors = neighbors_indices;
-            }
-
-            std::size_t cache_size() const { return 0; }
-
-            std::size_t cache_used() const { return 0; }
-
-            void reset() {}
-
-            void remove(const std::size_t& /*idx*/) {}
-
-        protected:
-
-            neighbors_indices_type m_node_neighbors;
-        };
     }
+
+    /**********************************
+     * Grid neighbors indices caching *
+     **********************************/
+
+    /**
+     * Provides a cache for neighbors indices queries of a particular node of the grid.
+     */
+    template <std::uint8_t N>
+    class neighbors_cache
+    {
+    public:
+        static constexpr unsigned int cache_width = N;
+        using neighbors_indices_type = std::array<std::size_t, N>;
+
+        neighbors_cache(std::size_t size)
+            : m_cache(cache_shape_type({size}))
+        {
+            for (std::size_t i=0; i<size; ++i)
+            {
+                m_cache[i].fill(std::numeric_limits<std::size_t>::max());
+            }
+        }
+
+        bool has(const std::size_t& idx) const
+        {
+            return m_cache[idx][0] == std::numeric_limits<std::size_t>::max() ? false : true;
+        }
+
+        neighbors_indices_type& get(const std::size_t& idx)
+        {
+            return m_cache[idx];
+        }
+
+        neighbors_indices_type& get_storage(const std::size_t& idx)
+        {
+            return m_cache[idx];
+        }
+
+        void store(const std::size_t& idx, const neighbors_indices_type& neighbors_indices)
+        {
+            m_cache[idx] = neighbors_indices;
+        }
+
+        std::size_t cache_size() const
+        {
+            return m_cache.size();
+        };
+
+        std::size_t cache_used() const
+        {
+            std::size_t count = 0;
+            
+            for (std::size_t i=0; i < m_cache.size(); ++i)
+            {
+                if (m_cache[i][0] != std::numeric_limits<std::size_t>::max()) { count += 1; }
+            }
+
+            return count; 
+        };
+
+        void reset()
+        {
+            for (std::size_t i=0; i < m_cache.size(); ++i)
+            {
+                m_cache[i].fill(std::numeric_limits<std::size_t>::max());
+            }
+        }
+
+        void remove(const std::size_t& idx)
+        {
+            m_cache[idx].fill(std::numeric_limits<std::size_t>::max());
+        }
+
+    protected:
+
+        using cache_type = xt::xtensor<neighbors_indices_type, 1>;
+        using cache_shape_type = typename cache_type::shape_type;
+
+        cache_type m_cache;
+    };
+
+
+    /**
+     * A pass-through/no cache for neighbors indices queries of a particular node of the grid.
+     */
+    template <unsigned int N>
+    class neighbors_no_cache
+    {
+    public:
+        static constexpr unsigned int cache_width = N;
+        using neighbors_indices_type = std::array<std::size_t, N>;
+
+        neighbors_no_cache(std::size_t /*size*/) {}
+
+        bool has(const std::size_t& /*idx*/) const { return false; }
+
+        neighbors_indices_type& get(const std::size_t& /*idx*/)
+        {
+            return m_node_neighbors;
+        }
+
+        neighbors_indices_type& get_storage(const std::size_t& /*idx*/)
+        {
+            return m_node_neighbors;
+        }
+
+        void store(const std::size_t& /*idx*/, const neighbors_indices_type neighbors_indices)
+        {
+            m_node_neighbors = neighbors_indices;
+        }
+
+        std::size_t cache_size() const { return 0; }
+
+        std::size_t cache_used() const { return 0; }
+
+        void reset() {}
+
+        void remove(const std::size_t& /*idx*/) {}
+
+    protected:
+
+        neighbors_indices_type m_node_neighbors;
+    };
+
 
     //***************************
     //* Structured grid interface
@@ -279,8 +284,8 @@ namespace fastscapelib
         using distance_type = typename inner_types::distance_type;
 
         using spacing_t = std::conditional_t<std::is_arithmetic<spacing_type>::value,
-                                            spacing_type,
-                                            const spacing_type&>;
+                                             spacing_type,
+                                             const spacing_type&>;
 
         using neighbors_type = typename xt::xtensor<neighbor, 1>;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
