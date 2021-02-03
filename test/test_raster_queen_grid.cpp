@@ -17,8 +17,12 @@ namespace fastscapelib
     EXPECT_EQ(queen_fixed.neighbors_indices(ROW*shape[1]+COL),         \
               (xt::xtensor<std::size_t, 1> INDICES));                  \
                                                                        \
+    queen_fixed.neighbors_indices(ROW*shape[1]+COL, neighbors_idx);    \
+    EXPECT_EQ(neighbors_idx,                                           \
+              (xt::xtensor<std::size_t, 1> INDICES));                  \
+                                                                       \
     EXPECT_EQ((queen_fixed.neighbors_indices(ROW, COL)),               \
-              (grid_type::neighbors_indices_raster_type RC_INDICES));    
+              (grid_type::neighbors_indices_raster_type RC_INDICES));
 
         TEST_F(queen_raster_grid_fixed, neighbors_indices)
         {
@@ -95,6 +99,10 @@ namespace fastscapelib
 
 #define EXPECT_INDICES(ROW, COL, INDICES, RC_INDICES)                  \
     EXPECT_EQ(queen_looped.neighbors_indices(ROW*shape[1]+COL),        \
+              (xt::xtensor<std::size_t, 1> INDICES));                  \
+                                                                       \
+    queen_looped.neighbors_indices(ROW*shape[1]+COL, neighbors_idx);   \
+    EXPECT_EQ(neighbors_idx,                                           \
               (xt::xtensor<std::size_t, 1> INDICES));                  \
                                                                        \
     EXPECT_EQ((queen_looped.neighbors_indices(ROW, COL)),              \
