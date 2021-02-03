@@ -11,27 +11,6 @@ namespace fastscapelib
     namespace testing
     {
 
-        class neighbor: public ::testing::Test
-        {
-            protected:
-
-                fs::neighbor n {3, 1.35, fs::node_status::core};
-        };
-
-        TEST_F(neighbor, ctor)
-        {
-            EXPECT_EQ(n.idx, 3u);
-            EXPECT_EQ(n.distance, 1.35);
-            EXPECT_EQ(n.status, fs::node_status::core);
-        }
-
-        TEST_F(neighbor, equal)
-        {
-            fs::neighbor other_n {3, 1.35, fs::node_status::core};
-            EXPECT_EQ(n, other_n);
-        }
-
-
         class profile_boundary_status: public ::testing::Test
         {
             protected:

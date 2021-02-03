@@ -172,23 +172,21 @@ namespace fastscapelib
             auto& receivers = this->receivers(fgraph);
             auto& dist2receivers = this->receivers_distance(fgraph);
             
-            for (std::size_t i=0; i<grid.size(); ++i)
+            for (auto i : grid.nodes_indices())
             {
                 receivers(i, 0) = i;
                 dist2receivers(i, 0) = 0;
                 slope_max = std::numeric_limits<double>::min();
                 
-                grid.neighbors(i, neighbors);
-
-                for (auto n=neighbors.begin(); n != neighbors.end(); ++n)
+                for (auto n : grid.neighbors(i, neighbors))
                 {          
-                    slope = (elevation.data()[i] - elevation.data()[n->idx]) / n->distance;
+                    slope = (elevation.data()[i] - elevation.data()[n.idx]) / n.distance;
 
                     if(slope > slope_max)
                     {
                         slope_max = slope;
-                        receivers(i, 0) = n->idx;
-                        dist2receivers(i, 0) = n->distance;
+                        receivers(i, 0) = n.idx;
+                        dist2receivers(i, 0) = n.distance;
                     }
                 }
                 donors(receivers(i, 0), donors_count(receivers(i, 0))++) = i;
