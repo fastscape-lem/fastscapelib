@@ -8,7 +8,7 @@ steps:
 
   - script: |
       source activate fastscapelib
-      python -m pip install -e -v .
+      python -m pip install -e . -v
     displayName: Build and install fastscapelib Python bindings
     workingDirectory: $(Build.SourcesDirectory)/python
 
