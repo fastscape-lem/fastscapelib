@@ -103,6 +103,25 @@ namespace fastscapelib
             EXPECT_EQ(graph.grid().size(), 16u); // dummy test
         }
 
+       TEST_F(flow_graph, update_routes)
+        {
+            auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();
+            auto resolver = std::make_unique<fs::no_sink_resolver<flow_graph_type>>();
+
+            flow_graph_type graph(grid, std::move(router), std::move(resolver));
+            graph.update_routes(elevation);
+            graph.update_routes(elevation); // check there is not memory effect
+        
+            xt::xtensor<size_type, 1> expected_fixed_receivers
+                { 1,  2,  7,  7,
+                  9,  9,  7,  7,
+                  9,  9,  9,  7,
+                  9,  9,  9,  14 };
+
+            EXPECT_TRUE(xt::all(xt::equal(xt::col(graph.receivers(), 0),
+                                          expected_fixed_receivers)));
+        }
+
         TEST_F(flow_graph, accumulate)
         {
             auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();

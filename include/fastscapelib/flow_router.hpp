@@ -172,6 +172,8 @@ namespace fastscapelib
             auto& receivers = this->receivers(fgraph);
             auto& dist2receivers = this->receivers_distance(fgraph);
             
+            donors_count.fill(0);
+
             for (auto i : grid.nodes_indices())
             {
                 receivers(i, 0) = i;
