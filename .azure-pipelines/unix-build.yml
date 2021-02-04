@@ -17,7 +17,7 @@ steps:
 
   - ${{ if eq(parameters.runPythonTests, 'true') }}:
       - script: |
-          source activate fsatscapelib
+          source activate fastscapelib
           conda install python=$(python_version) xtensor-python pytest pip -c conda-forge
         displayName: Install Python dependencies
 
