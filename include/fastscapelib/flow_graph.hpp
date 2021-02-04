@@ -43,6 +43,9 @@ namespace fastscapelib
 
         using elevation_type = xt_container_t<S, elev_t, G::xt_ndims>;
 
+        template <class T>
+        using data_type = xt_container_t<S, T, G::xt_ndims>;
+
         using donors_type = xt_container_t<S, index_type, 2>;
         using donors_count_type = xt_container_t<S, neighbors_count_type, 1>;
 
@@ -89,24 +92,26 @@ namespace fastscapelib
 
         G& grid() { return m_grid; };
 
-        index_type size() { return m_grid.size(); };
+        index_type size() const { return m_grid.size(); };
 
-        const receivers_type& receivers() { return m_receivers; };
+        const receivers_type& receivers() const { return m_receivers; };
 
-        const receivers_count_type& receivers_count() { return m_receivers_count; };
+        const receivers_count_type& receivers_count() const { return m_receivers_count; };
 
-        const receivers_distance_type& receivers_distance() { return m_receivers_distance; };
+        const receivers_distance_type& receivers_distance() const { return m_receivers_distance; };
 
-        const receivers_weight_type& receivers_weight() { return m_receivers_weight; };
+        const receivers_weight_type& receivers_weight() const { return m_receivers_weight; };
 
-        const donors_type& donors() { return m_donors; };
+        const donors_type& donors() const { return m_donors; };
 
-        const donors_count_type& donors_count() { return m_donors_count; };
+        const donors_count_type& donors_count() const { return m_donors_count; };
 
         template <class T>
         T accumulate(const T& data) const;
 
-        const stack_type& dfs_stack() { return m_dfs_stack; };
+        data_type<double> accumulate(const double& data) const;
+
+        const stack_type& dfs_stack() const { return m_dfs_stack; };
 
         const_dfs_iterator dfs_cbegin() { return m_dfs_stack.cbegin(); };
 
@@ -141,7 +146,8 @@ namespace fastscapelib
 
     template <class G, class elev_t, class S>
     template <class T>
-    T flow_graph<G, elev_t, S>::accumulate(const T& data) const
+    auto flow_graph<G, elev_t, S>::accumulate(const T& data) const
+        -> T
     {
         T acc = xt::zeros_like(data);
 
@@ -160,6 +166,14 @@ namespace fastscapelib
         }
 
         return acc;
+    }
+
+    template <class G, class elev_t, class S>
+    auto flow_graph<G, elev_t, S>::accumulate(const double& data) const
+        -> data_type<double>
+    {
+        data_type<double> tmp = xt::ones<double>(m_grid.shape()) * data;
+        return accumulate(tmp);
     }
 }
 

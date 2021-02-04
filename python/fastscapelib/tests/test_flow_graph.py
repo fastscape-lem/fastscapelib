@@ -67,6 +67,10 @@ class TestFlowGraph():
         npt.assert_almost_equal(flow_graph.accumulate(np.ones(elevation.shape)),
                                 expected)
 
+        npt.assert_almost_equal(flow_graph.accumulate(1.), expected)
+
+        npt.assert_almost_equal(flow_graph.accumulate(5.), 5 * expected)
+
         data = np.array([[1.1, 1.0, 1.1, 1.0],
                          [1.1, 1.0, 1.1, 1.0],
                          [1.1, 1.0, 1.1, 1.0],

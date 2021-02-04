@@ -150,6 +150,8 @@ namespace fastscapelib
                  {1.452,  1.32, 2.772,  1.32}};
 
             EXPECT_TRUE(xt::allclose(expected1, graph.accumulate(data1)));
+            EXPECT_TRUE(xt::allclose(expected1, graph.accumulate(1.)));
+            EXPECT_TRUE(xt::allclose(expected1 * 5., graph.accumulate(5.)));
             EXPECT_TRUE(xt::allclose(expected2, graph.accumulate(data2)));
         }
     }

@@ -47,21 +47,23 @@ namespace fastscapelib
 
             virtual const elevation_type& update_routes(const elevation_type& elevation) = 0;
             
-            virtual const xt::pyarray<std::size_t>& receivers() = 0;
+            virtual const xt::pyarray<std::size_t>& receivers() const = 0;
 
-            virtual const xt::pyarray<std::uint8_t>& receivers_count() = 0;
+            virtual const xt::pyarray<std::uint8_t>& receivers_count() const = 0;
 
-            virtual const xt::pyarray<double>& receivers_distance() = 0;
+            virtual const xt::pyarray<double>& receivers_distance() const = 0;
 
-            virtual const xt::pyarray<double>& receivers_weight() = 0;
+            virtual const xt::pyarray<double>& receivers_weight() const = 0;
                         
-            virtual const xt::pyarray<std::size_t>& donors() = 0;
+            virtual const xt::pyarray<std::size_t>& donors() const = 0;
 
-            virtual const xt::pyarray<std::uint8_t>& donors_count() = 0;
+            virtual const xt::pyarray<std::uint8_t>& donors_count() const = 0;
 
-            virtual const xt::pyarray<std::size_t>& dfs_stack() = 0;
+            virtual const xt::pyarray<std::size_t>& dfs_stack() const = 0;
 
-            virtual xt::pyarray<double> accumulate(const xt::pyarray<double>& data) = 0;
+            virtual xt::pyarray<double> accumulate(const xt::pyarray<double>& data) const = 0;
+
+            virtual xt::pyarray<double> accumulate(const double& data) const = 0;
         };
 
         template <class G>
@@ -94,21 +96,23 @@ namespace fastscapelib
 
             const elevation_type& update_routes(const elevation_type& elevation) { return m_wrapped->update_routes(elevation); };
 
-            const xt::pyarray<std::size_t>& receivers() { return m_wrapped->receivers(); };
+            const xt::pyarray<std::size_t>& receivers() const { return m_wrapped->receivers(); };
 
-            const xt::pyarray<std::uint8_t>& receivers_count() { return m_wrapped->receivers_count(); };
+            const xt::pyarray<std::uint8_t>& receivers_count() const { return m_wrapped->receivers_count(); };
 
-            const xt::pyarray<double>& receivers_distance() { return m_wrapped->receivers_distance(); };
+            const xt::pyarray<double>& receivers_distance() const { return m_wrapped->receivers_distance(); };
 
-            const xt::pyarray<double>& receivers_weight() { return m_wrapped->receivers_weight(); };
+            const xt::pyarray<double>& receivers_weight() const { return m_wrapped->receivers_weight(); };
 
-            const xt::pyarray<std::size_t>& donors() { return m_wrapped->donors(); };
+            const xt::pyarray<std::size_t>& donors() const { return m_wrapped->donors(); };
 
-            const xt::pyarray<std::uint8_t>& donors_count() { return m_wrapped->donors_count(); };
+            const xt::pyarray<std::uint8_t>& donors_count() const { return m_wrapped->donors_count(); };
 
-            const xt::pyarray<std::size_t>& dfs_stack() { return m_wrapped->dfs_stack(); };
+            const xt::pyarray<std::size_t>& dfs_stack() const { return m_wrapped->dfs_stack(); };
 
-            xt::pyarray<double> accumulate(const xt::pyarray<double>& data) { return m_wrapped->accumulate(data); };
+            xt::pyarray<double> accumulate(const xt::pyarray<double>& data) const { return m_wrapped->accumulate(data); };
+
+            xt::pyarray<double> accumulate(const double& data) const { return m_wrapped->accumulate(data); };
 
         private:
 
@@ -122,14 +126,15 @@ namespace fastscapelib
 
             using self_type = flow_graph_facade;
             using elevation_type = xt::pyarray<double>;
+            using index_type = std::size_t;
 
             template <class G>
             flow_graph_facade(G& obj, std::shared_ptr<flow_router_method> router, std::shared_ptr<sink_resolver_method> resolver)
                 : p_impl(std::make_unique<flow_graph_wrapper<G>>(obj, router, resolver))
-                {}
+            {}
 
             template <class G>
-            fs::flow_graph<G, elevation_type> get_implementation()
+            fs::flow_graph<G, double, fs::pyarray_selector>& get_implementation()
             {
                 auto& derived = dynamic_cast<flow_graph_wrapper<G>&>(*p_impl);
                 return derived.get_wrapped();
@@ -139,21 +144,23 @@ namespace fastscapelib
 
             const elevation_type& update_routes(const elevation_type& elevation) { return p_impl->update_routes(elevation); };
 
-            const xt::pyarray<std::size_t>& receivers() { return p_impl->receivers(); };
+            const xt::pyarray<std::size_t>& receivers() const { return p_impl->receivers(); };
 
-            const xt::pyarray<std::uint8_t>& receivers_count() { return p_impl->receivers_count(); };
+            const xt::pyarray<std::uint8_t>& receivers_count() const { return p_impl->receivers_count(); };
 
-            const xt::pyarray<double>& receivers_distance() { return p_impl->receivers_distance(); };
+            const xt::pyarray<double>& receivers_distance() const { return p_impl->receivers_distance(); };
 
-            const xt::pyarray<double>& receivers_weight() { return p_impl->receivers_weight(); };
+            const xt::pyarray<double>& receivers_weight() const { return p_impl->receivers_weight(); };
 
-            const xt::pyarray<std::size_t>& donors() { return p_impl->donors(); };
+            const xt::pyarray<std::size_t>& donors() const { return p_impl->donors(); };
 
-            const xt::pyarray<std::uint8_t>& donors_count() { return p_impl->donors_count(); };
+            const xt::pyarray<std::uint8_t>& donors_count() const { return p_impl->donors_count(); };
 
-            const xt::pyarray<std::size_t>& dfs_stack() { return p_impl->dfs_stack(); };
+            const xt::pyarray<std::size_t>& dfs_stack() const { return p_impl->dfs_stack(); };
 
-            xt::pyarray<double> accumulate(const xt::pyarray<double>& data) { return p_impl->accumulate(data); };
+            xt::pyarray<double> accumulate(const xt::pyarray<double>& data) const { return p_impl->accumulate(data); };
+
+            xt::pyarray<double> accumulate(const double& data) const { return p_impl->accumulate(data); };
 
         private:
 

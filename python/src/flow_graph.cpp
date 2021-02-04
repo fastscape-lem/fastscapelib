@@ -27,6 +27,7 @@ void add_flow_graph_bindings(py::module& m) {
         .def("donors", &flow_graph_facade::donors)
         .def("donors_count", &flow_graph_facade::donors_count)
         .def("dfs_stack", &flow_graph_facade::dfs_stack)
-        .def("accumulate", &flow_graph_facade::accumulate);
+        .def("accumulate", py::overload_cast<const xt::pyarray<double>&>(&flow_graph_facade::accumulate, py::const_))
+        .def("accumulate", py::overload_cast<const double&>(&flow_graph_facade::accumulate, py::const_));
 }
  
