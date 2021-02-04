@@ -112,5 +112,8 @@ class TestRasterGrid():
     def test_size(self):
         assert self.g.size == 50
 
+    def test_shape(self):
+        npt.assert_almost_equal(self.g.shape, [5, 10])
+
     def test_spacing(self):
         npt.assert_almost_equal(self.g.spacing, [2.2, 2.4])

@@ -97,6 +97,9 @@ class TestProfileGrid():
     def test_spacing(self):
         assert self.g.spacing == 2.2
 
+    def test_shape(self):
+        assert self.g.shape == 10
+
     def test_length(self):
         assert self.g.length == 19.8
 
