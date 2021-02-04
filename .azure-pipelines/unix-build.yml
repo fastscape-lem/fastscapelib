@@ -1,7 +1,7 @@
 parameters:
 - name: 'runPythonTests'
-  type: boolean
-  default: false
+  type: string
+  default: 'false'
 
 steps:
   - script: |
@@ -15,13 +15,13 @@ steps:
       source activate fastscapelib
     displayName: Install dependencies
 
-  - ${{ if eq(parameters.runPythonTests, true) }}:
+  - ${{ if eq(parameters.runPythonTests, 'true') }}:
       - script: |
           source activate fsatscapelib
           conda install python=$(python_version) xtensor-python pytest pip -c conda-forge
         displayName: Install Python dependencies
 
-  - ${{ if eq(parameters.runPythonTests, false) }}:
+  - ${{ if eq(parameters.runPythonTests, 'false') }}:
       - script: |
           source activate fastscapelib
           mkdir build
@@ -30,21 +30,21 @@ steps:
         displayName: Configure fastscapelib
         workingDirectory: $(Build.BinariesDirectory)
 
-  - ${{ if eq(parameters.runPythonTests, false) }}:
+  - ${{ if eq(parameters.runPythonTests, 'false') }}:
       - script: |
           source activate fastscapelib
           make -j2
         displayName: Build fastscapelib
         workingDirectory: $(Build.BinariesDirectory)/build
 
-  - ${{ if eq(parameters.runPythonTests, true) }}:
+  - ${{ if eq(parameters.runPythonTests, 'true') }}:
       - script: |
           source activate fastscapelib
           python -m pip install -e -v .
         displayName: Build and install fastscapelib Python bindings
         workingDirectory: $(Build.BinariesDirectory)/python
 
-  - ${{ if eq(parameters.runPythonTests, false) }}:
+  - ${{ if eq(parameters.runPythonTests, 'false') }}:
       - script: |
           source activate fastscapelib
           cd test
@@ -52,7 +52,7 @@ steps:
         displayName: Test fastscapelib
         workingDirectory: $(Build.BinariesDirectory)/build/test
 
-  - ${{ if eq(parameters.runPythonTests, true) }}:
+  - ${{ if eq(parameters.runPythonTests, 'true') }}:
       - script: |
           source activate fastscapelib
           pytest .
