@@ -1,7 +1,5 @@
-parameters:
-- name: 'runPythonTests'
-  type: string
-  default: 'false'
+variables:
+  runPythonTests: $[eq(variables['python'], 'true')]
 
 steps:
   - script: |
@@ -19,7 +17,7 @@ steps:
       source activate fastscapelib
       conda install python=$(python_version) xtensor-python pytest pip -c conda-forge
     displayName: Install Python dependencies
-    condition: eq(parameters.runPythonTests, 'true')
+    condition: and(succeeded(), eq(variables.runPythonTest, true))
 
   - ${{ if eq(parameters.runPythonTests, 'false') }}:
       - script: |
