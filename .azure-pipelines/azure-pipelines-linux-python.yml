@@ -11,8 +11,8 @@ jobs:
     pool:
       vmImage: ubuntu-16.04
     variables:
-      CC: gcc-$(gcc_version)
-      CXX: g++-$(gcc_version)
+      CC: gcc-9
+      CXX: g++-9
     timeoutInMinutes: 360
     steps:
 
