@@ -47,7 +47,7 @@ jobs:
           call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
           set CC=clang-cl
           set CXX=clang-cl
-          set CMAKE_GENERATOR=Ninja
+          set CMAKE_GENERATOR=NMake
           python -m pip install -e . -v
         displayName: "Build and install fastscapelib Python bindings"
         workingDirectory: $(Build.SourcesDirectory)/python
