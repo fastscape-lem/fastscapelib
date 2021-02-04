@@ -10,3 +10,4 @@ jobs:
   - template: ./.azure-pipelines/azure-pipelines-win.yml
   - template: ./.azure-pipelines/azure-pipelines-linux-python.yml
   - template: ./.azure-pipelines/azure-pipelines-macos-python.yml
+  - template: ./.azure-pipelines/azure-pipelines-win-python.yml
