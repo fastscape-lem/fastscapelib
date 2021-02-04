@@ -4,26 +4,16 @@ jobs:
       matrix:
         gcc_4:
           gcc_version: '4.9'
-          python: 'false'
         gcc_5:
           gcc_version: '5'
-          python: 'false'
         gcc_6:
           gcc_version: '6'
-          python: 'false'
         gcc_7:
           gcc_version: '7'
-          python: 'false'
         gcc_8:
           gcc_version: '8'
-          python: 'false'
         gcc_9:
           gcc_version: '9'
-          python: 'false'
-        python_37:
-          gcc_version: '9'
-          python: 'true'
-          python_version: '3.7'
     pool:
       vmImage: ubuntu-16.04
     variables:
@@ -44,5 +34,3 @@ jobs:
         displayName: Add conda to PATH
 
       - template: unix-build.yml
-        parameters:
-          runPythonTests: $(python)
