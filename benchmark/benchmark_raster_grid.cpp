@@ -96,12 +96,12 @@ namespace fastscapelib
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape {{n, n}};
 
-            neighbors_offsets_type::shape_type sh0 = {grid_type::max_neighbors};
+            neighbors_offsets_type::shape_type sh0 = {grid_type::max_neighbors()};
             neighbors_offsets_type offsets = xt::empty<xt::xtensor_fixed<std::ptrdiff_t, xt::xshape<2>>>(sh0);
 
             auto get_neighbors_indices = [&shape, &offsets](auto& r, auto& c) -> neighbors_offsets_type {
 
-                    for(std::size_t k=1; k<=grid_type::max_neighbors; ++k)
+                    for(std::size_t k=1; k<=grid_type::max_neighbors(); ++k)
                     {
                         const index_t kr = r + fs::consts::d8_row_offsets[k];
                         const index_t kc = c + fs::consts::d8_col_offsets[k];
@@ -128,14 +128,14 @@ namespace fastscapelib
             }
         }
 
-        using queen_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::queen, detail::neighbors_no_cache<8>>;
-        using queen_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::queen, detail::neighbors_cache<8>>;
+        using queen_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::queen, neighbors_no_cache<8>>;
+        using queen_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::queen, neighbors_cache<8>>;
 
-        using rook_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::rook, detail::neighbors_no_cache<4>>;
-        using rook_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::rook, detail::neighbors_cache<4>>;
+        using rook_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::rook, neighbors_no_cache<4>>;
+        using rook_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::rook, neighbors_cache<4>>;
 
-        using bishop_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::bishop, detail::neighbors_no_cache<4>>;
-        using bishop_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::bishop, detail::neighbors_cache<4>>;
+        using bishop_nocache = fs::raster_grid_xt<xtensor_selector, raster_connect::bishop, neighbors_no_cache<4>>;
+        using bishop_cacheall = fs::raster_grid_xt<xtensor_selector, raster_connect::bishop, neighbors_cache<4>>;
 
 
 #define BENCH_GRID(NAME, GRID)                              \

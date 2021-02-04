@@ -60,6 +60,8 @@ namespace fastscapelib
             virtual const xt::pyarray<std::uint8_t>& donors_count() = 0;
 
             virtual const xt::pyarray<std::size_t>& dfs_stack() = 0;
+
+            virtual xt::pyarray<double> accumulate(const xt::pyarray<double>& data) = 0;
         };
 
         template <class G>
@@ -106,6 +108,8 @@ namespace fastscapelib
 
             const xt::pyarray<std::size_t>& dfs_stack() { return m_wrapped->dfs_stack(); };
 
+            xt::pyarray<double> accumulate(const xt::pyarray<double>& data) { return m_wrapped->accumulate(data); };
+
         private:
 
             std::unique_ptr<wrapped_type> m_wrapped;
@@ -148,6 +152,8 @@ namespace fastscapelib
             const xt::pyarray<std::uint8_t>& donors_count() { return p_impl->donors_count(); };
 
             const xt::pyarray<std::size_t>& dfs_stack() { return p_impl->dfs_stack(); };
+
+            xt::pyarray<double> accumulate(const xt::pyarray<double>& data) { return p_impl->accumulate(data); };
 
         private:
 

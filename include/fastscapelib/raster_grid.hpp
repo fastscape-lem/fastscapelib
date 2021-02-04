@@ -489,6 +489,7 @@ namespace fastscapelib
         size_type m_size;
         spacing_type m_spacing;
         length_type m_length;
+        distance_type m_node_area;
 
         node_status_type m_status_at_nodes;
         boundary_status_type m_status_at_bounds;
@@ -545,6 +546,7 @@ namespace fastscapelib
     {
         m_size = shape[0] * shape[1];
         m_length = (xt::adapt(shape) - 1) * spacing;
+        m_node_area = xt::prod(spacing)();
 
         build_nodes_codes();
         m_neighbors_count = this->build_neighbors_count(status_at_bounds);        

@@ -330,6 +330,8 @@ namespace fastscapelib
 
         const node_status_type& status_at_nodes() const;
 
+        distance_type node_area(const size_type& idx) const noexcept;
+
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
 
         neighbors_distances_type neighbors_distances(const size_type& idx) const;
@@ -455,6 +457,16 @@ namespace fastscapelib
         -> const node_status_type&
     {
         return derived_grid().m_status_at_nodes;
+    }
+
+    /**
+     * Returns the drainage at grid node.
+     */
+    template <class G, class C>
+    inline auto structured_grid<G, C>::node_area(const size_type& /*idx*/) const noexcept
+        -> distance_type
+    {
+        return derived_grid().m_node_area;
     }
 
     /**
