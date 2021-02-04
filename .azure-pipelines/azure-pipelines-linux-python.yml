@@ -6,7 +6,7 @@ jobs:
           python_version: '3.7'
         python_38:
           python_version: '3.8'
-        python_38:
+        python_39:
           python_version: '3.9'
     pool:
       vmImage: ubuntu-16.04
