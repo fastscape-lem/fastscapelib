@@ -1,7 +1,7 @@
 jobs:
   - job: 'Windows_clangcl_py'
     pool:
-      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-latest'
     timeoutInMinutes: 360
     steps:
 
@@ -36,8 +36,8 @@ jobs:
       # Build and install
       - script: |
           setlocal EnableDelayedExpansion
-          call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
-          set CMAKE_GENERATOR="Ninja"
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
+          set CMAKE_GENERATOR="NMake Makefiles"
           echo '##vso[task.setvariable variable=CMAKE_GENERATOR]%CMAKE_GENERATOR%'
           python -m pip install -e . -v
         displayName: "Build and install fastscapelib Python bindings"
