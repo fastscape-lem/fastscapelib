@@ -37,8 +37,6 @@ jobs:
       - script: |
           setlocal EnableDelayedExpansion
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
-          set CMAKE_GENERATOR="NMake Makefiles"
-          echo '##vso[task.setvariable variable=CMAKE_GENERATOR]%CMAKE_GENERATOR%'
           python -m pip install -e . -v
         displayName: "Build and install fastscapelib Python bindings"
         workingDirectory: $(Build.SourcesDirectory)/python
