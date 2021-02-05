@@ -1,7 +1,7 @@
 Fastscapelib
 ============
 
-|Build Status| |Win Build Status| |Doc Status| |Zenodo|
+|Build Status| |Doc Status| |Zenodo|
 
 A C++ library of efficient algorithms for processing topographic data
 and landscape evolution modeling.
@@ -9,12 +9,9 @@ and landscape evolution modeling.
 This library currently has Python bindings and is easily extensible to
 other languages.
 
-.. |Build Status| image:: https://travis-ci.org/fastscape-lem/fastscapelib.svg?branch=master
-   :target: https://travis-ci.org/fastscape-lem/fastscapelib
+.. |Build Status| image:: https://dev.azure.com/fastscape-lem/fastscapelib/_apis/build/status/fastscape-lem.fastscapelib?branchName=master
+   :target: https://dev.azure.com/fastscape-lem/fastscapelib/_build/latest?definitionId=1&branchName=master
    :alt: Build Status
-.. |Win Build Status| image:: https://ci.appveyor.com/api/projects/status/4gm51wb8knpvq0rp/branch/master?svg=true
-   :target: https://ci.appveyor.com/project/benbovy/fastscapelib
-   :alt: Win Build Status
 .. |Doc Status| image:: http://readthedocs.org/projects/fastscapelib/badge/?version=latest
    :target: http://fastscapelib.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
