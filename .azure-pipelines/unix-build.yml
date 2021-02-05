@@ -2,9 +2,10 @@ steps:
   - script: |
       conda config --set always_yes yes --set changeps1 no
       conda update -q conda
-      conda create -n fastscapelib gtest cmake xtensor -c conda-forge
+      conda create -n fastscapelib cmake xtensor -c conda-forge
       source activate fastscapelib
     displayName: Install dependencies
+
   - script: |
       source activate fastscapelib
       mkdir build
@@ -15,13 +16,13 @@ steps:
 
   - script: |
       source activate fastscapelib
-      make -j2 test_fastscapelib
+      make -j2
     displayName: Build fastscapelib
     workingDirectory: $(Build.BinariesDirectory)/build
 
   - script: |
       source activate fastscapelib
       cd test
-      ./test_fastscapelib
+      cmake --build . -- test
     displayName: Test fastscapelib
     workingDirectory: $(Build.BinariesDirectory)/build/test

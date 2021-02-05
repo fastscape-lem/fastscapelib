@@ -100,8 +100,9 @@ pip-log.txt
 # misc
 .DS_Store
 
-# IDE
+# IDE / editors
 .ccls
 .ccls-cache/
 .vscode/
 compile_commands.json
+.dir-locals.el

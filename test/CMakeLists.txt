@@ -57,29 +57,34 @@ endif()
 # Compiler configuration
 # ======================
 
+# -- Check C++14 support
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # -- Set compiler flags
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
-    CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR
-    (CMAKE_CXX_COMPILER_ID MATCHES "Intel" AND NOT WIN32))
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR (CMAKE_CXX_COMPILER_ID MATCHES "Intel" AND NOT WIN32))
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wunused-parameter")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wreorder")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion -Wsign-conversion")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast -Wunused-variable")
-
-    # Check C++14 support (not working with MSVC)
-    include(CheckCXXCompilerFlag)
-    CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)
-
-    if(NOT HAS_CPP14_FLAG)
-        message(FATAL_ERROR "Unsupported compiler -- fastscapelib requires C++14 support!")
-    endif()
-endif()
-
-if(MSVC)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP /bigobj")
     set(CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(NOT WIN32)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wunused-parameter")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wreorder")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion -Wsign-conversion")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast -Wunused-variable")
+    else()   # We are using clang-cl
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /bigobj")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
+        add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+        add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
+    endif()
 endif()
 
 # Build
@@ -102,25 +107,10 @@ set(FASTSCAPELIB_TEST_SRC
     test_bedrock_channel.cpp
 )
 
-set(FASTSCAPELIB_TEST_TARGET test_fastscapelib)
-
-# -- build a target for each benchmark
+# -- build a target for each test
 foreach(filename IN LISTS FASTSCAPELIB_TEST_SRC)
     string(REPLACE ".cpp" "" targetname ${filename})
-    add_executable(${targetname} ${filename} main.cpp)
+    add_executable(${targetname} ${filename})
     target_link_libraries(${targetname} PRIVATE fastscapelib GTest::GTest GTest::Main)
+    add_test(${targetname} ${targetname})
 endforeach()
-
-# -- build a global target for all benchmarks
-add_executable(${FASTSCAPELIB_TEST_TARGET} ${FASTSCAPELIB_TEST_SRC} main.cpp)
-
-if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
-    add_dependencies(${FASTSCAPELIB_TEST_TARGET} gtest_main)
-endif()
-
-target_link_libraries(${FASTSCAPELIB_TEST_TARGET} PRIVATE
-                      fastscapelib GTest::GTest GTest::Main)
-
-target_compile_features(${FASTSCAPELIB_TEST_TARGET} INTERFACE cxx_std_14)
-
-

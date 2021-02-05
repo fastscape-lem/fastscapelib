@@ -308,7 +308,7 @@ namespace fastscapelib
                                     G& grid)
         {
             using neighbors_type = typename G::neighbors_type;
-            
+
             double slope, slope_max;
             neighbors_type neighbors;
 
@@ -317,11 +317,11 @@ namespace fastscapelib
                 receivers(i, 0) = i;
                 dist2receivers(i, 0) = 0;
                 slope_max = std::numeric_limits<double>::min();
-                
+
                 grid.neighbors(i, neighbors);
 
                 for (auto n=neighbors.begin(); n != neighbors.end(); ++n)
-                {          
+                {
                     slope = (elevation.data()[i] - elevation.data()[n->idx]) / n->distance;
 
                     if(slope > slope_max)

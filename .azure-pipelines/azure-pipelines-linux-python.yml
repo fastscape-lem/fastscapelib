@@ -1,0 +1,22 @@
+jobs:
+  - job: 'Linux_py'
+    strategy:
+      matrix:
+        python_37:
+          python_version: '3.7'
+        python_38:
+          python_version: '3.8'
+        python_39:
+          python_version: '3.9'
+    pool:
+      vmImage: ubuntu-16.04
+    variables:
+      CC: gcc-9
+      CXX: g++-9
+    timeoutInMinutes: 360
+    steps:
+
+      - bash: echo "##vso[task.prependpath]$CONDA/bin"
+        displayName: Add conda to PATH
+
+      - template: unix-build-python.yml
