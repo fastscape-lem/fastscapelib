@@ -1,5 +1,5 @@
 jobs:
-  - job: 'Windows_clangcl_py'
+  - job: 'Windows_py38'
     pool:
       vmImage: 'windows-latest'
     timeoutInMinutes: 360

@@ -1,10 +1,10 @@
 jobs:
-  - job: 'macos'
+  - job: 'MacOS'
     strategy:
       matrix:
-        macOS_10_14:
+        mojave_10_14:
           image_name: 'macOS-10.14'
-        macOS_10_15:
+        catalina_10_15:
           image_name: 'macOS-10.15'
     pool:
       vmImage: $(image_name)
@@ -15,9 +15,9 @@ jobs:
     steps:
       - script: |
           echo "Removing homebrew for Azure to avoid conflicts with conda"
-          curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall > ~/uninstall_homebrew
+          curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh > ~/uninstall_homebrew
           chmod +x ~/uninstall_homebrew
-          ~/uninstall_homebrew -f -q
+          sudo ~/uninstall_homebrew -f -q
         displayName: Remove homebrew
       - bash: |
           echo "##vso[task.prependpath]$CONDA/bin"
