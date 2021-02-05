@@ -97,9 +97,9 @@ void compute_drainage_area_grid_py(xt::pytensor<T, 2>& drainage_area,
 
 
 template <class K, class T>
-auto erode_stream_power_py(xt::pyarray<T>& erosion,
-                           const xt::pyarray<T>& elevation,
-                           const xt::pyarray<T>& drainage_area,
+auto erode_stream_power_py(xt::pyarray<T, xt::layout_type::row_major>& erosion,
+                           const xt::pyarray<T, xt::layout_type::row_major>& elevation,
+                           const xt::pyarray<T, xt::layout_type::row_major>& drainage_area,
                            fs::detail::flow_graph_facade& flow_graph,
                            const K k_coef,
                            double m_exp,
@@ -133,7 +133,7 @@ void add_erosion_bindings(py::module& m)
               "Compute bedrock channel erosion during a single time step "
               "using the Stream Power Law.");
 
-        m.def("erode_stream_power_var_d", &erode_stream_power_py<xt::pyarray<double>, double>,
+        m.def("erode_stream_power_var_d", &erode_stream_power_py<xt::pyarray<double, xt::layout_type::row_major>, double>,
               "Compute bedrock channel erosion during a single time step "
               "using the Stream Power Law.\n\n"
               "Version with spatially variable stream power coefficient.");
