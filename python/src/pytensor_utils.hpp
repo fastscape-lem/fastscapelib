@@ -11,7 +11,7 @@ namespace fastscapelib
     template <class T, std::size_t N>
     struct xt_container<pyarray_selector, T, N>
     {
-        using type = xt::pyarray<T>;
+        using type = xt::pyarray<T, xt::layout_type::row_major>;
     };
 }
 
