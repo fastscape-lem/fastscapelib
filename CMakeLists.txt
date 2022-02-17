@@ -93,6 +93,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sink_resolver.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/bedrock_channel.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/hillslope.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/xtensor_utils.hpp
 )
 
 set(FASTSCAPELIB_TARGET fastscapelib)
