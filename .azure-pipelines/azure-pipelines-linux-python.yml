@@ -9,7 +9,7 @@ jobs:
         python_39:
           python_version: '3.9'
     pool:
-      vmImage: ubuntu-16.04
+      vmImage: ubuntu-18.04
     variables:
       CC: gcc-9
       CXX: g++-9
