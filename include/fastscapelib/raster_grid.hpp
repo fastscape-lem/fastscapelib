@@ -4,6 +4,7 @@
 #ifndef FASTSCAPELIB_RASTER_GRID_H
 #define FASTSCAPELIB_RASTER_GRID_H
 
+#include "fastscapelib/grid.hpp"
 #include "fastscapelib/structured_grid.hpp"
 #include "fastscapelib/profile_grid.hpp"
 
@@ -419,6 +420,7 @@ namespace fastscapelib
 
         using self_type = raster_grid_xt<XT, RC, C>;
         using base_type = structured_grid<self_type, C>;
+        using neighbors_cache_type = C;
         using inner_types = grid_inner_types<self_type>;
 
         using xt_selector = typename inner_types::xt_selector;
@@ -522,7 +524,8 @@ namespace fastscapelib
 
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors, const size_type& idx) const;
 
-        friend class structured_grid<self_type, C>;
+        friend class structured_grid<self_type, neighbors_cache_type>;
+        friend class grid<self_type, neighbors_cache_type>;
     };
 
     /**
