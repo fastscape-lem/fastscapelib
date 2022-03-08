@@ -72,8 +72,9 @@ namespace fastscapelib
 
     protected:
 
-        structured_grid(std::size_t size) : grid<G, C>(size) {};
+        using grid<G, C>::grid;
         ~structured_grid() = default;
+
     };
 
     /**
