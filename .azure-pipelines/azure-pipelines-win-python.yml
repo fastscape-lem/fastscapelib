@@ -1,7 +1,7 @@
 jobs:
-  - job: 'Windows_py38'
+  - job: 'Windows_py39'
     pool:
-      vmImage: 'windows-latest'
+      vmImage: 'windows-2019'
     timeoutInMinutes: 360
     steps:
 
@@ -30,13 +30,13 @@ jobs:
       # Create conda enviroment
       # Note: conda activate doesn't work here, because it creates a new shell!
       - script: |
-          conda install python=3.8 cmake ninja xtensor-python pytest pip -c conda-forge
+          conda install python=3.9 cmake ninja xtensor-python pytest pip -c conda-forge
           conda list
         displayName: "Install conda packages"
       # Build and install
       - script: |
           setlocal EnableDelayedExpansion
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
           python -m pip install -e . -v
         displayName: "Build and install fastscapelib Python bindings"
         workingDirectory: $(Build.SourcesDirectory)/python
