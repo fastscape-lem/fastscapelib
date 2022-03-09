@@ -10,6 +10,7 @@
 #include "fastscapelib/flow_router_factory.hpp"
 #include "fastscapelib/sink_resolver.hpp"
 #include "fastscapelib/sink_resolver_factory.hpp"
+#include "fastscapelib/xtensor_utils.hpp"
 
 #include "pybind11/pybind11.h"
 
