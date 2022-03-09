@@ -1,7 +1,7 @@
 jobs:
   - job: 'Windows_py38'
     pool:
-      vmImage: 'windows-latest'
+      vmImage: 'windows-2019'
     timeoutInMinutes: 360
     steps:
 
@@ -36,7 +36,7 @@ jobs:
       # Build and install
       - script: |
           setlocal EnableDelayedExpansion
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
           python -m pip install -e . -v
         displayName: "Build and install fastscapelib Python bindings"
         workingDirectory: $(Build.SourcesDirectory)/python
