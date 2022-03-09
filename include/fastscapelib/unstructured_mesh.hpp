@@ -26,8 +26,6 @@ namespace fastscapelib
         using shape_type = typename xt_type::shape_type;
         using distance_type = double;
 
-        using code_type = std::uint8_t;
-
         using neighbors_count_type = std::uint8_t;
         using neighbors_distances_impl_type = typename std::array<distance_type, max_neighbors>;
 
