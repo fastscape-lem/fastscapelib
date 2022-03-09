@@ -86,6 +86,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_router_factory.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_router.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_routing.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/hillslope.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/iterators.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/profile_grid.hpp

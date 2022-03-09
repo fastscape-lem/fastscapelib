@@ -136,6 +136,7 @@ namespace fastscapelib
 
         using self_type = profile_grid_xt<XT, C>;
         using base_type = structured_grid<self_type, C>;
+        using neighbors_cache_type = C;
         using inner_types = grid_inner_types<self_type>;
 
         using xt_selector = typename inner_types::xt_selector;
@@ -205,7 +206,8 @@ namespace fastscapelib
 
         const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx) const;
 
-        friend class structured_grid<self_type, C>;
+        friend class structured_grid<self_type, neighbors_cache_type>;
+        friend class grid<self_type, neighbors_cache_type>;
     };
 
     template <class XT, class C>
