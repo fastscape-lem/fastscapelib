@@ -95,6 +95,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sink_resolver.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sinks.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/structured_grid.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/unstructured_mesh.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/version.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/xtensor_utils.hpp

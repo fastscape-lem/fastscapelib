@@ -6,6 +6,8 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
+#include "pytensor_utils.hpp"
+
 
 namespace py = pybind11;
 namespace fs = fastscapelib;
@@ -36,6 +38,15 @@ void add_grid_bindings(py::module& m) {
         .def_readwrite("idx", &fs::neighbor::idx, "Neighbor index.")
         .def_readwrite("distance", &fs::neighbor::distance, "Neighbor distance.")
         .def_readwrite("status", &fs::neighbor::status, "Neighbor status.");
+
+    // ==== Binding of the UnstructuredMesh class ==== //
+    using unstructured_mesh_py = unstructured_mesh_xt<pyarray_selector>;
+    py::class_<unstructured_mesh_py> umesh(m, "UnstructuredMesh");
+    umesh.def(py::init());
+
+    // umesh.def_property_readonly("size", [](const unstructured_mesh_py& mesh) { return mesh.size(); })
+    //      .def_property_readonly("status_at_nodes", [](const unstructured_mesh_py& mesh) { return mesh.status_at_nodes(); })
+    //      .def("neighbors", [](unstructured_mesh_py& mesh, std::size_t idx) { return mesh.neighbors(idx); });
 
     // ==== Binding of the profile_boundary_status class ==== //
     py::class_<profile_boundary_status> (m, "ProfileBoundaryStatus")

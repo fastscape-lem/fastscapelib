@@ -4,8 +4,6 @@
 #ifndef FASTSCAPELIB_PROFILE_GRID_H
 #define FASTSCAPELIB_PROFILE_GRID_H
 
-#include "fastscapelib/structured_grid.hpp"
-
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -14,6 +12,9 @@
 #include <type_traits>
 #include <map>
 #include <vector>
+
+#include "fastscapelib/grid.hpp"
+#include "fastscapelib/structured_grid.hpp"
 
 
 namespace fastscapelib
@@ -128,6 +129,7 @@ namespace fastscapelib
      * Used for modeling single channel or hillslope profiles.
      *
      * @tparam XT xtensor container selector for data array members.
+     * @tparam C Grid neighbors cache type.
      */
     template <class XT, class C = neighbors_cache<2>>
     class profile_grid_xt : public structured_grid<profile_grid_xt<XT, C>, C>
@@ -141,7 +143,10 @@ namespace fastscapelib
 
         using xt_selector = typename inner_types::xt_selector;
         static constexpr std::size_t xt_ndims = inner_types::xt_ndims;
-        static constexpr std::uint8_t max_neighbors(){ return inner_types::max_neighbors; };
+        static constexpr std::uint8_t max_neighbors()
+        {
+            return inner_types::max_neighbors;
+        };
 
         using size_type = typename inner_types::size_type;
         using shape_type = typename inner_types::shape_type;

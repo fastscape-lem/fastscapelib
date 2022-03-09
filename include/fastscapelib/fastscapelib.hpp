@@ -14,6 +14,7 @@
 #include "fastscapelib/flow_router.hpp"
 #include "fastscapelib/sink_resolver.hpp"
 #include "fastscapelib/grid.hpp"
+#include "fastscapelib/unstructured_mesh.hpp"
 #include "fastscapelib/structured_grid.hpp"
 #include "fastscapelib/profile_grid.hpp"
 #include "fastscapelib/raster_grid.hpp"
