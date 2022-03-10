@@ -23,7 +23,7 @@ namespace fastscapelib
      * Base class for the implementation of flow routing
      * methods.
      *
-     * All derived classes must implement ``route_impl``.
+     * All derived classes must implement ``route1_impl`` and ``route2_impl``.
      *
      * @tparam FG The flow_graph class.
      */
@@ -41,13 +41,18 @@ namespace fastscapelib
         flow_router& operator=(const flow_router&) = delete;
         flow_router& operator=(flow_router&&) = delete;
 
-        void route(const elevation_type& elevation, FG& fgraph)
+        void route1(const elevation_type& elevation, FG& fgraph)
         {
-            route_impl(elevation, fgraph);
+            route1_impl(elevation, fgraph);
+        }
+        void route2(const elevation_type& elevation, FG& fgraph)
+        {
+            route2_impl(elevation, fgraph);
         }
 
     private:
-        virtual void route_impl(const elevation_type& elevation, FG& fgraph) = 0;
+        virtual void route1_impl(const elevation_type& elevation, FG& fgraph) = 0;
+        virtual void route2_impl(const elevation_type& elevation, FG& fgraph) = 0;
 
     protected:
         using index_type = typename FG::index_type;
@@ -114,7 +119,8 @@ namespace fastscapelib
         virtual ~dummy_flow_router() = default;
 
     private:
-        void route_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+        void route1_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+        void route2_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
     };
 
 
@@ -179,7 +185,7 @@ namespace fastscapelib
             }
         };
 
-        void route_impl(const elevation_type& elevation, FG& fgraph)
+        void route1_impl(const elevation_type& elevation, FG& fgraph)
         {
             using neighbors_type = typename FG::grid_type::neighbors_type;
 
@@ -221,6 +227,8 @@ namespace fastscapelib
 
             compute_dfs_stack(fgraph);
         };
+
+        void route2_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
     };
 
 
@@ -248,7 +256,8 @@ namespace fastscapelib
     private:
         double p1 = 0., p2 = 0.;
 
-        void route_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+        void route1_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+        void route2_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
     };
 
 
