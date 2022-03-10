@@ -19,16 +19,19 @@ jobs:
         mamba-version: "*"
         channels: conda-forge
         channel-priority: strict
-        activate-environment: linters
+        activate-environment: pre-commit
         python-version: 3.9
         auto-update-conda: false
     - name: Install dependencies
+      shell: bash -l {0}
       run: |
         mamba install pre-commit
     - name: Conda info
+      shell: bash -l {0}
       run: |
         conda info -a
         conda list
     - name: Run pre-commit
+      shell: bash -l {0}
       run: |
         pre-commit run --all-files --verbose --show-diff-on-failure
