@@ -17,7 +17,7 @@ namespace fastscapelib
         using surf_type = bms::surface_type;
 
 
-        template<surf_type S>
+        template <surf_type S>
         void fill_sinks_flat(benchmark::State& state)
         {
             auto topo = bms::synthetic_topography_2d<S, double>(state.range(0));
@@ -30,7 +30,7 @@ namespace fastscapelib
             }
         }
 
-        template<surf_type S>
+        template <surf_type S>
         void fill_sinks_sloped(benchmark::State& state)
         {
             auto topo = bms::synthetic_topography_2d<S, double>(state.range(0));
@@ -44,13 +44,12 @@ namespace fastscapelib
         }
 
 
-#define BENCH_SURF(NAME, SURF)                                  \
-    BENCHMARK_TEMPLATE(NAME, SURF)                              \
-    ->Apply(bms::small_grid_sizes<benchmark::kMillisecond>);
+#define BENCH_SURF(NAME, SURF)                                                                     \
+    BENCHMARK_TEMPLATE(NAME, SURF)->Apply(bms::small_grid_sizes<benchmark::kMillisecond>);
 
-#define BENCH_ALL_SURF(NAME)                    \
-    BENCH_SURF(NAME, surf_type::cone)           \
-    BENCH_SURF(NAME, surf_type::cone_inv)       \
+#define BENCH_ALL_SURF(NAME)                                                                       \
+    BENCH_SURF(NAME, surf_type::cone)                                                              \
+    BENCH_SURF(NAME, surf_type::cone_inv)                                                          \
     BENCH_SURF(NAME, surf_type::cone_noise)
 
 

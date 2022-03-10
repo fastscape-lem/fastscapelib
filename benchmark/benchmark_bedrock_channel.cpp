@@ -26,18 +26,16 @@ namespace fastscapelib
     namespace benchmark_bedrock_channel
     {
 
-        template<class K, class S>
-        typename std::enable_if_t<std::is_floating_point<K>::value, K>
-        get_k_coef(S&& shape)
+        template <class K, class S>
+        typename std::enable_if_t<std::is_floating_point<K>::value, K> get_k_coef(S&& shape)
         {
             (void) shape;  // do not show warning
             return 1e-3;
         }
 
 
-        template<class K, class S>
-        typename std::enable_if_t<xt::is_xexpression<K>::value, K>
-        get_k_coef(S&& shape)
+        template <class K, class S>
+        typename std::enable_if_t<xt::is_xexpression<K>::value, K> get_k_coef(S&& shape)
         {
             using T = typename K::value_type;
 
@@ -48,7 +46,7 @@ namespace fastscapelib
         }
 
 
-        template<class T, class K, int Nd>
+        template <class T, class K, int Nd>
         void bm_erode_stream_power(benchmark::State& state)
         {
             auto ns = static_cast<std::size_t>(state.range(0));
@@ -64,10 +62,11 @@ namespace fastscapelib
                 double spacing = 300.;
 
                 auto grid = fs::profile_grid(ns, spacing, fs::node_status::fixed_value_boundary);
-            
-                auto flow_graph = flow_graph_type(grid,
-                                                  std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+
+                auto flow_graph
+                    = flow_graph_type(grid,
+                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
+                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
 
                 double x0 = 300.;
                 double length = (ns - 1) * spacing;
@@ -89,8 +88,15 @@ namespace fastscapelib
 
                 for (auto _ : state)
                 {
-                    ncorr = fs::erode_stream_power(erosion, elevation, drainage_area, flow_graph,
-                                                   k_coef, m_exp, n_exp, dt, 1e-3);
+                    ncorr = fs::erode_stream_power(erosion,
+                                                   elevation,
+                                                   drainage_area,
+                                                   flow_graph,
+                                                   k_coef,
+                                                   m_exp,
+                                                   n_exp,
+                                                   dt,
+                                                   1e-3);
                 }
             }
 
@@ -101,11 +107,13 @@ namespace fastscapelib
 
                 auto s = bms::FastscapeSetupBase<bms::surface_type::cone, T>(state.range(0));
 
-                auto grid = fs::raster_grid({{ns, ns}}, {s.dy, s.dy}, fs::node_status::fixed_value_boundary);
-            
-                auto flow_graph = flow_graph_type(grid,
-                                                  std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+                auto grid = fs::raster_grid(
+                    { { ns, ns } }, { s.dy, s.dy }, fs::node_status::fixed_value_boundary);
+
+                auto flow_graph
+                    = flow_graph_type(grid,
+                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
+                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
 
                 elevation = s.elevation;
                 erosion = xt::zeros_like(s.elevation);
@@ -122,24 +130,31 @@ namespace fastscapelib
 
                 for (auto _ : state)
                 {
-                    ncorr = fs::erode_stream_power(erosion, elevation, drainage_area, flow_graph,
-                                                   k_coef, m_exp, n_exp, dt, 1e-3);
+                    ncorr = fs::erode_stream_power(erosion,
+                                                   elevation,
+                                                   drainage_area,
+                                                   flow_graph,
+                                                   k_coef,
+                                                   m_exp,
+                                                   n_exp,
+                                                   dt,
+                                                   1e-3);
                 }
             }
         }
 
 
         BENCHMARK_TEMPLATE(bm_erode_stream_power, double, double, 1)
-        ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);
+            ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);
 
         BENCHMARK_TEMPLATE(bm_erode_stream_power, double, xt::xtensor<double, 1>, 1)
-        ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);
+            ->Apply(bms::grid_sizes<benchmark::kMicrosecond>);
 
         BENCHMARK_TEMPLATE(bm_erode_stream_power, double, double, 2)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
+            ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
 
         BENCHMARK_TEMPLATE(bm_erode_stream_power, double, xt::xtensor<double, 2>, 2)
-        ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
+            ->Apply(bms::grid_sizes<benchmark::kMillisecond>);
 
     }  // namespace benchmark_bedrock_channel
 }  // namespace fastscapelib
