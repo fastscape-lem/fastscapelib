@@ -2,8 +2,8 @@
  * Common grid element types (node status, neighbors).
  * grid base (abstract) class.
  */
-#ifndef GRID_H_
-#define GRID_H_
+#ifndef FASTSCAPELIB_GRID_H
+#define FASTSCAPELIB_GRID_H
 
 #include <cstddef>
 #include <cstdint>
@@ -587,4 +587,4 @@ namespace fastscapelib
 
 }
 
-#endif  // GRID_H_
+#endif  // FASTSCAPELIB_GRID_H
