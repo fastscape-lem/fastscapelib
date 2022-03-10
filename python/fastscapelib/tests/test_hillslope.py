@@ -1,6 +1,5 @@
-import pytest
 import numpy as np
-
+import pytest
 from _fastscapelib_py.algo import erode_linear_diffusion_d, erode_linear_diffusion_var_d
 
 
@@ -10,13 +9,12 @@ def _solve_diffusion_analytical(x, y, k_coef, t):
 
 
 def _compute_l2_norm(a1, a2):
-    return 1. / a1.size * np.sum(a2**2 - a1**2)
+    return 1.0 / a1.size * np.sum(a2**2 - a1**2)
 
 
 @pytest.mark.parametrize("k_coef_type", ["constant", "variable"])
 def test_erode_linear_diffusion(k_coef_type):
-    x, y = np.meshgrid(np.linspace(-20, 20, 51),
-                       np.linspace(-20, 20, 101))
+    x, y = np.meshgrid(np.linspace(-20, 20, 51), np.linspace(-20, 20, 101))
     dy = 0.4
     dx = 0.8
 
@@ -30,10 +28,10 @@ def test_erode_linear_diffusion(k_coef_type):
 
     elevation_analytical = _solve_diffusion_analytical(x, y, k_coef, t0 + dt)
 
-    if k_coef_type == 'constant':
+    if k_coef_type == "constant":
         func = erode_linear_diffusion_d
         k = k_coef
-    elif k_coef_type == 'variable':
+    elif k_coef_type == "variable":
         func = erode_linear_diffusion_var_d
         k = np.full_like(x, k_coef)
 
