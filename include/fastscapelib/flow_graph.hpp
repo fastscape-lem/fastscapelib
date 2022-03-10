@@ -1,7 +1,7 @@
 /**
  * @brief Class used to compute or follow flow routes on
  * the topographic surface.
- * 
+ *
  * It provides a single API to chain flow_router and
  * sink_resolver methods and access their results.
  *
@@ -63,73 +63,113 @@ namespace fastscapelib
         using sink_resolver_ptr = std::unique_ptr<sink_resolver<self_type>>;
 
         flow_graph(G& grid, flow_router_ptr router, sink_resolver_ptr resolver)
-            : m_grid(grid),
-              p_flow_router(std::move(router)),
-              p_sink_resolver(std::move(resolver))
+            : m_grid(grid)
+            , p_flow_router(std::move(router))
+            , p_sink_resolver(std::move(resolver))
         {
-            shape_type receivers_shape = {grid.size(), grid_type::max_neighbors()};
-            shape_type donors_shape = {grid.size(), grid_type::max_neighbors()+1};
+            shape_type receivers_shape = { grid.size(), grid_type::max_neighbors() };
+            shape_type donors_shape = { grid.size(), grid_type::max_neighbors() + 1 };
 
             m_receivers = xt::ones<index_type>(receivers_shape) * -1;
-            m_receivers_count = xt::zeros<index_type>({grid.size()});
+            m_receivers_count = xt::zeros<index_type>({ grid.size() });
             m_receivers_distance = xt::ones<distance_type>(receivers_shape) * -1;
             m_receivers_weight = xt::zeros<double>(receivers_shape);
 
             m_donors = xt::ones<index_type>(donors_shape) * -1;
-            m_donors_count = xt::zeros<index_type>({grid.size()});
+            m_donors_count = xt::zeros<index_type>({ grid.size() });
 
-            m_dfs_stack = xt::ones<index_type>({grid.size()}) * -1;
+            m_dfs_stack = xt::ones<index_type>({ grid.size() }) * -1;
         }
 
         const elevation_type& update_routes(const elevation_type& elevation)
         {
-            const auto& modified_elevation = p_sink_resolver->resolve_before_route(elevation, *this);
+            const auto& modified_elevation
+                = p_sink_resolver->resolve_before_route(elevation, *this);
             p_flow_router->route(modified_elevation, *this);
-            const auto& final_elevation = p_sink_resolver->resolve_after_route(modified_elevation, *this);
+            const auto& final_elevation
+                = p_sink_resolver->resolve_after_route(modified_elevation, *this);
 
             return final_elevation;
         }
 
-        G& grid() { return m_grid; };
+        G& grid()
+        {
+            return m_grid;
+        };
 
-        index_type size() const { return m_grid.size(); };
+        index_type size() const
+        {
+            return m_grid.size();
+        };
 
-        const receivers_type& receivers() const { return m_receivers; };
+        const receivers_type& receivers() const
+        {
+            return m_receivers;
+        };
 
-        const receivers_count_type& receivers_count() const { return m_receivers_count; };
+        const receivers_count_type& receivers_count() const
+        {
+            return m_receivers_count;
+        };
 
-        const receivers_distance_type& receivers_distance() const { return m_receivers_distance; };
+        const receivers_distance_type& receivers_distance() const
+        {
+            return m_receivers_distance;
+        };
 
-        const receivers_weight_type& receivers_weight() const { return m_receivers_weight; };
+        const receivers_weight_type& receivers_weight() const
+        {
+            return m_receivers_weight;
+        };
 
-        const donors_type& donors() const { return m_donors; };
+        const donors_type& donors() const
+        {
+            return m_donors;
+        };
 
-        const donors_count_type& donors_count() const { return m_donors_count; };
+        const donors_count_type& donors_count() const
+        {
+            return m_donors_count;
+        };
 
         template <class T>
         T accumulate(const T& data) const;
 
         data_type<double> accumulate(const double& data) const;
 
-        const stack_type& dfs_stack() const { return m_dfs_stack; };
+        const stack_type& dfs_stack() const
+        {
+            return m_dfs_stack;
+        };
 
-        const_dfs_iterator dfs_cbegin() { return m_dfs_stack.cbegin(); };
+        const_dfs_iterator dfs_cbegin()
+        {
+            return m_dfs_stack.cbegin();
+        };
 
-        const_dfs_iterator dfs_cend() { return m_dfs_stack.cend(); };
+        const_dfs_iterator dfs_cend()
+        {
+            return m_dfs_stack.cend();
+        };
 
-        const_reverse_dfs_iterator dfs_crbegin() { return m_dfs_stack.crbegin(); };
+        const_reverse_dfs_iterator dfs_crbegin()
+        {
+            return m_dfs_stack.crbegin();
+        };
 
-        const_reverse_dfs_iterator dfs_crend() { return m_dfs_stack.crend(); };
+        const_reverse_dfs_iterator dfs_crend()
+        {
+            return m_dfs_stack.crend();
+        };
 
     private:
-    
         using shape_type = typename xt_container_t<S, index_type, 2>::shape_type;
 
         G& m_grid;
 
         donors_type m_donors;
         donors_count_type m_donors_count;
-        
+
         receivers_type m_receivers;
         receivers_count_type m_receivers_count;
         receivers_distance_type m_receivers_distance;
@@ -146,16 +186,15 @@ namespace fastscapelib
 
     template <class G, class elev_t, class S>
     template <class T>
-    auto flow_graph<G, elev_t, S>::accumulate(const T& data) const
-        -> T
+    auto flow_graph<G, elev_t, S>::accumulate(const T& data) const -> T
     {
         T acc = xt::zeros_like(data);
 
-        for (auto inode=m_dfs_stack.crbegin(); inode!=m_dfs_stack.crend(); ++inode)
+        for (auto inode = m_dfs_stack.crbegin(); inode != m_dfs_stack.crend(); ++inode)
         {
             acc(*inode) += m_grid.node_area(*inode) * data.data()[*inode];
 
-            for (index_type r=0; r<m_receivers_count[*inode]; ++r)
+            for (index_type r = 0; r < m_receivers_count[*inode]; ++r)
             {
                 index_type ireceiver = m_receivers(*inode, r);
                 if (ireceiver != *inode)
@@ -169,8 +208,7 @@ namespace fastscapelib
     }
 
     template <class G, class elev_t, class S>
-    auto flow_graph<G, elev_t, S>::accumulate(const double& data) const
-        -> data_type<double>
+    auto flow_graph<G, elev_t, S>::accumulate(const double& data) const -> data_type<double>
     {
         data_type<double> tmp = xt::ones<double>(m_grid.shape()) * data;
         return accumulate(tmp);

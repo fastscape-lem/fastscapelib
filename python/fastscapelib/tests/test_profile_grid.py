@@ -1,15 +1,24 @@
-import pytest
 import numpy as np
 import numpy.testing as npt
+import pytest
 
-from fastscapelib.grid import NodeStatus, ProfileBoundaryStatus, ProfileGrid, Node, Neighbor
+from fastscapelib.grid import (
+    Neighbor,
+    Node,
+    NodeStatus,
+    ProfileBoundaryStatus,
+    ProfileGrid,
+)
 
 
-class TestProfileBoundaryStatus():
-
+class TestProfileBoundaryStatus:
     def setup_method(self, method):
-        self.bs1 = ProfileBoundaryStatus([NodeStatus.CORE, NodeStatus.FIXED_VALUE_BOUNDARY])
-        self.bs2 = ProfileBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY, NodeStatus.CORE)
+        self.bs1 = ProfileBoundaryStatus(
+            [NodeStatus.CORE, NodeStatus.FIXED_VALUE_BOUNDARY]
+        )
+        self.bs2 = ProfileBoundaryStatus(
+            NodeStatus.FIXED_VALUE_BOUNDARY, NodeStatus.CORE
+        )
         self.bs3 = ProfileBoundaryStatus(NodeStatus.CORE)
         self.bs4 = ProfileBoundaryStatus(NodeStatus.LOOPED_BOUNDARY)
 
@@ -36,8 +45,7 @@ class TestProfileBoundaryStatus():
         assert self.bs4.is_horizontal_looped
 
 
-class TestNeighbor():
-
+class TestNeighbor:
     def setup_method(self, method):
         self.n = Neighbor(5, 1.35, NodeStatus.CORE)
 
@@ -65,31 +73,40 @@ class TestNeighbor():
         assert self.n.status == NodeStatus.FIXED_VALUE_BOUNDARY
 
 
-class TestProfileGrid():
-
+class TestProfileGrid:
     def setup_method(self, method):
-        self.bs = [NodeStatus.FIXED_VALUE_BOUNDARY]*2
+        self.bs = [NodeStatus.FIXED_VALUE_BOUNDARY] * 2
         self.g = ProfileGrid(10, 2.2, self.bs, [(5, NodeStatus.FIXED_VALUE_BOUNDARY)])
 
     def test___init__(self):
         g = ProfileGrid(10, 2, self.bs, [(5, NodeStatus.FIXED_VALUE_BOUNDARY)])
         assert g.size == 10
-        assert g.spacing == 2.
-        assert g.length == 18.
+        assert g.spacing == 2.0
+        assert g.length == 18.0
 
-        g = ProfileGrid(15, 3., ProfileBoundaryStatus(self.bs), [Node(5, NodeStatus.FIXED_VALUE_BOUNDARY)])
+        g = ProfileGrid(
+            15,
+            3.0,
+            ProfileBoundaryStatus(self.bs),
+            [Node(5, NodeStatus.FIXED_VALUE_BOUNDARY)],
+        )
         assert g.size == 15
-        assert g.spacing == 3.
-        assert g.length == 42.
+        assert g.spacing == 3.0
+        assert g.length == 42.0
 
         with pytest.raises(IndexError):
             ProfileGrid(10, 2, self.bs, [(15, NodeStatus.FIXED_VALUE_BOUNDARY)])
 
     def test_from_length(self):
-        g = ProfileGrid.from_length(11, 20., ProfileBoundaryStatus(self.bs), [Node(5, NodeStatus.FIXED_VALUE_BOUNDARY)])
+        g = ProfileGrid.from_length(
+            11,
+            20.0,
+            ProfileBoundaryStatus(self.bs),
+            [Node(5, NodeStatus.FIXED_VALUE_BOUNDARY)],
+        )
         assert g.size == 11
-        assert g.spacing == 2.
-        assert g.length == 20.
+        assert g.spacing == 2.0
+        assert g.length == 20.0
 
     def test_size(self):
         assert self.g.size == 10
@@ -104,12 +121,15 @@ class TestProfileGrid():
         assert self.g.length == 19.8
 
     def test_status_at_nodes(self):
-        npt.assert_equal(self.g.status_at_nodes, np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1]))
+        npt.assert_equal(
+            self.g.status_at_nodes, np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1])
+        )
+
 
 #    def test_neighbors(self):
 #        assert self.g.neighbors(0) == [Neighbor(1, 2.2, NodeStatus.CORE)]
 #        assert self.g.neighbors(1) == [Neighbor(0, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY), Neighbor(2, 2.2, NodeStatus.CORE)]
 #        assert self.g.neighbors(6) == [Neighbor(5, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY), Neighbor(7, 2.2, NodeStatus.CORE)]
-#        
+#
 #        with pytest.raises(IndexError):
 #            self.g.neighbors(11)

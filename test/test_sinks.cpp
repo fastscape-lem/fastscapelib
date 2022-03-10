@@ -103,7 +103,7 @@ namespace fastscapelib
                 elev_type res = elevation;
                 fs::fill_sinks_flat(profile_grid_closed, res);
 
-                elev_type expected {3.0, 2.0, 2.0, 2.0};
+                elev_type expected{ 3.0, 2.0, 2.0, 2.0 };
                 EXPECT_TRUE(xt::all(xt::equal(res, expected)));
             }
 
@@ -113,7 +113,7 @@ namespace fastscapelib
                 elev_type res = elevation;
                 fs::fill_sinks_flat(profile_grid_half_open, res);
 
-                elev_type expected {3.0, 3.0, 3.0, 3.0};
+                elev_type expected{ 3.0, 3.0, 3.0, 3.0 };
                 EXPECT_TRUE(xt::all(xt::equal(res, expected)));
             }
         }

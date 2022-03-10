@@ -16,7 +16,8 @@
 #include "fastscapelib/iterators.hpp"
 
 
-namespace fastscapelib {
+namespace fastscapelib
+{
 
     //*****************
     //* Grid boundaries
@@ -25,7 +26,7 @@ namespace fastscapelib {
     /**
      * Status at a grid/mesh node.
      */
-    enum class node_status: std::uint8_t
+    enum class node_status : std::uint8_t
     {
         core = 0,
         fixed_value_boundary = 1,
@@ -40,10 +41,10 @@ namespace fastscapelib {
         class node_status_filter
         {
         public:
-
             node_status_filter(V ref)
                 : m_ref(ref)
-            {}
+            {
+            }
 
             template <class G>
             inline bool operator()(const G& grid, typename G::size_type idx) const
@@ -52,11 +53,10 @@ namespace fastscapelib {
             }
 
         private:
-
             V m_ref;
         };
 
-        template<class V>
+        template <class V>
         auto make_node_status_filter(V value)
         {
             return node_status_filter<V>(value);
@@ -64,12 +64,10 @@ namespace fastscapelib {
 
         inline bool node_status_cmp(node_status a, node_status b)
         {
-            static std::map<node_status, int> priority {
-                {node_status::core, 0},
-                {node_status::looped_boundary, 1},
-                {node_status::fixed_gradient_boundary, 2},
-                {node_status::fixed_value_boundary, 3}
-            };
+            static std::map<node_status, int> priority{ { node_status::core, 0 },
+                                                        { node_status::looped_boundary, 1 },
+                                                        { node_status::fixed_gradient_boundary, 2 },
+                                                        { node_status::fixed_value_boundary, 3 } };
 
             return priority[a] < priority[b];
         }
@@ -83,7 +81,6 @@ namespace fastscapelib {
     class boundary_status
     {
     protected:
-
         bool is_looped(node_status status) const;
     };
 
@@ -102,8 +99,8 @@ namespace fastscapelib {
      */
     struct node
     {
-        std::size_t idx;     /**< Node index */
-        node_status status;  /**< Node status */
+        std::size_t idx;    /**< Node index */
+        node_status status; /**< Node status */
     };
 
     /**
@@ -111,9 +108,9 @@ namespace fastscapelib {
      */
     struct neighbor
     {
-        std::size_t idx;     /**< Index of the neighbor node */
-        double distance;     /**< Distance to the neighbor node */
-        node_status status;  /**< Status at the neighbor node */
+        std::size_t idx;    /**< Index of the neighbor node */
+        double distance;    /**< Distance to the neighbor node */
+        node_status status; /**< Status at the neighbor node */
 
         bool operator==(const neighbor& rhs) const
         {
@@ -150,9 +147,9 @@ namespace fastscapelib {
         using neighbors_indices_type = std::array<std::size_t, N>;
 
         neighbors_cache(std::size_t size)
-            : m_cache(cache_shape_type({size}))
+            : m_cache(cache_shape_type({ size }))
         {
-            for (std::size_t i=0; i<size; ++i)
+            for (std::size_t i = 0; i < size; ++i)
             {
                 m_cache[i].fill(std::numeric_limits<std::size_t>::max());
             }
@@ -187,9 +184,12 @@ namespace fastscapelib {
         {
             std::size_t count = 0;
 
-            for (std::size_t i=0; i < m_cache.size(); ++i)
+            for (std::size_t i = 0; i < m_cache.size(); ++i)
             {
-                if (m_cache[i][0] != std::numeric_limits<std::size_t>::max()) { count += 1; }
+                if (m_cache[i][0] != std::numeric_limits<std::size_t>::max())
+                {
+                    count += 1;
+                }
             }
 
             return count;
@@ -197,7 +197,7 @@ namespace fastscapelib {
 
         void reset()
         {
-            for (std::size_t i=0; i < m_cache.size(); ++i)
+            for (std::size_t i = 0; i < m_cache.size(); ++i)
             {
                 m_cache[i].fill(std::numeric_limits<std::size_t>::max());
             }
@@ -209,7 +209,6 @@ namespace fastscapelib {
         }
 
     protected:
-
         using cache_type = xt::xtensor<neighbors_indices_type, 1>;
         using cache_shape_type = typename cache_type::shape_type;
 
@@ -227,9 +226,14 @@ namespace fastscapelib {
         static constexpr unsigned int cache_width = N;
         using neighbors_indices_type = std::array<std::size_t, N>;
 
-        neighbors_no_cache(std::size_t /*size*/) {}
+        neighbors_no_cache(std::size_t /*size*/)
+        {
+        }
 
-        bool has(const std::size_t& /*idx*/) const { return false; }
+        bool has(const std::size_t& /*idx*/) const
+        {
+            return false;
+        }
 
         neighbors_indices_type& get(const std::size_t& /*idx*/)
         {
@@ -246,16 +250,25 @@ namespace fastscapelib {
             m_node_neighbors = neighbors_indices;
         }
 
-        std::size_t cache_size() const { return 0; }
+        std::size_t cache_size() const
+        {
+            return 0;
+        }
 
-        std::size_t cache_used() const { return 0; }
+        std::size_t cache_used() const
+        {
+            return 0;
+        }
 
-        void reset() {}
+        void reset()
+        {
+        }
 
-        void remove(const std::size_t& /*idx*/) {}
+        void remove(const std::size_t& /*idx*/)
+        {
+        }
 
     protected:
-
         neighbors_indices_type m_node_neighbors;
     };
 
@@ -281,7 +294,6 @@ namespace fastscapelib {
     class grid
     {
     public:
-
         using derived_grid_type = G;
         using inner_types = grid_inner_types<derived_grid_type>;
 
@@ -312,20 +324,25 @@ namespace fastscapelib {
 
         neighbors_indices_type neighbors_indices(const size_type& idx);
 
-        neighbors_indices_type& neighbors_indices(const size_type& idx, neighbors_indices_type& neighbors_indices);
+        neighbors_indices_type& neighbors_indices(const size_type& idx,
+                                                  neighbors_indices_type& neighbors_indices);
 
         neighbors_type neighbors(const size_type& idx);
 
         neighbors_type& neighbors(const size_type& idx, neighbors_type& neighbors);
 
-        inline filtered_index_iterator<grid, detail::node_status_filter<node_status>> nodes_indices_begin(node_status status)
+        inline filtered_index_iterator<grid, detail::node_status_filter<node_status>>
+        nodes_indices_begin(node_status status)
         {
-            return filtered_index_iterator<grid, detail::node_status_filter<node_status>>(*this, detail::make_node_status_filter(status), 0);
+            return filtered_index_iterator<grid, detail::node_status_filter<node_status>>(
+                *this, detail::make_node_status_filter(status), 0);
         }
 
-        inline filtered_index_iterator<grid, detail::node_status_filter<node_status>> nodes_indices_end(node_status status)
+        inline filtered_index_iterator<grid, detail::node_status_filter<node_status>>
+        nodes_indices_end(node_status status)
         {
-            return filtered_index_iterator<grid, detail::node_status_filter<node_status>>(*this, detail::make_node_status_filter(status), size());
+            return filtered_index_iterator<grid, detail::node_status_filter<node_status>>(
+                *this, detail::make_node_status_filter(status), size());
         }
 
         inline index_iterator<grid> nodes_indices_begin()
@@ -348,22 +365,22 @@ namespace fastscapelib {
             return std::reverse_iterator<index_iterator<grid>>(nodes_indices_begin());
         }
 
-        inline detail::node_indices_iterator<grid> nodes_indices() {
+        inline detail::node_indices_iterator<grid> nodes_indices()
+        {
             return *this;
         };
 
-        const neighbors_cache_type& neighbors_indices_cache() {
+        const neighbors_cache_type& neighbors_indices_cache()
+        {
             return m_neighbors_indices_cache;
         };
 
     protected:
-
         using neighbors_indices_impl_type = typename C::neighbors_indices_type;
         using neighbors_distances_impl_type = typename inner_types::neighbors_distances_impl_type;
 
         grid(std::size_t size)
-            : m_neighbors_indices_cache(neighbors_cache_type(size))
-        {};
+            : m_neighbors_indices_cache(neighbors_cache_type(size)){};
         ~grid() = default;
 
         const derived_grid_type& derived_grid() const noexcept;
@@ -378,15 +395,13 @@ namespace fastscapelib {
 
 
     template <class G, class C>
-    inline auto grid<G, C>::derived_grid() const noexcept
-        -> const derived_grid_type&
+    inline auto grid<G, C>::derived_grid() const noexcept -> const derived_grid_type&
     {
         return *static_cast<const derived_grid_type*>(this);
     }
 
     template <class G, class C>
-    inline auto grid<G, C>::derived_grid() noexcept
-        -> derived_grid_type&
+    inline auto grid<G, C>::derived_grid() noexcept -> derived_grid_type&
     {
         return *static_cast<derived_grid_type*>(this);
     }
@@ -399,8 +414,7 @@ namespace fastscapelib {
      * Returns the total number of grid nodes.
      */
     template <class G, class C>
-    inline auto grid<G, C>::size() const noexcept
-        -> size_type
+    inline auto grid<G, C>::size() const noexcept -> size_type
     {
         return derived_grid().m_size;
     }
@@ -409,8 +423,7 @@ namespace fastscapelib {
      * Returns a constant reference to the array of status at grid nodes.
      */
     template <class G, class C>
-    inline auto grid<G, C>::status_at_nodes() const
-        -> const node_status_type&
+    inline auto grid<G, C>::status_at_nodes() const -> const node_status_type&
     {
         return derived_grid().m_status_at_nodes;
     }
@@ -419,8 +432,7 @@ namespace fastscapelib {
      * Returns the drainage at grid node.
      */
     template <class G, class C>
-    inline auto grid<G, C>::node_area(const size_type& /*idx*/) const noexcept
-        -> distance_type
+    inline auto grid<G, C>::node_area(const size_type& /*idx*/) const noexcept -> distance_type
     {
         return derived_grid().m_node_area;
     }
@@ -438,8 +450,7 @@ namespace fastscapelib {
     }
 
     template <class G, class C>
-    inline auto grid<G, C>::neighbors_indices(const size_type& idx)
-        -> neighbors_indices_type
+    inline auto grid<G, C>::neighbors_indices(const size_type& idx) -> neighbors_indices_type
     {
         neighbors_indices_type indices = xt::adapt(neighbors_indices_impl(idx));
         auto view = xt::view(indices, xt::range(0, neighbors_count(idx)));
@@ -469,8 +480,7 @@ namespace fastscapelib {
      * @return The vector of the neighbors of that grid node.
      */
     template <class G, class C>
-    inline auto grid<G, C>::neighbors(const size_type& idx)
-        -> neighbors_type
+    inline auto grid<G, C>::neighbors(const size_type& idx) -> neighbors_type
     {
         neighbors_type node_neighbors;
         neighbors(idx, node_neighbors);
@@ -488,7 +498,8 @@ namespace fastscapelib {
      *                          indices of that grid node.
      */
     template <class G, class C>
-    inline auto grid<G, C>::neighbors_indices(const size_type& idx, neighbors_indices_type& neighbors_indices)
+    inline auto grid<G, C>::neighbors_indices(const size_type& idx,
+                                              neighbors_indices_type& neighbors_indices)
         -> neighbors_indices_type&
     {
         const auto& n_count = neighbors_count(idx);
@@ -496,10 +507,10 @@ namespace fastscapelib {
 
         if (neighbors_indices.size() != n_count)
         {
-            neighbors_indices.resize({n_count});
+            neighbors_indices.resize({ n_count });
         }
 
-        for (neighbors_count_type i=0; i<n_count; ++i)
+        for (neighbors_count_type i = 0; i < n_count; ++i)
         {
             neighbors_indices[i] = n_indices[i];
         }
@@ -526,13 +537,13 @@ namespace fastscapelib {
 
         if (neighbors.size() != n_count)
         {
-            neighbors.resize({n_count});
+            neighbors.resize({ n_count });
         }
 
-        for (neighbors_count_type i=0; i<n_count; ++i)
+        for (neighbors_count_type i = 0; i < n_count; ++i)
         {
             n_idx = n_indices[i];
-            neighbors[i] = neighbor({n_idx, n_distances[i], status_at_nodes()[n_idx]});
+            neighbors[i] = neighbor({ n_idx, n_distances[i], status_at_nodes()[n_idx] });
         }
 
         return neighbors;
@@ -558,7 +569,8 @@ namespace fastscapelib {
         {
             neighbors_indices_impl_type& n_indices = m_neighbors_indices_cache.get(idx);
             return n_indices;
-        } else
+        }
+        else
         {
             neighbors_indices_impl_type& n_indices = m_neighbors_indices_cache.get_storage(idx);
             this->derived_grid().neighbors_indices_impl(n_indices, idx);
@@ -575,4 +587,4 @@ namespace fastscapelib {
 
 }
 
-#endif // GRID_H_
+#endif  // GRID_H_

@@ -17,14 +17,16 @@ namespace fastscapelib
          * Base class to define a ``flow_router`` parameters.
          */
         struct flow_router_parameters
-        {};
+        {
+        };
 
 
         /**
          * Class to define a ``flow_router`` parameters.
          */
         struct no_flow_router_parameters : public flow_router_parameters
-        {};
+        {
+        };
 
 
         /**
@@ -33,8 +35,10 @@ namespace fastscapelib
         struct multiple_flow_router_parameters : public flow_router_parameters
         {
             multiple_flow_router_parameters(double param1, double param2)
-                : p1(param1), p2(param2)
-            {}
+                : p1(param1)
+                , p2(param2)
+            {
+            }
 
             double p1;
             double p2;
@@ -44,14 +48,13 @@ namespace fastscapelib
         /**
          * A ``flow_router`` factory to register builders
          * and use them to create new ``flow_router``s.
-         * 
+         *
          * @tparam FG The flow_graph class.
          */
         template <class FG>
         class flow_router_factory
         {
         public:
-
             using self_type = flow_router_factory<FG>;
             using router_ptr_type = std::unique_ptr<fs::flow_router<FG>>;
             using func_type = std::function<router_ptr_type(const flow_router_parameters&)>;
@@ -61,7 +64,8 @@ namespace fastscapelib
             flow_router_factory& operator=(const flow_router_factory&) = delete;
             flow_router_factory& operator=(flow_router_factory&&) = delete;
 
-            static router_ptr_type build(fs::flow_router_methods method, const flow_router_parameters& params)
+            static router_ptr_type build(fs::flow_router_methods method,
+                                         const flow_router_parameters& params)
             {
                 return get_instance().build_impl(method, params);
             }
@@ -81,16 +85,18 @@ namespace fastscapelib
             flow_router_factory() = default;
             ~flow_router_factory() = default;
 
-            router_ptr_type build_impl(fs::flow_router_methods method, const flow_router_parameters& params) const
+            router_ptr_type build_impl(fs::flow_router_methods method,
+                                       const flow_router_parameters& params) const
             {
                 auto iter = m_factory.find(method);
                 if (iter != m_factory.end())
                 {
                     return (iter->second)(params);
-                } else
+                }
+                else
                 {
                     return nullptr;
-                }                
+                }
             }
 
             bool insert_impl(const fs::flow_router_methods& method, func_type&& builder)
@@ -102,7 +108,7 @@ namespace fastscapelib
                 m_factory.insert(std::make_pair(method, builder));
                 return true;
             }
-        
+
             std::map<fs::flow_router_methods, func_type> m_factory;
         };
     }

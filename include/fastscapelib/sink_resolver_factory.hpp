@@ -16,14 +16,13 @@ namespace fastscapelib
         /**
          * A ``sink_resolver`` factory to register builders
          * and use them to create new ``sink_resolver``s.
-         * 
+         *
          * @tparam FG The flow_graph class.
          */
         template <class FG>
         class sink_resolver_factory
         {
         public:
-
             using self_type = sink_resolver_factory<FG>;
             using resolver_ptr_type = std::unique_ptr<fs::sink_resolver<FG>>;
             using func_type = std::function<resolver_ptr_type()>;
@@ -59,10 +58,11 @@ namespace fastscapelib
                 if (iter != m_factory.end())
                 {
                     return (iter->second)();
-                } else
+                }
+                else
                 {
                     return nullptr;
-                }                
+                }
             }
 
             bool insert_impl(const fs::sink_resolver_methods& method, func_type&& builder)
@@ -74,7 +74,7 @@ namespace fastscapelib
                 m_factory.insert(std::make_pair(method, builder));
                 return true;
             }
-        
+
             std::map<fs::sink_resolver_methods, func_type> m_factory;
         };
 

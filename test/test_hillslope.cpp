@@ -23,19 +23,20 @@ const double pi = 3.141592653589793238462643383279502884;
  *
  * ``k_coef`` is assumed constant but might be an array.
  */
-template<class X, class Y, class K>
-auto solve_diffusion_analytical(X&& x, Y&& y, K&& k_coef, double t)
+template <class X, class Y, class K>
+auto
+solve_diffusion_analytical(X&& x, Y&& y, K&& k_coef, double t)
 {
     auto fact = 4 * k_coef * t;
-    xt::xtensor<double, 2> res = (xt::exp(-(xt::pow<2>(x) + xt::pow<2>(y)) / fact) /
-                                  (fact * pi));
+    xt::xtensor<double, 2> res = (xt::exp(-(xt::pow<2>(x) + xt::pow<2>(y)) / fact) / (fact * pi));
 
     return res;
 }
 
 
-template<class E1, class E2>
-double compute_l2_norm(E1&& e1, E2&& e2)
+template <class E1, class E2>
+double
+compute_l2_norm(E1&& e1, E2&& e2)
 {
     return 1. / static_cast<double>(e1.size()) * xt::sum(xt::pow<2>(e2 - e1))();
 }
@@ -45,8 +46,7 @@ TEST(hillslope, erode_linear_diffusion)
 {
     // test against fundamental solution of 2-d diffusion for multiple
     // values of dt (use l2-norm to compare results)
-    auto grid = xt::meshgrid(xt::linspace<double>(-20, 20, 101),
-                             xt::linspace<double>(-20, 20, 51));
+    auto grid = xt::meshgrid(xt::linspace<double>(-20, 20, 101), xt::linspace<double>(-20, 20, 51));
     xt::xtensor<double, 2> y = std::get<0>(grid);
     xt::xtensor<double, 2> x = std::get<1>(grid);
     auto dy = 0.4;
@@ -61,12 +61,12 @@ TEST(hillslope, erode_linear_diffusion)
     auto elevation_init = solve_diffusion_analytical(x, y, k_coef, t0);
     auto erosion = xt::empty_like(elevation_init);
 
-    std::array<double, 4> dt_values {1e3, 1e4, 1e5, 1e6};
+    std::array<double, 4> dt_values{ 1e3, 1e4, 1e5, 1e6 };
 
     // these are chosen arbitrarily after manual inspection (small enough values)
-    std::array<double, 4> l2_norm_thresholds {1e-9, 1e-6, 1e-5, 1e-5};
+    std::array<double, 4> l2_norm_thresholds{ 1e-9, 1e-6, 1e-5, 1e-5 };
 
-    for (std::size_t k=0; k<4; ++k)
+    for (std::size_t k = 0; k < 4; ++k)
     {
         auto dt = dt_values[k];
 
@@ -81,7 +81,7 @@ TEST(hillslope, erode_linear_diffusion)
         EXPECT_TRUE(l2_norm < l2_norm_thresholds[k]);
     }
 
-    for (std::size_t k=0; k<4; ++k)
+    for (std::size_t k = 0; k < 4; ++k)
     {
         auto dt = dt_values[k];
 
@@ -95,5 +95,4 @@ TEST(hillslope, erode_linear_diffusion)
 
         EXPECT_TRUE(l2_norm < l2_norm_thresholds[k]);
     }
-
 }

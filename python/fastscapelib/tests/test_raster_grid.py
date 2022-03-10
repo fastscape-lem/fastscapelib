@@ -1,14 +1,26 @@
-import pytest
 import numpy as np
 import numpy.testing as npt
+import pytest
 
-from fastscapelib.grid import NodeStatus, RasterBoundaryStatus, RasterNode, RasterNeighbor, RasterGrid
+from fastscapelib.grid import (
+    NodeStatus,
+    RasterBoundaryStatus,
+    RasterGrid,
+    RasterNeighbor,
+    RasterNode,
+)
 
 
-class TestRasterBoundaryStatus():
-
+class TestRasterBoundaryStatus:
     def setup_method(self, method):
-        self.bs1 = RasterBoundaryStatus([NodeStatus.CORE, NodeStatus.FIXED_VALUE_BOUNDARY, NodeStatus.CORE, NodeStatus.FIXED_VALUE_BOUNDARY])
+        self.bs1 = RasterBoundaryStatus(
+            [
+                NodeStatus.CORE,
+                NodeStatus.FIXED_VALUE_BOUNDARY,
+                NodeStatus.CORE,
+                NodeStatus.FIXED_VALUE_BOUNDARY,
+            ]
+        )
         self.bs2 = RasterBoundaryStatus(NodeStatus.CORE)
         self.bs3 = RasterBoundaryStatus(NodeStatus.LOOPED_BOUNDARY)
 
@@ -47,8 +59,7 @@ class TestRasterBoundaryStatus():
         assert self.bs3.is_vertical_looped
 
 
-class TestRasterNeighbor():
-
+class TestRasterNeighbor:
     def setup_method(self, method):
         self.n = RasterNeighbor(5, 0, 5, 1.35, NodeStatus.CORE)
 
@@ -88,26 +99,42 @@ class TestRasterNeighbor():
         assert self.n.status == NodeStatus.FIXED_VALUE_BOUNDARY
 
 
-class TestRasterGrid():
-
+class TestRasterGrid:
     def setup_method(self, method):
         self.bs = bs = RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY)
-        self.g = RasterGrid([5, 10], [2.2, 2.4], bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)])
+        self.g = RasterGrid(
+            [5, 10], [2.2, 2.4], bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)]
+        )
 
     def test___init__(self):
-        g1 = RasterGrid([10, 10], [2.3, 2.1], self.bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)])
+        g1 = RasterGrid(
+            [10, 10],
+            [2.3, 2.1],
+            self.bs,
+            [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)],
+        )
         assert g1.size == 100
         npt.assert_almost_equal(g1.spacing, [2.3, 2.1])
         npt.assert_almost_equal(g1.length, [20.7, 18.9])
 
         with pytest.raises(IndexError):
-            RasterGrid([5, 10], [2.2, 2.4], self.bs, [RasterNode(20, 255, NodeStatus.FIXED_VALUE_BOUNDARY)])
+            RasterGrid(
+                [5, 10],
+                [2.2, 2.4],
+                self.bs,
+                [RasterNode(20, 255, NodeStatus.FIXED_VALUE_BOUNDARY)],
+            )
 
     def test_from_length(self):
-        g = RasterGrid.from_length([11, 11], np.r_[23, 21], self.bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)])
+        g = RasterGrid.from_length(
+            [11, 11],
+            np.r_[23, 21],
+            self.bs,
+            [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)],
+        )
         assert g.size == 121
         npt.assert_almost_equal(g.spacing, [2.3, 2.1])
-        npt.assert_almost_equal(g.length, [23., 21.])
+        npt.assert_almost_equal(g.length, [23.0, 21.0])
 
     def test_size(self):
         assert self.g.size == 50

@@ -42,14 +42,14 @@ namespace fastscapelib
             auto size = static_cast<size_type>(state.range(0));
             auto grid = grid_type(size, 1.3, fs::node_status::fixed_value_boundary);
 
-            //warm-up cache
+            // warm-up cache
             for (size_type idx = 0; idx < grid.size(); ++idx)
             {
                 auto neighbors = grid.neighbors(idx);
-            } 
+            }
 
             neighbors_type neighbors;
-            
+
             for (auto _ : state)
             {
                 for (size_type idx = 0; idx < grid.size(); ++idx)
@@ -62,16 +62,15 @@ namespace fastscapelib
         using profile_nocache = fs::profile_grid_xt<xtensor_selector, neighbors_no_cache<2>>;
         using profile_cacheall = fs::profile_grid;
 
-#define BENCH_GRID(NAME, GRID)                             \
-    BENCHMARK_TEMPLATE(NAME, GRID)                         \
-    ->Apply(bms::small_grid_sizes<benchmark::kNanosecond>);  
+#define BENCH_GRID(NAME, GRID)                                                                     \
+    BENCHMARK_TEMPLATE(NAME, GRID)->Apply(bms::small_grid_sizes<benchmark::kNanosecond>);
 
-#define BENCH_RASTER(NAME)             \
-    BENCH_GRID(NAME, profile_nocache)  \
+#define BENCH_RASTER(NAME)                                                                         \
+    BENCH_GRID(NAME, profile_nocache)                                                              \
     BENCH_GRID(NAME, profile_cacheall)
 
         BENCH_RASTER(profile_grid__ctor);
         BENCH_RASTER(profile_grid__neighbors);
- 
-    } // namespace bench
-} // namespace fastscapelib
+
+    }  // namespace bench
+}  // namespace fastscapelib
