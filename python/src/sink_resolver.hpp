@@ -24,7 +24,8 @@ namespace fastscapelib
 
             sink_resolver_method(fs::sink_resolver_methods method)
                 : method(method)
-            {}
+            {
+            }
 
             fs::sink_resolver_methods method;
         };
@@ -34,8 +35,7 @@ namespace fastscapelib
             virtual ~no_sink_resolver_method() = default;
 
             no_sink_resolver_method()
-                : sink_resolver_method(fs::sink_resolver_methods::none)
-            {};
+                : sink_resolver_method(fs::sink_resolver_methods::none){};
         };
 
         template <class G>
@@ -44,11 +44,9 @@ namespace fastscapelib
             using flow_graph_type = fs::flow_graph<G, double, pyarray_selector>;
             using factory = fs::detail::sink_resolver_factory<flow_graph_type>;
 
-            factory::insert(fs::sink_resolver_methods::none, 
-                                    []() -> typename factory::resolver_ptr_type 
-                                    {
-                                        return std::make_unique<fs::no_sink_resolver<flow_graph_type>>(); 
-                                    });
+            factory::insert(fs::sink_resolver_methods::none,
+                            []() -> typename factory::resolver_ptr_type
+                            { return std::make_unique<fs::no_sink_resolver<flow_graph_type>>(); });
         }
     }
 }
