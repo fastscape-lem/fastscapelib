@@ -33,17 +33,15 @@ namespace fs = fastscapelib;
  */
 
 
-class erode_power_profile_grid: public ::testing::Test
+class erode_power_profile_grid : public ::testing::Test
 {
 public:
-
     erode_power_profile_grid()
     {
         uplift(0) = 0.;
-    }    
+    }
 
 protected:
-
     using flow_graph_type = fs::flow_graph<fs::profile_grid, double>;
     using index_type = typename flow_graph_type::index_type;
 
@@ -53,12 +51,12 @@ protected:
     double x0 = 300.;
     double length = (nnodes - 1) * spacing;
 
-    xt::xtensor<double, 1> x = xt::linspace<double>(length + x0, x0,
-                                                    static_cast<std::size_t>(nnodes));
+    xt::xtensor<double, 1> x
+        = xt::linspace<double>(length + x0, x0, static_cast<std::size_t>(nnodes));
     xt::xtensor<double, 1> elevation = (length + x0 - x) * 1e-4;
 
     double u_rate = 1e-3;
-    xt::xtensor<double, 1> uplift = xt::ones<double>({nnodes}) * u_rate;
+    xt::xtensor<double, 1> uplift = xt::ones<double>({ nnodes }) * u_rate;
 
     double k_coef_scalar = 1e-3;
     double m_exp = 0.5;
@@ -67,10 +65,12 @@ protected:
 
     xt::xtensor<double, 1> drainage_area = hack_coef * xt::pow(x, hack_exp);
 
-    fs::profile_grid grid = fs::profile_grid(static_cast<index_type>(nnodes), spacing, fs::node_status::fixed_value_boundary);
+    fs::profile_grid grid = fs::profile_grid(
+        static_cast<index_type>(nnodes), spacing, fs::node_status::fixed_value_boundary);
 
     template <class K>
-    xt::xtensor<double, 1> get_steady_slope_numerical(flow_graph_type& flow_graph, const K& k_coef, double n_exp, double dt, double tolerance);
+    xt::xtensor<double, 1> get_steady_slope_numerical(
+        flow_graph_type& flow_graph, const K& k_coef, double n_exp, double dt, double tolerance);
 
     xt::xtensor<double, 1> get_steady_slope_analytical(double n_exp);
 };
@@ -81,15 +81,13 @@ protected:
  * steady state.
  */
 template <class K>
-xt::xtensor<double, 1> erode_power_profile_grid::get_steady_slope_numerical(flow_graph_type& flow_graph,
-                                                                            const K& k_coef,
-                                                                            double n_exp,
-                                                                            double dt,
-                                                                            double tolerance)
+xt::xtensor<double, 1>
+erode_power_profile_grid::get_steady_slope_numerical(
+    flow_graph_type& flow_graph, const K& k_coef, double n_exp, double dt, double tolerance)
 {
     // run model until steady state is reached
     double elevation_diff = std::numeric_limits<double>::max();
-    xt::xtensor<double, 1> erosion = xt::zeros<double>({nnodes});
+    xt::xtensor<double, 1> erosion = xt::zeros<double>({ nnodes });
 
     int iter = 0;
 
@@ -99,10 +97,10 @@ xt::xtensor<double, 1> erode_power_profile_grid::get_steady_slope_numerical(flow
         elevation += uplift * dt;
 
         flow_graph.update_routes(elevation);
-        //auto drainage_area = flow_graph.accumulate(1.);
+        // auto drainage_area = flow_graph.accumulate(1.);
 
-        n_corr += fs::erode_stream_power(erosion, elevation, drainage_area, flow_graph,
-                                         k_coef, m_exp, n_exp, dt, tolerance);
+        n_corr += fs::erode_stream_power(
+            erosion, elevation, drainage_area, flow_graph, k_coef, m_exp, n_exp, dt, tolerance);
 
         elevation -= erosion;
 
@@ -127,13 +125,14 @@ xt::xtensor<double, 1> erode_power_profile_grid::get_steady_slope_numerical(flow
  * Note: this should be used to compare with the numerical solution only if
  * ``k_coef`` is invariant in space!
  */
-xt::xtensor<double, 1> erode_power_profile_grid::get_steady_slope_analytical(double n_exp)
+xt::xtensor<double, 1>
+erode_power_profile_grid::get_steady_slope_analytical(double n_exp)
 {
     // exclude 1st node for proper comparison with the numerical solution
     auto drainage_area_ = xt::view(drainage_area, xt::range(1, _));
 
-    xt::xtensor<double, 1> slope = (std::pow(u_rate / k_coef_scalar, 1. / n_exp) *
-                                    xt::pow(drainage_area_, -m_exp / n_exp));
+    xt::xtensor<double, 1> slope
+        = (std::pow(u_rate / k_coef_scalar, 1. / n_exp) * xt::pow(drainage_area_, -m_exp / n_exp));
 
     return slope;
 }
@@ -147,17 +146,14 @@ TEST_F(erode_power_profile_grid, flow_graph)
     flow_graph.update_routes(elevation);
 
     xt::xtensor<index_t, 1> receivers = xt::arange<index_t>(-1, nnodes - 1);
-    xt::xtensor<double, 1> dist2receivers = xt::ones<double>({nnodes}) * spacing;
+    xt::xtensor<double, 1> dist2receivers = xt::ones<double>({ nnodes }) * spacing;
     xt::xtensor<index_t, 1> stack = xt::arange<index_t>(0, nnodes);
     receivers(0) = 0;
     dist2receivers(0) = 0.;
 
-    EXPECT_TRUE(xt::all(xt::equal(receivers,
-                                  xt::col(flow_graph.receivers(), 0))));
-    EXPECT_TRUE(xt::all(xt::equal(dist2receivers,
-                                  xt::col(flow_graph.receivers_distance(), 0))));
-    EXPECT_TRUE(xt::all(xt::equal(stack,
-                                  flow_graph.dfs_stack())));
+    EXPECT_TRUE(xt::all(xt::equal(receivers, xt::col(flow_graph.receivers(), 0))));
+    EXPECT_TRUE(xt::all(xt::equal(dist2receivers, xt::col(flow_graph.receivers_distance(), 0))));
+    EXPECT_TRUE(xt::all(xt::equal(stack, flow_graph.dfs_stack())));
 }
 
 
@@ -167,13 +163,13 @@ TEST_F(erode_power_profile_grid, scalar_k_coef)
                                       std::make_unique<fs::single_flow_router<flow_graph_type>>(),
                                       std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
 
-    std::array<double, 3> n_exp_vals {1., 2., 4.};
+    std::array<double, 3> n_exp_vals{ 1., 2., 4. };
 
     for (const auto& n_exp : n_exp_vals)
     {
         SCOPED_TRACE("test against analytical solution of slope "
-                     "along a 1-d profile at steady-state for n_exp = " +
-                     std::to_string(n_exp));
+                     "along a 1-d profile at steady-state for n_exp = "
+                     + std::to_string(n_exp));
 
         elevation = (length + x0 - x) * 1e-4;
 
@@ -192,15 +188,15 @@ TEST_F(erode_power_profile_grid, array_k_coef)
                                       std::make_unique<fs::single_flow_router<flow_graph_type>>(),
                                       std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
 
-    std::array<double, 3> n_exp_vals {1., 2., 4.};
+    std::array<double, 3> n_exp_vals{ 1., 2., 4. };
 
     xt::xtensor<double, 1> k_coeff = xt::full_like(elevation, k_coef_scalar);
 
     for (const auto& n_exp : n_exp_vals)
     {
         SCOPED_TRACE("test against analytical solution of slope "
-                     "using a 1-d array for k_coef and n_exp = " +
-                     std::to_string(n_exp));
+                     "using a 1-d array for k_coef and n_exp = "
+                     + std::to_string(n_exp));
 
         elevation = (length + x0 - x) * 1e-4;
 
@@ -226,7 +222,6 @@ TEST_F(erode_power_profile_grid, n_exp)
         auto slope_n = get_steady_slope_numerical(flow_graph, k_coef_scalar, 0.8, 1e4, 1e-3);
         EXPECT_TRUE(n_corr > 0);
     }
-
 }
 
 
@@ -247,32 +242,34 @@ TEST(erode_stream_pow, raster_grid)
         double n_exp = 1.;
         double dy = 300.;
 
-        auto grid = fs::raster_grid({{2, 2}}, {dy, dy}, fs::node_status::fixed_value_boundary);
-     
-        auto flow_graph = flow_graph_type(grid,
-                                          std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                          std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+        auto grid
+            = fs::raster_grid({ { 2, 2 } }, { dy, dy }, fs::node_status::fixed_value_boundary);
+
+        auto flow_graph
+            = flow_graph_type(grid,
+                              std::make_unique<fs::single_flow_router<flow_graph_type>>(),
+                              std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
 
         double h = 1.;
         double a = dy * dy;
 
-        xt::xtensor<double, 2> elevation {{0., 0.}, {h, h}};
+        xt::xtensor<double, 2> elevation{ { 0., 0. }, { h, h } };
         flow_graph.update_routes(elevation);
         auto drainage_area = flow_graph.accumulate(1.);
 
-        EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<index_type, 1>({0, 1, 0, 1}),
+        EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<index_type, 1>({ 0, 1, 0, 1 }),
                                       xt::col(flow_graph.receivers(), 0))));
 
-        EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 1>({0., 0., dy, dy}),
+        EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 1>({ 0., 0., dy, dy }),
                                       xt::col(flow_graph.receivers_distance(), 0))));
 
-        EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<index_type, 1>({0, 2, 1, 3}),
-                                      flow_graph.dfs_stack())));
+        EXPECT_TRUE(
+            xt::all(xt::equal(xt::xtensor<index_type, 1>({ 0, 2, 1, 3 }), flow_graph.dfs_stack())));
 
-        EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 2>({{2*a, 2*a}, {a, a}}),
+        EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 2>({ { 2 * a, 2 * a }, { a, a } }),
                                       flow_graph.accumulate(xt::ones_like(elevation)))));
 
-        xt::xtensor<double, 2> erosion = xt::zeros<double>({2, 2});
+        xt::xtensor<double, 2> erosion = xt::zeros<double>({ 2, 2 });
 
         xt::xtensor<double, 2> k_coef_arr = xt::full_like(elevation, k_coef);
 
@@ -280,12 +277,11 @@ TEST(erode_stream_pow, raster_grid)
         double tolerance = 1e-3;
 
         index_type n_corr = fs::erode_stream_power(
-            erosion, elevation, drainage_area, flow_graph,
-            k_coef_arr, m_exp, n_exp, dt, tolerance);
+            erosion, elevation, drainage_area, flow_graph, k_coef_arr, m_exp, n_exp, dt, tolerance);
 
         double slope = h / dy;
         double err = dt * k_coef * std::pow(a, m_exp) * std::pow(slope, n_exp);
-        xt::xtensor<double, 2> expected_erosion = {{0., 0.}, {err, err}};
+        xt::xtensor<double, 2> expected_erosion = { { 0., 0. }, { err, err } };
 
         EXPECT_TRUE(xt::allclose(erosion, expected_erosion, 1e-5, 1e-5));
         EXPECT_TRUE(n_corr == 0);

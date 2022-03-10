@@ -12,11 +12,10 @@ namespace fastscapelib
     namespace testing
     {
 
-        class neighbor: public ::testing::Test
+        class neighbor : public ::testing::Test
         {
-            protected:
-
-                fs::neighbor n {3, 1.35, fs::node_status::core};
+        protected:
+            fs::neighbor n{ 3, 1.35, fs::node_status::core };
         };
 
         TEST_F(neighbor, ctor)
@@ -28,29 +27,29 @@ namespace fastscapelib
 
         TEST_F(neighbor, equal)
         {
-            fs::neighbor other_n {3, 1.35, fs::node_status::core};
+            fs::neighbor other_n{ 3, 1.35, fs::node_status::core };
             EXPECT_EQ(n, other_n);
         }
 
 
-        class structured_grid: public ::testing::Test
+        class structured_grid : public ::testing::Test
         {
-            protected:
+        protected:
+            using node_s = fs::node_status;
 
-                using node_s = fs::node_status;
+            fs::node_status fixed = fs::node_status::fixed_value_boundary;
+            std::array<node_s, 2> loop{ { fs::node_status::looped_boundary,
+                                          fs::node_status::looped_boundary } };
 
-                fs::node_status fixed = fs::node_status::fixed_value_boundary;
-                std::array<node_s, 2> loop {{fs::node_status::looped_boundary, fs::node_status::looped_boundary}};
+            fs::profile_boundary_status fixed_status{ fixed };
+            fs::profile_boundary_status looped_status{ loop };
 
-                fs::profile_boundary_status fixed_status {fixed};
-                fs::profile_boundary_status looped_status {loop};
+            using grid_type = fs::profile_grid_xt<fs::xtensor_selector>;
+            using size_type = typename grid_type::size_type;
 
-                using grid_type = fs::profile_grid_xt<fs::xtensor_selector>;
-                using size_type = typename grid_type::size_type;
-
-                size_type shape {5};
-                grid_type fixed_grid = grid_type(shape, 1.3, fs::node_status::fixed_value_boundary);
-                grid_type looped_grid = grid_type(shape, 1.4, fs::node_status::looped_boundary);
+            size_type shape{ 5 };
+            grid_type fixed_grid = grid_type(shape, 1.3, fs::node_status::fixed_value_boundary);
+            grid_type looped_grid = grid_type(shape, 1.4, fs::node_status::looped_boundary);
         };
 
         TEST_F(structured_grid, index_iterator)
@@ -63,7 +62,8 @@ namespace fastscapelib
 
         TEST_F(structured_grid, nodes_indices_begin)
         {
-            auto boundaries_filter = fixed_grid.nodes_indices_begin(fs::node_status::fixed_value_boundary);
+            auto boundaries_filter
+                = fixed_grid.nodes_indices_begin(fs::node_status::fixed_value_boundary);
             EXPECT_EQ(*boundaries_filter, 0u);
             EXPECT_EQ(*(boundaries_filter++), 0u);
             EXPECT_EQ(*(boundaries_filter++), 4u);
@@ -81,7 +81,8 @@ namespace fastscapelib
 
         TEST_F(structured_grid, nodes_indices_end)
         {
-            auto boundaries_filter = fixed_grid.nodes_indices_end(fs::node_status::fixed_value_boundary);
+            auto boundaries_filter
+                = fixed_grid.nodes_indices_end(fs::node_status::fixed_value_boundary);
             EXPECT_EQ(*boundaries_filter, 5u);
             EXPECT_EQ(*(--boundaries_filter), 4u);
             EXPECT_EQ(*(--boundaries_filter), 0u);
@@ -109,7 +110,8 @@ namespace fastscapelib
         {
             std::size_t sum = 0;
             std::size_t size = 0;
-            for (auto it=fixed_grid.nodes_indices_begin(); it!=fixed_grid.nodes_indices_end(); ++it)
+            for (auto it = fixed_grid.nodes_indices_begin(); it != fixed_grid.nodes_indices_end();
+                 ++it)
             {
                 sum += *it;
                 ++size;
@@ -119,7 +121,8 @@ namespace fastscapelib
 
             sum = 0;
             size = 0;
-            for (auto it=fixed_grid.nodes_indices_rbegin(); it!=fixed_grid.nodes_indices_rend(); ++it)
+            for (auto it = fixed_grid.nodes_indices_rbegin(); it != fixed_grid.nodes_indices_rend();
+                 ++it)
             {
                 sum += *it;
                 ++size;
