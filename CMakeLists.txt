@@ -24,10 +24,10 @@ message(STATUS "Building fastscapelib v${VERSION_STR}")
 # Dependencies
 # ============
 
-# -- xtensor (eventually from source download)
+# -- xtensor (optionally from source download)
 if(DOWNLOAD_XTENSOR)
-    configure_file(downloadXTensor.cmake.in 
-                    xtensor-download/CMakeLists.txt)
+    configure_file(downloadXTensor.cmake.in
+      xtensor-download/CMakeLists.txt)
 
     execute_process(
         COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
