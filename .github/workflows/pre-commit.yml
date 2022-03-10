@@ -1,0 +1,42 @@
+name: Pre-commit (Python, C++)
+
+on:
+  push:
+   branches:
+     - master
+  pull_request:
+    branches:
+     - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.9
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: 'latest'
+        mamba-version: "*"
+        channels: conda-forge
+        channel-priority: strict
+        activate-environment: linters
+        python-version: 3.9
+        auto-update-conda: false
+    - name: Install dependencies
+      shell: pwsh
+      run: |
+        conda install pre-commit
+    - name: Conda info
+      shell: pwsh
+      run: |
+        conda info -a
+        conda list
+    - name: Run pre-commit
+      shell: pwsh
+      run: |
+        pre-commit run --all-files --verbose --show-diff-on-failure
