@@ -20,24 +20,24 @@ namespace fastscapelib
     namespace detail
     {
 
-        template<class T, class S>
+        template <class T, class S>
         auto k_coef_as_array(T k_coef,
-                            S&& shape,
-                            typename std::enable_if_t<std::is_floating_point<T>::value>* = 0)
+                             S&& shape,
+                             typename std::enable_if_t<std::is_floating_point<T>::value>* = 0)
         {
             return xt::broadcast(std::forward<T>(k_coef), shape);
         }
 
 
-        template<class K, class S>
+        template <class K, class S>
         auto k_coef_as_array(K&& k_coef,
-                            S&& shape,
-                            typename std::enable_if_t<xt::is_xexpression<K>::value>* = 0)
+                             S&& shape,
+                             typename std::enable_if_t<xt::is_xexpression<K>::value>* = 0)
         {
             auto k_coef_arr = xt::flatten(k_coef);
 
             assert(k_coef_arr.shape() == shape);
-            (void) shape;   // TODO: still unused parameter warning despite assert?
+            (void) shape;  // TODO: still unused parameter warning despite assert?
 
             return k_coef_arr;
         }
@@ -52,7 +52,7 @@ namespace fastscapelib
          * between a node and its receiver, rather than on the node's
          * elevation itself. This allows saving some operations.
          */
-        template<class Er, class El, class Dr, class FG, class K>
+        template <class Er, class El, class Dr, class FG, class K>
         auto erode_stream_power_impl(Er&& erosion,
                                      El&& elevation,
                                      Dr&& drainage_area,
@@ -61,8 +61,7 @@ namespace fastscapelib
                                      double m_exp,
                                      double n_exp,
                                      double dt,
-                                     double tolerance)
-            -> typename FG::index_type
+                                     double tolerance) -> typename FG::index_type
         {
             using T = std::common_type_t<typename std::decay_t<Er>::value_type,
                                          typename std::decay_t<El>::value_type>;
@@ -85,7 +84,7 @@ namespace fastscapelib
             {
                 auto r_count = receivers_count[istack];
 
-                for (index_type r=0; r<r_count; ++r)
+                for (index_type r = 0; r < r_count; ++r)
                 {
                     index_type irec = receivers(istack, r);
 
@@ -106,8 +105,8 @@ namespace fastscapelib
                         continue;
                     }
 
-                    auto factor = (k_coef_arr(istack) * dt *
-                                   std::pow(drainage_area_flat(istack), m_exp));
+                    auto factor
+                        = (k_coef_arr(istack) * dt * std::pow(drainage_area_flat(istack), m_exp));
 
                     T delta_0 = istack_elevation - irec_elevation;
                     T delta_k;
@@ -156,7 +155,7 @@ namespace fastscapelib
                     if (r_count == 1)
                     {
                         erosion_flat(istack) = (delta_0 - delta_k);
-                    } 
+                    }
                     else
                     {
                         erosion_flat(istack) += (delta_0 - delta_k) * receivers_weight(istack, r);
@@ -215,7 +214,7 @@ namespace fastscapelib
      *     Total number of nodes for which erosion has been
      *     arbitrarily limited to ensure consistency.
      */
-    template<class Er, class El, class Dr, class FG>
+    template <class Er, class El, class Dr, class FG>
     auto erode_stream_power(xtensor_t<Er>& erosion,
                             const xtensor_t<El>& elevation,
                             const xtensor_t<Dr>& drainage_area,
@@ -224,15 +223,17 @@ namespace fastscapelib
                             double m_exp,
                             double n_exp,
                             double dt,
-                            double tolerance)
-        -> typename FG::index_type
+                            double tolerance) -> typename FG::index_type
     {
         return detail::erode_stream_power_impl(erosion.derived_cast(),
-                                              elevation.derived_cast(),
-                                              drainage_area.derived_cast(),
-                                              flow_graph,
-                                              k_coef, m_exp, n_exp,
-                                              dt, tolerance);
+                                               elevation.derived_cast(),
+                                               drainage_area.derived_cast(),
+                                               flow_graph,
+                                               k_coef,
+                                               m_exp,
+                                               n_exp,
+                                               dt,
+                                               tolerance);
     }
 
 
@@ -263,7 +264,7 @@ namespace fastscapelib
      *     Total number of nodes for which erosion has been
      *     arbitrarily limited to ensure consistency.
      */
-    template<class Er, class El, class Dr, class FG, class K>
+    template <class Er, class El, class Dr, class FG, class K>
     auto erode_stream_power(xtensor_t<Er>& erosion,
                             const xtensor_t<El>& elevation,
                             const xtensor_t<Dr>& drainage_area,
@@ -272,16 +273,17 @@ namespace fastscapelib
                             double m_exp,
                             double n_exp,
                             double dt,
-                            double tolerance)
-        -> typename FG::index_type
+                            double tolerance) -> typename FG::index_type
     {
         return detail::erode_stream_power_impl(erosion.derived_cast(),
                                                elevation.derived_cast(),
                                                drainage_area.derived_cast(),
                                                flow_graph,
                                                k_coef.derived_cast(),
-                                               m_exp, n_exp,
-                                               dt, tolerance);
+                                               m_exp,
+                                               n_exp,
+                                               dt,
+                                               tolerance);
     }
 
 }  // namespace fastscapelib

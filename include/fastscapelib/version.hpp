@@ -14,9 +14,9 @@ namespace fastscapelib
         constexpr int version_major = FASTSCAPELIB_VERSION_MAJOR;
         constexpr int version_minor = FASTSCAPELIB_VERSION_MINOR;
         constexpr int version_patch = FASTSCAPELIB_VERSION_PATCH;
-        static const std::string version_str = std::to_string(version_major) + "." +
-                                               std::to_string(version_minor) + "." +
-                                               std::to_string(version_patch);     
+        static const std::string version_str = std::to_string(version_major) + "."
+                                               + std::to_string(version_minor) + "."
+                                               + std::to_string(version_patch);
     }
 }
 #endif

@@ -39,6 +39,6 @@ namespace fastscapelib
     template <class X, class T, std::size_t N = 0>
     using xt_container_t = typename xt_container<X, T, N>::type;
 
-} // namespace fastscapelib
+}  // namespace fastscapelib
 
 #endif

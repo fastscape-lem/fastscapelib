@@ -43,7 +43,6 @@ namespace fastscapelib
     class unstructured_mesh_xt : public grid<unstructured_mesh_xt<XT, C>, C>
     {
     public:
-
         using self_type = unstructured_mesh_xt<XT, C>;
         using base_type = grid<self_type, C>;
         using neighbors_cache_type = C;
@@ -67,10 +66,10 @@ namespace fastscapelib
 
         using node_status_type = typename inner_types::node_status_type;
 
-        unstructured_mesh_xt() : base_type(0) {};
+        unstructured_mesh_xt()
+            : base_type(0){};
 
     protected:
-
         using neighbors_distances_impl_type = typename inner_types::neighbors_distances_impl_type;
         using neighbors_indices_impl_type = typename base_type::neighbors_indices_impl_type;
 
@@ -83,7 +82,8 @@ namespace fastscapelib
         void set_status_at_nodes(const std::vector<node>& status_at_nodes);
         inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
 
-        void neighbors_indices_impl(neighbors_indices_impl_type& neighbors, const size_type& idx) const;
+        void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
+                                    const size_type& idx) const;
 
         const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx) const;
 
@@ -101,4 +101,4 @@ namespace fastscapelib
     using unstructured_mesh = unstructured_mesh_xt<xtensor_selector>;
 }
 
-#endif // UNSTRUCTURED_MESH_H_
+#endif  // UNSTRUCTURED_MESH_H_

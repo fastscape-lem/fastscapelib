@@ -8,14 +8,14 @@ namespace fastscapelib
 {
 
     template <class G>
-    struct index_iterator : public xtl::xbidirectional_iterator_base<index_iterator<G>,
-                                                                     typename G::size_type,
-                                                                     std::ptrdiff_t,
-                                                                     typename G::size_type*,
-                                                                     typename G::size_type>
+    struct index_iterator
+        : public xtl::xbidirectional_iterator_base<index_iterator<G>,
+                                                   typename G::size_type,
+                                                   std::ptrdiff_t,
+                                                   typename G::size_type*,
+                                                   typename G::size_type>
     {
     public:
-
         using self_type = index_iterator<G>;
         using base_type = xtl::xbidirectional_iterator_base<self_type,
                                                             typename G::size_type,
@@ -31,8 +31,10 @@ namespace fastscapelib
         index_iterator() = default;
 
         index_iterator(G& grid, value_type position = 0)
-            : m_idx(position), m_grid(&grid)
-        {}
+            : m_idx(position)
+            , m_grid(&grid)
+        {
+        }
 
         inline self_type& operator++()
         {
@@ -54,7 +56,6 @@ namespace fastscapelib
         mutable value_type m_idx = 0;
 
     private:
-
         G* m_grid;
     };
 
@@ -66,11 +67,11 @@ namespace fastscapelib
 
 
     template <class G, class F>
-    struct filtered_index_iterator : public xtl::xbidirectional_iterator_base<filtered_index_iterator<G, F>,
-                                                                              typename G::size_type>
+    struct filtered_index_iterator
+        : public xtl::xbidirectional_iterator_base<filtered_index_iterator<G, F>,
+                                                   typename G::size_type>
     {
     public:
-
         using self_type = filtered_index_iterator<G, F>;
         using base_type = xtl::xbidirectional_iterator_base<self_type, typename G::size_type>;
 
@@ -80,9 +81,14 @@ namespace fastscapelib
         using difference_type = typename base_type::difference_type;
 
         filtered_index_iterator(G& grid, F filter_functor, value_type position = 0)
-            : m_idx(position), m_grid(grid), m_filter_func(filter_functor)
+            : m_idx(position)
+            , m_grid(grid)
+            , m_filter_func(filter_functor)
         {
-            if ((position == 0) && !m_filter_func(grid, position)) { ++m_idx; }
+            if ((position == 0) && !m_filter_func(grid, position))
+            {
+                ++m_idx;
+            }
         }
 
         inline self_type& operator++()
@@ -90,9 +96,8 @@ namespace fastscapelib
             do
             {
                 ++m_idx;
-            }
-            while ((!m_filter_func(m_grid, m_idx)) && (m_idx < m_grid.size()));
-   
+            } while ((!m_filter_func(m_grid, m_idx)) && (m_idx < m_grid.size()));
+
             return *this;
         }
 
@@ -101,9 +106,8 @@ namespace fastscapelib
             do
             {
                 --m_idx;
-            }
-            while ((!m_filter_func(m_grid, m_idx)) && (m_idx > 0));
-   
+            } while ((!m_filter_func(m_grid, m_idx)) && (m_idx > 0));
+
             return *this;
         }
 
@@ -113,7 +117,6 @@ namespace fastscapelib
         }
 
     private:
-
         mutable value_type m_idx;
 
         G& m_grid;
@@ -123,7 +126,8 @@ namespace fastscapelib
 
 
     template <class G, class F>
-    inline bool operator==(const filtered_index_iterator<G, F>& lhs, const filtered_index_iterator<G, F>& rhs)
+    inline bool operator==(const filtered_index_iterator<G, F>& lhs,
+                           const filtered_index_iterator<G, F>& rhs)
     {
         return lhs.m_idx == rhs.m_idx;
     }
@@ -136,19 +140,24 @@ namespace fastscapelib
         class node_indices_iterator
         {
         public:
-
             using iterator_type = index_iterator<G>;
 
             node_indices_iterator(G& grid)
                 : m_grid(grid)
-            {}
+            {
+            }
 
-            inline iterator_type begin() { return m_grid.nodes_indices_begin(); };
+            inline iterator_type begin()
+            {
+                return m_grid.nodes_indices_begin();
+            };
 
-            inline iterator_type end() { return m_grid.nodes_indices_end(); };
+            inline iterator_type end()
+            {
+                return m_grid.nodes_indices_end();
+            };
 
         private:
-
             G& m_grid;
         };
 
