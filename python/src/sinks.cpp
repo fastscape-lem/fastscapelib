@@ -1,14 +1,10 @@
-/**
- * @file
- * @brief Fastscapelib sinks bindings.
- */
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+
 #include "xtensor-python/pytensor.hpp"
 
 #include "fastscapelib/raster_grid.hpp"
 #include "fastscapelib/sinks.hpp"
-
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
 
 
 namespace py = pybind11;

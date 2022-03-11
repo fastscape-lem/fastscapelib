@@ -42,7 +42,14 @@ message("  -> site-packages: " ${SP_DIR})
 
 set(PY_FASTSCAPELIB _fastscapelib_py)
 
-pybind11_add_module(${PY_FASTSCAPELIB} src/main.cpp)
+pybind11_add_module(${PY_FASTSCAPELIB}
+    src/flow_graph.cpp
+    src/flow_router.cpp
+    src/grid.cpp
+    src/main.cpp
+    src/modelings.cpp
+    src/sink_resolver.cpp
+    src/sinks.cpp)
 
 target_include_directories(${PY_FASTSCAPELIB} PUBLIC ${NUMPY_INCLUDE_DIRS})
 

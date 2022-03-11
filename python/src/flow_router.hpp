@@ -1,6 +1,8 @@
 #ifndef PYFASTSCAPELIB_FLOW_ROUTER_H
 #define PYFASTSCAPELIB_FLOW_ROUTER_H
 
+#include <stdexcept>
+
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
@@ -10,11 +12,10 @@
 #include "fastscapelib/flow_router_factory.hpp"
 #include "fastscapelib/flow_graph.hpp"
 
-#include <stdexcept>
-
 
 namespace py = pybind11;
 namespace fs = fastscapelib;
+
 
 namespace fastscapelib
 {

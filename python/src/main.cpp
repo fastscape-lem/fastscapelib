@@ -2,26 +2,30 @@
  * @file
  * @brief Fastscapelib Python bindings.
  */
-#include <cstdint>
-
 #include "pybind11/pybind11.h"
 #define FORCE_IMPORT_ARRAY
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
 
-#include "fastscapelib/utils.hpp"
-#include "fastscapelib/fastscapelib.hpp"
-
-#include "grid.cpp"
-#include "modelings.cpp"
-#include "flow_router.cpp"
-#include "sink_resolver.cpp"
-#include "sinks.cpp"
-#include "flow_graph.cpp"
+#include "fastscapelib/version.hpp"
 
 
 namespace py = pybind11;
 namespace fs = fastscapelib;
+
+
+void
+add_grid_bindings(py::module_&);
+void
+add_flow_graph_bindings(py::module_&);
+void
+add_flow_routers_bindings(py::module_&);
+void
+add_sink_resolvers_bindings(py::module_&);
+void
+add_sinks_bindings(py::module_&);
+void
+add_modelings_bindings(py::module_&);
 
 
 PYBIND11_MODULE(_fastscapelib_py, m)

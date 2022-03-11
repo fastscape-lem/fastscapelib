@@ -1,9 +1,9 @@
 #ifndef PYFASTSCAPELIB_FLOW_GRAPH_H
 #define PYFASTSCAPELIB_FLOW_GRAPH_H
 
-#include "flow_router.hpp"
-#include "sink_resolver.hpp"
-#include "pytensor_utils.hpp"
+#include <stdexcept>
+
+#include "pybind11/pybind11.h"
 
 #include "fastscapelib/flow_graph.hpp"
 #include "fastscapelib/flow_router.hpp"
@@ -12,13 +12,14 @@
 #include "fastscapelib/sink_resolver_factory.hpp"
 #include "fastscapelib/xtensor_utils.hpp"
 
-#include "pybind11/pybind11.h"
-
-#include <stdexcept>
+#include "flow_router.hpp"
+#include "sink_resolver.hpp"
+#include "pytensor_utils.hpp"
 
 
 namespace py = pybind11;
 namespace fs = fastscapelib;
+
 
 namespace fastscapelib
 {

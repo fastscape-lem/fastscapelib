@@ -1,10 +1,13 @@
-/**
- * @file
- * @brief Fastscapelib grids Python bindings.
- */
-
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+
+#include "xtensor-python/pytensor.hpp"
+#include "xtensor-python/pyarray.hpp"
+
+#include "fastscapelib/grid.hpp"
+#include "fastscapelib/profile_grid.hpp"
+#include "fastscapelib/raster_grid.hpp"
+#include "fastscapelib/unstructured_mesh.hpp"
 
 #include "pytensor_utils.hpp"
 
@@ -16,21 +19,19 @@ namespace fs = fastscapelib;
 void
 add_grid_bindings(py::module& m)
 {
-    using namespace fs;
-
     // ==== Binding of the node_status enumeration ==== //
     py::enum_<fs::node_status> node_status(
         m,
         "NodeStatus",
         py::arithmetic(),
         "Status of grid/mesh nodes either inside the domain or on the domain boundary.");
-    node_status.value("CORE", node_status::core)
-        .value("FIXED_VALUE_BOUNDARY", node_status::fixed_value_boundary)
-        .value("FIXED_GRADIENT_BOUNDARY", node_status::fixed_gradient_boundary)
-        .value("LOOPED_BOUNDARY", node_status::looped_boundary);
+    node_status.value("CORE", fs::node_status::core)
+        .value("FIXED_VALUE_BOUNDARY", fs::node_status::fixed_value_boundary)
+        .value("FIXED_GRADIENT_BOUNDARY", fs::node_status::fixed_gradient_boundary)
+        .value("LOOPED_BOUNDARY", fs::node_status::looped_boundary);
 
     // ==== Binding of the node structure ==== //
-    py::class_<node>(m, "Node")
+    py::class_<fs::node>(m, "Node")
         .def(py::init<std::size_t, fs::node_status>())
         .def_readwrite("idx", &fs::node::idx, "Node index.")
         .def_readwrite("status", &fs::node::status, "Node status.");
@@ -44,7 +45,7 @@ add_grid_bindings(py::module& m)
         .def_readwrite("status", &fs::neighbor::status, "Neighbor status.");
 
     // ==== Binding of the UnstructuredMesh class ==== //
-    using unstructured_mesh_py = unstructured_mesh_xt<pyarray_selector>;
+    using unstructured_mesh_py = fs::unstructured_mesh_xt<fs::pyarray_selector>;
     py::class_<unstructured_mesh_py> umesh(m, "UnstructuredMesh");
     umesh.def(py::init());
 
@@ -55,7 +56,7 @@ add_grid_bindings(py::module& m)
     //      idx) { return mesh.neighbors(idx); });
 
     // ==== Binding of the profile_boundary_status class ==== //
-    py::class_<profile_boundary_status>(m, "ProfileBoundaryStatus")
+    py::class_<fs::profile_boundary_status>(m, "ProfileBoundaryStatus")
         .def(py::init<const fs::node_status>())
         .def(py::init<const fs::node_status, const fs::node_status>())
         .def(py::init<const std::array<fs::node_status, 2>&>())
@@ -67,14 +68,14 @@ add_grid_bindings(py::module& m)
                                "Horizontal looped status.");
 
     // ==== Binding of the ProfileGrid class ==== //
-    py::class_<profile_grid> pgrid(m, "ProfileGrid");
-    pgrid.def(py::init<profile_grid::size_type,
-                       profile_grid::spacing_type,
-                       const profile_grid::boundary_status_type&,
+    py::class_<fs::profile_grid> pgrid(m, "ProfileGrid");
+    pgrid.def(py::init<fs::profile_grid::size_type,
+                       fs::profile_grid::spacing_type,
+                       const fs::profile_grid::boundary_status_type&,
                        const std::vector<fs::node>>());
     pgrid.def(py::init(
         [](std::size_t size,
-           profile_grid::spacing_type spacing,
+           fs::profile_grid::spacing_type spacing,
            const std::array<fs::node_status, 2>& bs,
            const std::vector<std::pair<std::size_t, fs::node_status>>& ns)
         {
@@ -83,21 +84,21 @@ add_grid_bindings(py::module& m)
             {
                 node_vec.push_back({ node.first, node.second });
             }
-            return std::make_unique<profile_grid>(size, spacing, bs, node_vec);
+            return std::make_unique<fs::profile_grid>(size, spacing, bs, node_vec);
         }));
 
-    pgrid.def_static("from_length", &profile_grid::from_length);
+    pgrid.def_static("from_length", &fs::profile_grid::from_length);
 
-    pgrid.def_property_readonly("size", [](const profile_grid& g) { return g.size(); })
-        .def_property_readonly("shape", [](const profile_grid& g) { return g.shape(); })
-        .def_property_readonly("spacing", [](const profile_grid& g) { return g.spacing(); })
-        .def_property_readonly("length", [](const profile_grid& g) { return g.length(); })
+    pgrid.def_property_readonly("size", [](const fs::profile_grid& g) { return g.size(); })
+        .def_property_readonly("shape", [](const fs::profile_grid& g) { return g.shape(); })
+        .def_property_readonly("spacing", [](const fs::profile_grid& g) { return g.spacing(); })
+        .def_property_readonly("length", [](const fs::profile_grid& g) { return g.length(); })
         .def_property_readonly("status_at_nodes",
-                               [](const profile_grid& g) { return g.status_at_nodes(); })
-        .def("neighbors", [](profile_grid& g, std::size_t idx) { return g.neighbors(idx); });
+                               [](const fs::profile_grid& g) { return g.status_at_nodes(); })
+        .def("neighbors", [](fs::profile_grid& g, std::size_t idx) { return g.neighbors(idx); });
 
     // ==== Binding of the raster_node structure ==== //
-    py::class_<raster_node>(m, "RasterNode")
+    py::class_<fs::raster_node>(m, "RasterNode")
         .def(py::init<std::size_t, std::size_t, fs::node_status>())
         .def_readwrite("row", &fs::raster_node::row, "Node row index.")
         .def_readwrite("col", &fs::raster_node::col, "Node column index.")
@@ -114,7 +115,7 @@ add_grid_bindings(py::module& m)
         .def_readwrite("status", &fs::raster_neighbor::status, "Neighbor status.");
 
     // ==== Binding of the raster_boundary_status structure ==== //
-    py::class_<raster_boundary_status>(m, "RasterBoundaryStatus")
+    py::class_<fs::raster_boundary_status>(m, "RasterBoundaryStatus")
         .def(py::init<const fs::node_status>())
         .def(py::init<const std::array<fs::node_status, 4>&>())
 
@@ -130,25 +131,27 @@ add_grid_bindings(py::module& m)
                                "Vertical periodicity.");
 
     // ==== Binding of the RasterGrid class ==== //
-    py::class_<raster_grid> rgrid(m, "RasterGrid");
-    rgrid.def(py::init<const raster_grid::shape_type&,
+    py::class_<fs::raster_grid> rgrid(m, "RasterGrid");
+    rgrid.def(py::init<const fs::raster_grid::shape_type&,
                        const xt::pytensor<double, 1>&,
-                       const raster_grid::boundary_status_type&,
+                       const fs::raster_grid::boundary_status_type&,
                        const std::vector<fs::raster_node>>());
 
     rgrid.def_static("from_length",
-                     [](const raster_grid::shape_type& shape,
+                     [](const fs::raster_grid::shape_type& shape,
                         const xt::pytensor<double, 1>& length,
-                        const raster_grid::boundary_status_type& boundary,
+                        const fs::raster_grid::boundary_status_type& boundary,
                         const std::vector<fs::raster_node> status)
-                     { return raster_grid::from_length(shape, length, boundary, status); });
+                     { return fs::raster_grid::from_length(shape, length, boundary, status); });
 
-    rgrid.def_property_readonly("size", [](const raster_grid& g) { return g.size(); })
-        .def_property_readonly("shape", [](const raster_grid& g) { return g.shape(); })
-        .def_property_readonly(
-            "spacing", [](const raster_grid& g) -> xt::pytensor<double, 1> { return g.spacing(); })
-        .def_property_readonly(
-            "length", [](const raster_grid& g) -> xt::pytensor<double, 1> { return g.length(); })
+    rgrid.def_property_readonly("size", [](const fs::raster_grid& g) { return g.size(); })
+        .def_property_readonly("shape", [](const fs::raster_grid& g) { return g.shape(); })
+        .def_property_readonly("spacing",
+                               [](const fs::raster_grid& g) -> xt::pytensor<double, 1>
+                               { return g.spacing(); })
+        .def_property_readonly("length",
+                               [](const fs::raster_grid& g) -> xt::pytensor<double, 1>
+                               { return g.length(); })
         .def_property_readonly("status_at_nodes",
-                               [](const raster_grid& g) { return g.status_at_nodes(); });
+                               [](const fs::raster_grid& g) { return g.status_at_nodes(); });
 }

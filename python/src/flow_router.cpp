@@ -1,10 +1,16 @@
-#include "flow_router.hpp"
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
+#include "fastscapelib/profile_grid.hpp"
+#include "fastscapelib/raster_grid.hpp"
 #include "fastscapelib/flow_router.hpp"
+
+#include "flow_router.hpp"
 
 
 namespace py = pybind11;
 namespace fs = fastscapelib;
+
 
 void
 add_flow_routers_bindings(py::module& m)

@@ -1,3 +1,8 @@
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+
+#include "fastscapelib/profile_grid.hpp"
+#include "fastscapelib/raster_grid.hpp"
 #include "fastscapelib/flow_router.hpp"
 
 #include "sink_resolver.hpp"
