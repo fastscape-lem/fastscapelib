@@ -176,6 +176,9 @@ namespace fastscapelib
                                            const boundary_status_type& status_at_bounds,
                                            const std::vector<node>& status_at_nodes = {});
 
+        inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
+        inline const neighbors_count_type& neighbors_count(const code_type& code) const noexcept;
+
     protected:
         using neighbors_distances_impl_type = typename inner_types::neighbors_distances_impl_type;
         using neighbors_indices_impl_type = typename base_type::neighbors_indices_impl_type;
@@ -206,8 +209,6 @@ namespace fastscapelib
 
         std::array<neighbors_count_type, 3> m_neighbors_count;
         void build_neighbors_count();
-        inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
-        inline const neighbors_count_type& neighbors_count(const code_type& code) const noexcept;
 
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                     const size_type& idx) const;
