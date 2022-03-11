@@ -31,15 +31,13 @@ namespace fastscapelib
 
             virtual ~constant_before_sink_resolver() = default;
 
-            const elevation_type& resolve_before_route(const elevation_type& elevation,
-                                                       FG& /*fgraph*/) override
+            const elevation_type& resolve1(const elevation_type& elevation, FG& /*fgraph*/) override
             {
                 m_elevation = xt::ones_like(elevation) * 2.;
                 return m_elevation;
             }
 
-            const elevation_type& resolve_after_route(const elevation_type& elevation,
-                                                      FG& /*fgraph*/) override
+            const elevation_type& resolve2(const elevation_type& elevation, FG& /*fgraph*/) override
             {
                 return elevation;
             }
@@ -62,14 +60,12 @@ namespace fastscapelib
 
             virtual ~constant_after_sink_resolver() = default;
 
-            const elevation_type& resolve_before_route(const elevation_type& elevation,
-                                                       FG& /*fgraph*/) override
+            const elevation_type& resolve1(const elevation_type& elevation, FG& /*fgraph*/) override
             {
                 return elevation;
             }
 
-            const elevation_type& resolve_after_route(const elevation_type& elevation,
-                                                      FG& /*fgraph*/) override
+            const elevation_type& resolve2(const elevation_type& elevation, FG& /*fgraph*/) override
             {
                 m_elevation = xt::ones_like(elevation) * 5.;
                 return m_elevation;
@@ -114,7 +110,7 @@ namespace fastscapelib
         }
 
 
-        TEST_F(sink_resolver, resolve_before_route)
+        TEST_F(sink_resolver, resolve1)
         {
             auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();
             auto resolver = std::make_unique<constant_before_sink_resolver<flow_graph_type>>();
@@ -132,7 +128,7 @@ namespace fastscapelib
         }
 
 
-        TEST_F(sink_resolver, resolve_after_route)
+        TEST_F(sink_resolver, resolve2)
         {
             auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();
             auto resolver = std::make_unique<constant_after_sink_resolver<flow_graph_type>>();

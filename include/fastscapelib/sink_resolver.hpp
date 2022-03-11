@@ -17,8 +17,8 @@ namespace fastscapelib
      * Base class for the implementation of depression
      * filling or pit resolving.
      *
-     * All derived classes must implement ``resolve_before_route``
-     * and ``resolve_after_route`` methods.
+     * All derived classes must implement ``resolve1``
+     * and ``resolve2`` methods.
      *
      * @tparam FG The flow_graph class.
      */
@@ -36,12 +36,8 @@ namespace fastscapelib
         sink_resolver& operator=(const sink_resolver&) = delete;
         sink_resolver& operator=(sink_resolver&&) = delete;
 
-        virtual const elevation_type& resolve_before_route(const elevation_type& elevation,
-                                                           FG& fgraph)
-            = 0;
-        virtual const elevation_type& resolve_after_route(const elevation_type& elevation,
-                                                          FG& fgraph)
-            = 0;
+        virtual const elevation_type& resolve1(const elevation_type& elevation, FG& fgraph) = 0;
+        virtual const elevation_type& resolve2(const elevation_type& elevation, FG& fgraph) = 0;
 
     protected:
         sink_resolver() = default;
@@ -65,14 +61,12 @@ namespace fastscapelib
 
         virtual ~no_sink_resolver() = default;
 
-        const elevation_type& resolve_before_route(const elevation_type& elevation,
-                                                   FG& /*fgraph*/) override
+        const elevation_type& resolve1(const elevation_type& elevation, FG& /*fgraph*/) override
         {
             return elevation;
         }
 
-        const elevation_type& resolve_after_route(const elevation_type& elevation,
-                                                  FG& /*fgraph*/) override
+        const elevation_type& resolve2(const elevation_type& elevation, FG& /*fgraph*/) override
         {
             return elevation;
         }

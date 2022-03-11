@@ -83,11 +83,10 @@ namespace fastscapelib
 
         const elevation_type& update_routes(const elevation_type& elevation)
         {
-            const auto& modified_elevation
-                = p_sink_resolver->resolve_before_route(elevation, *this);
-            p_flow_router->route(modified_elevation, *this);
-            const auto& final_elevation
-                = p_sink_resolver->resolve_after_route(modified_elevation, *this);
+            const auto& modified_elevation = p_sink_resolver->resolve1(elevation, *this);
+            p_flow_router->route1(modified_elevation, *this);
+            const auto& final_elevation = p_sink_resolver->resolve2(modified_elevation, *this);
+            p_flow_router->route2(final_elevation, *this);
 
             return final_elevation;
         }
