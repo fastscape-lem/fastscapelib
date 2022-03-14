@@ -1,6 +1,8 @@
 #ifndef PYFASTSCAPELIB_GRID_H
 #define PYFASTSCAPELIB_GRID_H
 
+#include <functional>
+
 #include "fastscapelib/grid.hpp"
 #include "fastscapelib/profile_grid.hpp"
 #include "fastscapelib/raster_grid.hpp"
@@ -21,14 +23,22 @@ namespace fastscapelib
 
 
     template <class G>
-    struct py_grid_signature
+    struct py_grid_funcs
     {
-        // using neighbors_count = typename G::neighbors_count_type& (G::*)(const typename
-        // G::size_type&) const;
-        using neighbors_indices
-            = typename G::neighbors_indices_type (G::*)(const typename G::size_type&);
-        // using neighbors_distances = typename G::neighbors_distances_type& (G::*)(const typename
-        // G::size_type&) const;
+        using size_type = typename G::size_type;
+        using count_type = typename G::neighbors_count_type;
+        using indices_type = typename G::neighbors_indices_type;
+        using distances_type = typename G::neighbors_distances_type;
+
+        std::function<count_type(const G&, size_type)> neighbors_count
+            = [](const G& g, size_type idx) { return g.neighbors_count(idx); };
+
+        // no const since it may update the grid cache internally
+        std::function<indices_type(G&, size_type)> neighbors_indices
+            = [](G& g, size_type idx) { return g.neighbors_indices(idx); };
+
+        std::function<distances_type(const G&, size_type)> neighbors_distances
+            = [](const G& g, size_type idx) { return g.neighbors_distances(idx); };
     };
 }
 

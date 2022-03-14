@@ -322,6 +322,7 @@ namespace fastscapelib
 
         neighbors_distances_type neighbors_distances(const size_type& idx) const;
 
+        // no const since it may update the cache internally
         neighbors_indices_type neighbors_indices(const size_type& idx);
 
         neighbors_indices_type& neighbors_indices(const size_type& idx,

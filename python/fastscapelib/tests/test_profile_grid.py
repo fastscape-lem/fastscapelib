@@ -125,6 +125,18 @@ class TestProfileGrid:
             self.g.status_at_nodes, np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1])
         )
 
+    def test_neighbors_count(self):
+        assert self.g.neighbors_count(0) == 1
+        assert self.g.neighbors_count(5) == 2
+
+    def test_neighbors_indices(self):
+        npt.assert_equal(self.g.neighbors_indices(0), np.array([1]))
+        npt.assert_equal(self.g.neighbors_indices(5), np.array([4, 6]))
+
+    def test_neighbors_distances(self):
+        npt.assert_equal(self.g.neighbors_distances(0), np.array([2.2]))
+        npt.assert_equal(self.g.neighbors_distances(5), np.array([2.2, 2.2]))
+
 
 #    def test_neighbors(self):
 #        assert self.g.neighbors(0) == [Neighbor(1, 2.2, NodeStatus.CORE)]
