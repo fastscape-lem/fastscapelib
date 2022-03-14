@@ -3,6 +3,8 @@
 
 #include <functional>
 
+#include "pybind11/pybind11.h"
+
 #include "fastscapelib/grid.hpp"
 #include "fastscapelib/profile_grid.hpp"
 #include "fastscapelib/raster_grid.hpp"
@@ -11,6 +13,7 @@
 #include "pytensor_utils.hpp"
 
 
+namespace py = pybind11;
 namespace fs = fastscapelib;
 
 
@@ -44,6 +47,18 @@ namespace fastscapelib
         std::function<neighbors_type(G&, size_type)> neighbors
             = [](G& g, size_type idx) { return g.neighbors(idx); };
     };
+
+    template <class G>
+    void add_neighbor_methods(py::class_<G>& pyg)
+    {
+        auto grid_funcs = py_grid_funcs<G>();
+
+        pyg.def("neighbors_count", grid_funcs.neighbors_count)
+            .def("neighbors_indices", grid_funcs.neighbors_indices)
+            .def("neighbors_distances", grid_funcs.neighbors_distances)
+            .def("neighbors", grid_funcs.neighbors);
+    }
+
 }
 
 #endif  // PYFASTSCAPELIB_GRID_H

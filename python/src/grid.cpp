@@ -90,12 +90,7 @@ add_grid_bindings(py::module& m)
         .def_property_readonly("length", &fs::py_profile_grid::length)
         .def_property_readonly("status_at_nodes", &fs::py_profile_grid::status_at_nodes);
 
-    auto py_profile_grid_funcs = fs::py_grid_funcs<fs::py_profile_grid>();
-
-    pgrid.def("neighbors_count", py_profile_grid_funcs.neighbors_count)
-        .def("neighbors_indices", py_profile_grid_funcs.neighbors_indices)
-        .def("neighbors_distances", py_profile_grid_funcs.neighbors_distances)
-        .def("neighbors", py_profile_grid_funcs.neighbors);
+    fs::add_neighbor_methods(pgrid);
 
     // ==== Binding of the raster_node structure ==== //
     py::class_<fs::raster_node>(m, "RasterNode")
@@ -155,10 +150,5 @@ add_grid_bindings(py::module& m)
                                { return g.length(); })
         .def_property_readonly("status_at_nodes", &fs::py_raster_grid::status_at_nodes);
 
-    auto py_raster_grid_funcs = fs::py_grid_funcs<fs::py_raster_grid>();
-
-    rgrid.def("neighbors_count", py_raster_grid_funcs.neighbors_count)
-        .def("neighbors_indices", py_raster_grid_funcs.neighbors_indices)
-        .def("neighbors_distances", py_raster_grid_funcs.neighbors_distances)
-        .def("neighbors", py_raster_grid_funcs.neighbors);
+    fs::add_neighbor_methods(rgrid);
 }
