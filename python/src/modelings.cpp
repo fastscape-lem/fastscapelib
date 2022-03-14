@@ -1,8 +1,5 @@
-/**
- * @file
- * @brief Fastscapelib modelings Python bindings.
- */
-#include "flow_graph.hpp"
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 #include "fastscapelib/bedrock_channel.hpp"
 #include "fastscapelib/hillslope.hpp"
@@ -12,12 +9,12 @@
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
 
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
+#include "flow_graph.hpp"
 
 
 namespace py = pybind11;
 namespace fs = fastscapelib;
+
 
 template <class T>
 void

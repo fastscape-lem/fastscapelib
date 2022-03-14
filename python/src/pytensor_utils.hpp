@@ -3,6 +3,10 @@
 
 #include <cstddef>
 
+#include "xtensor-python/pyarray.hpp"
+
+#include "fastscapelib/xtensor_utils.hpp"
+
 
 namespace fastscapelib
 {

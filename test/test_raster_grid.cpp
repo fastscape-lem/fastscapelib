@@ -111,7 +111,7 @@ namespace fastscapelib
         TEST_F(raster_grid, clone)
         {
             using queen_type = fs::raster_grid_xt<fs::xtensor_selector, fs::raster_connect::queen>;
-            using neighbors_type = xt::xtensor<fs::neighbor, 1>;
+            using neighbors_type = std::vector<fs::neighbor>;
 
             double d1 = std::sqrt(1.3 * 1.3 + 1.2 * 1.2);
 

@@ -3,6 +3,7 @@ import numpy.testing as npt
 import pytest
 
 from fastscapelib.grid import (
+    Neighbor,
     NodeStatus,
     RasterBoundaryStatus,
     RasterGrid,
@@ -140,7 +141,42 @@ class TestRasterGrid:
         assert self.g.size == 50
 
     def test_shape(self):
-        npt.assert_almost_equal(self.g.shape, [5, 10])
+        npt.assert_equal(self.g.shape, [5, 10])
 
     def test_spacing(self):
-        npt.assert_almost_equal(self.g.spacing, [2.2, 2.4])
+        npt.assert_equal(self.g.spacing, [2.2, 2.4])
+
+    def test_neighbors_count(self):
+        assert self.g.neighbors_count(0) == 3
+        assert self.g.neighbors_count(15) == 8
+
+    def test_neighbors_indices(self):
+        npt.assert_equal(self.g.neighbors_indices(0), np.array([1, 10, 11]))
+        npt.assert_equal(
+            self.g.neighbors_indices(15), np.array([4, 5, 6, 14, 16, 24, 25, 26])
+        )
+
+        with pytest.raises(IndexError, match="grid index out of range"):
+            self.g.neighbors(51)
+
+    def test_neighbors_distances(self):
+        dist_diag = np.sqrt(2.2**2 + 2.4**2)
+        npt.assert_equal(self.g.neighbors_distances(0), np.array([2.4, 2.2, dist_diag]))
+        npt.assert_equal(
+            self.g.neighbors_distances(15),
+            np.array([dist_diag, 2.2, dist_diag, 2.4, 2.4, dist_diag, 2.2, dist_diag]),
+        )
+
+        with pytest.raises(IndexError, match="grid index out of range"):
+            self.g.neighbors(51)
+
+    def test_neighbors(self):
+        dist_diag = np.sqrt(2.2**2 + 2.4**2)
+        assert self.g.neighbors(0) == [
+            Neighbor(1, 2.4, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(10, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(11, dist_diag, NodeStatus.CORE),
+        ]
+
+        with pytest.raises(IndexError, match="grid index out of range"):
+            self.g.neighbors(51)
