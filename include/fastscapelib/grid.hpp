@@ -14,6 +14,7 @@
 #include "xtensor/xview.hpp"
 
 #include "fastscapelib/iterators.hpp"
+#include "fastscapelib/xtensor_utils.hpp"
 
 
 namespace fastscapelib
@@ -305,7 +306,8 @@ namespace fastscapelib
         using size_type = typename inner_types::size_type;
         using distance_type = typename inner_types::distance_type;
 
-        using neighbors_type = typename xt::xtensor<neighbor, 1>;
+        using xt_selector = typename inner_types::xt_selector;
+        using neighbors_type = std::vector<neighbor>;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
         using neighbors_indices_type = xt::xtensor<size_type, 1>;
         using neighbors_distances_type = xt::xtensor<distance_type, 1>;

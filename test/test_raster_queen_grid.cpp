@@ -350,7 +350,7 @@ namespace fastscapelib
 
         TEST_F(queen_raster_grid_fixed, neighbors)
         {  // Do not test extensively, indices and distances are already tested
-            using neighbors_type = xt::xtensor<fs::neighbor, 1>;
+            using neighbors_type = std::vector<fs::neighbor>;
 
             double d1 = std::sqrt(1.3 * 1.3 + 1.2 * 1.2);
             double d2 = std::sqrt(1.4 * 1.4 + 1.8 * 1.8);

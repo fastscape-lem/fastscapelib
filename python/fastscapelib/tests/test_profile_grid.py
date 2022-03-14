@@ -137,11 +137,16 @@ class TestProfileGrid:
         npt.assert_equal(self.g.neighbors_distances(0), np.array([2.2]))
         npt.assert_equal(self.g.neighbors_distances(5), np.array([2.2, 2.2]))
 
+    def test_neighbors(self):
+        assert self.g.neighbors(0) == [Neighbor(1, 2.2, NodeStatus.CORE)]
+        assert self.g.neighbors(1) == [
+            Neighbor(0, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(2, 2.2, NodeStatus.CORE),
+        ]
+        assert self.g.neighbors(6) == [
+            Neighbor(5, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(7, 2.2, NodeStatus.CORE),
+        ]
 
-#    def test_neighbors(self):
-#        assert self.g.neighbors(0) == [Neighbor(1, 2.2, NodeStatus.CORE)]
-#        assert self.g.neighbors(1) == [Neighbor(0, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY), Neighbor(2, 2.2, NodeStatus.CORE)]
-#        assert self.g.neighbors(6) == [Neighbor(5, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY), Neighbor(7, 2.2, NodeStatus.CORE)]
-#
-#        with pytest.raises(IndexError):
-#            self.g.neighbors(11)
+        # with pytest.raises(IndexError):
+        #    self.g.neighbors(11)

@@ -21,7 +21,6 @@ namespace fastscapelib
     using py_raster_grid = fs::raster_grid_xt<fs::pyarray_selector, fs::raster_connect::queen>;
     using py_unstructured_mesh = fs::unstructured_mesh_xt<fs::pyarray_selector>;
 
-
     template <class G>
     struct py_grid_funcs
     {
@@ -29,6 +28,7 @@ namespace fastscapelib
         using count_type = typename G::neighbors_count_type;
         using indices_type = typename G::neighbors_indices_type;
         using distances_type = typename G::neighbors_distances_type;
+        using neighbors_type = typename G::neighbors_type;
 
         std::function<count_type(const G&, size_type)> neighbors_count
             = [](const G& g, size_type idx) { return g.neighbors_count(idx); };
@@ -39,8 +39,11 @@ namespace fastscapelib
 
         std::function<distances_type(const G&, size_type)> neighbors_distances
             = [](const G& g, size_type idx) { return g.neighbors_distances(idx); };
+
+        // no const since it may update the grid cache internally
+        std::function<neighbors_type(G&, size_type)> neighbors
+            = [](G& g, size_type idx) { return g.neighbors(idx); };
     };
 }
-
 
 #endif  // PYFASTSCAPELIB_GRID_H

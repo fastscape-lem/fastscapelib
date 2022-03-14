@@ -234,7 +234,7 @@ namespace fastscapelib
 
         TEST_F(rook_raster_grid_looped, neighbors)
         {  // Do not test extensively, indices and distances are already tested
-            using neighbors_type = xt::xtensor<fs::neighbor, 1>;
+            using neighbors_type = std::vector<fs::neighbor>;
 
             {  // First row
                 // Top-left corner

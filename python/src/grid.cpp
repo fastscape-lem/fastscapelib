@@ -94,7 +94,8 @@ add_grid_bindings(py::module& m)
 
     pgrid.def("neighbors_count", py_profile_grid_funcs.neighbors_count)
         .def("neighbors_indices", py_profile_grid_funcs.neighbors_indices)
-        .def("neighbors_distances", py_profile_grid_funcs.neighbors_distances);
+        .def("neighbors_distances", py_profile_grid_funcs.neighbors_distances)
+        .def("neighbors", py_profile_grid_funcs.neighbors);
 
     // ==== Binding of the raster_node structure ==== //
     py::class_<fs::raster_node>(m, "RasterNode")
@@ -158,5 +159,6 @@ add_grid_bindings(py::module& m)
 
     rgrid.def("neighbors_count", py_raster_grid_funcs.neighbors_count)
         .def("neighbors_indices", py_raster_grid_funcs.neighbors_indices)
-        .def("neighbors_distances", py_raster_grid_funcs.neighbors_distances);
+        .def("neighbors_distances", py_raster_grid_funcs.neighbors_distances)
+        .def("neighbors", py_raster_grid_funcs.neighbors);
 }

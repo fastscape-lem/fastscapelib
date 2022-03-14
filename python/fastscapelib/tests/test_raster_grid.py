@@ -3,6 +3,7 @@ import numpy.testing as npt
 import pytest
 
 from fastscapelib.grid import (
+    Neighbor,
     NodeStatus,
     RasterBoundaryStatus,
     RasterGrid,
@@ -162,3 +163,11 @@ class TestRasterGrid:
             self.g.neighbors_distances(15),
             np.array([dist_diag, 2.2, dist_diag, 2.4, 2.4, dist_diag, 2.2, dist_diag]),
         )
+
+    def test_neighbors(self):
+        dist_diag = np.sqrt(2.2**2 + 2.4**2)
+        assert self.g.neighbors(0) == [
+            Neighbor(1, 2.4, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(10, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(11, dist_diag, NodeStatus.CORE),
+        ]

@@ -117,19 +117,19 @@ namespace fastscapelib
             EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_size(), 5u);
 
             EXPECT_EQ(fixed_grid.neighbors(0),
-                      (xt::xtensor<fs::neighbor, 1>{ { 1, 1.3, fs::node_status::core } }));
+                      (std::vector<fs::neighbor>{ { 1, 1.3, fs::node_status::core } }));
 
             for (std::size_t i = 1; i < 4; ++i)
             {
                 EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_used(), i);
                 EXPECT_EQ(fixed_grid.neighbors(i),
-                          (xt::xtensor<fs::neighbor, 1>{ { i - 1, 1.3, status_fixed(i - 1) },
-                                                         { i + 1, 1.3, status_fixed(i + 1) } }));
+                          (std::vector<fs::neighbor>{ { i - 1, 1.3, status_fixed(i - 1) },
+                                                      { i + 1, 1.3, status_fixed(i + 1) } }));
             }
             EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_used(), 4u);
 
             EXPECT_EQ(fixed_grid.neighbors(4),
-                      (xt::xtensor<fs::neighbor, 1>{ { 3, 1.3, fs::node_status::core } }));
+                      (std::vector<fs::neighbor>{ { 3, 1.3, fs::node_status::core } }));
             EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_used(), 5u);
         }
 
@@ -139,21 +139,20 @@ namespace fastscapelib
             EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_size(), 5u);
 
             EXPECT_EQ(looped_grid.neighbors(0),
-                      (xt::xtensor<fs::neighbor, 1>{ { 4, 1.4, fs::node_status::looped_boundary },
-                                                     { 1, 1.4, fs::node_status::core } }));
+                      (std::vector<fs::neighbor>{ { 4, 1.4, fs::node_status::looped_boundary },
+                                                  { 1, 1.4, fs::node_status::core } }));
 
             for (std::size_t i = 1; i < 4; ++i)
             {
                 EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_used(), i);
                 EXPECT_EQ(looped_grid.neighbors(i),
-                          (xt::xtensor<fs::neighbor, 1>{ { i - 1, 1.4, status_looped(i - 1) },
-                                                         { i + 1, 1.4, status_looped(i + 1) } }));
+                          (std::vector<fs::neighbor>{ { i - 1, 1.4, status_looped(i - 1) },
+                                                      { i + 1, 1.4, status_looped(i + 1) } }));
             }
             EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_used(), 4u);
-            EXPECT_EQ(
-                looped_grid.neighbors(4),
-                (xt::xtensor<fs::neighbor, 1>{ { 3, 1.4, fs::node_status::core },
-                                               { 0, 1.4, fs::node_status::looped_boundary } }));
+            EXPECT_EQ(looped_grid.neighbors(4),
+                      (std::vector<fs::neighbor>{ { 3, 1.4, fs::node_status::core },
+                                                  { 0, 1.4, fs::node_status::looped_boundary } }));
             EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_used(), 5u);
         }
 
