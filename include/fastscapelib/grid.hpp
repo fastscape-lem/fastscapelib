@@ -389,9 +389,13 @@ namespace fastscapelib
         const derived_grid_type& derived_grid() const noexcept;
         derived_grid_type& derived_grid() noexcept;
 
-        const neighbors_indices_impl_type& neighbors_indices_impl(const size_type& idx);
+        void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
+                                    const size_type& idx) const;
 
-        const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx) const;
+        inline const neighbors_indices_impl_type& neighbors_indices_cache(const size_type& idx);
+
+        inline const neighbors_distances_impl_type& neighbors_distances_impl(
+            const size_type& idx) const;
 
         neighbors_cache_type m_neighbors_indices_cache;
     };
@@ -455,7 +459,7 @@ namespace fastscapelib
     template <class G, class C>
     inline auto grid<G, C>::neighbors_indices(const size_type& idx) -> neighbors_indices_type
     {
-        neighbors_indices_type indices = xt::adapt(neighbors_indices_impl(idx));
+        neighbors_indices_type indices = xt::adapt(neighbors_indices_cache(idx));
         auto view = xt::view(indices, xt::range(0, neighbors_count(idx)));
 
         return view;
@@ -506,7 +510,7 @@ namespace fastscapelib
         -> neighbors_indices_type&
     {
         const auto& n_count = neighbors_count(idx);
-        const auto& n_indices = neighbors_indices_impl(idx);
+        const auto& n_indices = neighbors_indices_cache(idx);
 
         if (neighbors_indices.size() != n_count)
         {
@@ -535,7 +539,7 @@ namespace fastscapelib
     {
         size_type n_idx;
         const auto& n_count = neighbors_count(idx);
-        const auto& n_indices = neighbors_indices_impl(idx);
+        const auto& n_indices = neighbors_indices_cache(idx);
         const auto& n_distances = neighbors_distances_impl(idx);
 
         if (neighbors.size() != n_count)
@@ -565,7 +569,7 @@ namespace fastscapelib
      * @return Reference to the array of the neighbors indices of that grid node.
      */
     template <class G, class C>
-    inline auto grid<G, C>::neighbors_indices_impl(const size_type& idx)
+    inline auto grid<G, C>::neighbors_indices_cache(const size_type& idx)
         -> const neighbors_indices_impl_type&
     {
         if (m_neighbors_indices_cache.has(idx))
@@ -579,6 +583,13 @@ namespace fastscapelib
             this->derived_grid().neighbors_indices_impl(n_indices, idx);
             return n_indices;
         }
+    }
+
+    template <class G, class C>
+    inline auto grid<G, C>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
+                                                   const size_type& idx) const -> void
+    {
+        return derived_grid().neighbors_indices_impl(neighbors, idx);
     }
 
     template <class G, class C>

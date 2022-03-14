@@ -436,12 +436,14 @@ namespace fastscapelib
 
         using code_type = typename inner_types::code_type;
 
+        // row, col index pair
+        using raster_idx_type = xt::xtensor_fixed<size_type, xt::xshape<2>>;
+
         using neighbors_type = typename base_type::neighbors_type;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
         using neighbors_distances_type = typename base_type::neighbors_distances_type;
-        using neighbors_indices_raster_type
-            = xt::xtensor<xt::xtensor_fixed<size_type, xt::xshape<2>>, 1>;
+        using neighbors_indices_raster_type = xt::xtensor<raster_idx_type, 1>;
 
         using boundary_status_type = typename inner_types::boundary_status_type;
         using node_status_type = typename inner_types::node_status_type;
@@ -463,10 +465,10 @@ namespace fastscapelib
 
         using base_type::neighbors_indices;
         inline neighbors_indices_raster_type neighbors_indices(const size_type& row,
-                                                               const size_type& col) const noexcept;
+                                                               const size_type& col);
 
         template <class E>
-        inline auto neighbor_view(E&& field, size_type idx) const noexcept;
+        inline auto neighbor_view(E&& field, size_type idx);
 
         code_type node_code(const size_type& row, const size_type& col) const noexcept;
         code_type node_code(const size_type& idx) const noexcept;
@@ -510,6 +512,9 @@ namespace fastscapelib
         coded_ncount_type m_neighbors_count;
         coded_noffsets_type m_neighbor_offsets;
         coded_ndistances_type m_neighbor_distances;
+
+        inline size_type ravel_idx(const size_type& row, const size_type& col) const noexcept;
+        inline raster_idx_type unravel_idx(const size_type& idx) const noexcept;
 
         void set_status_at_nodes(const std::vector<raster_node>& status_at_nodes);
 
@@ -606,6 +611,27 @@ namespace fastscapelib
     }
 
     template <class XT, raster_connect RC, class C>
+    inline auto raster_grid_xt<XT, RC, C>::ravel_idx(const size_type& row,
+                                                     const size_type& col) const noexcept
+        -> size_type
+    {
+        // TODO: assumes row-major layout -> support col-major?
+        return row * m_shape[1] + col;
+    }
+
+    template <class XT, raster_connect RC, class C>
+    inline auto raster_grid_xt<XT, RC, C>::unravel_idx(const size_type& idx) const noexcept
+        -> raster_idx_type
+    {
+        // TODO: assumes row-major layout -> support col-major?
+        auto ncols = m_shape[1];
+        size_type row = idx / ncols;
+        size_type col = idx - row * ncols;
+
+        return raster_idx_type({ row, col });
+    }
+
+    template <class XT, raster_connect RC, class C>
     auto raster_grid_xt<XT, RC, C>::status_at_bounds() const noexcept -> boundary_status_type
     {
         return m_status_at_bounds;
@@ -691,7 +717,7 @@ namespace fastscapelib
         {
             for (std::size_t c = 0; c < m_shape[1]; ++c)
             {
-                m_nodes_codes[r * m_shape[1] + c]
+                m_nodes_codes[ravel_idx(r, c)]
                     = static_cast<std::uint8_t>(gcode_rc[0][r] + gcode_rc[1][c]);
             }
         }
@@ -727,7 +753,7 @@ namespace fastscapelib
                                                      const size_type& col) const noexcept
         -> code_type
     {
-        return m_nodes_codes[row * m_shape[1] + col];
+        return m_nodes_codes[ravel_idx(row, col)];
     }
 
     template <class XT, raster_connect RC, class C>
@@ -812,25 +838,6 @@ namespace fastscapelib
     }
 
     template <class XT, raster_connect RC, class C>
-    inline auto raster_grid_xt<XT, RC, C>::neighbors_indices(const size_type& row,
-                                                             const size_type& col) const noexcept
-        -> neighbors_indices_raster_type
-    {
-        xt::xtensor_fixed<size_type, xt::xshape<2>> idx{ row, col };
-
-        const auto& offsets = neighbor_offsets(node_code(row, col));
-        auto indices = neighbors_indices_raster_type(offsets.shape());
-
-        auto id_it = indices.begin();
-        for (auto it = offsets.cbegin(); it != offsets.cend(); ++it)
-        {
-            xt::noalias(*id_it++) = *it + idx;
-        }
-
-        return indices;
-    }
-
-    template <class XT, raster_connect RC, class C>
     inline auto raster_grid_xt<XT, RC, C>::get_neighbors_indices(
         const size_type& idx) const noexcept -> neighbors_indices_impl_type
     {
@@ -860,10 +867,26 @@ namespace fastscapelib
     }
 
     template <class XT, raster_connect RC, class C>
-    template <class E>
-    inline auto raster_grid_xt<XT, RC, C>::neighbor_view(E&& field, size_type idx) const noexcept
+    inline auto raster_grid_xt<XT, RC, C>::neighbors_indices(const size_type& row,
+                                                             const size_type& col)
+        -> neighbors_indices_raster_type
     {
-        return xt::index_view(std::forward<E>(field), get_neighbors_indices(idx));
+        auto flat_indices = neighbors_indices(ravel_idx(row, col));
+        auto indices = neighbors_indices_raster_type(flat_indices.shape());
+
+        for (size_type i = 0; i < indices.size(); ++i)
+        {
+            indices.at(i) = unravel_idx(flat_indices[i]);
+        }
+
+        return indices;
+    }
+
+    template <class XT, raster_connect RC, class C>
+    template <class E>
+    inline auto raster_grid_xt<XT, RC, C>::neighbor_view(E&& field, size_type idx)
+    {
+        return xt::index_view(std::forward<E>(field), neighbors_indices(idx));
     }
 
     /**
