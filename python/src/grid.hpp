@@ -37,7 +37,7 @@ namespace fastscapelib
 
         py_grid_funcs() = default;
 
-        std::function<count_type(const G&, size_type)> neighbors_count
+        std::function<count_type(const G&, size_type)> m_neighbors_count
             = [this](const G& g, size_type idx)
         {
             check_in_bounds(g, idx);
@@ -45,13 +45,13 @@ namespace fastscapelib
         };
 
         // no const since it may update the grid cache internally
-        std::function<indices_type(G&, size_type)> neighbors_indices = [this](G& g, size_type idx)
+        std::function<indices_type(G&, size_type)> m_neighbors_indices = [this](G& g, size_type idx)
         {
             check_in_bounds(g, idx);
             return g.neighbors_indices(idx);
         };
 
-        std::function<distances_type(const G&, size_type)> neighbors_distances
+        std::function<distances_type(const G&, size_type)> m_neighbors_distances
             = [this](const G& g, size_type idx)
         {
             check_in_bounds(g, idx);
@@ -59,7 +59,7 @@ namespace fastscapelib
         };
 
         // no const since it may update the grid cache internally
-        std::function<neighbors_type(G&, size_type)> neighbors = [this](G& g, size_type idx)
+        std::function<neighbors_type(G&, size_type)> m_neighbors = [this](G& g, size_type idx)
         {
             check_in_bounds(g, idx);
             return g.neighbors(idx);
@@ -80,10 +80,10 @@ namespace fastscapelib
     {
         auto grid_funcs = py_grid_funcs<G>();
 
-        pyg.def("neighbors_count", grid_funcs.neighbors_count)
-            .def("neighbors_indices", grid_funcs.neighbors_indices)
-            .def("neighbors_distances", grid_funcs.neighbors_distances)
-            .def("neighbors", grid_funcs.neighbors);
+        pyg.def("neighbors_count", grid_funcs.m_neighbors_count)
+            .def("neighbors_indices", grid_funcs.m_neighbors_indices)
+            .def("neighbors_distances", grid_funcs.m_neighbors_distances)
+            .def("neighbors", grid_funcs.m_neighbors);
     }
 
 }
