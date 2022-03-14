@@ -133,9 +133,15 @@ class TestProfileGrid:
         npt.assert_equal(self.g.neighbors_indices(0), np.array([1]))
         npt.assert_equal(self.g.neighbors_indices(5), np.array([4, 6]))
 
+        with pytest.raises(IndexError, match="grid index out of range"):
+            self.g.neighbors(11)
+
     def test_neighbors_distances(self):
         npt.assert_equal(self.g.neighbors_distances(0), np.array([2.2]))
         npt.assert_equal(self.g.neighbors_distances(5), np.array([2.2, 2.2]))
+
+        with pytest.raises(IndexError, match="grid index out of range"):
+            self.g.neighbors(11)
 
     def test_neighbors(self):
         assert self.g.neighbors(0) == [Neighbor(1, 2.2, NodeStatus.CORE)]
@@ -148,5 +154,5 @@ class TestProfileGrid:
             Neighbor(7, 2.2, NodeStatus.CORE),
         ]
 
-        # with pytest.raises(IndexError):
-        #    self.g.neighbors(11)
+        with pytest.raises(IndexError, match="grid index out of range"):
+            self.g.neighbors(11)

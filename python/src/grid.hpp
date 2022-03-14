@@ -2,6 +2,7 @@
 #define PYFASTSCAPELIB_GRID_H
 
 #include <functional>
+#include <stdexcept>
 
 #include "pybind11/pybind11.h"
 
@@ -27,25 +28,51 @@ namespace fastscapelib
     template <class G>
     struct py_grid_funcs
     {
+    public:
         using size_type = typename G::size_type;
         using count_type = typename G::neighbors_count_type;
         using indices_type = typename G::neighbors_indices_type;
         using distances_type = typename G::neighbors_distances_type;
         using neighbors_type = typename G::neighbors_type;
 
+        py_grid_funcs() = default;
+
         std::function<count_type(const G&, size_type)> neighbors_count
-            = [](const G& g, size_type idx) { return g.neighbors_count(idx); };
+            = [this](const G& g, size_type idx)
+        {
+            check_in_bounds(g, idx);
+            return g.neighbors_count(idx);
+        };
 
         // no const since it may update the grid cache internally
-        std::function<indices_type(G&, size_type)> neighbors_indices
-            = [](G& g, size_type idx) { return g.neighbors_indices(idx); };
+        std::function<indices_type(G&, size_type)> neighbors_indices = [this](G& g, size_type idx)
+        {
+            check_in_bounds(g, idx);
+            return g.neighbors_indices(idx);
+        };
 
         std::function<distances_type(const G&, size_type)> neighbors_distances
-            = [](const G& g, size_type idx) { return g.neighbors_distances(idx); };
+            = [this](const G& g, size_type idx)
+        {
+            check_in_bounds(g, idx);
+            return g.neighbors_distances(idx);
+        };
 
         // no const since it may update the grid cache internally
-        std::function<neighbors_type(G&, size_type)> neighbors
-            = [](G& g, size_type idx) { return g.neighbors(idx); };
+        std::function<neighbors_type(G&, size_type)> neighbors = [this](G& g, size_type idx)
+        {
+            check_in_bounds(g, idx);
+            return g.neighbors(idx);
+        };
+
+    private:
+        inline void check_in_bounds(const G& g, size_type idx)
+        {
+            if (idx < 0 || idx >= g.size())
+            {
+                throw std::out_of_range("grid index out of range");
+            }
+        }
     };
 
     template <class G>
