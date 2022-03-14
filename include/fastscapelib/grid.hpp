@@ -309,8 +309,8 @@ namespace fastscapelib
         using xt_selector = typename inner_types::xt_selector;
         using neighbors_type = std::vector<neighbor>;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
-        using neighbors_indices_type = xt::xtensor<size_type, 1>;
-        using neighbors_distances_type = xt::xtensor<distance_type, 1>;
+        using neighbors_indices_type = xt_container_t<xt_selector, size_type, 1>;
+        using neighbors_distances_type = xt_container_t<xt_selector, distance_type, 1>;
 
         using node_status_type = typename inner_types::node_status_type;
 
