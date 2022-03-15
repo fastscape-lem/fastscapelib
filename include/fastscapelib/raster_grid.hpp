@@ -524,9 +524,6 @@ namespace fastscapelib
 
         inline const neighbors_offsets_type& neighbor_offsets(code_type code) const noexcept;
 
-        inline neighbors_indices_impl_type get_neighbors_indices(
-            const size_type& idx) const noexcept;
-
         inline const neighbors_distances_impl_type& neighbors_distances_impl(
             const size_type& idx) const noexcept;
 
@@ -838,31 +835,16 @@ namespace fastscapelib
     }
 
     template <class XT, raster_connect RC, class C>
-    inline auto raster_grid_xt<XT, RC, C>::get_neighbors_indices(
-        const size_type& idx) const noexcept -> neighbors_indices_impl_type
-    {
-        const auto& offsets = neighbor_offsets(node_code(idx));
-        neighbors_indices_impl_type indices;
-
-        auto id_it = indices.begin();
-        for (auto it = offsets.cbegin(); it != offsets.cend(); ++it)
-        {
-            (*id_it++) = static_cast<size_type>((*it)[0]) * m_shape[1]
-                         + static_cast<size_type>((*it)[1]) + idx;
-        }
-
-        return indices;
-    }
-
-    template <class XT, raster_connect RC, class C>
     inline auto raster_grid_xt<XT, RC, C>::neighbors_indices_impl(
         neighbors_indices_impl_type& neighbors, const size_type& idx) const -> void
     {
-        auto indices = get_neighbors_indices(idx);
+        const auto& offsets = neighbor_offsets(node_code(idx));
 
-        for (size_type i = 0; i < indices.size(); ++i)
+        for (size_type i = 0; i < offsets.size(); ++i)
         {
-            neighbors.at(i) = indices[i];
+            const auto offset = offsets[i];
+            neighbors.at(i) = static_cast<size_type>((offset)[0]) * m_shape[1]
+                              + static_cast<size_type>((offset)[1]) + idx;
         }
     }
 
