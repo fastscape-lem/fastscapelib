@@ -35,6 +35,34 @@ namespace fastscapelib
         }
 
         template <class G>
+        void raster_grid__neighbors_indices(benchmark::State& state)
+        {
+            using grid_type = G;
+            using size_type = typename grid_type::size_type;
+            using neighbors_indices_type = typename grid_type::neighbors_indices_type;
+
+            auto n = static_cast<size_type>(state.range(0));
+            std::array<size_type, 2> shape{ { n, n } };
+            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
+
+            neighbors_indices_type neighbors_indices;
+
+            // warm-up cache
+            for (size_type idx = 0; idx < grid.size(); ++idx)
+            {
+                grid.neighbors_indices(idx, neighbors_indices);
+            }
+
+            for (auto _ : state)
+            {
+                for (size_type idx = 0; idx < grid.size(); ++idx)
+                {
+                    grid.neighbors_indices(idx, neighbors_indices);
+                }
+            }
+        }
+
+        template <class G>
         void raster_grid__neighbors(benchmark::State& state)
         {
             using grid_type = G;
@@ -45,13 +73,13 @@ namespace fastscapelib
             std::array<size_type, 2> shape{ { n, n } };
             auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
 
+            neighbors_type neighbors;
+
             // warm-up cache
             for (size_type idx = 0; idx < grid.size(); ++idx)
             {
-                auto neighbors = grid.neighbors(idx);
+                grid.neighbors(idx, neighbors);
             }
-
-            neighbors_type neighbors;
 
             for (auto _ : state)
             {
@@ -148,7 +176,7 @@ namespace fastscapelib
 
 
 #define BENCH_GRID(NAME, GRID)                                                                     \
-    BENCHMARK_TEMPLATE(NAME, GRID)->Apply(bms::small_grid_sizes<benchmark::kMillisecond>);
+    BENCHMARK_TEMPLATE(NAME, GRID)->Arg(512)->Unit(benchmark::kMicrosecond);
 
 #define BENCH_RC(NAME)                                                                             \
     BENCH_GRID(NAME, queen_nocache)                                                                \
@@ -165,6 +193,7 @@ namespace fastscapelib
 
 
         BENCH_ALL(raster_grid__ctor);
+        BENCH_ALL(raster_grid__neighbors_indices);
         BENCH_ALL(raster_grid__neighbors);
         BENCH_RC(raster_grid__neighbor_classic);
         BENCH_ALL(raster_grid__neighbor_view);
