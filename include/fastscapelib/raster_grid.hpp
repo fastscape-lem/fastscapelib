@@ -467,9 +467,6 @@ namespace fastscapelib
         inline neighbors_indices_raster_type neighbors_indices(const size_type& row,
                                                                const size_type& col);
 
-        template <class E>
-        inline auto neighbor_view(E&& field, size_type idx);
-
         code_type node_code(const size_type& row, const size_type& col) const noexcept;
         code_type node_code(const size_type& idx) const noexcept;
 
@@ -862,13 +859,6 @@ namespace fastscapelib
         }
 
         return indices;
-    }
-
-    template <class XT, raster_connect RC, class C>
-    template <class E>
-    inline auto raster_grid_xt<XT, RC, C>::neighbor_view(E&& field, size_type idx)
-    {
-        return xt::index_view(std::forward<E>(field), neighbors_indices(idx));
     }
 
     /**

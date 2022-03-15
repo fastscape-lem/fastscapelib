@@ -91,30 +91,6 @@ namespace fastscapelib
         }
 
         template <class G>
-        void raster_grid__neighbor_view(benchmark::State& state)
-        {
-            using grid_type = G;
-            using size_type = typename grid_type::size_type;
-
-            auto n = static_cast<size_type>(state.range(0));
-            std::array<size_type, 2> shape{ { n, n } };
-
-            auto rg = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
-            xt::xtensor<double, 2> field(shape, 1.);
-
-            for (auto _ : state)
-            {
-                for (size_type r = 0; r < shape[0]; ++r)
-                {
-                    for (size_type c = 0; c < shape[1]; ++c)
-                    {
-                        auto nb_field_view = rg.neighbor_view(field, r * shape[1] + c);
-                    }
-                }
-            }
-        }
-
-        template <class G>
         void raster_grid__neighbor_classic(benchmark::State& state)
         {
             using grid_type = G;
@@ -196,7 +172,6 @@ namespace fastscapelib
         BENCH_ALL(raster_grid__neighbors_indices);
         BENCH_ALL(raster_grid__neighbors);
         BENCH_RC(raster_grid__neighbor_classic);
-        BENCH_ALL(raster_grid__neighbor_view);
 
     }  // namespace bench
 }  // namespace fastscapelib
