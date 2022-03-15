@@ -489,10 +489,10 @@ namespace fastscapelib
     template <class G, class C>
     inline auto grid<G, C>::neighbors(const size_type& idx) -> neighbors_type
     {
-        neighbors_type node_neighbors;
-        neighbors(idx, node_neighbors);
+        neighbors_type nb;
+        neighbors(idx, nb);
 
-        return node_neighbors;
+        return nb;
     }
 
     /**
@@ -558,12 +558,7 @@ namespace fastscapelib
     //@}
 
     /**
-     * Iterate over the neighbors indices of a given grid node.
      *
-     * Returns a fixed size std::array for performance considerations,
-     * always use this method with the `neighbors_count` one.
-     *
-     * Follows looped boundary conditions, if any.
      *
      * @param idx Index of the grid node.
      * @return Reference to the array of the neighbors indices of that grid node.
