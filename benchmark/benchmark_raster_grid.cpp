@@ -63,6 +63,40 @@ namespace fastscapelib
         }
 
         template <class G>
+        void raster_grid__neighbors_indices_raster(benchmark::State& state)
+        {
+            using grid_type = G;
+            using size_type = typename grid_type::size_type;
+            using neighbors_indices_raster_type = typename grid_type::neighbors_indices_raster_type;
+
+            auto n = static_cast<size_type>(state.range(0));
+            std::array<size_type, 2> shape{ { n, n } };
+            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
+
+            neighbors_indices_raster_type neighbors_indices;
+
+            // warm-up cache
+            for (size_type r = 0; r < shape[0]; ++r)
+            {
+                for (size_type c = 0; c < shape[1]; ++c)
+                {
+                    grid.neighbors_indices(r, c, neighbors_indices);
+                }
+            }
+
+            for (auto _ : state)
+            {
+                for (size_type r = 0; r < shape[0]; ++r)
+                {
+                    for (size_type c = 0; c < shape[1]; ++c)
+                    {
+                        grid.neighbors_indices(r, c, neighbors_indices);
+                    }
+                }
+            }
+        }
+
+        template <class G>
         void raster_grid__neighbors(benchmark::State& state)
         {
             using grid_type = G;
@@ -86,6 +120,40 @@ namespace fastscapelib
                 for (size_type idx = 0; idx < grid.size(); ++idx)
                 {
                     grid.neighbors(idx, neighbors);
+                }
+            }
+        }
+
+        template <class G>
+        void raster_grid__neighbors_raster(benchmark::State& state)
+        {
+            using grid_type = G;
+            using size_type = typename grid_type::size_type;
+            using neighbors_raster_type = typename grid_type::neighbors_raster_type;
+
+            auto n = static_cast<size_type>(state.range(0));
+            std::array<size_type, 2> shape{ { n, n } };
+            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
+
+            neighbors_raster_type neighbors;
+
+            // warm-up cache
+            for (size_type r = 0; r < shape[0]; ++r)
+            {
+                for (size_type c = 0; c < shape[1]; ++c)
+                {
+                    grid.neighbors(r, c, neighbors);
+                }
+            }
+
+            for (auto _ : state)
+            {
+                for (size_type r = 0; r < shape[0]; ++r)
+                {
+                    for (size_type c = 0; c < shape[1]; ++c)
+                    {
+                        grid.neighbors(r, c, neighbors);
+                    }
                 }
             }
         }
@@ -170,7 +238,9 @@ namespace fastscapelib
 
         BENCH_ALL(raster_grid__ctor);
         BENCH_ALL(raster_grid__neighbors_indices);
+        BENCH_ALL(raster_grid__neighbors_indices_raster);
         BENCH_ALL(raster_grid__neighbors);
+        BENCH_ALL(raster_grid__neighbors_raster);
         BENCH_RC(raster_grid__neighbor_classic);
 
     }  // namespace bench

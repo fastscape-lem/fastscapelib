@@ -4,6 +4,11 @@
 #ifndef FASTSCAPELIB_RASTER_GRID_H
 #define FASTSCAPELIB_RASTER_GRID_H
 
+#include <vector>
+#include <utility>
+
+#include <xtensor/xtensor.hpp>
+
 #include "fastscapelib/grid.hpp"
 #include "fastscapelib/structured_grid.hpp"
 #include "fastscapelib/profile_grid.hpp"
@@ -437,13 +442,14 @@ namespace fastscapelib
         using code_type = typename inner_types::code_type;
 
         // row, col index pair
-        using raster_idx_type = xt::xtensor_fixed<size_type, xt::xshape<2>>;
+        using raster_idx_type = std::pair<size_type, size_type>;
 
         using neighbors_type = typename base_type::neighbors_type;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
         using neighbors_distances_type = typename base_type::neighbors_distances_type;
-        using neighbors_indices_raster_type = xt::xtensor<raster_idx_type, 1>;
+        using neighbors_indices_raster_type = std::vector<raster_idx_type>;
+        using neighbors_raster_type = std::vector<raster_neighbor>;
 
         using boundary_status_type = typename inner_types::boundary_status_type;
         using node_status_type = typename inner_types::node_status_type;
@@ -464,6 +470,10 @@ namespace fastscapelib
         using base_type::neighbors_distances;
 
         using base_type::neighbors_indices;
+        inline neighbors_indices_raster_type& neighbors_indices(
+            const size_type& row,
+            const size_type& col,
+            neighbors_indices_raster_type& neighbors_indices);
         inline neighbors_indices_raster_type neighbors_indices(const size_type& row,
                                                                const size_type& col);
 
@@ -472,6 +482,12 @@ namespace fastscapelib
 
         inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
         inline const neighbors_count_type& neighbors_count(const code_type& code) const noexcept;
+
+        using base_type::neighbors;
+        inline neighbors_raster_type& neighbors(const size_type& row,
+                                                const size_type& col,
+                                                neighbors_raster_type& neighbors);
+        inline neighbors_raster_type neighbors(const size_type& row, const size_type& col);
 
         shape_type shape() const noexcept;
 
@@ -622,7 +638,7 @@ namespace fastscapelib
         size_type row = idx / ncols;
         size_type col = idx - row * ncols;
 
-        return raster_idx_type({ row, col });
+        return std::make_pair(row, col);
     }
 
     template <class XT, raster_connect RC, class C>
@@ -846,19 +862,80 @@ namespace fastscapelib
     }
 
     template <class XT, raster_connect RC, class C>
+    inline auto raster_grid_xt<XT, RC, C>::neighbors_indices(
+        const size_type& row,
+        const size_type& col,
+        neighbors_indices_raster_type& neighbors_indices) -> neighbors_indices_raster_type&
+    {
+        const size_type flat_idx = ravel_idx(row, col);
+        const auto& n_count = neighbors_count(flat_idx);
+        const auto& n_indices = this->neighbors_indices_cache(flat_idx);
+
+        if (neighbors_indices.size() != n_count)
+        {
+            neighbors_indices.resize({ n_count });
+        }
+
+        for (neighbors_count_type i = 0; i < n_count; ++i)
+        {
+            neighbors_indices[i] = unravel_idx(n_indices[i]);
+        }
+
+        return neighbors_indices;
+    }
+
+    template <class XT, raster_connect RC, class C>
     inline auto raster_grid_xt<XT, RC, C>::neighbors_indices(const size_type& row,
                                                              const size_type& col)
         -> neighbors_indices_raster_type
     {
-        auto flat_indices = neighbors_indices(ravel_idx(row, col));
-        auto indices = neighbors_indices_raster_type(flat_indices.shape());
-
-        for (size_type i = 0; i < indices.size(); ++i)
-        {
-            indices.at(i) = unravel_idx(flat_indices[i]);
-        }
+        neighbors_indices_raster_type indices;
+        neighbors_indices(row, col, indices);
 
         return indices;
+    }
+
+    template <class XT, raster_connect RC, class C>
+    inline auto raster_grid_xt<XT, RC, C>::neighbors(const size_type& row,
+                                                     const size_type& col,
+                                                     neighbors_raster_type& neighbors)
+        -> neighbors_raster_type&
+    {
+        size_type n_flat_idx;
+        raster_idx_type n_raster_idx;
+
+        const size_type flat_idx = ravel_idx(row, col);
+        const auto& n_count = neighbors_count(flat_idx);
+        const auto& n_indices = this->neighbors_indices_cache(flat_idx);
+        const auto& n_distances = neighbors_distances_impl(flat_idx);
+
+        if (neighbors.size() != n_count)
+        {
+            neighbors.resize({ n_count });
+        }
+
+        for (neighbors_count_type i = 0; i < n_count; ++i)
+        {
+            n_flat_idx = n_indices[i];
+            n_raster_idx = unravel_idx(n_flat_idx);
+            neighbors[i] = raster_neighbor({ n_flat_idx,
+                                             n_raster_idx.first,
+                                             n_raster_idx.second,
+                                             n_distances[i],
+                                             this->status_at_nodes()[n_flat_idx] });
+        }
+
+        return neighbors;
+    }
+
+    template <class XT, raster_connect RC, class C>
+    inline auto raster_grid_xt<XT, RC, C>::neighbors(const size_type& row, const size_type& col)
+        -> neighbors_raster_type
+    {
+        neighbors_raster_type nb;
+        neighbors(row, col, nb);
+
+        return nb;
     }
 
     /**
