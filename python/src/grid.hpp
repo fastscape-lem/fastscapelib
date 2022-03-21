@@ -90,8 +90,8 @@ namespace fastscapelib
     {
     public:
         using size_type = typename py_raster_grid::size_type;
-        using indices_type = py_raster_grid::neighbors_indices_raster_type;
-        using neighbors_type = py_raster_grid::neighbors_raster_type;
+        using indices_type = typename py_raster_grid::neighbors_indices_raster_type;
+        using neighbors_type = typename py_raster_grid::neighbors_raster_type;
 
         py_raster_grid_funcs() = default;
 
