@@ -102,11 +102,11 @@ namespace fastscapelib
         template <class G, class E>
         void fill_sinks_flat_impl(G& grid, E&& elevation)
         {
-            using neighbors_type = typename G::neighbors_type;
+            using neighbors_indices_type = typename G::neighbors_indices_type;
             using elev_t = typename std::decay_t<E>::value_type;
 
             auto elevation_flat = xt::flatten(elevation);
-            neighbors_type neighbors;
+            neighbors_indices_type neighbors_indices;
 
             pflood_pr_queue<G, elev_t> open;
             xt::xtensor<bool, 1> closed = xt::zeros<bool>({ grid.size() });
@@ -118,20 +118,16 @@ namespace fastscapelib
                 pflood_node<G, elev_t> inode = open.top();
                 open.pop();
 
-                // TODO: use neighbor indice view instead?
-                // https://github.com/fastscape-lem/fastscapelib/issues/71
-                grid.neighbors(inode.m_idx, neighbors);
-
-                for (auto n = neighbors.begin(); n != neighbors.end(); ++n)
+                for (auto n_idx : grid.neighbors_indices(inode.m_idx, neighbors_indices))
                 {
-                    if (closed(n->idx))
+                    if (closed(n_idx))
                     {
                         continue;
                     }
 
-                    elevation_flat(n->idx) = std::max(elevation_flat(n->idx), inode.m_elevation);
-                    open.emplace(pflood_node<G, elev_t>(n->idx, elevation_flat(n->idx)));
-                    closed(n->idx) = true;
+                    elevation_flat(n_idx) = std::max(elevation_flat(n_idx), inode.m_elevation);
+                    open.emplace(pflood_node<G, elev_t>(n_idx, elevation_flat(n_idx)));
+                    closed(n_idx) = true;
                 }
             }
         }
@@ -143,11 +139,11 @@ namespace fastscapelib
         template <class G, class E>
         void fill_sinks_sloped_impl(G& grid, E&& elevation)
         {
-            using neighbors_type = typename G::neighbors_type;
+            using neighbors_indices_type = typename G::neighbors_indices_type;
             using elev_t = typename std::decay_t<E>::value_type;
 
             auto elevation_flat = xt::flatten(elevation);
-            neighbors_type neighbors;
+            neighbors_indices_type neighbors_indices;
 
             pflood_pr_queue<G, elev_t> open;
             pflood_queue<G, elev_t> pit;
@@ -174,30 +170,26 @@ namespace fastscapelib
                 elev_t elev_tiny_step
                     = std::nextafter(inode.m_elevation, std::numeric_limits<elev_t>::infinity());
 
-                // TODO: use neighbor indice view instead?
-                // https://github.com/fastscape-lem/fastscapelib/issues/71
-                grid.neighbors(inode.m_idx, neighbors);
-
-                for (auto n = neighbors.begin(); n != neighbors.end(); ++n)
+                for (auto n_idx : grid.neighbors_indices(inode.m_idx, neighbors_indices))
                 {
-                    if (closed(n->idx))
+                    if (closed(n_idx))
                     {
                         continue;
                     }
 
-                    if (elevation_flat(n->idx) <= elev_tiny_step)
+                    if (elevation_flat(n_idx) <= elev_tiny_step)
                     {
-                        elevation_flat(n->idx) = elev_tiny_step;
-                        knode = pflood_node<G, elev_t>(n->idx, elevation_flat(n->idx));
+                        elevation_flat(n_idx) = elev_tiny_step;
+                        knode = pflood_node<G, elev_t>(n_idx, elevation_flat(n_idx));
                         pit.emplace(knode);
                     }
                     else
                     {
-                        knode = pflood_node<G, elev_t>(n->idx, elevation_flat(n->idx));
+                        knode = pflood_node<G, elev_t>(n_idx, elevation_flat(n_idx));
                         open.emplace(knode);
                     }
 
-                    closed(n->idx) = true;
+                    closed(n_idx) = true;
                 }
             }
         }

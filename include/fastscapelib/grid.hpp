@@ -309,7 +309,9 @@ namespace fastscapelib
         using xt_selector = typename inner_types::xt_selector;
         using neighbors_type = std::vector<neighbor>;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
-        using neighbors_indices_type = xt_container_t<xt_selector, size_type, 1>;
+        // using xt:xtensor for indices as not all containers support resizing
+        // (e.g., using pyarray may cause segmentation faults with Python)
+        using neighbors_indices_type = xt::xtensor<size_type, 1>;
         using neighbors_distances_type = xt_container_t<xt_selector, distance_type, 1>;
 
         using node_status_type = typename inner_types::node_status_type;
@@ -389,9 +391,13 @@ namespace fastscapelib
         const derived_grid_type& derived_grid() const noexcept;
         derived_grid_type& derived_grid() noexcept;
 
-        const neighbors_indices_impl_type& neighbors_indices_impl(const size_type& idx);
+        void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
+                                    const size_type& idx) const;
 
-        const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx) const;
+        inline const neighbors_indices_impl_type& neighbors_indices_cache(const size_type& idx);
+
+        inline const neighbors_distances_impl_type& neighbors_distances_impl(
+            const size_type& idx) const;
 
         neighbors_cache_type m_neighbors_indices_cache;
     };
@@ -455,7 +461,7 @@ namespace fastscapelib
     template <class G, class C>
     inline auto grid<G, C>::neighbors_indices(const size_type& idx) -> neighbors_indices_type
     {
-        neighbors_indices_type indices = xt::adapt(neighbors_indices_impl(idx));
+        neighbors_indices_type indices = xt::adapt(neighbors_indices_cache(idx));
         auto view = xt::view(indices, xt::range(0, neighbors_count(idx)));
 
         return view;
@@ -485,10 +491,10 @@ namespace fastscapelib
     template <class G, class C>
     inline auto grid<G, C>::neighbors(const size_type& idx) -> neighbors_type
     {
-        neighbors_type node_neighbors;
-        neighbors(idx, node_neighbors);
+        neighbors_type nb;
+        neighbors(idx, nb);
 
-        return node_neighbors;
+        return nb;
     }
 
     /**
@@ -506,7 +512,7 @@ namespace fastscapelib
         -> neighbors_indices_type&
     {
         const auto& n_count = neighbors_count(idx);
-        const auto& n_indices = neighbors_indices_impl(idx);
+        const auto& n_indices = neighbors_indices_cache(idx);
 
         if (neighbors_indices.size() != n_count)
         {
@@ -535,7 +541,7 @@ namespace fastscapelib
     {
         size_type n_idx;
         const auto& n_count = neighbors_count(idx);
-        const auto& n_indices = neighbors_indices_impl(idx);
+        const auto& n_indices = neighbors_indices_cache(idx);
         const auto& n_distances = neighbors_distances_impl(idx);
 
         if (neighbors.size() != n_count)
@@ -554,18 +560,13 @@ namespace fastscapelib
     //@}
 
     /**
-     * Iterate over the neighbors indices of a given grid node.
      *
-     * Returns a fixed size std::array for performance considerations,
-     * always use this method with the `neighbors_count` one.
-     *
-     * Follows looped boundary conditions, if any.
      *
      * @param idx Index of the grid node.
      * @return Reference to the array of the neighbors indices of that grid node.
      */
     template <class G, class C>
-    inline auto grid<G, C>::neighbors_indices_impl(const size_type& idx)
+    inline auto grid<G, C>::neighbors_indices_cache(const size_type& idx)
         -> const neighbors_indices_impl_type&
     {
         if (m_neighbors_indices_cache.has(idx))
@@ -579,6 +580,13 @@ namespace fastscapelib
             this->derived_grid().neighbors_indices_impl(n_indices, idx);
             return n_indices;
         }
+    }
+
+    template <class G, class C>
+    inline auto grid<G, C>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
+                                                   const size_type& idx) const -> void
+    {
+        return derived_grid().neighbors_indices_impl(neighbors, idx);
     }
 
     template <class G, class C>

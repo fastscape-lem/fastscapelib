@@ -159,6 +159,22 @@ class TestRasterGrid:
         with pytest.raises(IndexError, match="grid index out of range"):
             self.g.neighbors(51)
 
+    def test_neighbors_raster_indices(self):
+        assert self.g.neighbors_indices(0, 0) == [(0, 1), (1, 0), (1, 1)]
+        assert self.g.neighbors_indices(1, 5) == [
+            (0, 4),
+            (0, 5),
+            (0, 6),
+            (1, 4),
+            (1, 6),
+            (2, 4),
+            (2, 5),
+            (2, 6),
+        ]
+
+        with pytest.raises(IndexError, match="grid index out of range"):
+            self.g.neighbors(10, 10)
+
     def test_neighbors_distances(self):
         dist_diag = np.sqrt(2.2**2 + 2.4**2)
         npt.assert_equal(self.g.neighbors_distances(0), np.array([2.4, 2.2, dist_diag]))
@@ -180,3 +196,15 @@ class TestRasterGrid:
 
         with pytest.raises(IndexError, match="grid index out of range"):
             self.g.neighbors(51)
+
+    def test_raster_neighbors(self):
+        dist_diag = np.sqrt(2.2**2 + 2.4**2)
+
+        assert self.g.neighbors(0, 0) == [
+            RasterNeighbor(1, 0, 1, 2.4, NodeStatus.FIXED_VALUE_BOUNDARY),
+            RasterNeighbor(10, 1, 0, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY),
+            RasterNeighbor(11, 1, 1, dist_diag, NodeStatus.CORE),
+        ]
+
+        with pytest.raises(IndexError, match="grid index out of range"):
+            self.g.neighbors(10, 10)

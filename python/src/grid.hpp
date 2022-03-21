@@ -26,7 +26,7 @@ namespace fastscapelib
     using py_unstructured_mesh = fs::unstructured_mesh_xt<fs::pyarray_selector>;
 
     template <class G>
-    struct py_grid_funcs
+    class py_grid_funcs
     {
     public:
         using size_type = typename G::size_type;
@@ -68,7 +68,7 @@ namespace fastscapelib
     private:
         inline void check_in_bounds(const G& g, size_type idx)
         {
-            if (idx < 0 || idx >= g.size())
+            if (idx >= g.size())
             {
                 throw std::out_of_range("grid index out of range");
             }
@@ -85,6 +85,40 @@ namespace fastscapelib
             .def("neighbors_distances", grid_funcs.m_neighbors_distances)
             .def("neighbors", grid_funcs.m_neighbors);
     }
+
+    class py_raster_grid_funcs
+    {
+    public:
+        using size_type = typename py_raster_grid::size_type;
+        using indices_type = typename py_raster_grid::neighbors_indices_raster_type;
+        using neighbors_type = typename py_raster_grid::neighbors_raster_type;
+
+        py_raster_grid_funcs() = default;
+
+        std::function<indices_type(py_raster_grid&, size_type, size_type)> m_neighbors_indices
+            = [this](py_raster_grid& g, size_type row, size_type col)
+        {
+            check_in_bounds(g, row, col);
+            return g.neighbors_indices(row, col);
+        };
+
+        std::function<neighbors_type(py_raster_grid&, size_type, size_type)> m_neighbors
+            = [this](py_raster_grid& g, size_type row, size_type col)
+        {
+            check_in_bounds(g, row, col);
+            return g.neighbors(row, col);
+        };
+
+    private:
+        inline void check_in_bounds(const py_raster_grid& g, size_type row, size_type col)
+        {
+            const auto& shape = g.shape();
+            if (row >= shape[0] || col >= shape[1])
+            {
+                throw std::out_of_range("grid index out of range");
+            }
+        }
+    };
 
 }
 

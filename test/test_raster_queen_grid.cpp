@@ -404,6 +404,30 @@ namespace fastscapelib
             }
         }
 
+        TEST_F(queen_raster_grid_fixed, raster_neighbors)
+        {
+            using neighbors_type = std::vector<fs::raster_neighbor>;
+
+            double d1 = std::sqrt(1.3 * 1.3 + 1.2 * 1.2);
+
+            {
+                EXPECT_EQ(queen_fixed.neighbors(0, 0),
+                          (neighbors_type{ /* Node */ { 1, 0, 1, 1.2, fb },
+                                           { 10, 1, 0, 1.3, fb },
+                                           { 11, 1, 1, d1, co } }));
+
+                EXPECT_EQ(queen_fixed.neighbors(1, 1),
+                          (neighbors_type{ { 0, 0, 0, d1, fb },
+                                           { 1, 0, 1, 1.3, fb },
+                                           { 2, 0, 2, d1, fb },
+                                           { 10, 1, 0, 1.2, fb },
+                                           /* Node */ { 12, 1, 2, 1.2, co },
+                                           { 20, 2, 0, d1, fb },
+                                           { 21, 2, 1, 1.3, co },
+                                           { 22, 2, 2, d1, co } }));
+            }
+        }
+
         TEST_F(queen_raster_grid, neighbors_count)
         {
             // Top-left corner nodes

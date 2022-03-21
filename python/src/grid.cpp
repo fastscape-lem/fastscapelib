@@ -151,4 +151,9 @@ add_grid_bindings(py::module& m)
         .def_property_readonly("status_at_nodes", &fs::py_raster_grid::status_at_nodes);
 
     fs::add_neighbor_methods(rgrid);
+
+    auto raster_grid_funcs = fs::py_raster_grid_funcs();
+
+    rgrid.def("neighbors_indices", raster_grid_funcs.m_neighbors_indices)
+        .def("neighbors", raster_grid_funcs.m_neighbors);
 }
