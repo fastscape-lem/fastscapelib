@@ -15,7 +15,7 @@
 #include "fastscapelib/flow_graph.hpp"
 #include "fastscapelib/flow_router.hpp"
 #include "fastscapelib/sink_resolver.hpp"
-#include "fastscapelib/utils.hpp"
+#include "fastscapelib/utils/utils.hpp"
 
 
 using namespace xt::placeholders;

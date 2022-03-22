@@ -14,8 +14,8 @@
 
 #include "xtensor/xtensor.hpp"
 
-#include "fastscapelib/utils.hpp"
-#include "fastscapelib/consts.hpp"
+#include "fastscapelib/utils/utils.hpp"
+#include "fastscapelib/utils/consts.hpp"
 #include "fastscapelib/grid/structured_grid.hpp"
 
 

@@ -11,7 +11,7 @@
 
 #include "fastscapelib/flow_router.hpp"
 #include "fastscapelib/sink_resolver.hpp"
-#include "fastscapelib/xtensor_utils.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 #include <stdexcept>
 

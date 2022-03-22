@@ -26,8 +26,8 @@
 #include "xtl/xiterator_base.hpp"
 
 #include "fastscapelib/grid/base.hpp"
-#include "fastscapelib/utils.hpp"
-#include "fastscapelib/xtensor_utils.hpp"
+#include "fastscapelib/utils/utils.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib

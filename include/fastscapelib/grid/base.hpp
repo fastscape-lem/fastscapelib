@@ -13,8 +13,8 @@
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"
 
-#include "fastscapelib/iterators.hpp"
-#include "fastscapelib/xtensor_utils.hpp"
+#include "fastscapelib/utils/iterators.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib

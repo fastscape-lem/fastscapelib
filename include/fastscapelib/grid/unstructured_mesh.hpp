@@ -2,7 +2,7 @@
 #define FASTSCAPELIB_GRID_UNSTRUCTURED_MESH_H
 
 #include "fastscapelib/grid/base.hpp"
-#include "fastscapelib/xtensor_utils.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib

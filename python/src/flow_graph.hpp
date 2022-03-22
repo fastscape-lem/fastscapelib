@@ -10,7 +10,7 @@
 #include "fastscapelib/flow_router_factory.hpp"
 #include "fastscapelib/sink_resolver.hpp"
 #include "fastscapelib/sink_resolver_factory.hpp"
-#include "fastscapelib/xtensor_utils.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 #include "flow_router.hpp"
 #include "sink_resolver.hpp"

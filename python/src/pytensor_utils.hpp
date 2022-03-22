@@ -5,7 +5,7 @@
 
 #include "xtensor-python/pyarray.hpp"
 
-#include "fastscapelib/xtensor_utils.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib

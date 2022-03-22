@@ -1,6 +1,6 @@
 #include "benchmark_setup.hpp"
 
-#include "fastscapelib/consts.hpp"
+#include "fastscapelib/utils/consts.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
 
 #include "xtensor/xfixed.hpp"

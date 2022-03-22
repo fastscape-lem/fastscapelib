@@ -13,7 +13,7 @@
 #include "xtensor/xview.hpp"
 
 #include "fastscapelib/grid/raster_grid.hpp"
-#include "fastscapelib/utils.hpp"
+#include "fastscapelib/utils/utils.hpp"
 
 
 namespace fs = fastscapelib;

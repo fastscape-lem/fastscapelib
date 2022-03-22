@@ -1,6 +1,6 @@
 #include "benchmark_setup.hpp"
 
-#include "fastscapelib/consts.hpp"
+#include "fastscapelib/utils/consts.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 #include "fastscapelib/flow_routing.hpp"

@@ -2,8 +2,8 @@
  * @file
  * @brief Some utilities used internally.
  */
-#ifndef FASTSCAPELIB_UTILS_H
-#define FASTSCAPELIB_UTILS_H
+#ifndef FASTSCAPELIB_UTILS_UTILS_H
+#define FASTSCAPELIB_UTILS_UTILS_H
 
 
 #include <cstddef>

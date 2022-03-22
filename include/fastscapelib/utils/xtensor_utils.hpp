@@ -1,8 +1,8 @@
 /**
  * xtensor utils (container tags, etc.)
  */
-#ifndef FASTSCAPELIB_XTENSOR_UTILS_H
-#define FASTSCAPELIB_XTENSOR_UTILS_H
+#ifndef FASTSCAPELIB_UTILS_XTENSOR_UTILS_H
+#define FASTSCAPELIB_UTILS_XTENSOR_UTILS_H
 
 
 #include <cstddef>

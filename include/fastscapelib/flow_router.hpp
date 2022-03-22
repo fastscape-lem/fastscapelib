@@ -10,7 +10,7 @@
 #define FASTSCAPELIB_FLOW_ROUTER_H
 
 #include "fastscapelib/flow_routing.hpp"
-#include "fastscapelib/xtensor_utils.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib

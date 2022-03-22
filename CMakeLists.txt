@@ -80,7 +80,7 @@ include(CMakePackageConfigHelpers)
 # -- fastscapelib
 set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/bedrock_channel.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/consts.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/consts.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/fastscapelib.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_graph.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_router_factory.hpp
@@ -88,7 +88,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_routing.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/base.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/hillslope.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/iterators.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/iterators.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/profile_grid.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/raster_grid.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sink_resolver_factory.hpp
@@ -96,9 +96,9 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sinks.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/structured_grid.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/unstructured_mesh.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/utils.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/version.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/xtensor_utils.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/xtensor_utils.hpp
 )
 
 set(FASTSCAPELIB_TARGET fastscapelib)
