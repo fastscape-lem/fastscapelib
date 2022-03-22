@@ -6,10 +6,10 @@
 
 #include "pybind11/pybind11.h"
 
-#include "fastscapelib/grid.hpp"
-#include "fastscapelib/profile_grid.hpp"
-#include "fastscapelib/raster_grid.hpp"
-#include "fastscapelib/unstructured_mesh.hpp"
+#include "fastscapelib/grid/base.hpp"
+#include "fastscapelib/grid/profile_grid.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
+#include "fastscapelib/grid/unstructured_mesh.hpp"
 
 #include "pytensor_utils.hpp"
 

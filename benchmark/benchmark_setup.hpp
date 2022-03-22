@@ -12,7 +12,7 @@
 #include "xtensor/xrandom.hpp"
 #include "xtensor/xview.hpp"
 
-#include "fastscapelib/raster_grid.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
 #include "fastscapelib/utils.hpp"
 
 

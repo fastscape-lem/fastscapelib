@@ -1,8 +1,8 @@
 /**
  * structured grid abstract class.
  */
-#ifndef FASTSCAPELIB_STRUCTURED_GRID_H
-#define FASTSCAPELIB_STRUCTURED_GRID_H
+#ifndef FASTSCAPELIB_GRID_STRUCTURED_GRID_H
+#define FASTSCAPELIB_GRID_STRUCTURED_GRID_H
 
 #include <algorithm>
 #include <array>
@@ -25,7 +25,7 @@
 
 #include "xtl/xiterator_base.hpp"
 
-#include "fastscapelib/grid.hpp"
+#include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/xtensor_utils.hpp"
 

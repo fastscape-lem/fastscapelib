@@ -4,7 +4,7 @@
 #include "fastscapelib/bedrock_channel.hpp"
 #include "fastscapelib/hillslope.hpp"
 #include "fastscapelib/flow_routing.hpp"
-#include "fastscapelib/raster_grid.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
 
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"

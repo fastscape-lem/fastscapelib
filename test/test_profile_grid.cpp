@@ -1,4 +1,4 @@
-#include "fastscapelib/profile_grid.hpp"
+#include "fastscapelib/grid/profile_grid.hpp"
 
 #include "gtest/gtest.h"
 

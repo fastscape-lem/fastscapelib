@@ -1,17 +1,17 @@
 /**
  * A raster grid represents a 2D uniform grid.
  */
-#ifndef FASTSCAPELIB_RASTER_GRID_H
-#define FASTSCAPELIB_RASTER_GRID_H
+#ifndef FASTSCAPELIB_GRID_RASTER_GRID_H
+#define FASTSCAPELIB_GRID_RASTER_GRID_H
 
 #include <vector>
 #include <utility>
 
 #include <xtensor/xtensor.hpp>
 
-#include "fastscapelib/grid.hpp"
-#include "fastscapelib/structured_grid.hpp"
-#include "fastscapelib/profile_grid.hpp"
+#include "fastscapelib/grid/base.hpp"
+#include "fastscapelib/grid/structured_grid.hpp"
+#include "fastscapelib/grid/profile_grid.hpp"
 
 
 namespace fastscapelib

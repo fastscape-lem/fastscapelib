@@ -1,8 +1,8 @@
 /**
  * A profile grid is a one dimensional grid.
  */
-#ifndef FASTSCAPELIB_PROFILE_GRID_H
-#define FASTSCAPELIB_PROFILE_GRID_H
+#ifndef FASTSCAPELIB_GRID_PROFILE_GRID_H
+#define FASTSCAPELIB_GRID_PROFILE_GRID_H
 
 #include <algorithm>
 #include <array>
@@ -13,8 +13,8 @@
 #include <map>
 #include <vector>
 
-#include "fastscapelib/grid.hpp"
-#include "fastscapelib/structured_grid.hpp"
+#include "fastscapelib/grid/base.hpp"
+#include "fastscapelib/grid/structured_grid.hpp"
 
 
 namespace fastscapelib

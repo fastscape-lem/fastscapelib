@@ -2,7 +2,7 @@
 #ifndef FASTSCAPELIB_TEST_RASTER_GRID_H
 #define FASTSCAPELIB_TEST_RASTER_GRID_H
 
-#include "fastscapelib/raster_grid.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
 
 #include "gtest/gtest.h"
 

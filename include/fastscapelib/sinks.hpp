@@ -16,7 +16,7 @@
 
 #include "fastscapelib/utils.hpp"
 #include "fastscapelib/consts.hpp"
-#include "fastscapelib/structured_grid.hpp"
+#include "fastscapelib/grid/structured_grid.hpp"
 
 
 namespace fastscapelib

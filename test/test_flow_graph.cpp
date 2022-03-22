@@ -2,7 +2,7 @@
 #include "fastscapelib/flow_router.hpp"
 #include "fastscapelib/flow_router_factory.hpp"
 #include "fastscapelib/sink_resolver.hpp"
-#include "fastscapelib/raster_grid.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
 
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xio.hpp"

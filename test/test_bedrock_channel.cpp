@@ -11,7 +11,7 @@
 #include "xtensor/xio.hpp"
 
 #include "fastscapelib/bedrock_channel.hpp"
-#include "fastscapelib/raster_grid.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
 #include "fastscapelib/flow_graph.hpp"
 #include "fastscapelib/flow_router.hpp"
 #include "fastscapelib/sink_resolver.hpp"

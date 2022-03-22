@@ -3,8 +3,8 @@
 
 #include "xtensor/xtensor.hpp"
 
-#include "fastscapelib/profile_grid.hpp"
-#include "fastscapelib/raster_grid.hpp"
+#include "fastscapelib/grid/profile_grid.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
 
 #include "gtest/gtest.h"
 

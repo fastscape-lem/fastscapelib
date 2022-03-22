@@ -9,7 +9,7 @@
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xrandom.hpp"
 
-#include "fastscapelib/raster_grid.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
 #include "fastscapelib/flow_graph.hpp"
 #include "fastscapelib/flow_routing.hpp"
 #include "fastscapelib/bedrock_channel.hpp"

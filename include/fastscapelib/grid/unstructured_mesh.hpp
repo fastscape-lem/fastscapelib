@@ -1,7 +1,7 @@
-#ifndef FASTSCAPELIB_UNSTRUCTURED_MESH_H
-#define FASTSCAPELIB_UNSTRUCTURED_MESH_H
+#ifndef FASTSCAPELIB_GRID_UNSTRUCTURED_MESH_H
+#define FASTSCAPELIB_GRID_UNSTRUCTURED_MESH_H
 
-#include "fastscapelib/grid.hpp"
+#include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/xtensor_utils.hpp"
 
 
@@ -101,4 +101,4 @@ namespace fastscapelib
     using unstructured_mesh = unstructured_mesh_xt<xtensor_selector>;
 }
 
-#endif  // FASTSCAPELIB_UNSTRUCTURED_MESH_H
+#endif  // FASTSCAPELIB_GRID_UNSTRUCTURED_MESH_H
