@@ -1,9 +1,10 @@
 #ifndef FASTSCAPELIB_FLOW_SINK_RESOLVER_FACTORY_H
 #define FASTSCAPELIB_FLOW_SINK_RESOLVER_FACTORY_H
 
-#include "fastscapelib/flow/sink_resolver.hpp"
-
 #include <functional>
+#include <map>
+
+#include "fastscapelib/flow/sink_resolver.hpp"
 
 
 namespace fs = fastscapelib;
