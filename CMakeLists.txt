@@ -83,16 +83,16 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/consts.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/fastscapelib.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_graph.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_router_factory.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_router.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_router_factory.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_router.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/algo/flow_routing.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/base.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/hillslope.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/iterators.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/profile_grid.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/raster_grid.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sink_resolver_factory.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sink_resolver.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/sink_resolver_factory.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/sink_resolver.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/algo/pflood.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/structured_grid.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/unstructured_mesh.hpp

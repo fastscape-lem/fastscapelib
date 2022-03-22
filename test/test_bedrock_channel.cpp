@@ -12,9 +12,9 @@
 
 #include "fastscapelib/bedrock_channel.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
-#include "fastscapelib/flow_graph.hpp"
-#include "fastscapelib/flow_router.hpp"
-#include "fastscapelib/sink_resolver.hpp"
+#include "fastscapelib/flow/flow_graph.hpp"
+#include "fastscapelib/flow/flow_router.hpp"
+#include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/utils/utils.hpp"
 
 

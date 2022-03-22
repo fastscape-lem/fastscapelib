@@ -6,8 +6,8 @@
  * with ``flow_router`` through a ``flow_graph``.
  *
  */
-#ifndef FASTSCAPELIB_SINK_RESOLVER_H
-#define FASTSCAPELIB_SINK_RESOLVER_H
+#ifndef FASTSCAPELIB_FLOW_SINK_RESOLVER_H
+#define FASTSCAPELIB_FLOW_SINK_RESOLVER_H
 
 
 namespace fastscapelib

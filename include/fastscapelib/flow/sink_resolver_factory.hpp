@@ -1,7 +1,7 @@
-#ifndef FASTSCAPELIB_SINK_RESOLVER_FACTORY_H
-#define FASTSCAPELIB_SINK_RESOLVER_FACTORY_H
+#ifndef FASTSCAPELIB_FLOW_SINK_RESOLVER_FACTORY_H
+#define FASTSCAPELIB_FLOW_SINK_RESOLVER_FACTORY_H
 
-#include "fastscapelib/sink_resolver.hpp"
+#include "fastscapelib/flow/sink_resolver.hpp"
 
 #include <functional>
 

@@ -3,9 +3,9 @@
 
 #include "pytensor_utils.hpp"
 
-#include "fastscapelib/sink_resolver.hpp"
-#include "fastscapelib/sink_resolver_factory.hpp"
-#include "fastscapelib/flow_graph.hpp"
+#include "fastscapelib/flow/sink_resolver.hpp"
+#include "fastscapelib/flow/sink_resolver_factory.hpp"
+#include "fastscapelib/flow/flow_graph.hpp"
 
 #include <stdexcept>
 

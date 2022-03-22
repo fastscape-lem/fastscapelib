@@ -6,8 +6,8 @@
  * with possible ``sink_resolver`` through a ``flow_graph``.
  *
  */
-#ifndef FASTSCAPELIB_FLOW_ROUTER_H
-#define FASTSCAPELIB_FLOW_ROUTER_H
+#ifndef FASTSCAPELIB_FLOW_FLOW_ROUTER_H
+#define FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 
 #include "fastscapelib/algo/flow_routing.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"

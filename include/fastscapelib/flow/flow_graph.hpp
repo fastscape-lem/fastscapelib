@@ -6,11 +6,11 @@
  * sink_resolver methods and access their results.
  *
  */
-#ifndef FASTSCAPELIB_FLOW_GRAPH_H
-#define FASTSCAPELIB_FLOW_GRAPH_H
+#ifndef FASTSCAPELIB_FLOW_FLOW_GRAPH_H
+#define FASTSCAPELIB_FLOW_FLOW_GRAPH_H
 
-#include "fastscapelib/flow_router.hpp"
-#include "fastscapelib/sink_resolver.hpp"
+#include "fastscapelib/flow/flow_router.hpp"
+#include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
 
 #include <stdexcept>

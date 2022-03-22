@@ -1,7 +1,7 @@
-#ifndef FASTSCAPELIB_FLOW_ROUTER_FACTORY_H
-#define FASTSCAPELIB_FLOW_ROUTER_FACTORY_H
+#ifndef FASTSCAPELIB_FLOW_FLOW_ROUTER_FACTORY_H
+#define FASTSCAPELIB_FLOW_FLOW_ROUTER_FACTORY_H
 
-#include "fastscapelib/flow_router.hpp"
+#include "fastscapelib/flow/flow_router.hpp"
 
 #include <functional>
 
