@@ -1,6 +1,6 @@
 #include "xtensor/xtensor.hpp"
 
-#include "fastscapelib/sinks.hpp"
+#include "fastscapelib/algo/pflood.hpp"
 
 #include "test_sinks.hpp"
 

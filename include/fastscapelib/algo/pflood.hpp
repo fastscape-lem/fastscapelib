@@ -1,9 +1,9 @@
 /**
- * Provides implementation of various efficient algorithms for
+ * Provides implementation of priority-flood algorithms for
  * depression filling or pit resolving.
  */
-#ifndef FASTSCAPELIB_SINKS_H
-#define FASTSCAPELIB_SINKS_H
+#ifndef FASTSCAPELIB_ALGO_PFLOOD_H
+#define FASTSCAPELIB_ALGO_PFLOOD_H
 
 #include <cmath>
 #include <functional>

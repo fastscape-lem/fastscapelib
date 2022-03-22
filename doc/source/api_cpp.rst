@@ -31,7 +31,7 @@ or include just a subset of the functions (by topic), e.g.,
 
 .. code-block:: cpp
 
-   #include "fastscapelib/flow_routing.hpp"
+   #include "fastscapelib/algo/flow_routing.hpp"
 
 Sinks (depressions)
 -------------------

@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 
-#include "fastscapelib/sinks.hpp"
+#include "fastscapelib/algo/pflood.hpp"
 
 #include "benchmark_setup.hpp"
 

@@ -3,7 +3,7 @@
 #include "fastscapelib/utils/consts.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
-#include "fastscapelib/flow_routing.hpp"
+#include "fastscapelib/algo/flow_routing.hpp"
 
 #include "xtensor/xfixed.hpp"
 #include "xtensor/xtensor.hpp"

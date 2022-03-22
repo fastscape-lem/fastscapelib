@@ -3,8 +3,8 @@
  * surface and compute flow path-related features or structures.
  *
  */
-#ifndef FASTSCAPELIB_FLOW_ROUTING_H
-#define FASTSCAPELIB_FLOW_ROUTING_H
+#ifndef FASTSCAPELIB_ALGO_FLOW_ROUTING_H
+#define FASTSCAPELIB_ALGO_FLOW_ROUTING_H
 
 #include <algorithm>
 #include <array>

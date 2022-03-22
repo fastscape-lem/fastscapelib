@@ -3,7 +3,7 @@
 
 #include "xtensor-python/pytensor.hpp"
 
-#include "fastscapelib/sinks.hpp"
+#include "fastscapelib/algo/pflood.hpp"
 
 #include "grid.hpp"
 
