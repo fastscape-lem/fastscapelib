@@ -8,7 +8,7 @@
 #define FASTSCAPELIB_FASTSCAPELIB_H
 
 #include "fastscapelib/version.hpp"
-#include "fastscapelib/bedrock_channel.hpp"
+#include "fastscapelib/eroders/spl.hpp"
 #include "fastscapelib/algo/flow_routing.hpp"
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
@@ -18,7 +18,7 @@
 #include "fastscapelib/grid/structured_grid.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
-#include "fastscapelib/hillslope.hpp"
+#include "fastscapelib/eroders/diffusion_adi.hpp"
 #include "fastscapelib/algo/pflood.hpp"
 
 #endif

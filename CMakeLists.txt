@@ -79,7 +79,7 @@ include(CMakePackageConfigHelpers)
 
 # -- fastscapelib
 set(FASTSCAPELIB_HEADERS
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/bedrock_channel.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/spl.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/consts.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/fastscapelib.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_graph.hpp
@@ -87,7 +87,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_router.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/algo/flow_routing.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/base.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/hillslope.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/diffusion_adi.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/iterators.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/profile_grid.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/raster_grid.hpp

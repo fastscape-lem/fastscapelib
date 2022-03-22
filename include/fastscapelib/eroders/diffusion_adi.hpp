@@ -1,8 +1,8 @@
 /**
  * Functions to compute hillslope erosion.
  */
-#ifndef FASTSCAPELIB_HILLSLOPE_H
-#define FASTSCAPELIB_HILLSLOPE_H
+#ifndef FASTSCAPELIB_ERODERS_DIFFUSION_ADI_H
+#define FASTSCAPELIB_ERODERS_DIFFUSION_ADI_H
 
 #include <array>
 #include <cstddef>

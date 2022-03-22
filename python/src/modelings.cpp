@@ -1,8 +1,8 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "fastscapelib/bedrock_channel.hpp"
-#include "fastscapelib/hillslope.hpp"
+#include "fastscapelib/eroders/spl.hpp"
+#include "fastscapelib/eroders/diffusion_adi.hpp"
 #include "fastscapelib/algo/flow_routing.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 

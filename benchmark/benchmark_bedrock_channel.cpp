@@ -12,7 +12,7 @@
 #include "fastscapelib/grid/raster_grid.hpp"
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/algo/flow_routing.hpp"
-#include "fastscapelib/bedrock_channel.hpp"
+#include "fastscapelib/eroders/spl.hpp"
 
 #include "benchmark_setup.hpp"
 

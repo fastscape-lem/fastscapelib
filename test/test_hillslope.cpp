@@ -6,7 +6,7 @@
 #include "xtensor/xmath.hpp"
 #include "xtensor/xtensor.hpp"
 
-#include "fastscapelib/hillslope.hpp"
+#include "fastscapelib/eroders/diffusion_adi.hpp"
 
 
 namespace fs = fastscapelib;

@@ -9,7 +9,7 @@
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xrandom.hpp"
 
-#include "fastscapelib/hillslope.hpp"
+#include "fastscapelib/eroders/diffusion_adi.hpp"
 
 #include "benchmark_setup.hpp"
 

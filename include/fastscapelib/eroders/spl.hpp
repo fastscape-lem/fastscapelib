@@ -1,7 +1,8 @@
 /**
  * Functions to compute bedrock channel erosion.
  */
-#pragma once
+#ifndef FASTSCAPELIB_ERODERS_SPL_H
+#define FASTSCAPELIB_ERODERS_SPL_H
 
 #include <cassert>
 #include <cmath>
@@ -287,3 +288,5 @@ namespace fastscapelib
     }
 
 }  // namespace fastscapelib
+
+#endif
