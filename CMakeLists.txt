@@ -102,8 +102,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/iterators.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/utils.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/xtensor_utils.hpp
-  # Misc
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/fastscapelib.hpp
+  # Version
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/version.hpp
 )
 

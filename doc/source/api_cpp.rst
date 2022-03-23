@@ -21,17 +21,7 @@ signatures.
 
 The fastscapelib library is organized into different topics listed
 here below. The namespace ``fastscapelib`` is used for the public
-API. You can either include all functions in your project at once:
-
-.. code-block:: cpp
-
-   #include "fastscapelib/fastscapelib.hpp"
-
-or include just a subset of the functions (by topic), e.g.,
-
-.. code-block:: cpp
-
-   #include "fastscapelib/algo/flow_routing.hpp"
+API.
 
 Sinks (depressions)
 -------------------
