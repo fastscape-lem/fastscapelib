@@ -2,7 +2,7 @@
 
 #include "fastscapelib/algo/pflood.hpp"
 
-#include "test_sinks.hpp"
+#include "test_pflood.hpp"
 
 
 namespace fs = fastscapelib;
