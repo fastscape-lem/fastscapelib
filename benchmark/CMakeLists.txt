@@ -121,12 +121,12 @@ endif()
 set(FASTSCAPELIB_BENCHMARK_HEADERS benchmark_setup.hpp)
 
 set(FASTSCAPELIB_BENCHMARK_SRC
-  benchmark_bedrock_channel.cpp
+  benchmark_diffusion_adi.cpp
+  benchmark_flow_routing.cpp
+  benchmark_pflood.cpp
   benchmark_profile_grid.cpp
   benchmark_raster_grid.cpp
-  benchmark_flow_routing.cpp
-  benchmark_hillslope.cpp
-  benchmark_sinks.cpp
+  benchmark_spl.cpp
 )
 
 # -- build a target for each benchmark
