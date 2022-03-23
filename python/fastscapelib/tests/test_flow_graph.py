@@ -2,7 +2,7 @@ import numpy as np
 import numpy.testing as npt
 import pytest
 
-from fastscapelib.flow_graph import (
+from fastscapelib.flow import (
     DummyFlowRouter,
     FlowGraph,
     MultipleFlowRouter,

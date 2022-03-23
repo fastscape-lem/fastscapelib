@@ -23,9 +23,9 @@ add_flow_routers_bindings(py::module_&);
 void
 add_sink_resolvers_bindings(py::module_&);
 void
-add_sinks_bindings(py::module_&);
+add_algo_bindings(py::module_&);
 void
-add_modelings_bindings(py::module_&);
+add_eroders_bindings(py::module_&);
 
 
 PYBIND11_MODULE(_fastscapelib_py, m)
@@ -37,19 +37,17 @@ PYBIND11_MODULE(_fastscapelib_py, m)
 
     m.attr("__version__") = fs::version::version_str;
 
-    py::module grid_m = m.def_submodule("grid", "The grid module of Fastscapelib");
+    py::module grid_m = m.def_submodule("grid", "Fastscapelib's grid module");
     add_grid_bindings(grid_m);
 
-    py::module flow_graph_m
-        = m.def_submodule("flow_graph", "The flow graph module of Fastscapelib");
-    add_flow_routers_bindings(flow_graph_m);
-    add_sink_resolvers_bindings(flow_graph_m);
-    add_flow_graph_bindings(flow_graph_m);
+    py::module flow_m = m.def_submodule("flow", "Fastscapelib's flow routing module");
+    add_flow_routers_bindings(flow_m);
+    add_sink_resolvers_bindings(flow_m);
+    add_flow_graph_bindings(flow_m);
 
-    // TODO: merge flow_graph and sinks modules?
-    py::module sinks_m = m.def_submodule("sinks", "Various algorithms for sink filling");
-    add_sinks_bindings(sinks_m);
+    py::module algo_m = m.def_submodule("algo", "Fastscapelib's misc. algorithms module");
+    add_algo_bindings(algo_m);
 
-    py::module algo_m = m.def_submodule("algo", "The algorithm module of Fastscapelib");
-    add_modelings_bindings(algo_m);
+    py::module eroders_m = m.def_submodule("eroders", "Fastscapelib's erosion module");
+    add_eroders_bindings(eroders_m);
 }

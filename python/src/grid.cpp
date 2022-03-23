@@ -4,9 +4,9 @@
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
 
-#include "fastscapelib/grid.hpp"
-#include "fastscapelib/profile_grid.hpp"
-#include "fastscapelib/raster_grid.hpp"
+#include "fastscapelib/grid/base.hpp"
+#include "fastscapelib/grid/profile_grid.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
 
 #include "grid.hpp"
 #include "pytensor_utils.hpp"

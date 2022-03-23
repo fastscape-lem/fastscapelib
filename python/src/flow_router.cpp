@@ -1,7 +1,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "fastscapelib/flow_router.hpp"
+#include "fastscapelib/flow/flow_router.hpp"
 
 #include "grid.hpp"
 #include "flow_router.hpp"

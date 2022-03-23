@@ -1,8 +1,8 @@
-#include "fastscapelib/flow_graph.hpp"
-#include "fastscapelib/flow_router.hpp"
-#include "fastscapelib/flow_router_factory.hpp"
-#include "fastscapelib/sink_resolver.hpp"
-#include "fastscapelib/raster_grid.hpp"
+#include "fastscapelib/flow/flow_graph.hpp"
+#include "fastscapelib/flow/flow_router.hpp"
+#include "fastscapelib/flow/flow_router_factory.hpp"
+#include "fastscapelib/flow/sink_resolver.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
 
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xio.hpp"

@@ -1,5 +1,5 @@
-#include "fastscapelib/structured_grid.hpp"
-#include "fastscapelib/profile_grid.hpp"
+#include "fastscapelib/grid/structured_grid.hpp"
+#include "fastscapelib/grid/profile_grid.hpp"
 
 #include "gtest/gtest.h"
 

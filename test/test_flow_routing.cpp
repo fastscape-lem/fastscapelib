@@ -1,6 +1,6 @@
-#include "fastscapelib/utils.hpp"
-#include "fastscapelib/raster_grid.hpp"
-#include "fastscapelib/flow_routing.hpp"
+#include "fastscapelib/utils/utils.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
+#include "fastscapelib/algo/flow_routing.hpp"
 
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xio.hpp"
