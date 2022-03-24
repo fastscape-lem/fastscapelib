@@ -86,7 +86,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/diffusion_adi.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/spl.hpp
   # Flow
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_graph.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_graph.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_router_factory.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_router.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/sink_resolver_factory.hpp
