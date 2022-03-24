@@ -108,7 +108,7 @@ namespace fastscapelib
         static constexpr std::size_t xt_ndims = 1;
 
         using xt_selector = XT;
-        using xt_type = xt_container_t<xt_selector, int, xt_ndims>;
+        using xt_type = xt_tensor_t<xt_selector, int, xt_ndims>;
 
         using size_type = typename xt_type::size_type;
         using shape_type = typename xt_type::shape_type;
@@ -122,7 +122,7 @@ namespace fastscapelib
         using neighbors_distances_impl_type = typename std::array<distance_type, max_neighbors>;
 
         using boundary_status_type = profile_boundary_status;
-        using node_status_type = xt_container_t<xt_selector, node_status, xt_ndims>;
+        using node_status_type = xt_tensor_t<xt_selector, node_status, xt_ndims>;
     };
 
     /**
@@ -404,7 +404,7 @@ namespace fastscapelib
      * This is mainly for convenience when using in C++ applications.
      *
      */
-    using profile_grid = profile_grid_xt<xtensor_selector>;
+    using profile_grid = profile_grid_xt<xt_selector>;
 }
 
 #endif

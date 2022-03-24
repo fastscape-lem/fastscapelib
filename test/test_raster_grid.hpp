@@ -62,7 +62,7 @@ namespace fastscapelib
         class queen_raster_grid : public raster_grid_base
         {
         protected:
-            using grid_type = fs::raster_grid_xt<fs::xtensor_selector, fs::raster_connect::queen>;
+            using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::queen>;
 
             grid_type queen_fixed = grid_type(shape, { 1.3, 1.2 }, fixed_value_status);
             grid_type queen_hlooped = grid_type(shape, { 1.3, 1.2 }, hlooped_status);
@@ -83,7 +83,7 @@ namespace fastscapelib
         class rook_raster_grid : public raster_grid_base
         {
         protected:
-            using grid_type = fs::raster_grid_xt<fs::xtensor_selector, fs::raster_connect::rook>;
+            using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::rook>;
 
             grid_type rook_fixed = grid_type(shape, { 1.3, 1.2 }, fixed_value_status);
             grid_type rook_hlooped = grid_type(shape, { 1.3, 1.2 }, hlooped_status);
@@ -104,7 +104,7 @@ namespace fastscapelib
         class bishop_raster_grid : public raster_grid_base
         {
         protected:
-            using grid_type = fs::raster_grid_xt<fs::xtensor_selector, fs::raster_connect::bishop>;
+            using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::bishop>;
 
             grid_type bishop_fixed = grid_type(shape, { 1.3, 1.2 }, fixed_value_status);
             grid_type bishop_hlooped = grid_type(shape, { 1.3, 1.2 }, hlooped_status);

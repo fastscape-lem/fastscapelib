@@ -207,7 +207,7 @@ namespace fastscapelib
         class single_flow_router__raster_queen : public single_flow_router__raster_base
         {
         protected:
-            using grid_type = fs::raster_grid_xt<fs::xtensor_selector, fs::raster_connect::queen>;
+            using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::queen>;
             using flow_graph_type = fs::flow_graph<grid_type, double>;
 
             grid_type fixed_grid
@@ -408,7 +408,7 @@ namespace fastscapelib
         class single_flow_router__raster_rook : public single_flow_router__raster_base
         {
         protected:
-            using grid_type = fs::raster_grid_xt<fs::xtensor_selector, fs::raster_connect::rook>;
+            using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::rook>;
             using flow_graph_type = fs::flow_graph<grid_type, double>;
 
             grid_type fixed_grid
@@ -616,7 +616,7 @@ namespace fastscapelib
         class single_flow_router__raster_bishop : public single_flow_router__raster_base
         {
         protected:
-            using grid_type = fs::raster_grid_xt<fs::xtensor_selector, fs::raster_connect::bishop>;
+            using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::bishop>;
             using flow_graph_type = fs::flow_graph<grid_type, double>;
 
             grid_type fixed_grid
