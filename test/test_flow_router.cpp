@@ -29,10 +29,10 @@ namespace fastscapelib
 
             grid_type grid = grid_type({ 4, 4 }, { 1.1, 1.2 }, fixed_value_status);
 
-            xt::xtensor<double, 2> elevation{ { 0.82, 0.16, 0.14, 0.20 },
-                                              { 0.71, 0.97, 0.41, 0.09 },
-                                              { 0.49, 0.01, 0.19, 0.38 },
-                                              { 0.29, 0.82, 0.09, 0.88 } };
+            xt::xarray<double> elevation{ { 0.82, 0.16, 0.14, 0.20 },
+                                          { 0.71, 0.97, 0.41, 0.09 },
+                                          { 0.49, 0.01, 0.19, 0.38 },
+                                          { 0.29, 0.82, 0.09, 0.88 } };
 
             flow_graph_type graph
                 = flow_graph_type(grid,

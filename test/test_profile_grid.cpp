@@ -56,7 +56,7 @@ namespace fastscapelib
             fs::profile_boundary_status fixed_value_status{ fixed };
             fs::profile_boundary_status looped_status{ loop };
 
-            using grid_type = fs::profile_grid_xt<fs::xtensor_selector>;
+            using grid_type = fs::profile_grid_xt<fs::xt_selector>;
             using size_type = typename grid_type::size_type;
 
             size_type shape{ 5 };

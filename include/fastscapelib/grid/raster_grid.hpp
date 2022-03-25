@@ -389,7 +389,7 @@ namespace fastscapelib
         static constexpr std::size_t xt_ndims = 2;
 
         using xt_selector = XT;
-        using xt_type = xt_container_t<xt_selector, int, xt_ndims>;
+        using xt_type = xt_tensor_t<xt_selector, int, xt_ndims>;
 
         using size_type = typename xt_type::size_type;
         using shape_type = typename xt_type::shape_type;
@@ -403,7 +403,7 @@ namespace fastscapelib
         using neighbors_distances_impl_type = typename std::array<distance_type, max_neighbors>;
 
         using boundary_status_type = raster_boundary_status;
-        using node_status_type = xt_container_t<xt_selector, node_status, xt_ndims>;
+        using node_status_type = xt_tensor_t<xt_selector, node_status, xt_ndims>;
     };
 
 
@@ -652,6 +652,8 @@ namespace fastscapelib
         const std::vector<raster_node>& status_at_nodes)
     {
         node_status_type temp_status_at_nodes(m_shape, node_status::core);
+        const auto nrows = static_cast<size_type>(m_shape[0]);
+        const auto ncols = static_cast<size_type>(m_shape[1]);
 
         // set border nodes
         auto left = xt::view(temp_status_at_nodes, xt::all(), 0);
@@ -667,12 +669,11 @@ namespace fastscapelib
         bottom = m_status_at_bounds.bottom;
 
         // set corner nodes
-        std::vector<corner_node> corners = {
-            { 0, 0, m_status_at_bounds.top, m_status_at_bounds.left },
-            { 0, m_shape[1] - 1, m_status_at_bounds.top, m_status_at_bounds.right },
-            { m_shape[0] - 1, 0, m_status_at_bounds.bottom, m_status_at_bounds.left },
-            { m_shape[0] - 1, m_shape[1] - 1, m_status_at_bounds.bottom, m_status_at_bounds.right }
-        };
+        std::vector<corner_node> corners
+            = { { 0, 0, m_status_at_bounds.top, m_status_at_bounds.left },
+                { 0, ncols - 1, m_status_at_bounds.top, m_status_at_bounds.right },
+                { nrows - 1, 0, m_status_at_bounds.bottom, m_status_at_bounds.left },
+                { nrows - 1, ncols - 1, m_status_at_bounds.bottom, m_status_at_bounds.right } };
 
         for (const auto& c : corners)
         {
@@ -946,7 +947,7 @@ namespace fastscapelib
      * This is mainly for convenience when using in C++ applications.
      *
      */
-    using raster_grid = raster_grid_xt<xtensor_selector, raster_connect::queen>;
+    using raster_grid = raster_grid_xt<xt_selector, raster_connect::queen>;
 
 }
 

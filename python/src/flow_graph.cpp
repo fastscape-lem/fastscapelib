@@ -1,5 +1,7 @@
 #include <memory>
 
+#include "xtensor-python/pytensor.hpp"
+
 #include "pybind11/pybind11.h"
 
 #include "grid.hpp"

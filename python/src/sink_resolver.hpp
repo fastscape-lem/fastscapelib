@@ -41,7 +41,7 @@ namespace fastscapelib
         template <class G>
         void register_sink_resolvers()
         {
-            using flow_graph_type = fs::flow_graph<G, double, pyarray_selector>;
+            using flow_graph_type = fs::flow_graph<G, double, py_selector>;
             using factory = fs::detail::sink_resolver_factory<flow_graph_type>;
 
             factory::insert(fs::sink_resolver_methods::none,
