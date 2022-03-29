@@ -297,13 +297,25 @@ namespace fastscapelib
         using derived_grid_type = G;
         using inner_types = grid_inner_types<derived_grid_type>;
 
+        static constexpr bool is_structured()
+        {
+            return inner_types::is_structured;
+        }
+
+        static constexpr bool is_uniform()
+        {
+            return inner_types::is_uniform;
+        }
+
         using grid_data_type = typename inner_types::grid_data_type;
 
         using xt_selector = typename inner_types::xt_selector;
+
         static constexpr std::size_t xt_ndims()
         {
             return inner_types::xt_ndims;
         }
+
         using xt_type = xt_tensor_t<xt_selector, grid_data_type, xt_ndims()>;
 
         using size_type = typename xt_type::size_type;
@@ -314,7 +326,8 @@ namespace fastscapelib
         static constexpr std::uint8_t max_neighbors()
         {
             return inner_types::max_neighbors;
-        };
+        }
+
         static_assert(neighbors_cache_type::cache_width >= max_neighbors(),
                       "Cache width is too small!");
 

@@ -47,6 +47,8 @@ add_grid_bindings(py::module& m)
     // ==== Binding of the UnstructuredMesh class ==== //
     py::class_<fs::py_unstructured_mesh> umesh(m, "UnstructuredMesh");
 
+    fs::add_grid_static_properties(umesh);
+
     umesh.def(py::init());
 
     // ==== Binding of the profile_boundary_status class ==== //
@@ -63,6 +65,8 @@ add_grid_bindings(py::module& m)
 
     // ==== Binding of the ProfileGrid class ==== //
     py::class_<fs::py_profile_grid> pgrid(m, "ProfileGrid");
+
+    fs::add_grid_static_properties(pgrid);
 
     pgrid.def(py::init<fs::py_profile_grid::size_type,
                        fs::py_profile_grid::spacing_type,
@@ -127,6 +131,8 @@ add_grid_bindings(py::module& m)
 
     // ==== Binding of the RasterGrid class ==== //
     py::class_<fs::py_raster_grid> rgrid(m, "RasterGrid");
+
+    fs::add_grid_static_properties(rgrid);
 
     rgrid.def(py::init<const fs::py_raster_grid::shape_type&,
                        const xt::pytensor<double, 1>&,
