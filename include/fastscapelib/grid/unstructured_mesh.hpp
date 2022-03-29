@@ -8,11 +8,11 @@
 namespace fastscapelib
 {
 
-    template <class S, class C>
+    template <class S, unsigned int N, class C>
     class unstructured_mesh_xt;
 
-    template <class S, class C>
-    struct grid_inner_types<unstructured_mesh_xt<S, C>>
+    template <class S, unsigned int N, class C>
+    struct grid_inner_types<unstructured_mesh_xt<S, N, C>>
     {
         static constexpr bool is_structured = false;
         static constexpr bool is_uniform = false;
@@ -22,7 +22,7 @@ namespace fastscapelib
         using xt_selector = S;
         static constexpr std::size_t xt_ndims = 1;
 
-        static constexpr uint8_t max_neighbors = 50u;
+        static constexpr uint8_t max_neighbors = N;
         using neighbors_cache_type = C;
         using neighbors_count_type = std::uint8_t;
     };
@@ -32,13 +32,14 @@ namespace fastscapelib
      * @brief 2-dimensional unstructured mesh.
      *
      * @tparam S xtensor container selector for data array members.
+     * @tparam N Max number of grid node neighbors.
      * @tparam C Grid neighbors cache type.
      */
-    template <class S, class C = neighbors_no_cache<50>>
-    class unstructured_mesh_xt : public grid<unstructured_mesh_xt<S, C>>
+    template <class S, unsigned int N = 50, class C = neighbors_no_cache<N>>
+    class unstructured_mesh_xt : public grid<unstructured_mesh_xt<S, N, C>>
     {
     public:
-        using self_type = unstructured_mesh_xt<S, C>;
+        using self_type = unstructured_mesh_xt<S, N, C>;
         using base_type = grid<self_type>;
 
         using grid_data_type = typename base_type::grid_data_type;
