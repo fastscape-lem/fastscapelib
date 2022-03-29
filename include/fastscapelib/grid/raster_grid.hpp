@@ -399,6 +399,7 @@ namespace fastscapelib
 
         using code_type = std::uint8_t;
 
+        using neighbors_cache_type = C;
         using neighbors_count_type = typename raster_neighbors_base::neighbors_count_type;
         using neighbors_distances_impl_type = typename std::array<distance_type, max_neighbors>;
 
@@ -417,13 +418,12 @@ namespace fastscapelib
               raster_connect RC,
               class C = neighbors_cache<raster_neighbors<RC>::max_neighbors()>>
     class raster_grid_xt
-        : public structured_grid<raster_grid_xt<S, RC, C>, C>
+        : public structured_grid<raster_grid_xt<S, RC, C>>
         , public raster_neighbors<RC>
     {
     public:
         using self_type = raster_grid_xt<S, RC, C>;
-        using base_type = structured_grid<self_type, C>;
-        using neighbors_cache_type = C;
+        using base_type = structured_grid<self_type>;
         using inner_types = grid_inner_types<self_type>;
 
         using xt_selector = typename inner_types::xt_selector;
@@ -543,8 +543,8 @@ namespace fastscapelib
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                     const size_type& idx) const;
 
-        friend class structured_grid<self_type, neighbors_cache_type>;
-        friend class grid<self_type, neighbors_cache_type>;
+        friend class structured_grid<self_type>;
+        friend class grid<self_type>;
     };
 
     /**

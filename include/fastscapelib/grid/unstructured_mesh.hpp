@@ -27,6 +27,7 @@ namespace fastscapelib
         using shape_type = typename xt_type::shape_type;
         using distance_type = double;
 
+        using neighbors_cache_type = C;
         using neighbors_count_type = std::uint8_t;
         using neighbors_distances_impl_type = typename std::array<distance_type, max_neighbors>;
 
@@ -41,12 +42,11 @@ namespace fastscapelib
      * @tparam C Grid neighbors cache type.
      */
     template <class S, class C = neighbors_no_cache<50>>
-    class unstructured_mesh_xt : public grid<unstructured_mesh_xt<S, C>, C>
+    class unstructured_mesh_xt : public grid<unstructured_mesh_xt<S, C>>
     {
     public:
         using self_type = unstructured_mesh_xt<S, C>;
-        using base_type = grid<self_type, C>;
-        using neighbors_cache_type = C;
+        using base_type = grid<self_type>;
         using inner_types = grid_inner_types<self_type>;
 
         using xt_selector = typename inner_types::xt_selector;
@@ -88,7 +88,7 @@ namespace fastscapelib
 
         const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx) const;
 
-        friend class grid<self_type, neighbors_cache_type>;
+        friend class grid<self_type>;
     };
 
     /**

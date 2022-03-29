@@ -118,6 +118,7 @@ namespace fastscapelib
 
         using code_type = std::uint8_t;
 
+        using neighbors_cache_type = C;
         using neighbors_count_type = std::uint8_t;
         using neighbors_distances_impl_type = typename std::array<distance_type, max_neighbors>;
 
@@ -135,12 +136,11 @@ namespace fastscapelib
      * @tparam C Grid neighbors cache type.
      */
     template <class S, class C = neighbors_cache<2>>
-    class profile_grid_xt : public structured_grid<profile_grid_xt<S, C>, C>
+    class profile_grid_xt : public structured_grid<profile_grid_xt<S, C>>
     {
     public:
         using self_type = profile_grid_xt<S, C>;
-        using base_type = structured_grid<self_type, C>;
-        using neighbors_cache_type = C;
+        using base_type = structured_grid<self_type>;
         using inner_types = grid_inner_types<self_type>;
 
         using xt_selector = typename inner_types::xt_selector;
@@ -215,8 +215,8 @@ namespace fastscapelib
 
         const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx) const;
 
-        friend class structured_grid<self_type, neighbors_cache_type>;
-        friend class grid<self_type, neighbors_cache_type>;
+        friend class structured_grid<self_type>;
+        friend class grid<self_type>;
     };
 
     template <class S, class C>
