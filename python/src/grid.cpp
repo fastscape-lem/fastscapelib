@@ -66,7 +66,7 @@ add_grid_bindings(py::module& m)
 
     pgrid.def(py::init<fs::py_profile_grid::size_type,
                        fs::py_profile_grid::spacing_type,
-                       const fs::py_profile_grid::boundary_status_type&,
+                       const fs::profile_boundary_status&,
                        const std::vector<fs::node>>());
     pgrid.def(py::init(
         [](std::size_t size,
@@ -130,13 +130,13 @@ add_grid_bindings(py::module& m)
 
     rgrid.def(py::init<const fs::py_raster_grid::shape_type&,
                        const xt::pytensor<double, 1>&,
-                       const fs::py_raster_grid::boundary_status_type&,
+                       const fs::raster_boundary_status&,
                        const std::vector<fs::raster_node>>());
 
     rgrid.def_static("from_length",
                      [](const fs::py_raster_grid::shape_type& shape,
                         const xt::pytensor<double, 1>& length,
-                        const fs::py_raster_grid::boundary_status_type& boundary,
+                        const fs::raster_boundary_status& boundary,
                         const std::vector<fs::raster_node> status)
                      { return fs::py_raster_grid::from_length(shape, length, boundary, status); });
 

@@ -150,11 +150,7 @@ namespace fastscapelib
     template <>
     struct raster_neighbors<raster_connect::queen> : public raster_neighbors_base
     {
-        // TODO: understand why using a static constexpr raises a linker error on CI
-        static constexpr std::uint8_t max_neighbors()
-        {
-            return 8u;
-        }
+        static constexpr std::uint8_t _max_neighbors = 8u;
 
         neighbors_offsets_type node_neighbors_offsets(std::ptrdiff_t up,
                                                       std::ptrdiff_t down,
@@ -228,10 +224,7 @@ namespace fastscapelib
     template <>
     struct raster_neighbors<raster_connect::rook> : public raster_neighbors_base
     {
-        static constexpr std::uint8_t max_neighbors()
-        {
-            return 4u;
-        }
+        static constexpr std::uint8_t _max_neighbors = 4u;
 
         neighbors_offsets_type node_neighbors_offsets(std::ptrdiff_t up,
                                                       std::ptrdiff_t down,
@@ -300,10 +293,7 @@ namespace fastscapelib
     template <>
     struct raster_neighbors<raster_connect::bishop> : public raster_neighbors_base
     {
-        static constexpr std::uint8_t max_neighbors()
-        {
-            return 4u;
-        }
+        static constexpr std::uint8_t _max_neighbors = 4u;
 
         neighbors_offsets_type node_neighbors_offsets(std::ptrdiff_t up,
                                                       std::ptrdiff_t down,
@@ -385,28 +375,20 @@ namespace fastscapelib
     {
         static constexpr bool is_structured = true;
         static constexpr bool is_uniform = true;
-        static constexpr uint8_t max_neighbors = raster_neighbors<RC>::max_neighbors();
-        static constexpr std::size_t xt_ndims = 2;
+
+        using grid_data_type = double;
 
         using xt_selector = S;
-        using xt_type = xt_tensor_t<xt_selector, int, xt_ndims>;
+        static constexpr std::size_t xt_ndims = 2;
 
-        using size_type = typename xt_type::size_type;
-        using shape_type = typename xt_type::shape_type;
-        using distance_type = double;
-        using length_type = xt::xtensor_fixed<distance_type, xt::xshape<2>>;
-        using spacing_type = length_type;
-
-        using code_type = std::uint8_t;
-
+        static constexpr uint8_t max_neighbors = raster_neighbors<RC>::_max_neighbors;
         using neighbors_cache_type = C;
         using neighbors_count_type = typename raster_neighbors_base::neighbors_count_type;
-        using neighbors_distances_impl_type = typename std::array<distance_type, max_neighbors>;
 
-        using boundary_status_type = raster_boundary_status;
-        using node_status_type = xt_tensor_t<xt_selector, node_status, xt_ndims>;
+        // structured_grid types
+        using length_type = xt::xtensor_fixed<grid_data_type, xt::xshape<2>>;
+        using spacing_type = xt::xtensor_fixed<grid_data_type, xt::xshape<2>>;
     };
-
 
     /**
      * @class raster_grid_xt
@@ -418,7 +400,7 @@ namespace fastscapelib
      */
     template <class S,
               raster_connect RC,
-              class C = neighbors_cache<raster_neighbors<RC>::max_neighbors()>>
+              class C = neighbors_cache<raster_neighbors<RC>::_max_neighbors>>
     class raster_grid_xt
         : public structured_grid<raster_grid_xt<S, RC, C>>
         , public raster_neighbors<RC>
@@ -426,44 +408,38 @@ namespace fastscapelib
     public:
         using self_type = raster_grid_xt<S, RC, C>;
         using base_type = structured_grid<self_type>;
-        using inner_types = grid_inner_types<self_type>;
 
-        using xt_selector = typename inner_types::xt_selector;
-        static constexpr std::size_t xt_ndims = inner_types::xt_ndims;
-        static constexpr std::uint8_t max_neighbors()
-        {
-            return inner_types::max_neighbors;
-        };
+        using grid_data_type = typename base_type::grid_data_type;
 
-        using size_type = typename inner_types::size_type;
-        using shape_type = typename inner_types::shape_type;
-        using length_type = typename inner_types::length_type;
-        using spacing_type = typename inner_types::spacing_type;
-        using distance_type = typename inner_types::distance_type;
+        using xt_selector = typename base_type::xt_selector;
+        using size_type = typename base_type::size_type;
+        using shape_type = typename base_type::shape_type;
 
-        using code_type = typename inner_types::code_type;
+        using length_type = typename base_type::length_type;
+        using spacing_type = typename base_type::spacing_type;
+
+        using code_type = std::uint8_t;
 
         // row, col index pair
         using raster_idx_type = std::pair<size_type, size_type>;
 
         using neighbors_type = typename base_type::neighbors_type;
-        using neighbors_count_type = typename inner_types::neighbors_count_type;
+        using neighbors_count_type = typename base_type::neighbors_count_type;
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
         using neighbors_distances_type = typename base_type::neighbors_distances_type;
         using neighbors_indices_raster_type = std::vector<raster_idx_type>;
         using neighbors_raster_type = std::vector<raster_neighbor>;
 
-        using boundary_status_type = typename inner_types::boundary_status_type;
-        using node_status_type = typename inner_types::node_status_type;
+        using node_status_type = typename base_type::node_status_type;
 
         raster_grid_xt(const shape_type& shape,
                        const spacing_type& spacing,
-                       const boundary_status_type& status_at_bounds,
+                       const raster_boundary_status& status_at_bounds,
                        const std::vector<raster_node>& status_at_nodes = {});
 
         static raster_grid_xt from_length(const shape_type& shape,
                                           const length_type& length,
-                                          const boundary_status_type& status_at_bounds,
+                                          const raster_boundary_status& status_at_bounds,
                                           const std::vector<raster_node>& status_at_nodes = {});
 
         template <raster_connect RCA, class CA = C>
@@ -493,10 +469,10 @@ namespace fastscapelib
 
         shape_type shape() const noexcept;
 
-        boundary_status_type status_at_bounds() const noexcept;
+        raster_boundary_status status_at_bounds() const noexcept;
 
     private:
-        using neighbors_distances_impl_type = typename inner_types::neighbors_distances_impl_type;
+        using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
         using neighbors_indices_impl_type = typename base_type::neighbors_indices_impl_type;
         using neighbors_offsets_type = typename raster_neighbors<RC>::neighbors_offsets_type;
 
@@ -509,10 +485,10 @@ namespace fastscapelib
         size_type m_size;
         spacing_type m_spacing;
         length_type m_length;
-        distance_type m_node_area;
+        grid_data_type m_node_area;
 
         node_status_type m_status_at_nodes;
-        boundary_status_type m_status_at_bounds;
+        raster_boundary_status m_status_at_bounds;
 
         struct corner_node
         {
@@ -564,7 +540,7 @@ namespace fastscapelib
     template <class S, raster_connect RC, class C>
     raster_grid_xt<S, RC, C>::raster_grid_xt(const shape_type& shape,
                                              const spacing_type& spacing,
-                                             const boundary_status_type& status_at_bounds,
+                                             const raster_boundary_status& status_at_bounds,
                                              const std::vector<raster_node>& status_at_nodes)
         : base_type(shape[0] * shape[1])
         , m_shape(shape)
@@ -601,7 +577,7 @@ namespace fastscapelib
     raster_grid_xt<S, RC, C> raster_grid_xt<S, RC, C>::from_length(
         const shape_type& shape,
         const length_type& length,
-        const boundary_status_type& status_at_bounds,
+        const raster_boundary_status& status_at_bounds,
         const std::vector<raster_node>& status_at_nodes)
     {
         spacing_type spacing = length / (xt::adapt(shape) - 1);
@@ -644,7 +620,7 @@ namespace fastscapelib
     }
 
     template <class S, raster_connect RC, class C>
-    auto raster_grid_xt<S, RC, C>::status_at_bounds() const noexcept -> boundary_status_type
+    auto raster_grid_xt<S, RC, C>::status_at_bounds() const noexcept -> raster_boundary_status
     {
         return m_status_at_bounds;
     }

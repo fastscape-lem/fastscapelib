@@ -16,22 +16,15 @@ namespace fastscapelib
     {
         static constexpr bool is_structured = false;
         static constexpr bool is_uniform = false;
-        static constexpr uint8_t max_neighbors = 50;
-        static constexpr std::size_t xt_ndims = 1;
+
+        using grid_data_type = double;
 
         using xt_selector = S;
-        using xt_type = xt_tensor_t<xt_selector, int, xt_ndims>;
-        using field_data_type = double;
+        static constexpr std::size_t xt_ndims = 1;
 
-        using size_type = typename xt_type::size_type;
-        using shape_type = typename xt_type::shape_type;
-        using distance_type = double;
-
+        static constexpr uint8_t max_neighbors = 50u;
         using neighbors_cache_type = C;
         using neighbors_count_type = std::uint8_t;
-        using neighbors_distances_impl_type = typename std::array<distance_type, max_neighbors>;
-
-        using node_status_type = xt_tensor_t<xt_selector, node_status, xt_ndims>;
     };
 
     /**
@@ -47,36 +40,30 @@ namespace fastscapelib
     public:
         using self_type = unstructured_mesh_xt<S, C>;
         using base_type = grid<self_type>;
-        using inner_types = grid_inner_types<self_type>;
 
-        using xt_selector = typename inner_types::xt_selector;
-        static constexpr std::size_t xt_ndims = inner_types::xt_ndims;
-        static constexpr std::uint8_t max_neighbors()
-        {
-            return inner_types::max_neighbors;
-        };
+        using grid_data_type = typename base_type::grid_data_type;
 
-        using size_type = typename inner_types::size_type;
-        using shape_type = typename inner_types::shape_type;
-        using distance_type = typename inner_types::distance_type;
+        using xt_selector = typename base_type::xt_selector;
+        using size_type = typename base_type::size_type;
+        using shape_type = typename base_type::shape_type;
 
         using neighbors_type = typename base_type::neighbors_type;
-        using neighbors_count_type = typename inner_types::neighbors_count_type;
+        using neighbors_count_type = typename base_type::neighbors_count_type;
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
         using neighbors_distances_type = typename base_type::neighbors_distances_type;
 
-        using node_status_type = typename inner_types::node_status_type;
+        using node_status_type = typename base_type::node_status_type;
 
         unstructured_mesh_xt()
             : base_type(0){};
 
     protected:
-        using neighbors_distances_impl_type = typename inner_types::neighbors_distances_impl_type;
+        using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
         using neighbors_indices_impl_type = typename base_type::neighbors_indices_impl_type;
 
         shape_type m_shape;
         size_type m_size;
-        distance_type m_node_area;
+        grid_data_type m_node_area;
 
         node_status_type m_status_at_nodes;
 

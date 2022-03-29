@@ -297,13 +297,25 @@ namespace fastscapelib
         using derived_grid_type = G;
         using inner_types = grid_inner_types<derived_grid_type>;
 
-        using size_type = typename inner_types::size_type;
-        using distance_type = typename inner_types::distance_type;
+        using grid_data_type = typename inner_types::grid_data_type;
 
         using xt_selector = typename inner_types::xt_selector;
+        static constexpr std::size_t xt_ndims()
+        {
+            return inner_types::xt_ndims;
+        }
+        using xt_type = xt_tensor_t<xt_selector, grid_data_type, xt_ndims()>;
+
+        using size_type = typename xt_type::size_type;
+        using shape_type = typename xt_type::shape_type;
 
         using neighbors_cache_type = typename inner_types::neighbors_cache_type;
-        static_assert(neighbors_cache_type::cache_width >= inner_types::max_neighbors,
+
+        static constexpr std::uint8_t max_neighbors()
+        {
+            return inner_types::max_neighbors;
+        };
+        static_assert(neighbors_cache_type::cache_width >= max_neighbors(),
                       "Cache width is too small!");
 
         using neighbors_type = std::vector<neighbor>;
@@ -311,15 +323,15 @@ namespace fastscapelib
         // using xt:xtensor for indices as not all containers support resizing
         // (e.g., using pyarray may cause segmentation faults with Python)
         using neighbors_indices_type = xt::xtensor<size_type, 1>;
-        using neighbors_distances_type = xt_tensor_t<xt_selector, distance_type, 1>;
+        using neighbors_distances_type = xt_tensor_t<xt_selector, grid_data_type, 1>;
 
-        using node_status_type = typename inner_types::node_status_type;
+        using node_status_type = xt_tensor_t<xt_selector, node_status, inner_types::xt_ndims>;
 
         size_type size() const noexcept;
 
         const node_status_type& status_at_nodes() const;
 
-        distance_type node_area(const size_type& idx) const noexcept;
+        grid_data_type node_area(const size_type& idx) const noexcept;
 
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
 
@@ -381,7 +393,8 @@ namespace fastscapelib
 
     protected:
         using neighbors_indices_impl_type = typename neighbors_cache_type::neighbors_indices_type;
-        using neighbors_distances_impl_type = typename inner_types::neighbors_distances_impl_type;
+        using neighbors_distances_impl_type =
+            typename std::array<grid_data_type, inner_types::max_neighbors>;
 
         grid(std::size_t size)
             : m_neighbors_indices_cache(neighbors_cache_type(size)){};
@@ -440,7 +453,7 @@ namespace fastscapelib
      * Returns the drainage at grid node.
      */
     template <class G>
-    inline auto grid<G>::node_area(const size_type& /*idx*/) const noexcept -> distance_type
+    inline auto grid<G>::node_area(const size_type& /*idx*/) const noexcept -> grid_data_type
     {
         return derived_grid().m_node_area;
     }

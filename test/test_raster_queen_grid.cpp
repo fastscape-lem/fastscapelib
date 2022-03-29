@@ -307,10 +307,10 @@ namespace fastscapelib
 
         TEST_F(queen_raster_grid_fixed, neighbors_distances)
         {
-            using distance_type = grid_type::distance_type;
+            using grid_data_type = grid_type::grid_data_type;
             using neighbors_distances_type = grid_type::neighbors_distances_type;
 
-            distance_type dia = std::sqrt(1.2 * 1.2 + 1.3 * 1.3);
+            grid_data_type dia = std::sqrt(1.2 * 1.2 + 1.3 * 1.3);
 
             // Top-left corner
             EXPECT_EQ(queen_fixed.neighbors_distances(0),
@@ -333,10 +333,10 @@ namespace fastscapelib
 
         TEST_F(queen_raster_grid_looped, neighbors_distances)
         {
-            using distance_type = grid_type::distance_type;
+            using grid_data_type = grid_type::grid_data_type;
             using neighbors_distances_type = grid_type::neighbors_distances_type;
 
-            distance_type dia = std::sqrt(1.4 * 1.4 + 1.8 * 1.8);
+            grid_data_type dia = std::sqrt(1.4 * 1.4 + 1.8 * 1.8);
 
             for (std::size_t r = 0; r < 5; ++r)
             {

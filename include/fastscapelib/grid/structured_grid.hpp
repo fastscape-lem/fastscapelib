@@ -51,10 +51,10 @@ namespace fastscapelib
     class structured_grid : public grid<G>
     {
     public:
+        using base_type = grid<G>;
         using inner_types = grid_inner_types<G>;
 
-        using size_type = typename inner_types::size_type;
-        using shape_type = typename inner_types::shape_type;
+        using shape_type = typename base_type::shape_type;
         using length_type = typename inner_types::length_type;
         using spacing_type = typename inner_types::spacing_type;
 
