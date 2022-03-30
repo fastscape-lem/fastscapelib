@@ -87,6 +87,14 @@ namespace fastscapelib
             EXPECT_TRUE(looped_status.is_horizontal_looped());
         }
 
+        TEST_F(profile_grid, static_expr)
+        {
+            EXPECT_EQ(fs::profile_grid::is_structured(), true);
+            EXPECT_EQ(fs::profile_grid::is_uniform(), true);
+            EXPECT_EQ(fs::profile_grid::max_neighbors(), 2u);
+            EXPECT_EQ(fs::profile_grid::xt_ndims(), 1);
+        }
+
         TEST_F(profile_grid, ctor)
         {
             std::vector<fs::node> nodes_vector1{ fs::node(

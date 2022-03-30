@@ -38,7 +38,7 @@ namespace fastscapelib
         using grid_type = G;
 
         using index_type = typename grid_type::size_type;
-        using distance_type = typename grid_type::distance_type;
+        using grid_data_type = typename grid_type::grid_data_type;
         using neighbors_count_type = typename grid_type::neighbors_count_type;
 
         using elevation_type = xt_array_t<S, elev_t>;
@@ -52,7 +52,7 @@ namespace fastscapelib
         using receivers_type = donors_type;
         using receivers_count_type = donors_count_type;
         using receivers_weight_type = xt_tensor_t<S, double, 2>;
-        using receivers_distance_type = xt_tensor_t<S, distance_type, 2>;
+        using receivers_distance_type = xt_tensor_t<S, grid_data_type, 2>;
 
         using stack_type = xt_tensor_t<S, index_type, 1>;
 
@@ -73,7 +73,7 @@ namespace fastscapelib
 
             m_receivers = xt::ones<index_type>(receivers_shape) * -1;
             m_receivers_count = xt::zeros<index_type>({ grid.size() });
-            m_receivers_distance = xt::ones<distance_type>(receivers_shape) * -1;
+            m_receivers_distance = xt::ones<grid_data_type>(receivers_shape) * -1;
             m_receivers_weight = xt::zeros<double>(receivers_shape);
 
             m_donors = xt::ones<index_type>(donors_shape) * -1;

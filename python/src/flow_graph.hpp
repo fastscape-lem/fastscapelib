@@ -42,7 +42,7 @@ namespace fastscapelib
         public:
             using index_type = std::size_t;
             using neighbors_count_type = std::uint8_t;
-            using distance_type = double;
+            using grid_data_type = double;
 
             using data_type = xt_array_t<py_selector, double>;
             using donors_type = xt_tensor_t<py_selector, index_type, 2>;
@@ -51,7 +51,7 @@ namespace fastscapelib
             using receivers_type = donors_type;
             using receivers_count_type = donors_count_type;
             using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
-            using receivers_distance_type = xt_tensor_t<py_selector, distance_type, 2>;
+            using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
             using stack_type = xt_tensor_t<py_selector, index_type, 1>;
 
@@ -89,7 +89,7 @@ namespace fastscapelib
 
             using index_type = typename flow_graph_wrapper_base::index_type;
             using neighbors_count_type = typename flow_graph_wrapper_base::neighbors_count_type;
-            using distance_type = typename flow_graph_wrapper_base::distance_type;
+            using grid_data_type = typename flow_graph_wrapper_base::grid_data_type;
             using data_type = typename flow_graph_wrapper_base::data_type;
             using donors_type = typename flow_graph_wrapper_base::donors_type;
             using donors_count_type = typename flow_graph_wrapper_base::donors_count_type;
@@ -196,7 +196,7 @@ namespace fastscapelib
 
             using index_type = std::size_t;
             using neighbors_count_type = std::uint8_t;
-            using distance_type = double;
+            using grid_data_type = double;
 
             using data_type = xt_array_t<py_selector, double>;
             using donors_type = xt_tensor_t<py_selector, index_type, 2>;
@@ -205,7 +205,7 @@ namespace fastscapelib
             using receivers_type = donors_type;
             using receivers_count_type = donors_count_type;
             using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
-            using receivers_distance_type = xt_tensor_t<py_selector, distance_type, 2>;
+            using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
             using stack_type = xt_tensor_t<py_selector, index_type, 1>;
 
