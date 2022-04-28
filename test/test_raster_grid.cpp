@@ -71,6 +71,14 @@ namespace fastscapelib
                          std::invalid_argument);
         }
 
+        TEST_F(raster_grid, static_expr)
+        {
+            EXPECT_EQ(fs::raster_grid::is_structured(), true);
+            EXPECT_EQ(fs::raster_grid::is_uniform(), true);
+            EXPECT_EQ(fs::raster_grid::max_neighbors(), 8u);
+            EXPECT_EQ(fs::raster_grid::xt_ndims(), 2);
+        }
+
         TEST_F(raster_grid, spacing)
         {
             EXPECT_TRUE(xt::all(xt::equal(fixed_grid.spacing(), spacing_type({ 1.3, 1.2 }))));
@@ -110,7 +118,7 @@ namespace fastscapelib
 
         TEST_F(raster_grid, clone)
         {
-            using queen_type = fs::raster_grid_xt<fs::xtensor_selector, fs::raster_connect::queen>;
+            using queen_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::queen>;
             using neighbors_type = std::vector<fs::neighbor>;
 
             double d1 = std::sqrt(1.3 * 1.3 + 1.2 * 1.2);

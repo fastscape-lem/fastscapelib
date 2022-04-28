@@ -107,6 +107,11 @@ class TestRasterGrid:
             [5, 10], [2.2, 2.4], bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)]
         )
 
+    def test_static_props(self):
+        assert RasterGrid.is_structured is True
+        assert RasterGrid.is_uniform is True
+        assert RasterGrid.max_neighbors == 8
+
     def test___init__(self):
         g1 = RasterGrid(
             [10, 10],

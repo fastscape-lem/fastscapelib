@@ -78,6 +78,11 @@ class TestProfileGrid:
         self.bs = [NodeStatus.FIXED_VALUE_BOUNDARY] * 2
         self.g = ProfileGrid(10, 2.2, self.bs, [(5, NodeStatus.FIXED_VALUE_BOUNDARY)])
 
+    def test_static_props(self):
+        assert ProfileGrid.is_structured is True
+        assert ProfileGrid.is_uniform is True
+        assert ProfileGrid.max_neighbors == 2
+
     def test___init__(self):
         g = ProfileGrid(10, 2, self.bs, [(5, NodeStatus.FIXED_VALUE_BOUNDARY)])
         assert g.size == 10

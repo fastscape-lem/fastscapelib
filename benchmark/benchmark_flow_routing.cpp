@@ -88,23 +88,23 @@ namespace fastscapelib
             }
         }
 
-        using profile_nocache = fs::profile_grid_xt<xtensor_selector, neighbors_no_cache<2>>;
+        using profile_nocache = fs::profile_grid_xt<xt_selector, neighbors_no_cache<2>>;
         using profile_cacheall = fs::profile_grid;
 
         using queen_nocache
-            = fs::raster_grid_xt<xtensor_selector, raster_connect::queen, neighbors_no_cache<8>>;
+            = fs::raster_grid_xt<xt_selector, raster_connect::queen, neighbors_no_cache<8>>;
         using queen_cacheall
-            = fs::raster_grid_xt<xtensor_selector, raster_connect::queen, neighbors_cache<8>>;
+            = fs::raster_grid_xt<xt_selector, raster_connect::queen, neighbors_cache<8>>;
 
         using rook_nocache
-            = fs::raster_grid_xt<xtensor_selector, raster_connect::rook, neighbors_no_cache<4>>;
+            = fs::raster_grid_xt<xt_selector, raster_connect::rook, neighbors_no_cache<4>>;
         using rook_cacheall
-            = fs::raster_grid_xt<xtensor_selector, raster_connect::rook, neighbors_cache<4>>;
+            = fs::raster_grid_xt<xt_selector, raster_connect::rook, neighbors_cache<4>>;
 
         using bishop_nocache
-            = fs::raster_grid_xt<xtensor_selector, raster_connect::bishop, neighbors_no_cache<4>>;
+            = fs::raster_grid_xt<xt_selector, raster_connect::bishop, neighbors_no_cache<4>>;
         using bishop_cacheall
-            = fs::raster_grid_xt<xtensor_selector, raster_connect::bishop, neighbors_cache<4>>;
+            = fs::raster_grid_xt<xt_selector, raster_connect::bishop, neighbors_cache<4>>;
 
 
 #define BENCH_GRID(NAME, GRID)                                                                     \

@@ -289,38 +289,62 @@ namespace fastscapelib
      * is delegated to the inheriting classes.
      *
      * @tparam G Derived grid type.
-     * @tparam C Grid neighbors cache type.
      */
-    template <class G, class C>
+    template <class G>
     class grid
     {
     public:
         using derived_grid_type = G;
         using inner_types = grid_inner_types<derived_grid_type>;
 
-        using neighbors_cache_type = C;
+        static constexpr bool is_structured()
+        {
+            return inner_types::is_structured;
+        }
 
-        static_assert(neighbors_cache_type::cache_width >= inner_types::max_neighbors,
-                      "Cache width is too small!");
+        static constexpr bool is_uniform()
+        {
+            return inner_types::is_uniform;
+        }
 
-        using size_type = typename inner_types::size_type;
-        using distance_type = typename inner_types::distance_type;
+        using grid_data_type = typename inner_types::grid_data_type;
 
         using xt_selector = typename inner_types::xt_selector;
+
+        static constexpr std::size_t xt_ndims()
+        {
+            return inner_types::xt_ndims;
+        }
+
+        using xt_type = xt_tensor_t<xt_selector, grid_data_type, xt_ndims()>;
+
+        using size_type = typename xt_type::size_type;
+        using shape_type = typename xt_type::shape_type;
+
+        using neighbors_cache_type = typename inner_types::neighbors_cache_type;
+
+        static constexpr std::uint8_t max_neighbors()
+        {
+            return inner_types::max_neighbors;
+        }
+
+        static_assert(neighbors_cache_type::cache_width >= max_neighbors(),
+                      "Cache width is too small!");
+
         using neighbors_type = std::vector<neighbor>;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
         // using xt:xtensor for indices as not all containers support resizing
         // (e.g., using pyarray may cause segmentation faults with Python)
         using neighbors_indices_type = xt::xtensor<size_type, 1>;
-        using neighbors_distances_type = xt_container_t<xt_selector, distance_type, 1>;
+        using neighbors_distances_type = xt_tensor_t<xt_selector, grid_data_type, 1>;
 
-        using node_status_type = typename inner_types::node_status_type;
+        using node_status_type = xt_tensor_t<xt_selector, node_status, inner_types::xt_ndims>;
 
         size_type size() const noexcept;
 
         const node_status_type& status_at_nodes() const;
 
-        distance_type node_area(const size_type& idx) const noexcept;
+        grid_data_type node_area(const size_type& idx) const noexcept;
 
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
 
@@ -381,8 +405,9 @@ namespace fastscapelib
         };
 
     protected:
-        using neighbors_indices_impl_type = typename C::neighbors_indices_type;
-        using neighbors_distances_impl_type = typename inner_types::neighbors_distances_impl_type;
+        using neighbors_indices_impl_type = typename neighbors_cache_type::neighbors_indices_type;
+        using neighbors_distances_impl_type =
+            typename std::array<grid_data_type, inner_types::max_neighbors>;
 
         grid(std::size_t size)
             : m_neighbors_indices_cache(neighbors_cache_type(size)){};
@@ -403,14 +428,14 @@ namespace fastscapelib
     };
 
 
-    template <class G, class C>
-    inline auto grid<G, C>::derived_grid() const noexcept -> const derived_grid_type&
+    template <class G>
+    inline auto grid<G>::derived_grid() const noexcept -> const derived_grid_type&
     {
         return *static_cast<const derived_grid_type*>(this);
     }
 
-    template <class G, class C>
-    inline auto grid<G, C>::derived_grid() noexcept -> derived_grid_type&
+    template <class G>
+    inline auto grid<G>::derived_grid() noexcept -> derived_grid_type&
     {
         return *static_cast<derived_grid_type*>(this);
     }
@@ -422,8 +447,8 @@ namespace fastscapelib
     /**
      * Returns the total number of grid nodes.
      */
-    template <class G, class C>
-    inline auto grid<G, C>::size() const noexcept -> size_type
+    template <class G>
+    inline auto grid<G>::size() const noexcept -> size_type
     {
         return derived_grid().m_size;
     }
@@ -431,8 +456,8 @@ namespace fastscapelib
     /**
      * Returns a constant reference to the array of status at grid nodes.
      */
-    template <class G, class C>
-    inline auto grid<G, C>::status_at_nodes() const -> const node_status_type&
+    template <class G>
+    inline auto grid<G>::status_at_nodes() const -> const node_status_type&
     {
         return derived_grid().m_status_at_nodes;
     }
@@ -440,8 +465,8 @@ namespace fastscapelib
     /**
      * Returns the drainage at grid node.
      */
-    template <class G, class C>
-    inline auto grid<G, C>::node_area(const size_type& /*idx*/) const noexcept -> distance_type
+    template <class G>
+    inline auto grid<G>::node_area(const size_type& /*idx*/) const noexcept -> grid_data_type
     {
         return derived_grid().m_node_area;
     }
@@ -451,15 +476,14 @@ namespace fastscapelib
      *
      * @param idx Index of the grid node.
      */
-    template <class G, class C>
-    inline auto grid<G, C>::neighbors_count(const size_type& idx) const
-        -> const neighbors_count_type&
+    template <class G>
+    inline auto grid<G>::neighbors_count(const size_type& idx) const -> const neighbors_count_type&
     {
         return derived_grid().neighbors_count(idx);
     }
 
-    template <class G, class C>
-    inline auto grid<G, C>::neighbors_indices(const size_type& idx) -> neighbors_indices_type
+    template <class G>
+    inline auto grid<G>::neighbors_indices(const size_type& idx) -> neighbors_indices_type
     {
         neighbors_indices_type indices = xt::adapt(neighbors_indices_cache(idx));
         auto view = xt::view(indices, xt::range(0, neighbors_count(idx)));
@@ -467,9 +491,8 @@ namespace fastscapelib
         return view;
     }
 
-    template <class G, class C>
-    inline auto grid<G, C>::neighbors_distances(const size_type& idx) const
-        -> neighbors_distances_type
+    template <class G>
+    inline auto grid<G>::neighbors_distances(const size_type& idx) const -> neighbors_distances_type
     {
         neighbors_distances_type distances = xt::adapt(neighbors_distances_impl(idx));
         auto view = xt::view(distances, xt::range(0, neighbors_count(idx)));
@@ -488,8 +511,8 @@ namespace fastscapelib
      * @param idx Index of the grid node.
      * @return The vector of the neighbors of that grid node.
      */
-    template <class G, class C>
-    inline auto grid<G, C>::neighbors(const size_type& idx) -> neighbors_type
+    template <class G>
+    inline auto grid<G>::neighbors(const size_type& idx) -> neighbors_type
     {
         neighbors_type nb;
         neighbors(idx, nb);
@@ -506,9 +529,9 @@ namespace fastscapelib
      * @param neighbors_indices Reference to the vector to be filled with the neighbors
      *                          indices of that grid node.
      */
-    template <class G, class C>
-    inline auto grid<G, C>::neighbors_indices(const size_type& idx,
-                                              neighbors_indices_type& neighbors_indices)
+    template <class G>
+    inline auto grid<G>::neighbors_indices(const size_type& idx,
+                                           neighbors_indices_type& neighbors_indices)
         -> neighbors_indices_type&
     {
         const auto& n_count = neighbors_count(idx);
@@ -535,8 +558,8 @@ namespace fastscapelib
      * @param idx Index of the grid node.
      * @param neighbors Reference to the vector to be filled with the neighbors of that grid node.
      */
-    template <class G, class C>
-    inline auto grid<G, C>::neighbors(const size_type& idx, neighbors_type& neighbors)
+    template <class G>
+    inline auto grid<G>::neighbors(const size_type& idx, neighbors_type& neighbors)
         -> neighbors_type&
     {
         size_type n_idx;
@@ -565,8 +588,8 @@ namespace fastscapelib
      * @param idx Index of the grid node.
      * @return Reference to the array of the neighbors indices of that grid node.
      */
-    template <class G, class C>
-    inline auto grid<G, C>::neighbors_indices_cache(const size_type& idx)
+    template <class G>
+    inline auto grid<G>::neighbors_indices_cache(const size_type& idx)
         -> const neighbors_indices_impl_type&
     {
         if (m_neighbors_indices_cache.has(idx))
@@ -582,15 +605,15 @@ namespace fastscapelib
         }
     }
 
-    template <class G, class C>
-    inline auto grid<G, C>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
-                                                   const size_type& idx) const -> void
+    template <class G>
+    inline auto grid<G>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
+                                                const size_type& idx) const -> void
     {
         return derived_grid().neighbors_indices_impl(neighbors, idx);
     }
 
-    template <class G, class C>
-    inline auto grid<G, C>::neighbors_distances_impl(const size_type& idx) const
+    template <class G>
+    inline auto grid<G>::neighbors_distances_impl(const size_type& idx) const
         -> const neighbors_distances_impl_type&
     {
         return derived_grid().neighbors_distances_impl(idx);

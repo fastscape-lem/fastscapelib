@@ -42,18 +42,18 @@ namespace fastscapelib
         public:
             using index_type = std::size_t;
             using neighbors_count_type = std::uint8_t;
-            using distance_type = double;
+            using grid_data_type = double;
 
-            using data_type = xt_container_t<pyarray_selector, double>;
-            using donors_type = xt_container_t<pyarray_selector, index_type>;
-            using donors_count_type = xt_container_t<pyarray_selector, neighbors_count_type>;
+            using data_type = xt_array_t<py_selector, double>;
+            using donors_type = xt_tensor_t<py_selector, index_type, 2>;
+            using donors_count_type = xt_tensor_t<py_selector, neighbors_count_type, 1>;
 
             using receivers_type = donors_type;
             using receivers_count_type = donors_count_type;
-            using receivers_weight_type = xt_container_t<pyarray_selector, double>;
-            using receivers_distance_type = xt_container_t<pyarray_selector, distance_type>;
+            using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
+            using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
-            using stack_type = xt_container_t<pyarray_selector, index_type>;
+            using stack_type = xt_tensor_t<py_selector, index_type, 1>;
 
 
             virtual ~flow_graph_wrapper_base(){};
@@ -85,11 +85,11 @@ namespace fastscapelib
         class flow_graph_wrapper : public flow_graph_wrapper_base
         {
         public:
-            using wrapped_type = fs::flow_graph<G, double, fs::pyarray_selector>;
+            using wrapped_type = fs::flow_graph<G, double, fs::py_selector>;
 
             using index_type = typename flow_graph_wrapper_base::index_type;
             using neighbors_count_type = typename flow_graph_wrapper_base::neighbors_count_type;
-            using distance_type = typename flow_graph_wrapper_base::distance_type;
+            using grid_data_type = typename flow_graph_wrapper_base::grid_data_type;
             using data_type = typename flow_graph_wrapper_base::data_type;
             using donors_type = typename flow_graph_wrapper_base::donors_type;
             using donors_count_type = typename flow_graph_wrapper_base::donors_count_type;
@@ -196,18 +196,18 @@ namespace fastscapelib
 
             using index_type = std::size_t;
             using neighbors_count_type = std::uint8_t;
-            using distance_type = double;
+            using grid_data_type = double;
 
-            using data_type = xt_container_t<pyarray_selector, double>;
-            using donors_type = xt_container_t<pyarray_selector, index_type>;
-            using donors_count_type = xt_container_t<pyarray_selector, neighbors_count_type>;
+            using data_type = xt_array_t<py_selector, double>;
+            using donors_type = xt_tensor_t<py_selector, index_type, 2>;
+            using donors_count_type = xt_tensor_t<py_selector, neighbors_count_type, 1>;
 
             using receivers_type = donors_type;
             using receivers_count_type = donors_count_type;
-            using receivers_weight_type = xt_container_t<pyarray_selector, double>;
-            using receivers_distance_type = xt_container_t<pyarray_selector, distance_type>;
+            using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
+            using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
-            using stack_type = xt_container_t<pyarray_selector, index_type>;
+            using stack_type = xt_tensor_t<py_selector, index_type, 1>;
 
             template <class G>
             flow_graph_facade(G& obj,
@@ -218,7 +218,7 @@ namespace fastscapelib
             }
 
             template <class G>
-            fs::flow_graph<G, double, fs::pyarray_selector>& get_implementation()
+            fs::flow_graph<G, double, fs::py_selector>& get_implementation()
             {
                 auto& derived = dynamic_cast<flow_graph_wrapper<G>&>(*p_impl);
                 return derived.get_wrapped();
@@ -244,7 +244,7 @@ namespace fastscapelib
                 return p_impl->receivers_count();
             };
 
-            const data_type& receivers_distance() const
+            const receivers_distance_type& receivers_distance() const
             {
                 return p_impl->receivers_distance();
             };

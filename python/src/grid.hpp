@@ -21,9 +21,20 @@ namespace fs = fastscapelib;
 namespace fastscapelib
 {
 
-    using py_profile_grid = fs::profile_grid_xt<fs::pyarray_selector>;
-    using py_raster_grid = fs::raster_grid_xt<fs::pyarray_selector, fs::raster_connect::queen>;
-    using py_unstructured_mesh = fs::unstructured_mesh_xt<fs::pyarray_selector>;
+    using py_profile_grid = fs::profile_grid_xt<fs::py_selector>;
+    using py_raster_grid = fs::raster_grid_xt<fs::py_selector, fs::raster_connect::queen>;
+    using py_unstructured_mesh = fs::unstructured_mesh_xt<fs::py_selector>;
+
+    template <class G>
+    void add_grid_static_properties(py::class_<G>& pyg)
+    {
+        pyg.def_property_readonly_static("is_structured",
+                                         [](py::object /*self*/) { return G::is_structured(); })
+            .def_property_readonly_static("is_uniform",
+                                          [](py::object /*self*/) { return G::is_uniform(); })
+            .def_property_readonly_static("max_neighbors",
+                                          [](py::object /*self*/) { return G::max_neighbors(); });
+    }
 
     template <class G>
     class py_grid_funcs
