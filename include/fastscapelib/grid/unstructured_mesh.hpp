@@ -84,7 +84,7 @@ namespace fastscapelib
         std::array<double, grid_inner_types<self_type>::xt_ndims> m_convex_hull_indices;
         std::array<double, grid_inner_types<self_type>::xt_ndims> m_areas;
 
-        //coded_ndistances_type m_neighbor_distances;
+        // coded_ndistances_type m_neighbor_distances;
 
         node_status_type m_status_at_nodes;
 
