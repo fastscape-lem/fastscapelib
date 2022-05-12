@@ -55,8 +55,19 @@ namespace fastscapelib
 
         using node_status_type = typename base_type::node_status_type;
 
-        unstructured_mesh_xt()
-            : base_type(0){};
+        /**
+         * Does it need a self type?
+         * Why are the type classes defined in the protected area here but not in raster_grid.hpp?
+         * is it ok that neighbors_indices is overloaded?
+         */
+
+        unstructured_mesh_xt(const shape_type& points,
+                             const neighbors_count_type& neighbors_indices_ptr,
+                             const neighbors_indices_type& neighbors_indices,
+                             const neighbors_distances_type& convex_hull_indices,
+                             const size_type& areas,
+                             const node_status_type& status_at_nodes = {});
+
 
     protected:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
@@ -64,7 +75,16 @@ namespace fastscapelib
 
         shape_type m_shape;
         size_type m_size;
+        neighbors_distances_type m_spacing;
         grid_data_type m_node_area;
+
+        std::array<double, grid_inner_types<self_type>::xt_ndims> m_points;
+        std::array<double, grid_inner_types<self_type>::xt_ndims> m_neighbors_indices_ptr;
+        std::array<double, grid_inner_types<self_type>::xt_ndims> m_neighbors_indices;
+        std::array<double, grid_inner_types<self_type>::xt_ndims> m_convex_hull_indices;
+        std::array<double, grid_inner_types<self_type>::xt_ndims> m_areas;
+
+        //coded_ndistances_type m_neighbor_distances;
 
         node_status_type m_status_at_nodes;
 
