@@ -69,7 +69,7 @@ namespace fastscapelib
         template <class G>
         void register_flow_routers()
         {
-            using flow_graph_type = fs::flow_graph<G, double, py_selector>;
+            using flow_graph_type = fs::flow_graph<G, py_selector>;
             using factory = fs::detail::flow_router_factory<flow_graph_type>;
 
             factory::insert(fs::flow_router_methods::dummy,

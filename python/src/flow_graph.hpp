@@ -85,7 +85,7 @@ namespace fastscapelib
         class flow_graph_wrapper : public flow_graph_wrapper_base
         {
         public:
-            using wrapped_type = fs::flow_graph<G, double, fs::py_selector>;
+            using wrapped_type = fs::flow_graph<G, fs::py_selector>;
 
             using index_type = typename flow_graph_wrapper_base::index_type;
             using neighbors_count_type = typename flow_graph_wrapper_base::neighbors_count_type;
@@ -218,7 +218,7 @@ namespace fastscapelib
             }
 
             template <class G>
-            fs::flow_graph<G, double, fs::py_selector>& get_implementation()
+            fs::flow_graph<G, fs::py_selector>& get_implementation()
             {
                 auto& derived = dynamic_cast<flow_graph_wrapper<G>&>(*p_impl);
                 return derived.get_wrapped();

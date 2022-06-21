@@ -42,7 +42,7 @@ public:
     }
 
 protected:
-    using flow_graph_type = fs::flow_graph<fs::profile_grid, double>;
+    using flow_graph_type = fs::flow_graph<fs::profile_grid>;
     using index_type = typename flow_graph_type::index_type;
 
     index_type n_corr = 0;
@@ -229,7 +229,7 @@ TEST(erode_stream_pow, raster_grid)
 {
     namespace fs = fastscapelib;
 
-    using flow_graph_type = fs::flow_graph<fs::raster_grid, double>;
+    using flow_graph_type = fs::flow_graph<fs::raster_grid>;
     using index_type = typename flow_graph_type::index_type;
 
     {
