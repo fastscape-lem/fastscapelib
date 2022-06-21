@@ -20,4 +20,4 @@ repos:
     rev: v14.0.5
     hooks:
       - id: clang-format
-        args: [--style=file, -i]
+        args: [--style=file]
