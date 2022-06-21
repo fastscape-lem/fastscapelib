@@ -27,21 +27,20 @@ namespace fastscapelib
      * the topographic surface.
      *
      * @tparam G The grid type.
-     * @tparam elev_t Type used to store elevation values.
      * @tparam S The xtensor selector type.
      */
-    template <class G, class elev_t, class S = typename G::xt_selector>
+    template <class G, class S = typename G::xt_selector>
     class flow_graph
     {
     public:
-        using self_type = flow_graph<G, elev_t, S>;
+        using self_type = flow_graph<G, S>;
         using grid_type = G;
 
         using index_type = typename grid_type::size_type;
         using grid_data_type = typename grid_type::grid_data_type;
         using neighbors_count_type = typename grid_type::neighbors_count_type;
 
-        using elevation_type = xt_array_t<S, elev_t>;
+        using elevation_type = xt_array_t<S, grid_data_type>;
 
         template <class T>
         using data_type = xt_array_t<S, T>;
@@ -182,9 +181,9 @@ namespace fastscapelib
         friend class sink_resolver<self_type>;
     };
 
-    template <class G, class elev_t, class S>
+    template <class G, class S>
     template <class T>
-    auto flow_graph<G, elev_t, S>::accumulate(const T& data) const -> T
+    auto flow_graph<G, S>::accumulate(const T& data) const -> T
     {
         T acc = xt::zeros_like(data);
 
@@ -205,8 +204,8 @@ namespace fastscapelib
         return acc;
     }
 
-    template <class G, class elev_t, class S>
-    auto flow_graph<G, elev_t, S>::accumulate(const double& data) const -> data_type<double>
+    template <class G, class S>
+    auto flow_graph<G, S>::accumulate(const double& data) const -> data_type<double>
     {
         data_type<double> tmp = xt::ones<double>(m_grid.shape()) * data;
         return accumulate(tmp);

@@ -78,7 +78,7 @@ namespace fastscapelib
         class flow_graph : public ::testing::Test
         {
         protected:
-            using flow_graph_type = fs::flow_graph<fs::raster_grid, double>;
+            using flow_graph_type = fs::flow_graph<fs::raster_grid>;
             using grid_type = fs::raster_grid;
             using size_type = typename grid_type::size_type;
 

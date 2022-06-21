@@ -22,7 +22,7 @@ namespace fastscapelib
         protected:
             using grid_type = fs::profile_grid;
             using size_type = typename grid_type::size_type;
-            using flow_graph_type = fs::flow_graph<grid_type, double>;
+            using flow_graph_type = fs::flow_graph<grid_type>;
 
             size_type n = static_cast<size_type>(8);
 
@@ -208,7 +208,7 @@ namespace fastscapelib
         {
         protected:
             using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::queen>;
-            using flow_graph_type = fs::flow_graph<grid_type, double>;
+            using flow_graph_type = fs::flow_graph<grid_type>;
 
             grid_type fixed_grid
                 = grid_type(shape, { 1.1, 1.2 }, fs::node_status::fixed_value_boundary);
@@ -409,7 +409,7 @@ namespace fastscapelib
         {
         protected:
             using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::rook>;
-            using flow_graph_type = fs::flow_graph<grid_type, double>;
+            using flow_graph_type = fs::flow_graph<grid_type>;
 
             grid_type fixed_grid
                 = grid_type(shape, { 1.1, 1.2 }, fs::node_status::fixed_value_boundary);
@@ -617,7 +617,7 @@ namespace fastscapelib
         {
         protected:
             using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::bishop>;
-            using flow_graph_type = fs::flow_graph<grid_type, double>;
+            using flow_graph_type = fs::flow_graph<grid_type>;
 
             grid_type fixed_grid
                 = grid_type(shape, { 1.1, 1.2 }, fs::node_status::fixed_value_boundary);
