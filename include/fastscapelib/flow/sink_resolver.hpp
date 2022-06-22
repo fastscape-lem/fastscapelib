@@ -46,10 +46,8 @@ namespace fastscapelib
         sink_resolver() = default;
     };
 
-
     /**
-     * A sink resolver with no action on the
-     * the topographic surface.
+     * A sink resolver that doesn't resolve anything.
      *
      * @tparam FG The flow_graph class.
      */
@@ -73,22 +71,6 @@ namespace fastscapelib
         {
             return elevation;
         }
-    };
-
-
-    /**
-     * The possible sink resolvers.
-     *
-     */
-    enum class sink_resolver_methods
-    {
-        none = 0,
-        fill_pflood,
-        fill_mst_kruskal,
-        fill_mst_boruvka,
-        fill_auto,  // either pflood or mst depending on number of sinks
-        carve_mst_kruskal,
-        carve_mst_boruvka
     };
 }
 

@@ -249,19 +249,6 @@ namespace fastscapelib
     private:
         double p1 = 0., p2 = 0.;
     };
-
-
-    /**
-     * The possible flow routers.
-     */
-    enum class flow_router_methods
-    {
-        one_channel = 0,
-        single,
-        multiple,
-        single_parallel,
-        dummy
-    };
 }
 
 #endif

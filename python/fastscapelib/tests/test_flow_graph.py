@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.testing as npt
-import pytest
 
 from fastscapelib.flow import (
     DummyFlowRouter,
@@ -9,14 +8,7 @@ from fastscapelib.flow import (
     NoSinkResolver,
     SingleFlowRouter,
 )
-from fastscapelib.grid import (
-    Node,
-    NodeStatus,
-    ProfileGrid,
-    RasterBoundaryStatus,
-    RasterGrid,
-    RasterNode,
-)
+from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
 
 
 class TestFlowGraph:

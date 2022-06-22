@@ -5,7 +5,6 @@ import pytest
 from fastscapelib.flow import (
     DummyFlowRouter,
     FlowGraph,
-    FlowRouterMethods,
     MultipleFlowRouter,
     NoSinkResolver,
     SingleFlowRouter,
@@ -18,15 +17,6 @@ from fastscapelib.grid import (
     RasterGrid,
     RasterNode,
 )
-
-
-class TestFlowRouterMethods:
-    def test___init__(self):
-        FlowRouterMethods.ONE_CHANNEL
-        FlowRouterMethods.SINGLE
-        FlowRouterMethods.MULTIPLE
-        FlowRouterMethods.SINGLE_PARALLEL
-        FlowRouterMethods.DUMMY
 
 
 class TestDummyFlowRouter:

@@ -7,9 +7,7 @@
 
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
-#include "fastscapelib/flow/flow_router_factory.hpp"
 #include "fastscapelib/flow/sink_resolver.hpp"
-#include "fastscapelib/flow/sink_resolver_factory.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
 
 #include "flow_router.hpp"

@@ -1,6 +1,5 @@
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
-#include "fastscapelib/flow/flow_router_factory.hpp"
 #include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 
@@ -50,34 +49,6 @@ namespace fastscapelib
         {
         };
 
-
-        TEST_F(flow_router, factory)
-        {
-            using factory = fs::detail::flow_router_factory<flow_graph_type>;
-
-            bool status = factory::insert(
-                fs::flow_router_methods::dummy,
-                [](const fs::detail::flow_router_parameters&) -> factory::router_ptr_type
-                { return std::make_unique<fs::dummy_flow_router<flow_graph_type>>(); });
-            EXPECT_TRUE(status);
-
-            status = factory::insert(
-                fs::flow_router_methods::dummy,
-                [](const fs::detail::flow_router_parameters&) -> factory::router_ptr_type
-                { return std::make_unique<fs::dummy_flow_router<flow_graph_type>>(); });
-            EXPECT_FALSE(status);
-
-            auto router = fs::detail::flow_router_factory<flow_graph_type>::build(
-                fs::flow_router_methods::dummy, fs::detail::flow_router_parameters());
-            auto resolver = std::make_unique<fs::no_sink_resolver<flow_graph_type>>();
-
-            flow_graph_type graph(grid, std::move(router), std::move(resolver));
-
-            EXPECT_EQ(graph.grid().size(), 16u);  // dummy test
-
-            const auto& graph_elevation = graph.update_routes(elevation);
-            EXPECT_TRUE(xt::all(xt::equal(elevation, graph_elevation)));
-        }
 
         TEST_F(dummy_flow_router, receivers)
         {
