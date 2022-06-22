@@ -17,9 +17,8 @@ namespace fs = fastscapelib;
 void
 add_flow_graph_bindings(py::module& m)
 {
-    using py_flow_graph = fs::detail::flow_graph_facade;
+    using py_flow_graph = fs::detail::py_flow_graph;
 
-    // ==== Binding of the FlowGraph class ==== //
     py::class_<py_flow_graph>(m, "FlowGraph")
         .def(py::init<fs::py_profile_grid&,
                       fs::detail::py_flow_router&,

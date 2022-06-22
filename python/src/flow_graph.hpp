@@ -24,15 +24,13 @@ namespace fastscapelib
     namespace detail
     {
         /**
-         * Implementation of type erasure for the
-         * ``flow_graph`` class.
+         * Flow graph facade class for Python bindings.
          *
-         * This allow to expose a single class through Python
-         * bindings.
+         * It implements type erasure in order to expose
+         * a single class to Python for all grid types.
          *
          */
-
-        class flow_graph_facade;
+        class py_flow_graph;
 
 
         class flow_graph_wrapper_base
@@ -53,10 +51,7 @@ namespace fastscapelib
 
             using stack_type = xt_tensor_t<py_selector, index_type, 1>;
 
-
             virtual ~flow_graph_wrapper_base(){};
-
-            virtual int get_index_type() const = 0;
 
             virtual const data_type& update_routes(const data_type& elevation) = 0;
 
@@ -83,7 +78,7 @@ namespace fastscapelib
         class flow_graph_wrapper : public flow_graph_wrapper_base
         {
         public:
-            using wrapped_type = fs::flow_graph<G, fs::py_selector>;
+            using flow_graph_type = fs::flow_graph<G, fs::py_selector>;
 
             using index_type = typename flow_graph_wrapper_base::index_type;
             using neighbors_count_type = typename flow_graph_wrapper_base::neighbors_count_type;
@@ -100,85 +95,73 @@ namespace fastscapelib
 
             flow_graph_wrapper(G& grid, py_flow_router& py_router, py_sink_resolver& py_resolver)
             {
-                auto router_ptr = fs::detail::make_flow_router<wrapped_type>(py_router);
-                auto resolver_ptr = fs::detail::make_sink_resolver<wrapped_type>(py_resolver);
+                auto router_ptr = fs::detail::make_flow_router<flow_graph_type>(py_router);
+                auto resolver_ptr = fs::detail::make_sink_resolver<flow_graph_type>(py_resolver);
 
-                m_wrapped = std::make_unique<wrapped_type>(
+                p_graph = std::make_unique<flow_graph_type>(
                     grid, std::move(router_ptr), std::move(resolver_ptr));
             }
 
             virtual ~flow_graph_wrapper(){};
 
-            wrapped_type& get_wrapped()
-            {
-                return *m_wrapped;
-            };
-
-            int get_index_type() const
-            {
-                return 0;
-            };
-
             const data_type& update_routes(const data_type& elevation)
             {
-                return m_wrapped->update_routes(elevation);
+                return p_graph->update_routes(elevation);
             };
 
             const receivers_type& receivers() const
             {
-                return m_wrapped->receivers();
+                return p_graph->receivers();
             };
 
             const receivers_count_type& receivers_count() const
             {
-                return m_wrapped->receivers_count();
+                return p_graph->receivers_count();
             };
 
             const receivers_distance_type& receivers_distance() const
             {
-                return m_wrapped->receivers_distance();
+                return p_graph->receivers_distance();
             };
 
             const receivers_weight_type& receivers_weight() const
             {
-                return m_wrapped->receivers_weight();
+                return p_graph->receivers_weight();
             };
 
             const donors_type& donors() const
             {
-                return m_wrapped->donors();
+                return p_graph->donors();
             };
 
             const donors_count_type& donors_count() const
             {
-                return m_wrapped->donors_count();
+                return p_graph->donors_count();
             };
 
             const stack_type& dfs_stack() const
             {
-                return m_wrapped->dfs_stack();
+                return p_graph->dfs_stack();
             };
 
             data_type accumulate(const data_type& data) const
             {
-                return m_wrapped->accumulate(data);
+                return p_graph->accumulate(data);
             };
 
             data_type accumulate(const double& data) const
             {
-                return m_wrapped->accumulate(data);
+                return p_graph->accumulate(data);
             };
 
         private:
-            std::unique_ptr<wrapped_type> m_wrapped;
+            std::unique_ptr<flow_graph_type> p_graph;
         };
 
 
-        class flow_graph_facade
+        class py_flow_graph
         {
         public:
-            using self_type = flow_graph_facade;
-
             using index_type = std::size_t;
             using neighbors_count_type = std::uint8_t;
             using grid_data_type = double;
@@ -195,75 +178,64 @@ namespace fastscapelib
             using stack_type = xt_tensor_t<py_selector, index_type, 1>;
 
             template <class G>
-            flow_graph_facade(G& obj, py_flow_router& py_router, py_sink_resolver& py_resolver)
-                : p_impl(std::make_unique<flow_graph_wrapper<G>>(obj, py_router, py_resolver))
+            py_flow_graph(G& grid, py_flow_router& py_router, py_sink_resolver& py_resolver)
+                : p_wrapped_graph(
+                    std::make_unique<flow_graph_wrapper<G>>(grid, py_router, py_resolver))
             {
-            }
-
-            template <class G>
-            fs::flow_graph<G, fs::py_selector>& get_implementation()
-            {
-                auto& derived = dynamic_cast<flow_graph_wrapper<G>&>(*p_impl);
-                return derived.get_wrapped();
-            };
-
-            int get_implementation_index_type() const
-            {
-                return p_impl->get_index_type();
             }
 
             const data_type& update_routes(const data_type& elevation)
             {
-                return p_impl->update_routes(elevation);
+                return p_wrapped_graph->update_routes(elevation);
             };
 
             const receivers_type& receivers() const
             {
-                return p_impl->receivers();
+                return p_wrapped_graph->receivers();
             };
 
             const receivers_count_type& receivers_count() const
             {
-                return p_impl->receivers_count();
+                return p_wrapped_graph->receivers_count();
             };
 
             const receivers_distance_type& receivers_distance() const
             {
-                return p_impl->receivers_distance();
+                return p_wrapped_graph->receivers_distance();
             };
 
             const receivers_weight_type& receivers_weight() const
             {
-                return p_impl->receivers_weight();
+                return p_wrapped_graph->receivers_weight();
             };
 
             const donors_type& donors() const
             {
-                return p_impl->donors();
+                return p_wrapped_graph->donors();
             };
 
             const donors_count_type& donors_count() const
             {
-                return p_impl->donors_count();
+                return p_wrapped_graph->donors_count();
             };
 
             const stack_type& dfs_stack() const
             {
-                return p_impl->dfs_stack();
+                return p_wrapped_graph->dfs_stack();
             };
 
             data_type accumulate(const data_type& data) const
             {
-                return p_impl->accumulate(data);
+                return p_wrapped_graph->accumulate(data);
             };
 
             data_type accumulate(const double& data) const
             {
-                return p_impl->accumulate(data);
+                return p_wrapped_graph->accumulate(data);
             };
 
         private:
-            std::unique_ptr<flow_graph_wrapper_base> p_impl;
+            std::unique_ptr<flow_graph_wrapper_base> p_wrapped_graph;
         };
     }
 }
