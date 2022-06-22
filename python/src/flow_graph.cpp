@@ -22,13 +22,13 @@ add_flow_graph_bindings(py::module& m)
     // ==== Binding of the FlowGraph class ==== //
     py::class_<py_flow_graph>(m, "FlowGraph")
         .def(py::init<fs::py_profile_grid&,
-                      std::shared_ptr<fs::detail::flow_router_method>,
+                      fs::detail::py_flow_router&,
                       std::shared_ptr<fs::detail::sink_resolver_method>>(),
              py::arg("grid"),
              py::arg("flow_router"),
              py::arg("sink_resolver") = std::make_shared<fs::detail::no_sink_resolver_method>())
         .def(py::init<fs::py_raster_grid&,
-                      std::shared_ptr<fs::detail::flow_router_method>,
+                      fs::detail::py_flow_router&,
                       std::shared_ptr<fs::detail::sink_resolver_method>>(),
              py::arg("grid"),
              py::arg("flow_router"),

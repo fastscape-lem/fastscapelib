@@ -101,11 +101,10 @@ namespace fastscapelib
             using stack_type = typename flow_graph_wrapper_base::stack_type;
 
             flow_graph_wrapper(G& grid,
-                               std::shared_ptr<flow_router_method> router,
+                               py_flow_router& py_router,
                                std::shared_ptr<sink_resolver_method> resolver)
             {
-                auto router_ptr = fs::detail::flow_router_factory<wrapped_type>::build(
-                    router->method, *router->parameters);
+                auto router_ptr = fs::detail::make_flow_router<wrapped_type>(py_router);
                 auto resolver_ptr
                     = fs::detail::sink_resolver_factory<wrapped_type>::build(resolver->method);
 
@@ -211,9 +210,9 @@ namespace fastscapelib
 
             template <class G>
             flow_graph_facade(G& obj,
-                              std::shared_ptr<flow_router_method> router,
+                              py_flow_router& py_router,
                               std::shared_ptr<sink_resolver_method> resolver)
-                : p_impl(std::make_unique<flow_graph_wrapper<G>>(obj, router, resolver))
+                : p_impl(std::make_unique<flow_graph_wrapper<G>>(obj, py_router, resolver))
             {
             }
 
