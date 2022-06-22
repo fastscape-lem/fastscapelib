@@ -16,9 +16,6 @@
 namespace fastscapelib
 {
 
-    template <class FG>
-    class sink_resolver;
-
     /**
      * Base class for the implementation of flow routing
      * methods.

@@ -19,9 +19,6 @@
 namespace fastscapelib
 {
 
-    template <class FG>
-    class sink_resolver;
-
     /**
      * Main class used to compute or follow flow routes on
      * the topographic surface.
