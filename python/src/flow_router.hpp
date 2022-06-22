@@ -36,14 +36,6 @@ namespace fastscapelib
             py_flow_router() = default;
         };
 
-        class py_dummy_flow_router : public py_flow_router
-        {
-        public:
-            virtual ~py_dummy_flow_router() = default;
-
-            py_dummy_flow_router() = default;
-        };
-
         class py_single_flow_router : public py_flow_router
         {
         public:
@@ -73,11 +65,7 @@ namespace fastscapelib
         template <class FG>
         std::unique_ptr<fs::flow_router<FG>> make_flow_router(py_flow_router& py_router)
         {
-            if (dynamic_cast<const py_dummy_flow_router*>(&py_router))
-            {
-                return std::make_unique<fs::dummy_flow_router<FG>>();
-            }
-            else if (dynamic_cast<const py_single_flow_router*>(&py_router))
+            if (dynamic_cast<const py_single_flow_router*>(&py_router))
             {
                 return std::make_unique<fs::single_flow_router<FG>>();
             }

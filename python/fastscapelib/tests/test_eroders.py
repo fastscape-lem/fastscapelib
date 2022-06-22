@@ -8,7 +8,6 @@ from fastscapelib.eroders import (
     erode_stream_power_var_d,
 )
 from fastscapelib.flow import (
-    DummyFlowRouter,
     FlowGraph,
     MultipleFlowRouter,
     NoSinkResolver,

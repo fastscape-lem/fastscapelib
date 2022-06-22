@@ -16,9 +16,6 @@ add_flow_routers_bindings(py::module& m)
 {
     py::class_<fs::detail::py_flow_router>(m, "FlowRouter");
 
-    py::class_<fs::detail::py_dummy_flow_router, fs::detail::py_flow_router>(m, "DummyFlowRouter")
-        .def(py::init());
-
     py::class_<fs::detail::py_single_flow_router, fs::detail::py_flow_router>(m, "SingleFlowRouter")
         .def(py::init());
 

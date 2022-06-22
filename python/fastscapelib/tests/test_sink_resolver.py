@@ -1,11 +1,6 @@
 import pytest
 
-from fastscapelib.flow import (
-    DummyFlowRouter,
-    FlowGraph,
-    NoSinkResolver,
-    SingleFlowRouter,
-)
+from fastscapelib.flow import FlowGraph, NoSinkResolver, SingleFlowRouter
 from fastscapelib.grid import NodeStatus, ProfileGrid
 
 

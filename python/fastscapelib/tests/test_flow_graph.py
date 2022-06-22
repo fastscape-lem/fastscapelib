@@ -2,7 +2,6 @@ import numpy as np
 import numpy.testing as npt
 
 from fastscapelib.flow import (
-    DummyFlowRouter,
     FlowGraph,
     MultipleFlowRouter,
     NoSinkResolver,
@@ -21,9 +20,8 @@ class TestFlowGraph:
             [],
         )
 
-        FlowGraph(profile_grid, DummyFlowRouter(), NoSinkResolver())
-        FlowGraph(profile_grid, MultipleFlowRouter(1.0, 1.1), NoSinkResolver())
         FlowGraph(profile_grid, SingleFlowRouter(), NoSinkResolver())
+        FlowGraph(profile_grid, MultipleFlowRouter(1.0, 1.1), NoSinkResolver())
 
     def test_update_routes(self):
         grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])

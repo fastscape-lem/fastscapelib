@@ -16,6 +16,22 @@ namespace fastscapelib
     namespace testing
     {
 
+        template <class FG>
+        class dummy_flow_router final : public fs::flow_router<FG>
+        {
+        public:
+            using base_type = fs::flow_router<FG>;
+            using elevation_type = typename base_type::elevation_type;
+
+            dummy_flow_router() = default;
+
+            virtual ~dummy_flow_router() = default;
+
+            void route1(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+            void route2(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+        };
+
+
         class flow_router : public ::testing::Test
         {
         protected:
@@ -35,7 +51,7 @@ namespace fastscapelib
 
             flow_graph_type graph
                 = flow_graph_type(grid,
-                                  std::make_unique<fs::dummy_flow_router<flow_graph_type>>(),
+                                  std::make_unique<dummy_flow_router<flow_graph_type>>(),
                                   std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
 
             void update()
@@ -45,12 +61,7 @@ namespace fastscapelib
         };
 
 
-        class dummy_flow_router : public flow_router
-        {
-        };
-
-
-        TEST_F(dummy_flow_router, receivers)
+        TEST_F(flow_router, receivers)
         {
             update();
 
@@ -58,7 +69,7 @@ namespace fastscapelib
         }
 
 
-        TEST_F(dummy_flow_router, receivers_distance)
+        TEST_F(flow_router, receivers_distance)
         {
             update();
 

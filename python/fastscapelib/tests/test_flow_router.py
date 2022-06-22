@@ -3,7 +3,6 @@ import numpy.testing as npt
 import pytest
 
 from fastscapelib.flow import (
-    DummyFlowRouter,
     FlowGraph,
     MultipleFlowRouter,
     NoSinkResolver,
@@ -17,14 +16,6 @@ from fastscapelib.grid import (
     RasterGrid,
     RasterNode,
 )
-
-
-class TestDummyFlowRouter:
-    def test___init__(self):
-        dummy_router = DummyFlowRouter()
-
-        with pytest.raises(TypeError):
-            DummyFlowRouter(1.0)
 
 
 class TestSingleFlowRouter:

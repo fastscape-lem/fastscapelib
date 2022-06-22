@@ -93,27 +93,6 @@ namespace fastscapelib
 
 
     /**
-     * A flow_router not doing anything.
-     *
-     * @tparam FG The flow_graph class.
-     */
-    template <class FG>
-    class dummy_flow_router final : public flow_router<FG>
-    {
-    public:
-        using base_type = flow_router<FG>;
-        using elevation_type = typename base_type::elevation_type;
-
-        dummy_flow_router() = default;
-
-        virtual ~dummy_flow_router() = default;
-
-        void route1(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-        void route2(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-    };
-
-
-    /**
      * A flow_router considering only one receiver per
      * grid node.
      *
@@ -220,8 +199,7 @@ namespace fastscapelib
 
 
     /**
-     * A flow_router considering multiple receivers per
-     * grid node.
+     * TODO: not yet operational.
      *
      * @tparam FG The flow_graph class.
      */
