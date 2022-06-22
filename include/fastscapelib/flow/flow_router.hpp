@@ -33,9 +33,12 @@ namespace fastscapelib
     public:
         using elevation_type = typename FG::elevation_type;
 
-        // Entity semantic
+        // Entity semantics, i.e., a flow graph uses a flow router via this base class.
+        // -> avoid incomplete destruction (e.g., there may be members in inherited classes
+        // that need to be destroyed)
         virtual ~flow_router() = default;
 
+        // do not assign or copy flow routers using the base class.
         flow_router(const flow_router&) = delete;
         flow_router(flow_router&&) = delete;
         flow_router& operator=(const flow_router&) = delete;

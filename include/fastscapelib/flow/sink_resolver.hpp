@@ -28,9 +28,12 @@ namespace fastscapelib
     public:
         using elevation_type = typename FG::elevation_type;
 
-        // Entity semantic
+        // Entity semantics, i.e., a flow graph uses a sink resolver via this base class.
+        // -> avoid incomplete destruction (e.g., there may be members in inherited classes
+        // that need to be destroyed)
         virtual ~sink_resolver() = default;
 
+        // do not assign or copy sink resolvers using the base class.
         sink_resolver(const sink_resolver&) = delete;
         sink_resolver(sink_resolver&&) = delete;
         sink_resolver& operator=(const sink_resolver&) = delete;
