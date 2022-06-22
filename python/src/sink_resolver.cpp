@@ -12,8 +12,8 @@ namespace fs = fastscapelib;
 void
 add_sink_resolvers_bindings(py::module& m)
 {
-    fs::detail::register_sink_resolvers<fs::py_profile_grid>();
-    fs::detail::register_sink_resolvers<fs::py_raster_grid>();
+    // fs::detail::register_sink_resolvers<fs::py_profile_grid>();
+    // fs::detail::register_sink_resolvers<fs::py_raster_grid>();
 
     // ==== Binding of the SinkResolverMethods enumeration ==== /
     py::enum_<fs::sink_resolver_methods> methods(
@@ -27,12 +27,9 @@ add_sink_resolvers_bindings(py::module& m)
         .value("CARVE_MST_BORUVKA", fs::sink_resolver_methods::carve_mst_boruvka);
 
     // ==== Binding of the BaseSinkResolver class ==== //
-    py::class_<fs::detail::sink_resolver_method, std::shared_ptr<fs::detail::sink_resolver_method>>(
-        m, "BaseSinkResolver");
+    py::class_<fs::detail::py_sink_resolver>(m, "SinkResolver");
 
     // ==== Binding of the NoSinkResolver class ==== //
-    py::class_<fs::detail::no_sink_resolver_method,
-               fs::detail::sink_resolver_method,
-               std::shared_ptr<fs::detail::no_sink_resolver_method>>(m, "NoSinkResolver")
+    py::class_<fs::detail::py_no_sink_resolver, fs::detail::py_sink_resolver>(m, "NoSinkResolver")
         .def(py::init());
 }

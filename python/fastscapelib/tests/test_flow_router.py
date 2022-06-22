@@ -7,6 +7,7 @@ from fastscapelib.flow import (
     FlowGraph,
     FlowRouterMethods,
     MultipleFlowRouter,
+    NoSinkResolver,
     SingleFlowRouter,
 )
 from fastscapelib.grid import (
@@ -40,7 +41,9 @@ class TestSingleFlowRouter:
     @classmethod
     def setup_class(cls):
         profile_grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
-        cls.profile_flow_graph = FlowGraph(profile_grid, SingleFlowRouter())
+        cls.profile_flow_graph = FlowGraph(
+            profile_grid, SingleFlowRouter(), NoSinkResolver()
+        )
         cls.profile_elevation = np.r_[0.82, 0.16, 0.14, 0.20, 0.71, 0.97, 0.41, 0.09]
         cls.result_profile_elevation = cls.profile_flow_graph.update_routes(
             cls.profile_elevation
@@ -52,7 +55,9 @@ class TestSingleFlowRouter:
             RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
             [],
         )
-        cls.raster_flow_graph = FlowGraph(raster_grid, SingleFlowRouter())
+        cls.raster_flow_graph = FlowGraph(
+            raster_grid, SingleFlowRouter(), NoSinkResolver()
+        )
         cls.raster_elevation = np.array(
             [
                 [0.82, 0.16, 0.14, 0.20],

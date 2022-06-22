@@ -1,7 +1,7 @@
 #ifndef PYFASTSCAPELIB_FLOW_GRAPH_H
 #define PYFASTSCAPELIB_FLOW_GRAPH_H
 
-#include <stdexcept>
+#include <memory>
 
 #include "pybind11/pybind11.h"
 
@@ -100,22 +100,10 @@ namespace fastscapelib
                 typename flow_graph_wrapper_base::receivers_distance_type;
             using stack_type = typename flow_graph_wrapper_base::stack_type;
 
-            flow_graph_wrapper(G& grid,
-                               py_flow_router& py_router,
-                               std::shared_ptr<sink_resolver_method> resolver)
+            flow_graph_wrapper(G& grid, py_flow_router& py_router, py_sink_resolver& py_resolver)
             {
                 auto router_ptr = fs::detail::make_flow_router<wrapped_type>(py_router);
-                auto resolver_ptr
-                    = fs::detail::sink_resolver_factory<wrapped_type>::build(resolver->method);
-
-                if (router_ptr == nullptr)
-                {
-                    throw std::runtime_error("Using an unregistered flow router builder.");
-                }
-                if (resolver_ptr == nullptr)
-                {
-                    throw std::runtime_error("Using an unregistered sink resolver builder.");
-                }
+                auto resolver_ptr = fs::detail::make_sink_resolver<wrapped_type>(py_resolver);
 
                 m_wrapped = std::make_unique<wrapped_type>(
                     grid, std::move(router_ptr), std::move(resolver_ptr));
@@ -209,10 +197,8 @@ namespace fastscapelib
             using stack_type = xt_tensor_t<py_selector, index_type, 1>;
 
             template <class G>
-            flow_graph_facade(G& obj,
-                              py_flow_router& py_router,
-                              std::shared_ptr<sink_resolver_method> resolver)
-                : p_impl(std::make_unique<flow_graph_wrapper<G>>(obj, py_router, resolver))
+            flow_graph_facade(G& obj, py_flow_router& py_router, py_sink_resolver& py_resolver)
+                : p_impl(std::make_unique<flow_graph_wrapper<G>>(obj, py_router, py_resolver))
             {
             }
 

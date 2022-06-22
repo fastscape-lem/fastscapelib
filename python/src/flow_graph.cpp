@@ -23,16 +23,16 @@ add_flow_graph_bindings(py::module& m)
     py::class_<py_flow_graph>(m, "FlowGraph")
         .def(py::init<fs::py_profile_grid&,
                       fs::detail::py_flow_router&,
-                      std::shared_ptr<fs::detail::sink_resolver_method>>(),
+                      fs::detail::py_sink_resolver&>(),
              py::arg("grid"),
              py::arg("flow_router"),
-             py::arg("sink_resolver") = std::make_shared<fs::detail::no_sink_resolver_method>())
+             py::arg("sink_resolver"))
         .def(py::init<fs::py_raster_grid&,
                       fs::detail::py_flow_router&,
-                      std::shared_ptr<fs::detail::sink_resolver_method>>(),
+                      fs::detail::py_sink_resolver&>(),
              py::arg("grid"),
              py::arg("flow_router"),
-             py::arg("sink_resolver") = std::make_shared<fs::detail::no_sink_resolver_method>())
+             py::arg("sink_resolver"))
         .def("update_routes", &py_flow_graph::update_routes)
         .def("receivers", &py_flow_graph::receivers)
         .def("receivers_count", &py_flow_graph::receivers_count)

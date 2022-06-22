@@ -1,6 +1,7 @@
 #ifndef PYFASTSCAPELIB_FLOW_ROUTER_H
 #define PYFASTSCAPELIB_FLOW_ROUTER_H
 
+#include <memory>
 #include <stdexcept>
 
 #include "pybind11/pybind11.h"
@@ -30,7 +31,7 @@ namespace fastscapelib
         public:
             // needed in order for dynamic_cast to work
             // (we'll perform downcasting when creating the
-            // correspondingflow_router class)
+            // corresponding flow_router class)
             virtual ~py_flow_router() = default;
 
             py_flow_router() = default;
