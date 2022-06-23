@@ -1,6 +1,5 @@
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
-#include "fastscapelib/flow/flow_router_factory.hpp"
 #include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 
@@ -95,7 +94,7 @@ namespace fastscapelib
 
         TEST_F(flow_graph, ctor)
         {
-            auto router = std::make_unique<fs::dummy_flow_router<flow_graph_type>>();
+            auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();
             auto resolver = std::make_unique<fs::no_sink_resolver<flow_graph_type>>();
 
             flow_graph_type graph(grid, std::move(router), std::move(resolver));

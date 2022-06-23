@@ -8,9 +8,9 @@ from fastscapelib.eroders import (
     erode_stream_power_var_d,
 )
 from fastscapelib.flow import (
-    DummyFlowRouter,
     FlowGraph,
     MultipleFlowRouter,
+    NoSinkResolver,
     SingleFlowRouter,
 )
 from fastscapelib.grid import (
@@ -31,7 +31,7 @@ class TestErodeStreamPower:
     def test_profile_grid(self, func, k):
         spacing = 300.0
         grid = ProfileGrid(4, 300, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
-        flow_graph = FlowGraph(grid, SingleFlowRouter())
+        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
 
         h = 1.0
         elevation = np.array([0.0, h, h, 0.0], dtype="d")
@@ -83,7 +83,7 @@ class TestErodeStreamPower:
             RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
             [],
         )
-        flow_graph = FlowGraph(grid, SingleFlowRouter())
+        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
 
         h = 1.0
         elevation = np.array([[0.0, 0.0], [h, h]], dtype="d")

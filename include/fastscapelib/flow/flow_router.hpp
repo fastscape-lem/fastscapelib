@@ -16,14 +16,11 @@
 namespace fastscapelib
 {
 
-    template <class FG>
-    class sink_resolver;
-
     /**
      * Base class for the implementation of flow routing
      * methods.
      *
-     * All derived classes must implement ``route1_impl`` and ``route2_impl``.
+     * All derived classes must implement ``route1`` and ``route2`` methods.
      *
      * @tparam FG The flow_graph class.
      */
@@ -33,26 +30,19 @@ namespace fastscapelib
     public:
         using elevation_type = typename FG::elevation_type;
 
-        // Entity semantic
+        // Entity semantics, i.e., a flow graph uses a flow router via this base class.
+        // -> avoid incomplete destruction (e.g., there may be members in inherited classes
+        // that need to be destroyed)
         virtual ~flow_router() = default;
 
+        // do not assign or copy flow routers using the base class.
         flow_router(const flow_router&) = delete;
         flow_router(flow_router&&) = delete;
         flow_router& operator=(const flow_router&) = delete;
         flow_router& operator=(flow_router&&) = delete;
 
-        void route1(const elevation_type& elevation, FG& fgraph)
-        {
-            route1_impl(elevation, fgraph);
-        }
-        void route2(const elevation_type& elevation, FG& fgraph)
-        {
-            route2_impl(elevation, fgraph);
-        }
-
-    private:
-        virtual void route1_impl(const elevation_type& elevation, FG& fgraph) = 0;
-        virtual void route2_impl(const elevation_type& elevation, FG& fgraph) = 0;
+        virtual void route1(const elevation_type& elevation, FG& fgraph) = 0;
+        virtual void route2(const elevation_type& elevation, FG& fgraph) = 0;
 
     protected:
         using index_type = typename FG::index_type;
@@ -103,28 +93,6 @@ namespace fastscapelib
 
 
     /**
-     * A flow_router not doing anything.
-     *
-     * @tparam FG The flow_graph class.
-     */
-    template <class FG>
-    class dummy_flow_router final : public flow_router<FG>
-    {
-    public:
-        using base_type = flow_router<FG>;
-        using elevation_type = typename base_type::elevation_type;
-
-        dummy_flow_router() = default;
-
-        virtual ~dummy_flow_router() = default;
-
-    private:
-        void route1_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-        void route2_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-    };
-
-
-    /**
      * A flow_router considering only one receiver per
      * grid node.
      *
@@ -141,51 +109,7 @@ namespace fastscapelib
 
         virtual ~single_flow_router() = default;
 
-    private:
-        using index_type = typename flow_router<FG>::index_type;
-        using stack_type = typename flow_router<FG>::stack_type;
-        using donors_count_type = typename flow_router<FG>::donors_count_type;
-        using donors_type = typename flow_router<FG>::donors_type;
-
-        double p1 = 0., p2 = 0.;
-
-        void add2stack(index_type& nstack,
-                       stack_type& stack,
-                       const donors_count_type& ndonors,
-                       const donors_type& donors,
-                       const index_type inode)
-        {
-            for (index_type k = 0; k < ndonors(inode); ++k)
-            {
-                const auto idonor = donors(inode, k);
-                if (idonor != inode)
-                {
-                    stack(nstack++) = idonor;
-                    add2stack(nstack, stack, ndonors, donors, idonor);
-                }
-            }
-        }
-
-        void compute_dfs_stack(FG& fgraph)
-        {
-            const auto& receivers = this->receivers(fgraph);
-            const auto& donors = this->donors(fgraph);
-            const auto& donors_count = this->donors_count(fgraph);
-
-            auto& stack = this->dfs_stack(fgraph);
-            index_type nstack = 0;
-
-            for (index_type i = 0; i < fgraph.size(); ++i)
-            {
-                if (receivers(i, 0) == i)
-                {
-                    stack(nstack++) = i;
-                    add2stack(nstack, stack, donors_count, donors, i);
-                }
-            }
-        };
-
-        void route1_impl(const elevation_type& elevation, FG& fgraph)
+        void route1(const elevation_type& elevation, FG& fgraph)
         {
             using neighbors_type = typename FG::grid_type::neighbors_type;
 
@@ -228,13 +152,54 @@ namespace fastscapelib
             compute_dfs_stack(fgraph);
         };
 
-        void route2_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+        void route2(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+
+    private:
+        using index_type = typename flow_router<FG>::index_type;
+        using stack_type = typename flow_router<FG>::stack_type;
+        using donors_count_type = typename flow_router<FG>::donors_count_type;
+        using donors_type = typename flow_router<FG>::donors_type;
+
+        void add2stack(index_type& nstack,
+                       stack_type& stack,
+                       const donors_count_type& ndonors,
+                       const donors_type& donors,
+                       const index_type inode)
+        {
+            for (index_type k = 0; k < ndonors(inode); ++k)
+            {
+                const auto idonor = donors(inode, k);
+                if (idonor != inode)
+                {
+                    stack(nstack++) = idonor;
+                    add2stack(nstack, stack, ndonors, donors, idonor);
+                }
+            }
+        }
+
+        void compute_dfs_stack(FG& fgraph)
+        {
+            const auto& receivers = this->receivers(fgraph);
+            const auto& donors = this->donors(fgraph);
+            const auto& donors_count = this->donors_count(fgraph);
+
+            auto& stack = this->dfs_stack(fgraph);
+            index_type nstack = 0;
+
+            for (index_type i = 0; i < fgraph.size(); ++i)
+            {
+                if (receivers(i, 0) == i)
+                {
+                    stack(nstack++) = i;
+                    add2stack(nstack, stack, donors_count, donors, i);
+                }
+            }
+        };
     };
 
 
     /**
-     * A flow_router considering multiple receivers per
-     * grid node.
+     * TODO: not yet operational.
      *
      * @tparam FG The flow_graph class.
      */
@@ -253,24 +218,11 @@ namespace fastscapelib
 
         virtual ~multiple_flow_router() = default;
 
+        void route1(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+        void route2(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+
     private:
         double p1 = 0., p2 = 0.;
-
-        void route1_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-        void route2_impl(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-    };
-
-
-    /**
-     * The possible flow routers.
-     */
-    enum class flow_router_methods
-    {
-        one_channel = 0,
-        single,
-        multiple,
-        single_parallel,
-        dummy
     };
 }
 

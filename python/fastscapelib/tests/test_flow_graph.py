@@ -1,21 +1,13 @@
 import numpy as np
 import numpy.testing as npt
-import pytest
 
 from fastscapelib.flow import (
-    DummyFlowRouter,
     FlowGraph,
     MultipleFlowRouter,
+    NoSinkResolver,
     SingleFlowRouter,
 )
-from fastscapelib.grid import (
-    Node,
-    NodeStatus,
-    ProfileGrid,
-    RasterBoundaryStatus,
-    RasterGrid,
-    RasterNode,
-)
+from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
 
 
 class TestFlowGraph:
@@ -28,13 +20,12 @@ class TestFlowGraph:
             [],
         )
 
-        FlowGraph(profile_grid, DummyFlowRouter())
-        FlowGraph(profile_grid, MultipleFlowRouter(1.0, 1.1))
-        FlowGraph(profile_grid, SingleFlowRouter())
+        FlowGraph(profile_grid, SingleFlowRouter(), NoSinkResolver())
+        FlowGraph(profile_grid, MultipleFlowRouter(1.0, 1.1), NoSinkResolver())
 
     def test_update_routes(self):
         grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
-        flow_graph = FlowGraph(grid, SingleFlowRouter())
+        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
         elevation = np.r_[0.82, 0.16, 0.14, 0.20, 0.71, 0.97, 0.41, 0.09]
 
         graph_elevation = flow_graph.update_routes(elevation)
@@ -66,7 +57,7 @@ class TestFlowGraph:
 
     def test_accumulate(self):
         grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
-        flow_graph = FlowGraph(grid, SingleFlowRouter())
+        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
         elevation = np.r_[0.82, 0.16, 0.14, 0.20, 0.71, 0.97, 0.41, 0.09]
 
         graph_elevation = flow_graph.update_routes(elevation)
@@ -82,7 +73,7 @@ class TestFlowGraph:
             RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
             [],
         )
-        flow_graph = FlowGraph(grid, SingleFlowRouter())
+        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
         elevation = np.array(
             [
                 [0.82, 0.16, 0.14, 0.20],
