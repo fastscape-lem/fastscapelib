@@ -13,29 +13,41 @@ namespace fs = fastscapelib;
 
 namespace fastscapelib
 {
-    namespace testing
+
+    struct dummy_flow_router
+    {
+    };
+
+    namespace detail
     {
 
         template <class FG>
-        class dummy_flow_router final : public fs::flow_router<FG>
+        class flow_router_impl<FG, dummy_flow_router>
+            : public flow_router_impl_base<FG, dummy_flow_router>
         {
         public:
-            using base_type = fs::flow_router<FG>;
-            using elevation_type = typename base_type::elevation_type;
+            using graph_type = FG;
+            using base_type = flow_router_impl_base<graph_type, dummy_flow_router>;
 
-            dummy_flow_router() = default;
+            using elevation_type = typename graph_type::elevation_type;
 
-            virtual ~dummy_flow_router() = default;
+            static constexpr size_t n_receivers = 0;
 
-            void route1(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-            void route2(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+            flow_router_impl(graph_type& graph, dummy_flow_router& router)
+                : base_type(graph, router){};
+
+            void route1(const elevation_type& /*elevation*/){};
+            void route2(const elevation_type& /*elevation*/){};
         };
+    }
 
+    namespace testing
+    {
 
         class flow_router : public ::testing::Test
         {
         protected:
-            using flow_graph_type = fs::flow_graph<fs::raster_grid>;
+            using flow_graph_type = fs::flow_graph<fs::raster_grid, dummy_flow_router>;
             using grid_type = fs::raster_grid;
             using size_type = typename grid_type::size_type;
 
@@ -50,9 +62,9 @@ namespace fastscapelib
                                           { 0.29, 0.82, 0.09, 0.88 } };
 
             flow_graph_type graph
-                = flow_graph_type(grid,
-                                  std::make_unique<dummy_flow_router<flow_graph_type>>(),
-                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+                = fs::make_flow_graph(grid,
+                                      fs::dummy_flow_router(),
+                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
 
             void update()
             {

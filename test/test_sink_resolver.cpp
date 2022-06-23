@@ -77,7 +77,7 @@ namespace fastscapelib
         class sink_resolver : public ::testing::Test
         {
         protected:
-            using flow_graph_type = fs::flow_graph<fs::raster_grid>;
+            using flow_graph_type = fs::flow_graph<fs::raster_grid, fs::single_flow_router>;
             using grid_type = fs::raster_grid;
             using size_type = typename grid_type::size_type;
 
@@ -111,9 +111,9 @@ namespace fastscapelib
 
         TEST_F(sink_resolver, resolve1)
         {
-            auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();
+            auto router = fs::single_flow_router();
             auto resolver = std::make_unique<constant_before_sink_resolver<flow_graph_type>>();
-            flow_graph_type graph(grid, std::move(router), std::move(resolver));
+            auto graph = fs::make_flow_graph(grid, router, std::move(resolver));
 
             xt::xarray<int> dummy_receivers = xt::ones<int>({ 16, 8 }) * -1;
             xt::view(dummy_receivers, xt::all(), 0) = xt::arange<int>(0, 16, 1);
@@ -129,9 +129,9 @@ namespace fastscapelib
 
         TEST_F(sink_resolver, resolve2)
         {
-            auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();
+            auto router = fs::single_flow_router();
             auto resolver = std::make_unique<constant_after_sink_resolver<flow_graph_type>>();
-            auto graph = flow_graph_type(grid, std::move(router), std::move(resolver));
+            auto graph = fs::make_flow_graph(grid, router, std::move(resolver));
 
             const auto& graph_elevation = graph.update_routes(elevation);
             EXPECT_TRUE(xt::all(xt::equal(xt::ones_like(elevation) * 5., graph_elevation)));
