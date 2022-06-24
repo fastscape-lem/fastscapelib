@@ -13,6 +13,12 @@
 namespace fastscapelib
 {
 
+    struct sink_resolver
+    {
+        // enable dynamic downcasting on sink resolver types
+        virtual ~sink_resolver() = default;
+    };
+
     namespace detail
     {
 
@@ -75,7 +81,7 @@ namespace fastscapelib
         };
     }
 
-    struct no_sink_resolver
+    struct no_sink_resolver : public sink_resolver
     {
     };
 }

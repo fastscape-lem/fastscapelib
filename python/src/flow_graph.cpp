@@ -6,8 +6,6 @@
 
 #include "grid.hpp"
 #include "flow_graph.hpp"
-#include "flow_router.hpp"
-#include "sink_resolver.hpp"
 
 
 namespace py = pybind11;
@@ -20,15 +18,25 @@ add_flow_graph_bindings(py::module& m)
     using py_flow_graph = fs::detail::py_flow_graph;
 
     py::class_<py_flow_graph>(m, "FlowGraph")
-        .def(py::init<fs::py_profile_grid&,
-                      fs::detail::py_flow_router&,
-                      fs::detail::py_sink_resolver&>(),
+        .def(py::init(
+                 [](fs::py_profile_grid& grid,
+                    const std::shared_ptr<fs::flow_router> ptr_router,
+                    const std::shared_ptr<fs::sink_resolver> ptr_resolver)
+                 {
+                     auto router = std::static_pointer_cast<fs::single_flow_router>(ptr_router);
+                     return std::make_unique<py_flow_graph>(grid, *router, *ptr_resolver);
+                 }),
              py::arg("grid"),
              py::arg("flow_router"),
              py::arg("sink_resolver"))
-        .def(py::init<fs::py_raster_grid&,
-                      fs::detail::py_flow_router&,
-                      fs::detail::py_sink_resolver&>(),
+        .def(py::init(
+                 [](fs::py_raster_grid& grid,
+                    const std::shared_ptr<fs::flow_router> ptr_router,
+                    const std::shared_ptr<fs::sink_resolver> ptr_resolver)
+                 {
+                     auto router = dynamic_cast<fs::single_flow_router&>(*ptr_router);
+                     return std::make_unique<py_flow_graph>(grid, router, *ptr_resolver);
+                 }),
              py::arg("grid"),
              py::arg("flow_router"),
              py::arg("sink_resolver"))

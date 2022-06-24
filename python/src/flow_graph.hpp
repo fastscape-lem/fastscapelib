@@ -10,8 +10,6 @@
 #include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
 
-#include "flow_router.hpp"
-#include "sink_resolver.hpp"
 #include "pytensor_utils.hpp"
 
 
@@ -74,11 +72,11 @@ namespace fastscapelib
             virtual data_type accumulate(const double& data) const = 0;
         };
 
-        template <class G>
+        template <class G, class FR, class SR>
         class flow_graph_wrapper : public flow_graph_wrapper_base
         {
         public:
-            using flow_graph_type = fs::flow_graph<G, fs::py_selector>;
+            using flow_graph_type = fs::flow_graph<G, FR, SR, fs::py_selector>;
 
             using index_type = typename flow_graph_wrapper_base::index_type;
             using neighbors_count_type = typename flow_graph_wrapper_base::neighbors_count_type;
@@ -93,13 +91,9 @@ namespace fastscapelib
                 typename flow_graph_wrapper_base::receivers_distance_type;
             using stack_type = typename flow_graph_wrapper_base::stack_type;
 
-            flow_graph_wrapper(G& grid, py_flow_router& py_router, py_sink_resolver& py_resolver)
+            flow_graph_wrapper(G& grid, const FR& router, const SR& resolver)
             {
-                auto router_ptr = fs::detail::make_flow_router<flow_graph_type>(py_router);
-                auto resolver_ptr = fs::detail::make_sink_resolver<flow_graph_type>(py_resolver);
-
-                p_graph = std::make_unique<flow_graph_type>(
-                    grid, std::move(router_ptr), std::move(resolver_ptr));
+                p_graph = std::make_unique<flow_graph_type>(grid, router, resolver);
             }
 
             virtual ~flow_graph_wrapper(){};
@@ -177,10 +171,10 @@ namespace fastscapelib
 
             using stack_type = xt_tensor_t<py_selector, index_type, 1>;
 
-            template <class G>
-            py_flow_graph(G& grid, py_flow_router& py_router, py_sink_resolver& py_resolver)
+            template <class G, class FR, class SR>
+            py_flow_graph(G& grid, const FR& router, const SR& resolver)
                 : p_wrapped_graph(
-                    std::make_unique<flow_graph_wrapper<G>>(grid, py_router, py_resolver))
+                    std::make_unique<flow_graph_wrapper<G, FR, SR>>(grid, router, resolver))
             {
             }
 

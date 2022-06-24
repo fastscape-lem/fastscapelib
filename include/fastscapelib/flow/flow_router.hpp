@@ -15,6 +15,29 @@
 
 namespace fastscapelib
 {
+
+    enum class flow_router_method
+    {
+        single_flow = 0,
+        multiple_flow,
+        custom
+    };
+
+
+    class flow_router
+    {
+    public:
+        virtual ~flow_router() = default;
+        const flow_router_method m_method;
+
+    protected:
+        flow_router(flow_router_method method)
+            : m_method(method)
+        {
+        }
+    };
+
+
     namespace detail
     {
 
@@ -104,12 +127,16 @@ namespace fastscapelib
         public:
             using graph_type = FG;
             using flow_router_type = FR;
+            using base_type = flow_router_impl_base<graph_type, flow_router_type>;
 
             using elevation_type = typename graph_type::elevation_type;
 
             static constexpr size_t n_receivers = 0;
 
-            flow_router_impl(graph_type& graph, flow_router_type& router) = delete;
+            // we don't want to instantiate a generic implementation
+            // -> only support calling a specialized class template constructor
+            flow_router_impl(graph_type& graph, const flow_router_type& router)
+                : base_type(graph, router){};
 
             void route1(const elevation_type& /*elevation*/){};
             void route2(const elevation_type& /*elevation*/){};
@@ -117,8 +144,11 @@ namespace fastscapelib
     }
 
 
-    struct single_flow_router
+    class single_flow_router : public flow_router
     {
+    public:
+        single_flow_router()
+            : flow_router(flow_router_method::single_flow){};
     };
 
 
@@ -230,10 +260,16 @@ namespace fastscapelib
     }
 
 
-    struct multiple_flow_router
+    struct multiple_flow_router : public flow_router
     {
-        double p1;
-        double p2;
+    public:
+        double m_p1;
+        double m_p2;
+
+        multiple_flow_router(double p1, double p2)
+            : flow_router(flow_router_method::single_flow)
+            , m_p1(p1)
+            , m_p2(p2){};
     };
 
 

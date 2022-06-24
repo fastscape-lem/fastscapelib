@@ -14,7 +14,7 @@ namespace fs = fastscapelib;
 namespace fastscapelib
 {
 
-    struct test_sink_resolver
+    struct test_sink_resolver : public sink_resolver
     {
     };
 
