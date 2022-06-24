@@ -25,15 +25,17 @@ namespace fastscapelib
      *
      * @tparam G The grid type.
      * @tparam FR The flow router type.
+     * @tparam SR The sink resolver type.
      * @tparam S The xtensor selector type.
      */
-    template <class G, class FR, class S = typename G::xt_selector>
+    template <class G, class FR, class SR, class S = typename G::xt_selector>
     class flow_graph
     {
     public:
-        using self_type = flow_graph<G, S>;
+        using self_type = flow_graph<G, FR, SR, S>;
         using grid_type = G;
         using router_type = FR;
+        using resolver_type = SR;
 
         using index_type = typename grid_type::size_type;
         using grid_data_type = typename grid_type::grid_data_type;
@@ -57,11 +59,10 @@ namespace fastscapelib
         using const_dfs_iterator = const index_type*;
         using const_reverse_dfs_iterator = std::reverse_iterator<const index_type*>;
 
-        using sink_resolver_ptr = std::unique_ptr<sink_resolver<self_type>>;
-
-        flow_graph(G& grid, router_type& router, sink_resolver_ptr resolver)
+        flow_graph(G& grid, const router_type& router, const resolver_type& resolver)
             : m_grid(grid)
-            , p_sink_resolver(std::move(resolver))
+            , m_router_impl(*this, router)
+            , m_resolver_impl(*this, resolver)
         {
             using shape_type = std::array<index_type, 2>;
             const shape_type receivers_shape = { grid.size(), grid_type::max_neighbors() };
@@ -76,15 +77,13 @@ namespace fastscapelib
             m_donors_count = xt::zeros<index_type>({ grid.size() });
 
             m_dfs_stack = xt::ones<index_type>({ grid.size() }) * -1;
-
-            m_router_impl(*this, router);
         }
 
         const elevation_type& update_routes(const elevation_type& elevation)
         {
-            const auto& modified_elevation = p_sink_resolver->resolve1(elevation, *this);
+            const auto& modified_elevation = m_resolver_impl.resolve1(elevation);
             m_router_impl.route1(modified_elevation);
-            const auto& final_elevation = p_sink_resolver->resolve2(modified_elevation, *this);
+            const auto& final_elevation = m_resolver_impl.resolve2(modified_elevation);
             m_router_impl.route2(final_elevation);
 
             return final_elevation;
@@ -174,17 +173,18 @@ namespace fastscapelib
         stack_type m_dfs_stack;
 
         using router_impl_type = typename detail::flow_router_impl<self_type, router_type>;
+        using resolver_impl_type = typename detail::sink_resolver_impl<self_type, resolver_type>;
 
         router_impl_type m_router_impl;
-        sink_resolver_ptr p_sink_resolver;
+        resolver_impl_type m_resolver_impl;
 
         friend class detail::flow_router_impl_base<self_type, router_type>;
-        friend class sink_resolver<self_type>;
+        friend class detail::sink_resolver_impl<self_type, resolver_type>;
     };
 
-    template <class G, class FR, class S>
+    template <class G, class FR, class SR, class S>
     template <class T>
-    auto flow_graph<G, FR, S>::accumulate(const T& data) const -> T
+    auto flow_graph<G, FR, SR, S>::accumulate(const T& data) const -> T
     {
         T acc = xt::zeros_like(data);
 
@@ -205,8 +205,8 @@ namespace fastscapelib
         return acc;
     }
 
-    template <class G, class FR, class S>
-    auto flow_graph<G, FR, S>::accumulate(const double& data) const -> data_type<double>
+    template <class G, class FR, class SR, class S>
+    auto flow_graph<G, FR, SR, S>::accumulate(const double& data) const -> data_type<double>
     {
         data_type<double> tmp = xt::ones<double>(m_grid.shape()) * data;
         return accumulate(tmp);
@@ -214,9 +214,9 @@ namespace fastscapelib
 
 
     template <class G, class FR, class SR, class S = typename G::xt_selector>
-    flow_graph<G, FR, S> make_flow_graph(G& grid, FR& router, SR& ptr_resolver)
+    flow_graph<G, FR, SR, S> make_flow_graph(G& grid, const FR& router, const SR& resolver)
     {
-        return flow_graph<G, FR, S>(grid, router, std::move(ptr_resolver));
+        return flow_graph<G, FR, SR, S>(grid, router, resolver);
     }
 }
 

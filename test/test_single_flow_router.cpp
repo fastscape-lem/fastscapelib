@@ -21,7 +21,8 @@ namespace fastscapelib
         protected:
             using grid_type = fs::profile_grid;
             using size_type = typename grid_type::size_type;
-            using flow_graph_type = fs::flow_graph<grid_type>;
+            using flow_graph_type
+                = fs::flow_graph<grid_type, fs::single_flow_router, fs::no_sink_resolver>;
 
             size_type n = static_cast<size_type>(8);
 
@@ -31,14 +32,10 @@ namespace fastscapelib
             xt::xtensor<double, 1> elevation{ 0.82, 0.16, 0.14, 0.20, 0.71, 0.97, 0.41, 0.09 };
 
             flow_graph_type fixed_graph
-                = flow_graph_type(fixed_grid,
-                                  std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+                = fs::make_flow_graph(fixed_grid, fs::single_flow_router(), fs::no_sink_resolver());
 
-            flow_graph_type looped_graph
-                = flow_graph_type(looped_grid,
-                                  std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+            flow_graph_type looped_graph = fs::make_flow_graph(
+                looped_grid, fs::single_flow_router(), fs::no_sink_resolver());
 
             void update()
             {
@@ -207,7 +204,8 @@ namespace fastscapelib
         {
         protected:
             using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::queen>;
-            using flow_graph_type = fs::flow_graph<grid_type>;
+            using flow_graph_type
+                = fs::flow_graph<grid_type, fs::single_flow_router, fs::no_sink_resolver>;
 
             grid_type fixed_grid
                 = grid_type(shape, { 1.1, 1.2 }, fs::node_status::fixed_value_boundary);
@@ -215,14 +213,10 @@ namespace fastscapelib
                 = grid_type(shape, { 1.1, 1.2 }, fs::node_status::looped_boundary);
 
             flow_graph_type fixed_graph
-                = flow_graph_type(fixed_grid,
-                                  std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+                = fs::make_flow_graph(fixed_grid, fs::single_flow_router(), fs::no_sink_resolver());
 
-            flow_graph_type looped_graph
-                = flow_graph_type(looped_grid,
-                                  std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+            flow_graph_type looped_graph = fs::make_flow_graph(
+                looped_grid, fs::single_flow_router(), fs::no_sink_resolver());
 
             xt::xtensor<double, 2> elevation{ { 0.82, 0.16, 0.14, 0.20 },
                                               { 0.71, 0.97, 0.41, 0.09 },
@@ -408,7 +402,8 @@ namespace fastscapelib
         {
         protected:
             using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::rook>;
-            using flow_graph_type = fs::flow_graph<grid_type>;
+            using flow_graph_type
+                = fs::flow_graph<grid_type, fs::single_flow_router, fs::no_sink_resolver>;
 
             grid_type fixed_grid
                 = grid_type(shape, { 1.1, 1.2 }, fs::node_status::fixed_value_boundary);
@@ -416,14 +411,10 @@ namespace fastscapelib
                 = grid_type(shape, { 1.1, 1.2 }, fs::node_status::looped_boundary);
 
             flow_graph_type fixed_graph
-                = flow_graph_type(fixed_grid,
-                                  std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+                = fs::make_flow_graph(fixed_grid, fs::single_flow_router(), fs::no_sink_resolver());
 
-            flow_graph_type looped_graph
-                = flow_graph_type(looped_grid,
-                                  std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+            flow_graph_type looped_graph = fs::make_flow_graph(
+                looped_grid, fs::single_flow_router(), fs::no_sink_resolver());
 
             xt::xtensor<double, 2> elevation{ { 0.82, 0.16, 0.14, 0.20 },
                                               { 0.71, 0.97, 0.41, 0.09 },
@@ -616,7 +607,8 @@ namespace fastscapelib
         {
         protected:
             using grid_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::bishop>;
-            using flow_graph_type = fs::flow_graph<grid_type>;
+            using flow_graph_type
+                = fs::flow_graph<grid_type, fs::single_flow_router, fs::no_sink_resolver>;
 
             grid_type fixed_grid
                 = grid_type(shape, { 1.1, 1.2 }, fs::node_status::fixed_value_boundary);
@@ -624,14 +616,10 @@ namespace fastscapelib
                 = grid_type(shape, { 1.1, 1.2 }, fs::node_status::looped_boundary);
 
             flow_graph_type fixed_graph
-                = flow_graph_type(fixed_grid,
-                                  std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+                = fs::make_flow_graph(fixed_grid, fs::single_flow_router(), fs::no_sink_resolver());
 
-            flow_graph_type looped_graph
-                = flow_graph_type(looped_grid,
-                                  std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+            flow_graph_type looped_graph = fs::make_flow_graph(
+                looped_grid, fs::single_flow_router(), fs::no_sink_resolver());
 
             xt::xtensor<double, 2> elevation{ { 0.82, 0.16, 0.14, 0.20 },
                                               { 0.71, 0.97, 0.41, 0.09 },

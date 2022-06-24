@@ -19,7 +19,8 @@ namespace fastscapelib
         class flow_graph : public ::testing::Test
         {
         protected:
-            using flow_graph_type = fs::flow_graph<fs::raster_grid, fs::single_flow_router>;
+            using flow_graph_type
+                = fs::flow_graph<fs::raster_grid, fs::single_flow_router, fs::no_sink_resolver>;
             using grid_type = fs::raster_grid;
             using size_type = typename grid_type::size_type;
 
@@ -36,20 +37,16 @@ namespace fastscapelib
 
         TEST_F(flow_graph, ctor)
         {
-            fs::single_flow_router router;
-            auto resolver = std::make_unique<fs::no_sink_resolver<flow_graph_type>>();
-
-            auto graph = fs::make_flow_graph(grid, router, resolver);
+            auto graph
+                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
             EXPECT_EQ(graph.grid().size(), 16u);  // dummy test
         }
 
         TEST_F(flow_graph, update_routes)
         {
-            auto router = fs::single_flow_router();
-            auto resolver = std::make_unique<fs::no_sink_resolver<flow_graph_type>>();
-
-            auto graph = fs::make_flow_graph(grid, router, resolver);
+            auto graph
+                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
             graph.update_routes(elevation);
             graph.update_routes(elevation);  // check there is not memory effect
 
@@ -62,10 +59,8 @@ namespace fastscapelib
 
         TEST_F(flow_graph, accumulate)
         {
-            auto router = fs::single_flow_router();
-            auto resolver = std::make_unique<fs::no_sink_resolver<flow_graph_type>>();
-
-            auto graph = fs::make_flow_graph(grid, router, resolver);
+            auto graph
+                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
             graph.update_routes(elevation);
 
             xt::xtensor<double, 2> data1 = xt::ones_like(elevation);

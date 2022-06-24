@@ -33,7 +33,7 @@ namespace fastscapelib
 
             static constexpr size_t n_receivers = 0;
 
-            flow_router_impl(graph_type& graph, dummy_flow_router& router)
+            flow_router_impl(graph_type& graph, const dummy_flow_router& router)
                 : base_type(graph, router){};
 
             void route1(const elevation_type& /*elevation*/){};
@@ -47,7 +47,8 @@ namespace fastscapelib
         class flow_router : public ::testing::Test
         {
         protected:
-            using flow_graph_type = fs::flow_graph<fs::raster_grid, dummy_flow_router>;
+            using flow_graph_type
+                = fs::flow_graph<fs::raster_grid, dummy_flow_router, fs::no_sink_resolver>;
             using grid_type = fs::raster_grid;
             using size_type = typename grid_type::size_type;
 
@@ -62,9 +63,7 @@ namespace fastscapelib
                                           { 0.29, 0.82, 0.09, 0.88 } };
 
             flow_graph_type graph
-                = fs::make_flow_graph(grid,
-                                      fs::dummy_flow_router(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+                = fs::make_flow_graph(grid, fs::dummy_flow_router(), fs::no_sink_resolver());
 
             void update()
             {

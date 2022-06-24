@@ -44,7 +44,7 @@ namespace fastscapelib
 
             using stack_type = typename graph_type::stack_type;
 
-            flow_router_impl_base(graph_type& graph, router_type& router)
+            flow_router_impl_base(graph_type& graph, const router_type& router)
                 : m_graph(graph)
                 , m_router(router){};
 
@@ -82,7 +82,7 @@ namespace fastscapelib
             };
 
             graph_type& m_graph;
-            router_type& m_router;
+            const router_type& m_router;
         };
 
 
@@ -137,7 +137,7 @@ namespace fastscapelib
 
             static constexpr size_t n_receivers = 1;
 
-            flow_router_impl(graph_type& graph, single_flow_router& router)
+            flow_router_impl(graph_type& graph, const single_flow_router& router)
                 : base_type(graph, router){};
 
             void route1(const elevation_type& elevation)
@@ -256,7 +256,7 @@ namespace fastscapelib
 
             static constexpr size_t n_receivers = graph_type::grid_type::max_neighbors();
 
-            flow_router_impl(graph_type& graph, single_flow_router& router)
+            flow_router_impl(graph_type& graph, const multiple_flow_router& router)
                 : base_type(graph, router){};
 
             void route1(const elevation_type& /*elevation*/){};

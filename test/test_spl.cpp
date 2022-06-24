@@ -42,7 +42,8 @@ public:
     }
 
 protected:
-    using flow_graph_type = fs::flow_graph<fs::profile_grid>;
+    using flow_graph_type
+        = fs::flow_graph<fs::profile_grid, fs::single_flow_router, fs::no_sink_resolver>;
     using index_type = typename flow_graph_type::index_type;
 
     index_type n_corr = 0;
@@ -139,9 +140,7 @@ erode_power_profile_grid::get_steady_slope_analytical(double n_exp)
 
 TEST_F(erode_power_profile_grid, flow_graph)
 {
-    auto flow_graph = flow_graph_type(grid,
-                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
     flow_graph.update_routes(elevation);
 
@@ -159,9 +158,7 @@ TEST_F(erode_power_profile_grid, flow_graph)
 
 TEST_F(erode_power_profile_grid, scalar_k_coef)
 {
-    auto flow_graph = flow_graph_type(grid,
-                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
     std::array<double, 3> n_exp_vals{ 1., 2., 4. };
 
@@ -184,9 +181,7 @@ TEST_F(erode_power_profile_grid, scalar_k_coef)
 
 TEST_F(erode_power_profile_grid, array_k_coef)
 {
-    auto flow_graph = flow_graph_type(grid,
-                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
     std::array<double, 3> n_exp_vals{ 1., 2., 4. };
 
@@ -210,9 +205,7 @@ TEST_F(erode_power_profile_grid, array_k_coef)
 
 TEST_F(erode_power_profile_grid, n_exp)
 {
-    auto flow_graph = flow_graph_type(grid,
-                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
     {
         SCOPED_TRACE("test arbitrary limitation of erosion");
@@ -229,7 +222,8 @@ TEST(erode_stream_pow, raster_grid)
 {
     namespace fs = fastscapelib;
 
-    using flow_graph_type = fs::flow_graph<fs::raster_grid>;
+    using flow_graph_type
+        = fs::flow_graph<fs::raster_grid, fs::single_flow_router, fs::no_sink_resolver>;
     using index_type = typename flow_graph_type::index_type;
 
     {
@@ -245,10 +239,7 @@ TEST(erode_stream_pow, raster_grid)
         auto grid
             = fs::raster_grid({ { 2, 2 } }, { dy, dy }, fs::node_status::fixed_value_boundary);
 
-        auto flow_graph
-            = flow_graph_type(grid,
-                              std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                              std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+        auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
         double h = 1.;
         double a = dy * dy;
