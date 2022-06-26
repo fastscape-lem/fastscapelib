@@ -14,12 +14,10 @@ namespace fs = fastscapelib;
 namespace fastscapelib
 {
 
-    struct test_flow_router : public flow_router
+    struct test_flow_router
     {
-    public:
-        test_flow_router()
-            : flow_router(fs::flow_router_method::custom){};
     };
+
 
     namespace detail
     {

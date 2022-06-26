@@ -178,7 +178,7 @@ namespace fastscapelib
         router_impl_type m_router_impl;
         resolver_impl_type m_resolver_impl;
 
-        friend class detail::flow_router_impl_base<self_type, router_type>;
+        friend class detail::flow_router_impl<self_type, router_type>;
         friend class detail::sink_resolver_impl<self_type, resolver_type>;
     };
 
