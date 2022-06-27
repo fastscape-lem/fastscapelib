@@ -21,22 +21,22 @@ namespace fastscapelib
         /**
          * Common implementation for all sink resolving methods.
          *
-         * @tparam FG The flow graph type.
+         * @tparam FG The flow graph implementation type.
          * @tparam SR The sink resolver type.
          */
         template <class FG, class SR>
         class sink_resolver_impl_base
         {
         public:
-            using graph_type = FG;
+            using graph_impl_type = FG;
             using resolver_type = SR;
 
-            sink_resolver_impl_base(graph_type& graph, const resolver_type& resolver)
-                : m_graph(graph)
+            sink_resolver_impl_base(graph_impl_type& graph_impl, const resolver_type& resolver)
+                : m_graph_impl(graph_impl)
                 , m_resolver(resolver){};
 
         private:
-            graph_type& m_graph;
+            graph_impl_type& m_graph_impl;
             const resolver_type& m_resolver;
         };
 

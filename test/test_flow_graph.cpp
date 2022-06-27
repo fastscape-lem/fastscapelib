@@ -54,7 +54,7 @@ namespace fastscapelib
                                                                 9, 9, 9, 7, 9, 9, 9, 14 };
 
             EXPECT_TRUE(
-                xt::all(xt::equal(xt::col(graph.receivers(), 0), expected_fixed_receivers)));
+                xt::all(xt::equal(xt::col(graph.impl().receivers(), 0), expected_fixed_receivers)));
         }
 
         TEST_F(flow_graph, accumulate)

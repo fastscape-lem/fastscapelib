@@ -23,13 +23,6 @@ class TestFlowGraph:
         FlowGraph(profile_grid, SingleFlowRouter(), NoSinkResolver())
         FlowGraph(profile_grid, MultipleFlowRouter(1.0, 1.1), NoSinkResolver())
 
-    def test_impl(self):
-        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
-        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
-
-        # TODO: update
-        npt.assert_array_equal(flow_graph.impl().test(), np.full((grid.size, 2), -1))
-
     def test_update_routes(self):
         grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
         flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
@@ -37,14 +30,20 @@ class TestFlowGraph:
 
         graph_elevation = flow_graph.update_routes(elevation)
 
-        npt.assert_equal(flow_graph.receivers()[:, 0], np.r_[1, 2, 2, 2, 3, 6, 7, 7])
-        npt.assert_equal(flow_graph.receivers_count(), np.ones(elevation.size))
-        npt.assert_equal(flow_graph.receivers_weight()[:, 0], np.ones(elevation.size))
-        npt.assert_equal(flow_graph.receivers_weight()[:, 1], np.zeros(elevation.size))
+        npt.assert_equal(
+            flow_graph.impl().receivers()[:, 0], np.r_[1, 2, 2, 2, 3, 6, 7, 7]
+        )
+        npt.assert_equal(flow_graph.impl().receivers_count(), np.ones(elevation.size))
+        npt.assert_equal(
+            flow_graph.impl().receivers_weight()[:, 0], np.ones(elevation.size)
+        )
+        npt.assert_equal(
+            flow_graph.impl().receivers_weight()[:, 1], np.zeros(elevation.size)
+        )
 
         m = np.iinfo(np.uint64).max
         npt.assert_equal(
-            flow_graph.donors(),
+            flow_graph.impl().donors(),
             np.array(
                 [
                     [m, m, m],
@@ -58,7 +57,9 @@ class TestFlowGraph:
                 ]
             ),
         )
-        npt.assert_equal(flow_graph.donors_count(), np.r_[0, 1, 3, 1, 0, 0, 1, 2])
+        npt.assert_equal(
+            flow_graph.impl().donors_count(), np.r_[0, 1, 3, 1, 0, 0, 1, 2]
+        )
 
         npt.assert_equal(graph_elevation, elevation)
 

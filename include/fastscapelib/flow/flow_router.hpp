@@ -23,24 +23,24 @@ namespace fastscapelib
         /**
          * Common implementation for all flow routing methods.
          *
-         * @tparam FG The flow graph type.
+         * @tparam FG The flow graph implementation type.
          * @tparam FR The flow router type.
          */
         template <class FG, class FR>
         class flow_router_impl_base
         {
         public:
-            using graph_type = FG;
+            using graph_impl_type = FG;
             using router_type = FR;
 
         protected:
-            flow_router_impl_base(graph_type& graph, const router_type& router)
-                : m_graph(graph)
+            flow_router_impl_base(graph_impl_type& graph_impl, const router_type& router)
+                : m_graph_impl(graph_impl)
                 , m_router(router){};
 
             ~flow_router_impl_base() = default;
 
-            graph_type& m_graph;
+            graph_impl_type& m_graph_impl;
             const router_type& m_router;
         };
 
@@ -54,22 +54,22 @@ namespace fastscapelib
          * The declaration for the generic case here contains the minimum that
          * should be (re)implemented in specialized template classes.
          *
-         * @tparam FG The flow graph type.
+         * @tparam FG The flow graph implememtation type.
          * @tparam FR The flow router type.
          */
         template <class FG, class FR>
         class flow_router_impl : public flow_router_impl_base<FG, FR>
         {
         public:
-            using graph_type = FG;
+            using graph_impl_type = FG;
             using flow_router_type = FR;
-            using base_type = flow_router_impl_base<graph_type, flow_router_type>;
+            using base_type = flow_router_impl_base<graph_impl_type, flow_router_type>;
 
-            using elevation_type = typename graph_type::elevation_type;
+            using elevation_type = typename graph_impl_type::elevation_type;
 
             // we don't want to instantiate a generic implementation
             // -> only support calling a specialized class template constructor
-            flow_router_impl(graph_type& graph, const flow_router_type& router) = delete;
+            flow_router_impl(graph_impl_type& graph_impl, const flow_router_type& router) = delete;
 
             void route1(const elevation_type& /*elevation*/){};
             void route2(const elevation_type& /*elevation*/){};
@@ -92,26 +92,26 @@ namespace fastscapelib
             : public flow_router_impl_base<FG, single_flow_router>
         {
         public:
-            using graph_type = FG;
-            using base_type = flow_router_impl_base<graph_type, single_flow_router>;
+            using graph_impl_type = FG;
+            using base_type = flow_router_impl_base<graph_impl_type, single_flow_router>;
 
-            using elevation_type = typename graph_type::elevation_type;
+            using elevation_type = typename graph_impl_type::elevation_type;
 
-            flow_router_impl(graph_type& graph, const single_flow_router& router)
-                : base_type(graph, router){};
+            flow_router_impl(graph_impl_type& graph_impl, const single_flow_router& router)
+                : base_type(graph_impl, router){};
 
             void route1(const elevation_type& elevation)
             {
-                using neighbors_type = typename graph_type::grid_type::neighbors_type;
+                using neighbors_type = typename graph_impl_type::grid_type::neighbors_type;
 
                 double slope, slope_max;
                 neighbors_type neighbors;
 
-                auto& grid = this->m_graph.grid();
-                auto& donors = this->m_graph.m_donors;
-                auto& donors_count = this->m_graph.m_donors_count;
-                auto& receivers = this->m_graph.m_receivers;
-                auto& dist2receivers = this->m_graph.m_receivers_distance;
+                auto& grid = this->m_graph_impl.grid();
+                auto& donors = this->m_graph_impl.m_donors;
+                auto& donors_count = this->m_graph_impl.m_donors_count;
+                auto& receivers = this->m_graph_impl.m_receivers;
+                auto& dist2receivers = this->m_graph_impl.m_receivers_distance;
 
                 donors_count.fill(0);
 
@@ -135,9 +135,9 @@ namespace fastscapelib
                     donors(receivers(i, 0), donors_count(receivers(i, 0))++) = i;
                 }
 
-                this->m_graph.m_receivers_count.fill(1);
+                this->m_graph_impl.m_receivers_count.fill(1);
 
-                auto weights = xt::col(this->m_graph.m_receivers_weight, 0);
+                auto weights = xt::col(this->m_graph_impl.m_receivers_weight, 0);
                 weights.fill(1.);
 
                 compute_dfs_stack();
@@ -146,10 +146,10 @@ namespace fastscapelib
             void route2(const elevation_type& /*elevation*/){};
 
         private:
-            using index_type = typename graph_type::index_type;
-            using stack_type = typename graph_type::stack_type;
-            using donors_count_type = typename graph_type::donors_count_type;
-            using donors_type = typename graph_type::donors_type;
+            using index_type = typename graph_impl_type::index_type;
+            using stack_type = typename graph_impl_type::stack_type;
+            using donors_count_type = typename graph_impl_type::donors_count_type;
+            using donors_type = typename graph_impl_type::donors_type;
 
             void add2stack(index_type& nstack,
                            stack_type& stack,
@@ -170,14 +170,14 @@ namespace fastscapelib
 
             void compute_dfs_stack()
             {
-                const auto& receivers = this->m_graph.m_receivers;
-                const auto& donors = this->m_graph.m_donors;
-                const auto& donors_count = this->m_graph.m_donors_count;
+                const auto& receivers = this->m_graph_impl.m_receivers;
+                const auto& donors = this->m_graph_impl.m_donors;
+                const auto& donors_count = this->m_graph_impl.m_donors_count;
 
-                auto& stack = this->m_graph.m_dfs_stack;
+                auto& stack = this->m_graph_impl.m_dfs_stack;
                 index_type nstack = 0;
 
-                for (index_type i = 0; i < this->m_graph.size(); ++i)
+                for (index_type i = 0; i < this->m_graph_impl.size(); ++i)
                 {
                     if (receivers(i, 0) == i)
                     {
@@ -211,15 +211,15 @@ namespace fastscapelib
             : public flow_router_impl_base<FG, multiple_flow_router>
         {
         public:
-            using graph_type = FG;
-            using base_type = flow_router_impl_base<graph_type, multiple_flow_router>;
+            using graph_impl_type = FG;
+            using base_type = flow_router_impl_base<graph_impl_type, multiple_flow_router>;
 
-            using elevation_type = typename graph_type::elevation_type;
+            using elevation_type = typename graph_impl_type::elevation_type;
 
-            static constexpr size_t n_receivers = graph_type::grid_type::n_neighbors_max();
+            static constexpr size_t n_receivers = graph_impl_type::grid_type::n_neighbors_max();
 
-            flow_router_impl(graph_type& graph, const multiple_flow_router& router)
-                : base_type(graph, router){};
+            flow_router_impl(graph_impl_type& graph_impl, const multiple_flow_router& router)
+                : base_type(graph_impl, router){};
 
             void route1(const elevation_type& /*elevation*/){};
             void route2(const elevation_type& /*elevation*/){};

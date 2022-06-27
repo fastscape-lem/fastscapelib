@@ -150,9 +150,10 @@ TEST_F(erode_power_profile_grid, flow_graph)
     receivers(0) = 0;
     dist2receivers(0) = 0.;
 
-    EXPECT_TRUE(xt::all(xt::equal(receivers, xt::col(flow_graph.receivers(), 0))));
-    EXPECT_TRUE(xt::all(xt::equal(dist2receivers, xt::col(flow_graph.receivers_distance(), 0))));
-    EXPECT_TRUE(xt::all(xt::equal(stack, flow_graph.dfs_stack())));
+    EXPECT_TRUE(xt::all(xt::equal(receivers, xt::col(flow_graph.impl().receivers(), 0))));
+    EXPECT_TRUE(
+        xt::all(xt::equal(dist2receivers, xt::col(flow_graph.impl().receivers_distance(), 0))));
+    EXPECT_TRUE(xt::all(xt::equal(stack, flow_graph.impl().dfs_stack())));
 }
 
 
@@ -249,13 +250,13 @@ TEST(erode_stream_pow, raster_grid)
         auto drainage_area = flow_graph.accumulate(1.);
 
         EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<index_type, 1>({ 0, 1, 0, 1 }),
-                                      xt::col(flow_graph.receivers(), 0))));
+                                      xt::col(flow_graph.impl().receivers(), 0))));
 
         EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 1>({ 0., 0., dy, dy }),
-                                      xt::col(flow_graph.receivers_distance(), 0))));
+                                      xt::col(flow_graph.impl().receivers_distance(), 0))));
 
-        EXPECT_TRUE(
-            xt::all(xt::equal(xt::xtensor<index_type, 1>({ 0, 2, 1, 3 }), flow_graph.dfs_stack())));
+        EXPECT_TRUE(xt::all(
+            xt::equal(xt::xtensor<index_type, 1>({ 0, 2, 1, 3 }), flow_graph.impl().dfs_stack())));
 
         EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 2>({ { 2 * a, 2 * a }, { a, a } }),
                                       flow_graph.accumulate(xt::ones_like(elevation)))));

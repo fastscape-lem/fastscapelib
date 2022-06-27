@@ -78,7 +78,8 @@ namespace fastscapelib
         {
             update();
 
-            EXPECT_TRUE(xt::all(xt::equal(graph.receivers(), xt::ones<int>({ 16, 8 }) * -1)));
+            EXPECT_TRUE(
+                xt::all(xt::equal(graph.impl().receivers(), xt::ones<int>({ 16, 8 }) * -1)));
         }
 
 
@@ -86,7 +87,8 @@ namespace fastscapelib
         {
             update();
 
-            EXPECT_TRUE(xt::allclose(graph.receivers_distance(), xt::ones<double>({ 16, 8 }) * -1));
+            EXPECT_TRUE(
+                xt::allclose(graph.impl().receivers_distance(), xt::ones<double>({ 16, 8 }) * -1));
         }
     }
 }

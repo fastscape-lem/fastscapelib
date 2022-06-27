@@ -59,28 +59,29 @@ class TestSingleFlowRouter:
 
     def test_receivers(self):
         npt.assert_equal(
-            self.profile_flow_graph.receivers()[:, 0], np.r_[1, 2, 2, 2, 3, 6, 7, 7]
+            self.profile_flow_graph.impl().receivers()[:, 0],
+            np.r_[1, 2, 2, 2, 3, 6, 7, 7],
         )
 
         npt.assert_equal(
-            self.raster_flow_graph.receivers()[:, 0],
+            self.raster_flow_graph.impl().receivers()[:, 0],
             np.r_[1, 2, 7, 7, 9, 9, 7, 7, 9, 9, 9, 7, 9, 9, 9, 14],
         )
 
     def test_receivers_count(self):
-        npt.assert_equal(self.profile_flow_graph.receivers_count(), np.ones(8))
+        npt.assert_equal(self.profile_flow_graph.impl().receivers_count(), np.ones(8))
 
-        npt.assert_equal(self.raster_flow_graph.receivers_count(), np.ones(16))
+        npt.assert_equal(self.raster_flow_graph.impl().receivers_count(), np.ones(16))
 
     def test_receivers_distance(self):
         npt.assert_equal(
-            self.profile_flow_graph.receivers_distance()[:, 0],
+            self.profile_flow_graph.impl().receivers_distance()[:, 0],
             np.r_[1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0] * 2.2,
         )
 
         dia = np.sqrt(1.1**2 + 1.2**2)
         npt.assert_equal(
-            self.raster_flow_graph.receivers_distance()[:, 0],
+            self.raster_flow_graph.impl().receivers_distance()[:, 0],
             np.r_[
                 1.2,
                 1.2,
@@ -102,12 +103,18 @@ class TestSingleFlowRouter:
         )
 
     def test_receivers_weight(self):
-        npt.assert_equal(self.profile_flow_graph.receivers_weight()[:, 0], np.ones(8))
-        npt.assert_equal(self.profile_flow_graph.receivers_weight()[:, 1], np.zeros(8))
-
-        npt.assert_equal(self.raster_flow_graph.receivers_weight()[:, 0], np.ones(16))
         npt.assert_equal(
-            self.raster_flow_graph.receivers_weight()[:, 1:], np.zeros((16, 7))
+            self.profile_flow_graph.impl().receivers_weight()[:, 0], np.ones(8)
+        )
+        npt.assert_equal(
+            self.profile_flow_graph.impl().receivers_weight()[:, 1], np.zeros(8)
+        )
+
+        npt.assert_equal(
+            self.raster_flow_graph.impl().receivers_weight()[:, 0], np.ones(16)
+        )
+        npt.assert_equal(
+            self.raster_flow_graph.impl().receivers_weight()[:, 1:], np.zeros((16, 7))
         )
 
     def test_donors(self):
@@ -119,7 +126,7 @@ class TestSingleFlowRouter:
         expected_donors[6, 0] = 5
         expected_donors[7, :2] = np.r_[6, 7]
 
-        npt.assert_equal(self.profile_flow_graph.donors(), expected_donors)
+        npt.assert_equal(self.profile_flow_graph.impl().donors(), expected_donors)
 
         expected_donors = np.full((16, 9), m)
         expected_donors[1, 0] = 0
@@ -128,25 +135,25 @@ class TestSingleFlowRouter:
         expected_donors[9, :8] = np.r_[4, 5, 8, 9, 10, 12, 13, 14]
         expected_donors[14, 0] = 15
 
-        npt.assert_equal(self.raster_flow_graph.donors(), expected_donors)
+        npt.assert_equal(self.raster_flow_graph.impl().donors(), expected_donors)
 
     def test_donors_count(self):
         npt.assert_equal(
-            self.profile_flow_graph.donors_count(), np.r_[0, 1, 3, 1, 0, 0, 1, 2]
+            self.profile_flow_graph.impl().donors_count(), np.r_[0, 1, 3, 1, 0, 0, 1, 2]
         )
 
         npt.assert_equal(
-            self.raster_flow_graph.donors_count(),
+            self.raster_flow_graph.impl().donors_count(),
             np.r_[0, 1, 1, 0, 0, 0, 0, 5, 0, 8, 0, 0, 0, 0, 1, 0],
         )
 
     def test_dfs_stack(self):
         npt.assert_equal(
-            self.profile_flow_graph.dfs_stack(), np.r_[2, 1, 0, 3, 4, 7, 6, 5]
+            self.profile_flow_graph.impl().dfs_stack(), np.r_[2, 1, 0, 3, 4, 7, 6, 5]
         )
 
         npt.assert_equal(
-            self.raster_flow_graph.dfs_stack(),
+            self.raster_flow_graph.impl().dfs_stack(),
             np.r_[7, 2, 1, 0, 3, 6, 11, 9, 4, 5, 8, 10, 12, 13, 14, 15],
         )
 
