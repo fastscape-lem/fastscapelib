@@ -6,6 +6,7 @@
 #include "pybind11/pybind11.h"
 
 #include "fastscapelib/flow/flow_graph.hpp"
+#include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
@@ -19,6 +20,65 @@ namespace fs = fastscapelib;
 
 namespace fastscapelib
 {
+
+    class py_flow_graph_impl;
+
+
+    namespace detail
+    {
+
+        class flow_graph_impl_wrapper_base
+        {
+        public:
+            using test_type = xt_array_t<fs::py_selector, double>;
+
+            virtual ~flow_graph_impl_wrapper_base(){};
+
+            virtual const test_type test() const = 0;
+        };
+
+
+        template <class FG>
+        class flow_graph_impl_wrapper : public flow_graph_impl_wrapper_base
+        {
+        public:
+            using flow_graph_impl_type = FG;
+
+            virtual ~flow_graph_impl_wrapper(){};
+
+            flow_graph_impl_wrapper(FG& graph_impl)
+                : p_graph_impl(graph_impl){};
+
+            const test_type test() const
+            {
+                return p_graph_impl.test();
+            };
+
+        private:
+            flow_graph_impl_type& p_graph_impl;
+        };
+    }
+
+
+    class py_flow_graph_impl
+    {
+    public:
+        using test_type = xt_array_t<fs::py_selector, double>;
+
+        template <class FG>
+        py_flow_graph_impl(FG& graph_impl)
+            : p_wrapped_graph_impl(
+                std::make_unique<detail::flow_graph_impl_wrapper<FG>>(graph_impl)){};
+
+        const test_type test() const
+        {
+            return p_wrapped_graph_impl->test();
+        };
+
+    private:
+        std::unique_ptr<detail::flow_graph_impl_wrapper_base> p_wrapped_graph_impl;
+    };
+
 
     /**
      * Flow graph facade class for Python bindings.
@@ -52,6 +112,8 @@ namespace fastscapelib
             using stack_type = xt_tensor_t<py_selector, index_type, 1>;
 
             virtual ~flow_graph_wrapper_base(){};
+
+            virtual const py_flow_graph_impl& impl() = 0;
 
             virtual const data_type& update_routes(const data_type& elevation) = 0;
 
@@ -96,9 +158,15 @@ namespace fastscapelib
             flow_graph_wrapper(G& grid, const FR& router, const SR& resolver)
             {
                 p_graph = std::make_unique<flow_graph_type>(grid, router, resolver);
+                p_graph_impl = std::make_unique<py_flow_graph_impl>(p_graph->impl());
             }
 
             virtual ~flow_graph_wrapper(){};
+
+            const py_flow_graph_impl& impl()
+            {
+                return *p_graph_impl;
+            };
 
             const data_type& update_routes(const data_type& elevation)
             {
@@ -152,6 +220,7 @@ namespace fastscapelib
 
         private:
             std::unique_ptr<flow_graph_type> p_graph;
+            std::unique_ptr<py_flow_graph_impl> p_graph_impl;
         };
 
 
@@ -179,9 +248,12 @@ namespace fastscapelib
         template <class G, class FR, class SR>
         py_flow_graph(G& grid, const FR& router, const SR& resolver)
             : p_wrapped_graph(
-                std::make_unique<detail::flow_graph_wrapper<G, FR, SR>>(grid, router, resolver))
+                std::make_unique<detail::flow_graph_wrapper<G, FR, SR>>(grid, router, resolver)){};
+
+        const py_flow_graph_impl& impl()
         {
-        }
+            return p_wrapped_graph->impl();
+        };
 
         const data_type& update_routes(const data_type& elevation)
         {

@@ -81,7 +81,7 @@ class TestProfileGrid:
     def test_static_props(self):
         assert ProfileGrid.is_structured is True
         assert ProfileGrid.is_uniform is True
-        assert ProfileGrid.max_neighbors == 2
+        assert ProfileGrid.n_neighbors_max == 2
 
     def test___init__(self):
         g = ProfileGrid(10, 2, self.bs, [(5, NodeStatus.FIXED_VALUE_BOUNDARY)])

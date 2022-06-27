@@ -14,8 +14,9 @@ namespace fs = fastscapelib;
 namespace fastscapelib
 {
 
-    struct test_sink_resolver : public sink_resolver
+    struct test_sink_resolver
     {
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
     };
 
     namespace detail

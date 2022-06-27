@@ -9,15 +9,11 @@
 #ifndef FASTSCAPELIB_FLOW_SINK_RESOLVER_H
 #define FASTSCAPELIB_FLOW_SINK_RESOLVER_H
 
+#include "fastscapelib/flow/flow_graph_impl.hpp"
+
 
 namespace fastscapelib
 {
-
-    struct sink_resolver
-    {
-        // enable dynamic downcasting on sink resolver types
-        virtual ~sink_resolver() = default;
-    };
 
     namespace detail
     {
@@ -81,8 +77,9 @@ namespace fastscapelib
         };
     }
 
-    struct no_sink_resolver : public sink_resolver
+    struct no_sink_resolver
     {
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
     };
 }
 

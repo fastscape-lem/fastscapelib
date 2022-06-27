@@ -10,6 +10,7 @@
 #define FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 
 #include "fastscapelib/algo/flow_routing.hpp"
+#include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
 
 
@@ -66,8 +67,6 @@ namespace fastscapelib
 
             using elevation_type = typename graph_type::elevation_type;
 
-            static constexpr size_t n_receivers = 0;
-
             // we don't want to instantiate a generic implementation
             // -> only support calling a specialized class template constructor
             flow_router_impl(graph_type& graph, const flow_router_type& router) = delete;
@@ -80,6 +79,8 @@ namespace fastscapelib
 
     struct single_flow_router
     {
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        static constexpr bool is_single = true;
     };
 
 
@@ -95,8 +96,6 @@ namespace fastscapelib
             using base_type = flow_router_impl_base<graph_type, single_flow_router>;
 
             using elevation_type = typename graph_type::elevation_type;
-
-            static constexpr size_t n_receivers = 1;
 
             flow_router_impl(graph_type& graph, const single_flow_router& router)
                 : base_type(graph, router){};
@@ -193,6 +192,8 @@ namespace fastscapelib
 
     struct multiple_flow_router
     {
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        static constexpr bool is_single = false;
         double p1;
         double p2;
     };
@@ -215,7 +216,7 @@ namespace fastscapelib
 
             using elevation_type = typename graph_type::elevation_type;
 
-            static constexpr size_t n_receivers = graph_type::grid_type::max_neighbors();
+            static constexpr size_t n_receivers = graph_type::grid_type::n_neighbors_max();
 
             flow_router_impl(graph_type& graph, const multiple_flow_router& router)
                 : base_type(graph, router){};

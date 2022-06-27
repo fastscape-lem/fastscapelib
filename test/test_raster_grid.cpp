@@ -75,7 +75,7 @@ namespace fastscapelib
         {
             EXPECT_EQ(fs::raster_grid::is_structured(), true);
             EXPECT_EQ(fs::raster_grid::is_uniform(), true);
-            EXPECT_EQ(fs::raster_grid::max_neighbors(), 8u);
+            EXPECT_EQ(fs::raster_grid::n_neighbors_max(), 8u);
             EXPECT_EQ(fs::raster_grid::xt_ndims(), 2);
         }
 

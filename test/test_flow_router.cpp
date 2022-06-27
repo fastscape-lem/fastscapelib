@@ -16,6 +16,7 @@ namespace fastscapelib
 
     struct test_flow_router
     {
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
     };
 
 

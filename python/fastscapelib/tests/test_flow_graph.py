@@ -23,6 +23,13 @@ class TestFlowGraph:
         FlowGraph(profile_grid, SingleFlowRouter(), NoSinkResolver())
         FlowGraph(profile_grid, MultipleFlowRouter(1.0, 1.1), NoSinkResolver())
 
+    def test_impl(self):
+        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
+
+        # TODO: update
+        npt.assert_array_equal(flow_graph.impl().test(), np.full((grid.size, 2), -1))
+
     def test_update_routes(self):
         grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
         flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())

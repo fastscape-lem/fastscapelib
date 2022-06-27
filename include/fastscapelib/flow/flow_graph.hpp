@@ -9,11 +9,12 @@
 #ifndef FASTSCAPELIB_FLOW_FLOW_GRAPH_H
 #define FASTSCAPELIB_FLOW_FLOW_GRAPH_H
 
+#include <stdexcept>
+#include <type_traits>
+
 #include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
-
-#include <stdexcept>
 
 
 namespace fastscapelib
@@ -36,6 +37,12 @@ namespace fastscapelib
         using grid_type = G;
         using router_type = FR;
         using resolver_type = SR;
+
+        static_assert(std::is_same<typename router_type::flow_graph_impl_tag,
+                                   typename resolver_type::flow_graph_impl_tag>::value,
+                      "incompatible flow router and sink resolver types");
+        using flow_graph_impl_tag = typename router_type::flow_graph_impl_tag;
+        using flow_graph_impl_type = detail::flow_graph_impl<grid_type, S, flow_graph_impl_tag>;
 
         using index_type = typename grid_type::size_type;
         using grid_data_type = typename grid_type::grid_data_type;
@@ -61,12 +68,13 @@ namespace fastscapelib
 
         flow_graph(G& grid, const router_type& router, const resolver_type& resolver)
             : m_grid(grid)
+            , m_graph_impl(grid)
             , m_router_impl(*this, router)
             , m_resolver_impl(*this, resolver)
         {
             using shape_type = std::array<index_type, 2>;
-            const shape_type receivers_shape = { grid.size(), grid_type::max_neighbors() };
-            const shape_type donors_shape = { grid.size(), grid_type::max_neighbors() + 1 };
+            const shape_type receivers_shape = { grid.size(), grid_type::n_neighbors_max() };
+            const shape_type donors_shape = { grid.size(), grid_type::n_neighbors_max() + 1 };
 
             m_receivers = xt::ones<index_type>(receivers_shape) * -1;
             m_receivers_count = xt::zeros<index_type>({ grid.size() });
@@ -98,6 +106,11 @@ namespace fastscapelib
         {
             return m_grid.size();
         };
+
+        const flow_graph_impl_type& impl() const
+        {
+            return m_graph_impl;
+        }
 
         const receivers_type& receivers() const
         {
@@ -161,6 +174,8 @@ namespace fastscapelib
 
     private:
         G& m_grid;
+
+        flow_graph_impl_type m_graph_impl;
 
         donors_type m_donors;
         donors_count_type m_donors_count;

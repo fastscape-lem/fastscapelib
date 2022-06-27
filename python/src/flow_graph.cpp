@@ -15,12 +15,16 @@ namespace fs = fastscapelib;
 void
 add_flow_graph_bindings(py::module& m)
 {
+    py::class_<fs::py_flow_graph_impl>(m, "FlowGraphImpl")
+        .def("test", &fs::py_flow_graph_impl::test);
+
     py::class_<fs::py_flow_graph> pyfgraph(m, "FlowGraph");
 
     fs::add_init_methods<fs::py_profile_grid>(pyfgraph);
     fs::add_init_methods<fs::py_raster_grid>(pyfgraph);
 
-    pyfgraph.def("update_routes", &fs::py_flow_graph::update_routes)
+    pyfgraph.def("impl", &fs::py_flow_graph::impl, py::return_value_policy::reference)
+        .def("update_routes", &fs::py_flow_graph::update_routes)
         .def("receivers", &fs::py_flow_graph::receivers)
         .def("receivers_count", &fs::py_flow_graph::receivers_count)
         .def("receivers_distance", &fs::py_flow_graph::receivers_distance)
