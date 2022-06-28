@@ -13,10 +13,219 @@
 #include "xtensor/xmanipulation.hpp"
 
 #include "fastscapelib/utils/utils.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib
 {
+
+    template <class FG, class S = typename FG::xt_selector>
+    class spl_eroder
+    {
+    public:
+        using flow_graph_type = FG;
+        using xt_selector = S;
+        using grid_type = typename flow_graph_type::grid_type;
+
+        using size_type = typename grid_type::size_type;
+        using shape_type = typename grid_type::shape_type;
+        using data_type = typename grid_type::grid_data_type;
+        using data_array_type = xt_array_t<xt_selector, data_type>;
+        using elevation_type = data_array_type;
+
+        template <class K>
+        spl_eroder(FG& flow_graph, K&& k_coef, double m_exp, double n_exp, double tolerance)
+            : m_flow_graph(flow_graph)
+            , m_shape(flow_graph.grid().shape())
+            , m_tolerance(tolerance)
+        {
+            set_k_coef(k_coef);
+            set_m_exp(m_exp);
+            set_n_exp(n_exp);
+
+            m_erosion = xt::zeros<data_type>(m_shape);
+        };
+
+        const data_array_type& k_coef()
+        {
+            return m_k_coef;
+        };
+
+        template <class T>
+        void set_k_coef(T value, typename std::enable_if_t<std::is_floating_point<T>::value>* = 0)
+        {
+            m_k_coef = xt::broadcast(std::forward<T>(value), { m_flow_graph.size() });
+        };
+
+        template <class K>
+        void set_k_coef(K&& value, typename std::enable_if_t<xt::is_xexpression<K>::value>* = 0)
+        {
+            assert(value.shape() == m_shape);
+            m_k_coef = xt::flatten(value);
+        };
+
+        double m_exp()
+        {
+            return m_m_exp;
+        };
+
+        void set_m_exp(double value)
+        {
+            // TODO: validate value
+            m_m_exp = value;
+        };
+
+        double n_exp()
+        {
+            return m_n_exp;
+        };
+
+        void set_n_exp(double value)
+        {
+            // TODO: validate value
+            m_n_exp = value;
+        };
+
+        double tolerance()
+        {
+            return m_tolerance;
+        }
+
+        size_type n_corr()
+        {
+            return m_n_corr;
+        };
+
+        const data_array_type& erode(const data_array_type& elevation,
+                                     const data_array_type& drainage_area,
+                                     double dt);
+
+    private:
+        flow_graph_type& m_flow_graph;
+        shape_type m_shape;
+        data_array_type m_k_coef;
+        data_array_type m_erosion;
+        double m_m_exp;
+        double m_n_exp;
+        double m_tolerance;
+        size_type m_n_corr;
+    };
+
+
+    template <class FG, class S>
+    auto spl_eroder<FG, S>::erode(const data_array_type& elevation,
+                                  const data_array_type& drainage_area,
+                                  double dt) -> const data_array_type&
+    {
+        auto erosion_flat = xt::flatten(m_erosion);
+        const auto elevation_flat = xt::flatten(elevation);
+        const auto drainage_area_flat = xt::flatten(drainage_area);
+
+        auto& flow_graph_impl = m_flow_graph.impl();
+
+        const auto& receivers = flow_graph_impl.receivers();
+        const auto& receivers_count = flow_graph_impl.receivers_count();
+        const auto& receivers_distance = flow_graph_impl.receivers_distance();
+        const auto& receivers_weight = flow_graph_impl.receivers_weight();
+        const auto& dfs_stack = flow_graph_impl.dfs_stack();
+
+        m_n_corr = 0;
+
+        for (const auto& istack : dfs_stack)
+        {
+            auto r_count = receivers_count[istack];
+
+            for (size_type r = 0; r < r_count; ++r)
+            {
+                size_type irec = receivers(istack, r);
+
+                if (irec == istack)
+                {
+                    // at basin outlet or pit
+                    erosion_flat(istack) = 0.;
+                    continue;
+                }
+
+                data_type istack_elevation = elevation_flat(istack);  // at time t
+                data_type irec_elevation
+                    = elevation_flat(irec) - erosion_flat(irec);  // at time t+dt
+
+                if (irec_elevation >= istack_elevation)
+                {
+                    // may happen if flow is routed outside of a depression / flat area
+                    erosion_flat(istack) = 0.;
+                    continue;
+                }
+
+                auto factor
+                    = (m_k_coef(istack) * dt * std::pow(drainage_area_flat(istack), m_m_exp));
+
+                data_type delta_0 = istack_elevation - irec_elevation;
+                data_type delta_k;
+
+                if (m_n_exp == 1)
+                {
+                    // fast path for n_exp = 1 (common use case)
+                    factor /= receivers_distance(istack, r);
+                    delta_k = delta_0 / (1. + factor);
+                }
+
+                else
+                {
+                    // 1st order Newton-Raphson iterations (k)
+                    factor /= std::pow(receivers_distance(istack, r), m_n_exp);
+                    delta_k = delta_0;
+
+                    while (true)
+                    {
+                        auto factor_delta_exp = factor * std::pow(delta_k, m_n_exp);
+                        auto func = delta_k + factor_delta_exp - delta_0;
+
+                        if (func <= m_tolerance)
+                        {
+                            break;
+                        }
+
+                        auto func_deriv = 1 + m_n_exp * factor_delta_exp / delta_k;
+                        delta_k -= func / func_deriv;
+
+                        if (delta_k <= 0)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (delta_k <= 0)
+                {
+                    // prevent the creation of new depressions / flat channels
+                    // by arbitrarily limiting erosion
+                    m_n_corr++;
+                    delta_k = std::numeric_limits<data_type>::min();
+                }
+
+                if (r_count == 1)
+                {
+                    erosion_flat(istack) = (delta_0 - delta_k);
+                }
+                else
+                {
+                    erosion_flat(istack) += (delta_0 - delta_k) * receivers_weight(istack, r);
+                }
+            }
+        }
+
+        return m_erosion;
+    };
+
+
+    template <class FG, class K>
+    spl_eroder<FG> make_spl_eroder(
+        FG& graph, K&& k_coef, double m_exp, double n_exp, double tolerance)
+    {
+        return spl_eroder<FG>(graph, k_coef, m_exp, n_exp, tolerance);
+    }
+
 
     namespace detail
     {
@@ -62,11 +271,11 @@ namespace fastscapelib
                                      double m_exp,
                                      double n_exp,
                                      double dt,
-                                     double tolerance) -> typename FG::index_type
+                                     double tolerance) -> typename FG::size_type
         {
             using T = std::common_type_t<typename std::decay_t<Er>::value_type,
                                          typename std::decay_t<El>::value_type>;
-            using index_type = typename FG::index_type;
+            using size_type = typename FG::size_type;
 
             auto erosion_flat = xt::flatten(erosion);
             const auto elevation_flat = xt::flatten(elevation);
@@ -81,15 +290,15 @@ namespace fastscapelib
             const auto& receivers_weight = flow_graph.impl().receivers_weight();
             const auto& dfs_stack = flow_graph.impl().dfs_stack();
 
-            index_type n_corr = 0;
+            size_type n_corr = 0;
 
             for (const auto& istack : dfs_stack)
             {
                 auto r_count = receivers_count[istack];
 
-                for (index_type r = 0; r < r_count; ++r)
+                for (size_type r = 0; r < r_count; ++r)
                 {
-                    index_type irec = receivers(istack, r);
+                    size_type irec = receivers(istack, r);
 
                     if (irec == istack)
                     {
@@ -226,7 +435,7 @@ namespace fastscapelib
                             double m_exp,
                             double n_exp,
                             double dt,
-                            double tolerance) -> typename FG::index_type
+                            double tolerance) -> typename FG::size_type
     {
         return detail::erode_stream_power_impl(erosion.derived_cast(),
                                                elevation.derived_cast(),
@@ -276,7 +485,7 @@ namespace fastscapelib
                             double m_exp,
                             double n_exp,
                             double dt,
-                            double tolerance) -> typename FG::index_type
+                            double tolerance) -> typename FG::size_type
     {
         return detail::erode_stream_power_impl(erosion.derived_cast(),
                                                elevation.derived_cast(),

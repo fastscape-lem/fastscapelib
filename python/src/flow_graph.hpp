@@ -44,9 +44,9 @@ namespace fastscapelib
         public:
             using neighbors_count_type = std::uint8_t;
             using grid_data_type = double;
-            using index_type = std::size_t;
+            using size_type = std::size_t;
 
-            using donors_type = xt_tensor_t<py_selector, index_type, 2>;
+            using donors_type = xt_tensor_t<py_selector, size_type, 2>;
             using donors_count_type = xt_tensor_t<py_selector, neighbors_count_type, 1>;
 
             using receivers_type = donors_type;
@@ -54,7 +54,7 @@ namespace fastscapelib
             using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
             using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
-            using stack_type = xt_tensor_t<py_selector, index_type, 1>;
+            using stack_type = xt_tensor_t<py_selector, size_type, 1>;
 
             virtual ~flow_graph_impl_wrapper_base(){};
 
@@ -80,7 +80,7 @@ namespace fastscapelib
         public:
             using flow_graph_impl_type = FG;
 
-            using index_type = typename flow_graph_impl_wrapper_base::index_type;
+            using size_type = typename flow_graph_impl_wrapper_base::size_type;
             using neighbors_count_type =
                 typename flow_graph_impl_wrapper_base::neighbors_count_type;
             using grid_data_type = typename flow_graph_impl_wrapper_base::grid_data_type;
@@ -144,11 +144,11 @@ namespace fastscapelib
     class py_flow_graph_impl
     {
     public:
-        using index_type = std::size_t;
+        using size_type = std::size_t;
         using neighbors_count_type = std::uint8_t;
         using grid_data_type = double;
 
-        using donors_type = xt_tensor_t<py_selector, index_type, 2>;
+        using donors_type = xt_tensor_t<py_selector, size_type, 2>;
         using donors_count_type = xt_tensor_t<py_selector, neighbors_count_type, 1>;
 
         using receivers_type = donors_type;
@@ -156,7 +156,7 @@ namespace fastscapelib
         using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
         using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
-        using stack_type = xt_tensor_t<py_selector, index_type, 1>;
+        using stack_type = xt_tensor_t<py_selector, size_type, 1>;
 
 
         template <class FG>
@@ -220,12 +220,12 @@ namespace fastscapelib
         class flow_graph_wrapper_base
         {
         public:
-            using index_type = std::size_t;
+            using size_type = std::size_t;
             using data_type = xt_array_t<py_selector, double>;
 
             virtual ~flow_graph_wrapper_base(){};
 
-            virtual index_type size() const = 0;
+            virtual size_type size() const = 0;
 
             virtual const py_flow_graph_impl& impl() const = 0;
 
@@ -242,7 +242,7 @@ namespace fastscapelib
         public:
             using flow_graph_type = fs::flow_graph<G, FR, SR, fs::py_selector>;
 
-            using index_type = typename flow_graph_wrapper_base::index_type;
+            using size_type = typename flow_graph_wrapper_base::size_type;
             using data_type = typename flow_graph_wrapper_base::data_type;
 
             flow_graph_wrapper(G& grid, const FR& router, const SR& resolver)
@@ -253,7 +253,7 @@ namespace fastscapelib
 
             virtual ~flow_graph_wrapper(){};
 
-            index_type size() const
+            size_type size() const
             {
                 return p_graph->size();
             };
@@ -288,15 +288,28 @@ namespace fastscapelib
     class py_flow_graph
     {
     public:
-        using index_type = std::size_t;
+        using size_type = std::size_t;
         using data_type = xt_array_t<py_selector, double>;
+
+        /*
+         * grid_type facade (need to redefine it here - at least partially - as
+         * the template parameter has been erased and also because py_flow_graph
+         * may be reused as template argument for other classes like eroders).
+         *
+         */
+        struct grid_type
+        {
+            using size_type = std::size_t;
+            using shape_type = xt_array_t<py_selector, double>::shape_type;
+            using grid_data_type = double;
+        };
 
         template <class G, class FR, class SR>
         py_flow_graph(G& grid, const FR& router, const SR& resolver)
             : p_wrapped_graph(
                 std::make_unique<detail::flow_graph_wrapper<G, FR, SR>>(grid, router, resolver)){};
 
-        index_type size() const
+        size_type size() const
         {
             return p_wrapped_graph->size();
         };

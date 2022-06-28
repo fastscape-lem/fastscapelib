@@ -37,18 +37,20 @@ namespace fastscapelib
         using grid_type = G;
         using router_type = FR;
         using resolver_type = SR;
+        using xt_selector = S;
 
         static_assert(std::is_same<typename router_type::flow_graph_impl_tag,
                                    typename resolver_type::flow_graph_impl_tag>::value,
                       "incompatible flow router and sink resolver types");
         using flow_graph_impl_tag = typename router_type::flow_graph_impl_tag;
-        using flow_graph_impl_type = detail::flow_graph_impl<grid_type, S, flow_graph_impl_tag>;
+        using flow_graph_impl_type
+            = detail::flow_graph_impl<grid_type, xt_selector, flow_graph_impl_tag>;
 
-        using index_type = typename grid_type::size_type;
-        using elevation_type = xt_array_t<S, typename grid_type::grid_data_type>;
+        using size_type = typename grid_type::size_type;
+        using elevation_type = xt_array_t<xt_selector, typename grid_type::grid_data_type>;
 
         template <class T>
-        using data_type = xt_array_t<S, T>;
+        using data_type = xt_array_t<xt_selector, T>;
 
         flow_graph(G& grid, const router_type& router, const resolver_type& resolver)
             : m_grid(grid)
@@ -71,7 +73,7 @@ namespace fastscapelib
             return m_grid;
         };
 
-        index_type size() const
+        size_type size() const
         {
             return m_grid.size();
         };

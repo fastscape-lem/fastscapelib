@@ -4,11 +4,13 @@
 #include "fastscapelib/eroders/spl.hpp"
 #include "fastscapelib/eroders/diffusion_adi.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
 
 #include "flow_graph.hpp"
+#include "pytensor_utils.hpp"
 
 
 namespace py = pybind11;
@@ -49,6 +51,31 @@ erode_linear_diffusion_py(xt::pytensor<T, 2>& erosion,
 void
 add_spl_bindings(py::module& m)
 {
+    using data_array_type = fs::xt_array_t<fs::py_selector, double>;
+    using py_spl_eroder = fs::spl_eroder<fs::py_flow_graph, fs::py_selector>;
+
+    py::class_<py_spl_eroder>(m, "SPLEroder")
+        .def(py::init<fs::py_flow_graph&, double, double, double, double>())
+        .def(py::init<fs::py_flow_graph&, data_array_type&, double, double, double>())
+        .def_property("k_coef",
+                      &py_spl_eroder::k_coef,
+                      [](py_spl_eroder& self, py::object value)
+                      {
+                          if (py::isinstance<py::float_>(value))
+                          {
+                              self.set_k_coef(value.cast<double>());
+                          }
+                          else if (py::isinstance<data_array_type&>(value))
+                          {
+                              self.set_k_coef(value.cast<data_array_type&>());
+                          }
+                      })
+        .def_property("m_exp", &py_spl_eroder::m_exp, &py_spl_eroder::set_m_exp)
+        .def_property("m_exp", &py_spl_eroder::n_exp, &py_spl_eroder::set_n_exp)
+        .def_property_readonly("tolerance", &py_spl_eroder::tolerance)
+        .def_property_readonly("n_corr", &py_spl_eroder::n_corr)
+        .def("erode", &py_spl_eroder::erode);
+
     m.def("erode_stream_power_d",
           &erode_stream_power_py<double, double>,
           "Compute bedrock channel erosion during a single time step "
