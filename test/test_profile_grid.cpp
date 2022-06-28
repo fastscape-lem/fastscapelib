@@ -91,7 +91,7 @@ namespace fastscapelib
         {
             EXPECT_EQ(fs::profile_grid::is_structured(), true);
             EXPECT_EQ(fs::profile_grid::is_uniform(), true);
-            EXPECT_EQ(fs::profile_grid::max_neighbors(), 2u);
+            EXPECT_EQ(fs::profile_grid::n_neighbors_max(), 2u);
             EXPECT_EQ(fs::profile_grid::xt_ndims(), 1);
         }
 

@@ -10,220 +10,221 @@
 #define FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 
 #include "fastscapelib/algo/flow_routing.hpp"
+#include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib
 {
 
-    /**
-     * Base class for the implementation of flow routing
-     * methods.
-     *
-     * All derived classes must implement ``route1`` and ``route2`` methods.
-     *
-     * @tparam FG The flow_graph class.
-     */
-    template <class FG>
-    class flow_router
+    namespace detail
     {
-    public:
-        using elevation_type = typename FG::elevation_type;
 
-        // Entity semantics, i.e., a flow graph uses a flow router via this base class.
-        // -> avoid incomplete destruction (e.g., there may be members in inherited classes
-        // that need to be destroyed)
-        virtual ~flow_router() = default;
-
-        // do not assign or copy flow routers using the base class.
-        flow_router(const flow_router&) = delete;
-        flow_router(flow_router&&) = delete;
-        flow_router& operator=(const flow_router&) = delete;
-        flow_router& operator=(flow_router&&) = delete;
-
-        virtual void route1(const elevation_type& elevation, FG& fgraph) = 0;
-        virtual void route2(const elevation_type& elevation, FG& fgraph) = 0;
-
-    protected:
-        using index_type = typename FG::index_type;
-
-        using donors_type = typename FG::donors_type;
-        using donors_count_type = typename FG::donors_count_type;
-
-        using receivers_type = typename FG::receivers_type;
-        using receivers_count_type = typename FG::receivers_count_type;
-        using receivers_distance_type = typename FG::receivers_distance_type;
-        using receivers_weight_type = typename FG::receivers_weight_type;
-
-        using stack_type = typename FG::stack_type;
-
-        flow_router() = default;
-
-        donors_type& donors(FG& fgraph)
+        /**
+         * Common implementation for all flow routing methods.
+         *
+         * @tparam FG The flow graph implementation type.
+         * @tparam FR The flow router type.
+         */
+        template <class FG, class FR>
+        class flow_router_impl_base
         {
-            return fgraph.m_donors;
-        };
-        donors_count_type& donors_count(FG& fgraph)
-        {
-            return fgraph.m_donors_count;
+        public:
+            using graph_impl_type = FG;
+            using router_type = FR;
+
+        protected:
+            flow_router_impl_base(graph_impl_type& graph_impl, const router_type& router)
+                : m_graph_impl(graph_impl)
+                , m_router(router){};
+
+            ~flow_router_impl_base() = default;
+
+            graph_impl_type& m_graph_impl;
+            const router_type& m_router;
         };
 
-        receivers_type& receivers(FG& fgraph)
-        {
-            return fgraph.m_receivers;
-        };
-        receivers_count_type& receivers_count(FG& fgraph)
-        {
-            return fgraph.m_receivers_count;
-        };
-        receivers_distance_type& receivers_distance(FG& fgraph)
-        {
-            return fgraph.m_receivers_distance;
-        };
-        receivers_weight_type& receivers_weight(FG& fgraph)
-        {
-            return fgraph.m_receivers_weight;
-        };
 
-        stack_type& dfs_stack(FG& fgraph)
+        /**
+         * Flow routing implementation.
+         *
+         * This class is used via template specialization (one for each
+         * flow routing method).
+         *
+         * The declaration for the generic case here contains the minimum that
+         * should be (re)implemented in specialized template classes.
+         *
+         * @tparam FG The flow graph implememtation type.
+         * @tparam FR The flow router type.
+         */
+        template <class FG, class FR>
+        class flow_router_impl : public flow_router_impl_base<FG, FR>
         {
-            return fgraph.m_dfs_stack;
+        public:
+            using graph_impl_type = FG;
+            using flow_router_type = FR;
+            using base_type = flow_router_impl_base<graph_impl_type, flow_router_type>;
+
+            using elevation_type = typename graph_impl_type::elevation_type;
+
+            // we don't want to instantiate a generic implementation
+            // -> only support calling a specialized class template constructor
+            flow_router_impl(graph_impl_type& graph_impl, const flow_router_type& router) = delete;
+
+            void route1(const elevation_type& /*elevation*/){};
+            void route2(const elevation_type& /*elevation*/){};
         };
+    }
+
+
+    struct single_flow_router
+    {
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        static constexpr bool is_single = true;
     };
 
 
-    /**
-     * A flow_router considering only one receiver per
-     * grid node.
-     *
-     * @tparam FG The flow_graph class.
-     */
-    template <class FG>
-    class single_flow_router final : public flow_router<FG>
+    namespace detail
     {
-    public:
-        using base_type = flow_router<FG>;
-        using elevation_type = typename base_type::elevation_type;
 
-        single_flow_router() = default;
-
-        virtual ~single_flow_router() = default;
-
-        void route1(const elevation_type& elevation, FG& fgraph)
+        template <class FG>
+        class flow_router_impl<FG, single_flow_router>
+            : public flow_router_impl_base<FG, single_flow_router>
         {
-            using neighbors_type = typename FG::grid_type::neighbors_type;
+        public:
+            using graph_impl_type = FG;
+            using base_type = flow_router_impl_base<graph_impl_type, single_flow_router>;
 
-            double slope, slope_max;
-            neighbors_type neighbors;
+            using elevation_type = typename graph_impl_type::elevation_type;
 
-            auto& grid = fgraph.grid();
-            auto& donors = this->donors(fgraph);
-            auto& donors_count = this->donors_count(fgraph);
-            auto& receivers = this->receivers(fgraph);
-            auto& dist2receivers = this->receivers_distance(fgraph);
+            flow_router_impl(graph_impl_type& graph_impl, const single_flow_router& router)
+                : base_type(graph_impl, router){};
 
-            donors_count.fill(0);
-
-            for (auto i : grid.nodes_indices())
+            void route1(const elevation_type& elevation)
             {
-                receivers(i, 0) = i;
-                dist2receivers(i, 0) = 0;
-                slope_max = std::numeric_limits<double>::min();
+                using neighbors_type = typename graph_impl_type::grid_type::neighbors_type;
 
-                for (auto n : grid.neighbors(i, neighbors))
+                double slope, slope_max;
+                neighbors_type neighbors;
+
+                auto& grid = this->m_graph_impl.grid();
+                auto& donors = this->m_graph_impl.m_donors;
+                auto& donors_count = this->m_graph_impl.m_donors_count;
+                auto& receivers = this->m_graph_impl.m_receivers;
+                auto& dist2receivers = this->m_graph_impl.m_receivers_distance;
+
+                donors_count.fill(0);
+
+                for (auto i : grid.nodes_indices())
                 {
-                    slope = (elevation.data()[i] - elevation.data()[n.idx]) / n.distance;
+                    receivers(i, 0) = i;
+                    dist2receivers(i, 0) = 0;
+                    slope_max = std::numeric_limits<double>::min();
 
-                    if (slope > slope_max)
+                    for (auto n : grid.neighbors(i, neighbors))
                     {
-                        slope_max = slope;
-                        receivers(i, 0) = n.idx;
-                        dist2receivers(i, 0) = n.distance;
+                        slope = (elevation.data()[i] - elevation.data()[n.idx]) / n.distance;
+
+                        if (slope > slope_max)
+                        {
+                            slope_max = slope;
+                            receivers(i, 0) = n.idx;
+                            dist2receivers(i, 0) = n.distance;
+                        }
+                    }
+                    donors(receivers(i, 0), donors_count(receivers(i, 0))++) = i;
+                }
+
+                this->m_graph_impl.m_receivers_count.fill(1);
+
+                auto weights = xt::col(this->m_graph_impl.m_receivers_weight, 0);
+                weights.fill(1.);
+
+                compute_dfs_stack();
+            };
+
+            void route2(const elevation_type& /*elevation*/){};
+
+        private:
+            using index_type = typename graph_impl_type::index_type;
+            using stack_type = typename graph_impl_type::stack_type;
+            using donors_count_type = typename graph_impl_type::donors_count_type;
+            using donors_type = typename graph_impl_type::donors_type;
+
+            void add2stack(index_type& nstack,
+                           stack_type& stack,
+                           const donors_count_type& ndonors,
+                           const donors_type& donors,
+                           const index_type inode)
+            {
+                for (index_type k = 0; k < ndonors(inode); ++k)
+                {
+                    const auto idonor = donors(inode, k);
+                    if (idonor != inode)
+                    {
+                        stack(nstack++) = idonor;
+                        add2stack(nstack, stack, ndonors, donors, idonor);
                     }
                 }
-                donors(receivers(i, 0), donors_count(receivers(i, 0))++) = i;
             }
 
-            this->receivers_count(fgraph).fill(1);
-
-            auto weights = xt::col(this->receivers_weight(fgraph), 0);
-            weights.fill(1.);
-
-            compute_dfs_stack(fgraph);
-        };
-
-        void route2(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-
-    private:
-        using index_type = typename flow_router<FG>::index_type;
-        using stack_type = typename flow_router<FG>::stack_type;
-        using donors_count_type = typename flow_router<FG>::donors_count_type;
-        using donors_type = typename flow_router<FG>::donors_type;
-
-        void add2stack(index_type& nstack,
-                       stack_type& stack,
-                       const donors_count_type& ndonors,
-                       const donors_type& donors,
-                       const index_type inode)
-        {
-            for (index_type k = 0; k < ndonors(inode); ++k)
+            void compute_dfs_stack()
             {
-                const auto idonor = donors(inode, k);
-                if (idonor != inode)
+                const auto& receivers = this->m_graph_impl.m_receivers;
+                const auto& donors = this->m_graph_impl.m_donors;
+                const auto& donors_count = this->m_graph_impl.m_donors_count;
+
+                auto& stack = this->m_graph_impl.m_dfs_stack;
+                index_type nstack = 0;
+
+                for (index_type i = 0; i < this->m_graph_impl.size(); ++i)
                 {
-                    stack(nstack++) = idonor;
-                    add2stack(nstack, stack, ndonors, donors, idonor);
+                    if (receivers(i, 0) == i)
+                    {
+                        stack(nstack++) = i;
+                        add2stack(nstack, stack, donors_count, donors, i);
+                    }
                 }
-            }
-        }
-
-        void compute_dfs_stack(FG& fgraph)
-        {
-            const auto& receivers = this->receivers(fgraph);
-            const auto& donors = this->donors(fgraph);
-            const auto& donors_count = this->donors_count(fgraph);
-
-            auto& stack = this->dfs_stack(fgraph);
-            index_type nstack = 0;
-
-            for (index_type i = 0; i < fgraph.size(); ++i)
-            {
-                if (receivers(i, 0) == i)
-                {
-                    stack(nstack++) = i;
-                    add2stack(nstack, stack, donors_count, donors, i);
-                }
-            }
+            };
         };
-    };
+    }
 
 
-    /**
-     * TODO: not yet operational.
-     *
-     * @tparam FG The flow_graph class.
-     */
-    template <class FG>
-    class multiple_flow_router final : public flow_router<FG>
+    struct multiple_flow_router
     {
-    public:
-        using base_type = flow_router<FG>;
-        using elevation_type = typename base_type::elevation_type;
-
-        multiple_flow_router(double param1, double param2)
-            : p1(param1)
-            , p2(param2)
-        {
-        }
-
-        virtual ~multiple_flow_router() = default;
-
-        void route1(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-        void route2(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-
-    private:
-        double p1 = 0., p2 = 0.;
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        static constexpr bool is_single = false;
+        double p1;
+        double p2;
     };
+
+
+    namespace detail
+    {
+
+        /**
+         * TODO: not yet operational.
+         *
+         */
+        template <class FG>
+        class flow_router_impl<FG, multiple_flow_router>
+            : public flow_router_impl_base<FG, multiple_flow_router>
+        {
+        public:
+            using graph_impl_type = FG;
+            using base_type = flow_router_impl_base<graph_impl_type, multiple_flow_router>;
+
+            using elevation_type = typename graph_impl_type::elevation_type;
+
+            static constexpr size_t n_receivers = graph_impl_type::grid_type::n_neighbors_max();
+
+            flow_router_impl(graph_impl_type& graph_impl, const multiple_flow_router& router)
+                : base_type(graph_impl, router){};
+
+            void route1(const elevation_type& /*elevation*/){};
+            void route2(const elevation_type& /*elevation*/){};
+        };
+    }
 }
 
 #endif

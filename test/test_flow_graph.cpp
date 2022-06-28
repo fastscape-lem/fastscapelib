@@ -16,68 +16,11 @@ namespace fastscapelib
     namespace testing
     {
 
-        template <class FG>
-        class constant_before_sink_resolver final : public fs::sink_resolver<FG>
-        {
-        public:
-            using base_type = constant_before_sink_resolver<FG>;
-            using elevation_type = typename base_type::elevation_type;
-
-            constant_before_sink_resolver()
-                : m_elevation(elevation_type({ 0 }))
-            {
-            }
-
-            virtual ~constant_before_sink_resolver() = default;
-
-            const elevation_type& resolve1(const elevation_type& elevation, FG& /*fgraph*/) override
-            {
-                m_elevation = xt::ones_like(elevation) * 2.;
-                return m_elevation;
-            }
-
-            const elevation_type& resolve2(const elevation_type& elevation, FG& /*fgraph*/) override
-            {
-                return elevation;
-            }
-
-        private:
-            elevation_type m_elevation;
-        };
-
-        template <class FG>
-        class constant_after_sink_resolver final : public fs::sink_resolver<FG>
-        {
-        public:
-            using base_type = constant_after_sink_resolver<FG>;
-            using elevation_type = typename base_type::elevation_type;
-
-            constant_after_sink_resolver()
-                : m_elevation(elevation_type({ 0 }))
-            {
-            }
-
-            virtual ~constant_after_sink_resolver() = default;
-
-            const elevation_type& resolve1(const elevation_type& elevation, FG& /*fgraph*/) override
-            {
-                return elevation;
-            }
-
-            const elevation_type& resolve2(const elevation_type& elevation, FG& /*fgraph*/) override
-            {
-                m_elevation = xt::ones_like(elevation) * 5.;
-                return m_elevation;
-            }
-
-        private:
-            elevation_type m_elevation;
-        };
-
         class flow_graph : public ::testing::Test
         {
         protected:
-            using flow_graph_type = fs::flow_graph<fs::raster_grid>;
+            using flow_graph_type
+                = fs::flow_graph<fs::raster_grid, fs::single_flow_router, fs::no_sink_resolver>;
             using grid_type = fs::raster_grid;
             using size_type = typename grid_type::size_type;
 
@@ -94,20 +37,16 @@ namespace fastscapelib
 
         TEST_F(flow_graph, ctor)
         {
-            auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();
-            auto resolver = std::make_unique<fs::no_sink_resolver<flow_graph_type>>();
-
-            flow_graph_type graph(grid, std::move(router), std::move(resolver));
+            auto graph
+                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
             EXPECT_EQ(graph.grid().size(), 16u);  // dummy test
         }
 
         TEST_F(flow_graph, update_routes)
         {
-            auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();
-            auto resolver = std::make_unique<fs::no_sink_resolver<flow_graph_type>>();
-
-            flow_graph_type graph(grid, std::move(router), std::move(resolver));
+            auto graph
+                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
             graph.update_routes(elevation);
             graph.update_routes(elevation);  // check there is not memory effect
 
@@ -115,15 +54,13 @@ namespace fastscapelib
                                                                 9, 9, 9, 7, 9, 9, 9, 14 };
 
             EXPECT_TRUE(
-                xt::all(xt::equal(xt::col(graph.receivers(), 0), expected_fixed_receivers)));
+                xt::all(xt::equal(xt::col(graph.impl().receivers(), 0), expected_fixed_receivers)));
         }
 
         TEST_F(flow_graph, accumulate)
         {
-            auto router = std::make_unique<fs::single_flow_router<flow_graph_type>>();
-            auto resolver = std::make_unique<fs::no_sink_resolver<flow_graph_type>>();
-
-            flow_graph_type graph(grid, std::move(router), std::move(resolver));
+            auto graph
+                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
             graph.update_routes(elevation);
 
             xt::xtensor<double, 2> data1 = xt::ones_like(elevation);

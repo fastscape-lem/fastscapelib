@@ -30,14 +30,20 @@ class TestFlowGraph:
 
         graph_elevation = flow_graph.update_routes(elevation)
 
-        npt.assert_equal(flow_graph.receivers()[:, 0], np.r_[1, 2, 2, 2, 3, 6, 7, 7])
-        npt.assert_equal(flow_graph.receivers_count(), np.ones(elevation.size))
-        npt.assert_equal(flow_graph.receivers_weight()[:, 0], np.ones(elevation.size))
-        npt.assert_equal(flow_graph.receivers_weight()[:, 1], np.zeros(elevation.size))
+        npt.assert_equal(
+            flow_graph.impl().receivers()[:, 0], np.r_[1, 2, 2, 2, 3, 6, 7, 7]
+        )
+        npt.assert_equal(flow_graph.impl().receivers_count(), np.ones(elevation.size))
+        npt.assert_equal(
+            flow_graph.impl().receivers_weight()[:, 0], np.ones(elevation.size)
+        )
+        npt.assert_equal(
+            flow_graph.impl().receivers_weight()[:, 1], np.zeros(elevation.size)
+        )
 
         m = np.iinfo(np.uint64).max
         npt.assert_equal(
-            flow_graph.donors(),
+            flow_graph.impl().donors(),
             np.array(
                 [
                     [m, m, m],
@@ -51,7 +57,9 @@ class TestFlowGraph:
                 ]
             ),
         )
-        npt.assert_equal(flow_graph.donors_count(), np.r_[0, 1, 3, 1, 0, 0, 1, 2])
+        npt.assert_equal(
+            flow_graph.impl().donors_count(), np.r_[0, 1, 3, 1, 0, 0, 1, 2]
+        )
 
         npt.assert_equal(graph_elevation, elevation)
 

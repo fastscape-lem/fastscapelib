@@ -8,9 +8,9 @@ namespace fastscapelib
     namespace testing
     {
 
-        TEST_F(bishop_raster_grid, max_neighbors)
+        TEST_F(bishop_raster_grid, n_neighbors_max)
         {
-            EXPECT_EQ(grid_type::max_neighbors(), 4u);
+            EXPECT_EQ(grid_type::n_neighbors_max(), 4u);
         }
 
 #define EXPECT_INDICES(ROW, COL, INDICES, RC_INDICES)                                              \

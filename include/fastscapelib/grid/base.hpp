@@ -323,12 +323,12 @@ namespace fastscapelib
 
         using neighbors_cache_type = typename inner_types::neighbors_cache_type;
 
-        static constexpr std::uint8_t max_neighbors()
+        static constexpr std::uint8_t n_neighbors_max()
         {
-            return inner_types::max_neighbors;
+            return inner_types::n_neighbors_max;
         }
 
-        static_assert(neighbors_cache_type::cache_width >= max_neighbors(),
+        static_assert(neighbors_cache_type::cache_width >= n_neighbors_max(),
                       "Cache width is too small!");
 
         using neighbors_type = std::vector<neighbor>;
@@ -407,7 +407,7 @@ namespace fastscapelib
     protected:
         using neighbors_indices_impl_type = typename neighbors_cache_type::neighbors_indices_type;
         using neighbors_distances_impl_type =
-            typename std::array<grid_data_type, inner_types::max_neighbors>;
+            typename std::array<grid_data_type, inner_types::n_neighbors_max>;
 
         grid(std::size_t size)
             : m_neighbors_indices_cache(neighbors_cache_type(size)){};

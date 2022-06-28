@@ -169,14 +169,14 @@ namespace fastscapelib
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape{ { n, n } };
 
-            neighbors_offsets_type::shape_type sh0 = { grid_type::max_neighbors() };
+            neighbors_offsets_type::shape_type sh0 = { grid_type::n_neighbors_max() };
             neighbors_offsets_type offsets
                 = xt::empty<xt::xtensor_fixed<std::ptrdiff_t, xt::xshape<2>>>(sh0);
 
             auto get_neighbors_indices
                 = [&shape, &offsets](auto& r, auto& c) -> neighbors_offsets_type
             {
-                for (std::size_t k = 1; k <= grid_type::max_neighbors(); ++k)
+                for (std::size_t k = 1; k <= grid_type::n_neighbors_max(); ++k)
                 {
                     const index_t kr = r + fs::consts::d8_row_offsets[k];
                     const index_t kc = c + fs::consts::d8_col_offsets[k];

@@ -110,7 +110,7 @@ namespace fastscapelib
         using xt_selector = S;
         static constexpr std::size_t xt_ndims = 1;
 
-        static constexpr uint8_t max_neighbors = 2u;
+        static constexpr uint8_t n_neighbors_max = 2u;
         using neighbors_cache_type = C;
         using neighbors_count_type = std::uint8_t;
 

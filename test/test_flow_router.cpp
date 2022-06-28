@@ -13,29 +13,44 @@ namespace fs = fastscapelib;
 
 namespace fastscapelib
 {
-    namespace testing
+
+    struct test_flow_router
+    {
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+    };
+
+
+    namespace detail
     {
 
         template <class FG>
-        class dummy_flow_router final : public fs::flow_router<FG>
+        class flow_router_impl<FG, test_flow_router>
+            : public flow_router_impl_base<FG, test_flow_router>
         {
         public:
-            using base_type = fs::flow_router<FG>;
-            using elevation_type = typename base_type::elevation_type;
+            using graph_type = FG;
+            using base_type = flow_router_impl_base<graph_type, test_flow_router>;
 
-            dummy_flow_router() = default;
+            using elevation_type = typename graph_type::elevation_type;
 
-            virtual ~dummy_flow_router() = default;
+            static constexpr size_t n_receivers = 0;
 
-            void route1(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
-            void route2(const elevation_type& /*elevation*/, FG& /*fgraph*/){};
+            flow_router_impl(graph_type& graph, const test_flow_router& router)
+                : base_type(graph, router){};
+
+            void route1(const elevation_type& /*elevation*/){};
+            void route2(const elevation_type& /*elevation*/){};
         };
+    }
 
+    namespace testing
+    {
 
         class flow_router : public ::testing::Test
         {
         protected:
-            using flow_graph_type = fs::flow_graph<fs::raster_grid>;
+            using flow_graph_type
+                = fs::flow_graph<fs::raster_grid, test_flow_router, fs::no_sink_resolver>;
             using grid_type = fs::raster_grid;
             using size_type = typename grid_type::size_type;
 
@@ -50,9 +65,7 @@ namespace fastscapelib
                                           { 0.29, 0.82, 0.09, 0.88 } };
 
             flow_graph_type graph
-                = flow_graph_type(grid,
-                                  std::make_unique<dummy_flow_router<flow_graph_type>>(),
-                                  std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+                = fs::make_flow_graph(grid, fs::test_flow_router(), fs::no_sink_resolver());
 
             void update()
             {
@@ -65,7 +78,8 @@ namespace fastscapelib
         {
             update();
 
-            EXPECT_TRUE(xt::all(xt::equal(graph.receivers(), xt::ones<int>({ 16, 8 }) * -1)));
+            EXPECT_TRUE(
+                xt::all(xt::equal(graph.impl().receivers(), xt::ones<int>({ 16, 8 }) * -1)));
         }
 
 
@@ -73,7 +87,8 @@ namespace fastscapelib
         {
             update();
 
-            EXPECT_TRUE(xt::allclose(graph.receivers_distance(), xt::ones<double>({ 16, 8 }) * -1));
+            EXPECT_TRUE(
+                xt::allclose(graph.impl().receivers_distance(), xt::ones<double>({ 16, 8 }) * -1));
         }
     }
 }
