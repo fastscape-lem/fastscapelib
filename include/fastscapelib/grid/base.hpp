@@ -342,6 +342,8 @@ namespace fastscapelib
 
         size_type size() const noexcept;
 
+        shape_type shape() const noexcept;
+
         const node_status_type& status_at_nodes() const;
 
         grid_data_type node_area(const size_type& idx) const noexcept;
@@ -451,6 +453,15 @@ namespace fastscapelib
     inline auto grid<G>::size() const noexcept -> size_type
     {
         return derived_grid().m_size;
+    }
+
+    /**
+     * Returns the total number of grid nodes.
+     */
+    template <class G>
+    inline auto grid<G>::shape() const noexcept -> shape_type
+    {
+        return derived_grid().m_shape;
     }
 
     /**

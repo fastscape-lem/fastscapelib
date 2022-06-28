@@ -110,6 +110,7 @@ class TestProfileGrid:
             [Node(5, NodeStatus.FIXED_VALUE_BOUNDARY)],
         )
         assert g.size == 11
+        assert g.shape == [11]
         assert g.spacing == 2.0
         assert g.length == 20.0
 

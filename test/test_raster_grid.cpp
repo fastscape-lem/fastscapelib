@@ -91,6 +91,12 @@ namespace fastscapelib
             EXPECT_EQ(looped_grid.size(), 50u);
         }
 
+        TEST_F(raster_grid, shape)
+        {
+            EXPECT_EQ(fixed_grid.shape(), shape_type({ 5, 10 }));
+            EXPECT_EQ(looped_grid.shape(), shape_type({ 5, 10 }));
+        }
+
         TEST_F(raster_grid, length)
         {
             EXPECT_TRUE(xt::all(xt::isclose(fixed_grid.length(), length_type({ 5.2, 10.8 }))));
