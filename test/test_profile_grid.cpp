@@ -58,10 +58,11 @@ namespace fastscapelib
 
             using grid_type = fs::profile_grid_xt<fs::xt_selector>;
             using size_type = typename grid_type::size_type;
+            using shape_type = typename grid_type::shape_type;
 
-            size_type shape{ 5 };
-            grid_type fixed_grid = grid_type(shape, 1.3, fs::node_status::fixed_value_boundary);
-            grid_type looped_grid = grid_type(shape, 1.4, fs::node_status::looped_boundary);
+            size_type size = 5;
+            grid_type fixed_grid = grid_type(size, 1.3, fs::node_status::fixed_value_boundary);
+            grid_type looped_grid = grid_type(size, 1.4, fs::node_status::looped_boundary);
 
             fs::node_status status_fixed(std::size_t idx)
             {
@@ -99,7 +100,7 @@ namespace fastscapelib
         {
             std::vector<fs::node> nodes_vector1{ fs::node(
                 { 1, fs::node_status::fixed_value_boundary }) };
-            grid_type g1(shape, 1.3, fs::node_status::looped_boundary, nodes_vector1);
+            grid_type g1(size, 1.3, fs::node_status::looped_boundary, nodes_vector1);
 
             auto expected_status
                 = grid_type::node_status_type{ fs::node_status::looped_boundary,
@@ -110,12 +111,11 @@ namespace fastscapelib
             ASSERT_EQ(g1.status_at_nodes(), expected_status);
 
             std::vector<fs::node> nodes_vector2{ fs::node({ 15, fs::node_status::core }) };
-            ASSERT_THROW(
-                grid_type(shape, 1.3, fs::node_status::fixed_value_boundary, nodes_vector2),
-                std::out_of_range);
+            ASSERT_THROW(grid_type(size, 1.3, fs::node_status::fixed_value_boundary, nodes_vector2),
+                         std::out_of_range);
 
             std::vector<fs::node> nodes_vector3{ fs::node({ 0, fs::node_status::core }) };
-            ASSERT_THROW(grid_type(shape, 1.3, fs::node_status::looped_boundary, nodes_vector3),
+            ASSERT_THROW(grid_type(size, 1.3, fs::node_status::looped_boundary, nodes_vector3),
                          std::invalid_argument);
         }
 
@@ -174,6 +174,12 @@ namespace fastscapelib
         {
             EXPECT_EQ(fixed_grid.size(), 5u);
             EXPECT_EQ(looped_grid.size(), 5u);
+        }
+
+        TEST_F(profile_grid, shape)
+        {
+            EXPECT_EQ(fixed_grid.shape(), shape_type({ 5 }));
+            EXPECT_EQ(looped_grid.shape(), shape_type({ 5 }));
         }
 
         TEST_F(profile_grid, length)
