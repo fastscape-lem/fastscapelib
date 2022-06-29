@@ -64,8 +64,12 @@ protected:
 
     xt::xtensor<double, 1> drainage_area = hack_coef * xt::pow(x, hack_exp);
 
-    fs::profile_grid grid = fs::profile_grid(
-        static_cast<size_type>(nnodes), spacing, fs::node_status::fixed_value_boundary);
+    // left base level
+    fs::profile_boundary_status left_base_level{ fs::node_status::fixed_value_boundary,
+                                                 fs::node_status::core };
+
+    fs::profile_grid grid
+        = fs::profile_grid(static_cast<size_type>(nnodes), spacing, left_base_level);
 
     template <class K>
     xt::xtensor<double, 1> get_steady_slope_numerical(
@@ -239,8 +243,12 @@ TEST(erode_stream_pow, raster_grid)
         double spacing = 300;
         shape_type shape{ 2, 2 };
 
-        auto grid
-            = fs::raster_grid(shape, { spacing, spacing }, fs::node_status::fixed_value_boundary);
+        // top border base-level
+        fs::node_status fixed = fs::node_status::fixed_value_boundary;
+        fs::node_status core = fs::node_status::core;
+        fs::raster_boundary_status top_base_level{ { core, core, fixed, core } };
+
+        auto grid = fs::raster_grid(shape, { spacing, spacing }, top_base_level);
 
         auto flow_graph
             = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
@@ -273,7 +281,7 @@ TEST(erode_stream_pow, raster_grid)
             xt::equal(xt::xtensor<size_type, 1>({ 0, 2, 1, 3 }), flow_graph.impl().dfs_stack())));
 
         EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 2>({ { 2 * a, 2 * a }, { a, a } }),
-                                      flow_graph.accumulate(xt::ones_like(elevation)))));
+                                      flow_graph.accumulate(1.))));
 
         // spl erosion
         double dt = 1.;  // use small time step (compare with explicit scheme)

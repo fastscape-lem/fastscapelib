@@ -47,10 +47,9 @@ namespace fastscapelib
             = detail::flow_graph_impl<grid_type, xt_selector, flow_graph_impl_tag>;
 
         using size_type = typename grid_type::size_type;
-        using elevation_type = xt_array_t<xt_selector, typename grid_type::grid_data_type>;
 
-        template <class T>
-        using data_type = xt_array_t<xt_selector, T>;
+        using data_type = typename grid_type::grid_data_type;
+        using data_array_type = xt_array_t<xt_selector, data_type>;
 
         flow_graph(G& grid, const router_type& router, const resolver_type& resolver)
             : m_grid(grid)
@@ -58,7 +57,7 @@ namespace fastscapelib
             , m_router_impl(m_graph_impl, router)
             , m_resolver_impl(m_graph_impl, resolver){};
 
-        const elevation_type& update_routes(const elevation_type& elevation)
+        const data_array_type& update_routes(const data_array_type& elevation)
         {
             const auto& modified_elevation = m_resolver_impl.resolve1(elevation);
             m_router_impl.route1(modified_elevation);
@@ -68,10 +67,10 @@ namespace fastscapelib
             return final_elevation;
         }
 
-        G& grid()
+        grid_type& grid() const
         {
             return m_grid;
-        };
+        }
 
         size_type size() const
         {
@@ -83,13 +82,25 @@ namespace fastscapelib
             return m_graph_impl;
         }
 
-        template <class T>
-        T accumulate(const T& data) const;
-
-        data_type<double> accumulate(const double& data) const;
+        void accumulate(data_array_type& acc, const data_array_type& src) const
+        {
+            return m_graph_impl.accumulate(acc, src);
+        };
+        void accumulate(data_array_type& acc, data_type src) const
+        {
+            return m_graph_impl.accumulate(acc, src);
+        };
+        data_array_type accumulate(const data_array_type& src) const
+        {
+            return m_graph_impl.accumulate(src);
+        };
+        data_array_type accumulate(data_type src) const
+        {
+            return m_graph_impl.accumulate(src);
+        };
 
     private:
-        G& m_grid;
+        grid_type& m_grid;
 
         flow_graph_impl_type m_graph_impl;
 
@@ -101,19 +112,6 @@ namespace fastscapelib
         router_impl_type m_router_impl;
         resolver_impl_type m_resolver_impl;
     };
-
-    template <class G, class FR, class SR, class S>
-    template <class T>
-    auto flow_graph<G, FR, SR, S>::accumulate(const T& data) const -> T
-    {
-        return m_graph_impl.accumulate(data);
-    }
-
-    template <class G, class FR, class SR, class S>
-    auto flow_graph<G, FR, SR, S>::accumulate(const double& data) const -> data_type<double>
-    {
-        return m_graph_impl.accumulate(data);
-    }
 
 
     template <class G, class FR, class SR, class S = typename G::xt_selector>

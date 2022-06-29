@@ -61,16 +61,16 @@ namespace fastscapelib
             using resolver_type = SR;
             using base_type = sink_resolver_impl_base<graph_impl_type, resolver_type>;
 
-            using elevation_type = typename graph_impl_type::elevation_type;
+            using data_array_type = typename graph_impl_type::data_array_type;
 
             sink_resolver_impl(graph_impl_type& graph, const resolver_type& resolver)
                 : base_type(graph, resolver){};
 
-            const elevation_type& resolve1(const elevation_type& elevation)
+            const data_array_type& resolve1(const data_array_type& elevation)
             {
                 return elevation;
             };
-            const elevation_type& resolve2(const elevation_type& elevation)
+            const data_array_type& resolve2(const data_array_type& elevation)
             {
                 return elevation;
             };

@@ -26,21 +26,16 @@ namespace fastscapelib
 
             size_type n = static_cast<size_type>(8);
 
-            grid_type fixed_grid = grid_type(n, 1., fs::node_status::fixed_value_boundary);
-            grid_type looped_grid = grid_type(n, 1., fs::node_status::looped_boundary);
+            grid_type grid = grid_type(n, 1., fs::node_status::fixed_value_boundary);
 
-            xt::xtensor<double, 1> elevation{ 0.82, 0.16, 0.14, 0.20, 0.71, 0.97, 0.41, 0.09 };
+            xt::xtensor<double, 1> elevation{ 0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0 };
 
-            flow_graph_type fixed_graph
-                = fs::make_flow_graph(fixed_grid, fs::single_flow_router(), fs::no_sink_resolver());
-
-            flow_graph_type looped_graph = fs::make_flow_graph(
-                looped_grid, fs::single_flow_router(), fs::no_sink_resolver());
+            flow_graph_type graph
+                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
             void update()
             {
-                fixed_graph.update_routes(elevation);
-                looped_graph.update_routes(elevation);
+                graph.update_routes(elevation);
             }
         };
 
@@ -48,109 +43,68 @@ namespace fastscapelib
         {
             update();
 
-            xt::xtensor<size_type, 1> expected_fixed_receivers{ 1, 2, 2, 2, 3, 6, 7, 7 };
-            EXPECT_TRUE(xt::all(
-                xt::equal(xt::col(fixed_graph.impl().receivers(), 0), expected_fixed_receivers)));
-            EXPECT_TRUE(xt::all(xt::equal(xt::col(fixed_graph.impl().receivers(), 1),
-                                          xt::ones_like(expected_fixed_receivers) * -1)));
-
-            xt::xtensor<size_type, 1> expected_looped_receivers{ 7, 2, 2, 2, 3, 6, 7, 7 };
-            EXPECT_TRUE(xt::all(
-                xt::equal(xt::col(looped_graph.impl().receivers(), 0), expected_looped_receivers)));
-            EXPECT_TRUE(xt::all(xt::equal(xt::col(looped_graph.impl().receivers(), 1),
-                                          xt::ones_like(expected_fixed_receivers) * -1)));
+            xt::xtensor<size_type, 1> expected_receivers{ 0, 0, 2, 2, 3, 6, 7, 7 };
+            EXPECT_TRUE(
+                xt::all(xt::equal(xt::col(graph.impl().receivers(), 0), expected_receivers)));
+            EXPECT_TRUE(xt::all(xt::equal(xt::col(graph.impl().receivers(), 1),
+                                          xt::ones_like(expected_receivers) * -1)));
         }
 
         TEST_F(single_flow_router__profile, receivers_distance)
         {
             update();
 
-            xt::xtensor<double, 1> expected_fixed_receivers_distance{
-                1., 1., 0., 1., 1., 1., 1., 0.
-            };
-            EXPECT_TRUE(xt::all(xt::equal(xt::col(fixed_graph.impl().receivers_distance(), 0),
-                                          expected_fixed_receivers_distance)));
-            EXPECT_TRUE(xt::all(xt::equal(xt::col(fixed_graph.impl().receivers_distance(), 1),
-                                          xt::ones_like(expected_fixed_receivers_distance) * -1)));
-
-            xt::xtensor<double, 1> expected_looped_receivers_distance{ 1., 1., 0., 1.,
-                                                                       1., 1., 1., 0. };
-            EXPECT_TRUE(xt::all(xt::equal(xt::col(looped_graph.impl().receivers_distance(), 0),
-                                          expected_looped_receivers_distance)));
-            EXPECT_TRUE(xt::all(xt::equal(xt::col(looped_graph.impl().receivers_distance(), 1),
-                                          xt::ones_like(expected_fixed_receivers_distance) * -1)));
+            xt::xtensor<double, 1> expected_receivers_distance{ 0., 1., 0., 1., 1., 1., 1., 0. };
+            EXPECT_TRUE(xt::all(xt::equal(xt::col(graph.impl().receivers_distance(), 0),
+                                          expected_receivers_distance)));
+            EXPECT_TRUE(xt::all(xt::equal(xt::col(graph.impl().receivers_distance(), 1),
+                                          xt::ones_like(expected_receivers_distance) * -1)));
         }
 
         TEST_F(single_flow_router__profile, receivers_count)
         {
             update();
 
-            EXPECT_TRUE(xt::all(
-                xt::equal(fixed_graph.impl().receivers_count(), xt::ones<std::uint8_t>({ 8 }))));
-
-            EXPECT_TRUE(xt::all(
-                xt::equal(looped_graph.impl().receivers_count(), xt::ones<std::uint8_t>({ 8 }))));
+            EXPECT_TRUE(
+                xt::all(xt::equal(graph.impl().receivers_count(), xt::ones<std::uint8_t>({ 8 }))));
         }
 
         TEST_F(single_flow_router__profile, receivers_weight)
         {
             update();
 
-            EXPECT_TRUE(xt::all(xt::equal(xt::col(fixed_graph.impl().receivers_weight(), 0),
-                                          xt::ones<double>({ 8 }))));
-            EXPECT_TRUE(xt::all(xt::equal(xt::col(fixed_graph.impl().receivers_weight(), 1),
-                                          xt::zeros<double>({ 8 }))));
-
-            EXPECT_TRUE(xt::all(xt::equal(xt::col(looped_graph.impl().receivers_weight(), 0),
-                                          xt::ones<double>({ 8 }))));
-            EXPECT_TRUE(xt::all(xt::equal(xt::col(looped_graph.impl().receivers_weight(), 1),
-                                          xt::zeros<double>({ 8 }))));
+            EXPECT_TRUE(xt::all(
+                xt::equal(xt::col(graph.impl().receivers_weight(), 0), xt::ones<double>({ 8 }))));
+            EXPECT_TRUE(xt::all(
+                xt::equal(xt::col(graph.impl().receivers_weight(), 1), xt::zeros<double>({ 8 }))));
         }
 
         TEST_F(single_flow_router__profile, donors)
         {
             update();
 
-            xt::xarray<size_type> expected_fixed_donors = xt::ones<size_type>({ 8, 3 }) * -1;
-            expected_fixed_donors(1, 0) = 0;
-            xt::view(expected_fixed_donors, 2, xt::all()) = xt::xarray<size_type>({ 1, 2, 3 });
-            expected_fixed_donors(3, 0) = 4;
-            expected_fixed_donors(6, 0) = 5;
-            xt::view(expected_fixed_donors, 7, xt::range(0, 2)) = xt::xarray<size_type>({ 6, 7 });
+            xt::xarray<int> expected_donors{ { 1, -1, -1 }, { -1, -1, -1 }, { 2, 3, -1 },
+                                             { 4, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 },
+                                             { 5, -1, -1 }, { 6, -1, -1 } };
 
-            EXPECT_TRUE(xt::all(xt::equal(fixed_graph.impl().donors(), expected_fixed_donors)));
-
-            xt::xarray<size_type> expected_looped_donors = xt::ones<size_type>({ 8, 3 }) * -1;
-            xt::view(expected_looped_donors, 2, xt::all()) = xt::xarray<size_type>({ 1, 2, 3 });
-            expected_looped_donors(3, 0) = 4;
-            expected_looped_donors(6, 0) = 5;
-            xt::view(expected_looped_donors, 7, xt::all()) = xt::xarray<size_type>({ 0, 6, 7 });
-
-            EXPECT_TRUE(xt::all(xt::equal(looped_graph.impl().donors(), expected_looped_donors)));
+            EXPECT_TRUE(xt::all(xt::equal(graph.impl().donors(), expected_donors)));
         }
 
         TEST_F(single_flow_router__profile, donors_count)
         {
             update();
 
-            xt::xtensor<std::uint8_t, 1> expected_fixed_donors_count{ 0, 1, 3, 1, 0, 0, 1, 2 };
+            xt::xtensor<std::uint8_t, 1> expected_fixed_donors_count{ 1, 0, 2, 1, 0, 0, 1, 1 };
             EXPECT_TRUE(
-                xt::all(xt::equal(fixed_graph.impl().donors_count(), expected_fixed_donors_count)));
-
-            xt::xtensor<std::uint8_t, 1> expected_looped_donors_count{ 0, 0, 3, 1, 0, 0, 1, 3 };
-            EXPECT_TRUE(xt::all(
-                xt::equal(looped_graph.impl().donors_count(), expected_looped_donors_count)));
+                xt::all(xt::equal(graph.impl().donors_count(), expected_fixed_donors_count)));
         }
 
         TEST_F(single_flow_router__profile, dfs_stack)
         {
             update();
 
-            xt::xtensor<std::uint8_t, 1> expected_fixed_stack{ 2, 1, 0, 3, 4, 7, 6, 5 };
-            EXPECT_TRUE(xt::all(xt::equal(fixed_graph.impl().dfs_stack(), expected_fixed_stack)));
-
-            xt::xtensor<std::uint8_t, 1> expected_looped_stack{ 2, 1, 3, 4, 7, 0, 6, 5 };
-            EXPECT_TRUE(xt::all(xt::equal(looped_graph.impl().dfs_stack(), expected_looped_stack)));
+            xt::xtensor<std::uint8_t, 1> expected_fixed_stack{ 0, 1, 2, 3, 4, 7, 6, 5 };
+            EXPECT_TRUE(xt::all(xt::equal(graph.impl().dfs_stack(), expected_fixed_stack)));
         }
 
         // TEST_F(single_flow_router__profile, dfs_iterators)

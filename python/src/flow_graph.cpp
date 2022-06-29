@@ -32,10 +32,19 @@ add_flow_graph_bindings(py::module& m)
     pyfgraph.def("impl", &fs::py_flow_graph::impl, py::return_value_policy::reference);
 
     pyfgraph.def("update_routes", &fs::py_flow_graph::update_routes);
+
+    using data_array_type = fs::py_flow_graph::data_array_type;
+    using data_type = fs::py_flow_graph::data_type;
+
     pyfgraph
         .def("accumulate",
-             py::overload_cast<const xt::pyarray<double, xt::layout_type::row_major>&>(
+             py::overload_cast<data_array_type&, const data_array_type&>(
                  &fs::py_flow_graph::accumulate, py::const_))
         .def("accumulate",
-             py::overload_cast<const double&>(&fs::py_flow_graph::accumulate, py::const_));
+             py::overload_cast<data_array_type&, data_type>(&fs::py_flow_graph::accumulate,
+                                                            py::const_))
+        .def("accumulate",
+             py::overload_cast<const data_array_type&>(&fs::py_flow_graph::accumulate, py::const_))
+        .def("accumulate",
+             py::overload_cast<data_type>(&fs::py_flow_graph::accumulate, py::const_));
 }

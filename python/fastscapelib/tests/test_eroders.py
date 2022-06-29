@@ -35,7 +35,7 @@ class TestErodeStreamPower:
 
         h = 1.0
         elevation = np.array([0.0, h, h, 0.0], dtype="d")
-        graph_elevation = flow_graph.update_routes(elevation)
+        flow_graph.update_routes(elevation)
 
         drainage_area = flow_graph.accumulate(1.0)
         erosion = np.zeros_like(elevation)
@@ -77,17 +77,27 @@ class TestErodeStreamPower:
         # Test on a tiny (2x2) 2-d square grid with a planar surface
         # tilted in y (rows) and with all outlets on the 1st row.
         spacing = 300.0
+
+        # top-border base level
+        top_base_level = [
+            NodeStatus.CORE,
+            NodeStatus.CORE,
+            NodeStatus.FIXED_VALUE_BOUNDARY,
+            NodeStatus.CORE,
+        ]
+
         grid = RasterGrid(
             [2, 2],
             [spacing, spacing],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+            RasterBoundaryStatus(top_base_level),
             [],
         )
+
         flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
 
         h = 1.0
         elevation = np.array([[0.0, 0.0], [h, h]], dtype="d")
-        graph_elevation = flow_graph.update_routes(elevation)
+        flow_graph.update_routes(elevation)
 
         drainage_area = flow_graph.accumulate(1.0)
         erosion = np.zeros_like(elevation)

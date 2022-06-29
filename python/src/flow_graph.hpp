@@ -221,7 +221,8 @@ namespace fastscapelib
         {
         public:
             using size_type = std::size_t;
-            using data_type = xt_array_t<py_selector, double>;
+            using data_type = double;
+            using data_array_type = xt_array_t<py_selector, data_type>;
 
             virtual ~flow_graph_wrapper_base(){};
 
@@ -229,11 +230,12 @@ namespace fastscapelib
 
             virtual const py_flow_graph_impl& impl() const = 0;
 
-            virtual const data_type& update_routes(const data_type& elevation) = 0;
+            virtual const data_array_type& update_routes(const data_array_type& elevation) = 0;
 
-            virtual data_type accumulate(const data_type& data) const = 0;
-
-            virtual data_type accumulate(const double& data) const = 0;
+            virtual void accumulate(data_array_type& acc, const data_array_type& src) const = 0;
+            virtual void accumulate(data_array_type& acc, data_type src) const = 0;
+            virtual data_array_type accumulate(const data_array_type& src) const = 0;
+            virtual data_array_type accumulate(data_type src) const = 0;
         };
 
         template <class G, class FR, class SR>
@@ -263,19 +265,26 @@ namespace fastscapelib
                 return *p_graph_impl;
             };
 
-            const data_type& update_routes(const data_type& elevation)
+            const data_array_type& update_routes(const data_array_type& elevation)
             {
                 return p_graph->update_routes(elevation);
             };
 
-            data_type accumulate(const data_type& data) const
+            void accumulate(data_array_type& acc, const data_array_type& src) const
             {
-                return p_graph->accumulate(data);
+                return p_graph->accumulate(acc, src);
             };
-
-            data_type accumulate(const double& data) const
+            void accumulate(data_array_type& acc, data_type src) const
             {
-                return p_graph->accumulate(data);
+                return p_graph->accumulate(acc, src);
+            };
+            data_array_type accumulate(const data_array_type& src) const
+            {
+                return p_graph->accumulate(src);
+            };
+            data_array_type accumulate(data_type src) const
+            {
+                return p_graph->accumulate(src);
             };
 
         private:
@@ -289,25 +298,23 @@ namespace fastscapelib
     {
     public:
         using size_type = std::size_t;
-        using data_type = xt_array_t<py_selector, double>;
-
-        /*
-         * grid_type facade (need to redefine it here - at least partially - as
-         * the template parameter has been erased and also because py_flow_graph
-         * may be reused as template argument for other classes like eroders).
-         *
-         */
-        struct grid_type
-        {
-            using size_type = std::size_t;
-            using shape_type = xt_array_t<py_selector, double>::shape_type;
-            using grid_data_type = double;
-        };
+        using data_type = double;
+        using data_array_type = xt_array_t<py_selector, data_type>;
 
         template <class G, class FR, class SR>
         py_flow_graph(G& grid, const FR& router, const SR& resolver)
             : p_wrapped_graph(
                 std::make_unique<detail::flow_graph_wrapper<G, FR, SR>>(grid, router, resolver)){};
+        // : p_grid(std::make_unique<py_grid>(grid))
+
+        // TODO: add `py_grid`, which wraps `fs::grid<D>` with type erasure
+        // and only exposes partial API (shape, size, etc. but no neighbors
+        // methods or iterators)
+
+        // py_grid& grid() const
+        // {
+        //     return *p_grid;
+        // }
 
         size_type size() const
         {
@@ -319,23 +326,31 @@ namespace fastscapelib
             return p_wrapped_graph->impl();
         };
 
-        const data_type& update_routes(const data_type& elevation)
+        const data_array_type& update_routes(const data_array_type& elevation)
         {
             return p_wrapped_graph->update_routes(elevation);
         };
 
-        data_type accumulate(const data_type& data) const
+        void accumulate(data_array_type& acc, const data_array_type& src) const
         {
-            return p_wrapped_graph->accumulate(data);
+            return p_wrapped_graph->accumulate(acc, src);
         };
-
-        data_type accumulate(const double& data) const
+        void accumulate(data_array_type& acc, data_type src) const
         {
-            return p_wrapped_graph->accumulate(data);
+            return p_wrapped_graph->accumulate(acc, src);
+        };
+        data_array_type accumulate(const data_array_type& src) const
+        {
+            return p_wrapped_graph->accumulate(src);
+        };
+        data_array_type accumulate(data_type src) const
+        {
+            return p_wrapped_graph->accumulate(src);
         };
 
     private:
         std::unique_ptr<detail::flow_graph_wrapper_base> p_wrapped_graph;
+        // std::unique_ptr<py_grid> p_grid;
     };
 
 
