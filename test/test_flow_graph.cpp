@@ -53,11 +53,11 @@ namespace fastscapelib
             graph.update_routes(elevation);
             graph.update_routes(elevation);  // check there is not memory effect
 
-            xt::xtensor<size_type, 1> expected_fixed_receivers{ 4,  5,  6,  7,  8,  9,  10, 11,
-                                                                13, 13, 13, 15, 12, 13, 14, 15 };
+            xt::xtensor<size_type, 1> expected_receivers{ 4,  5,  6,  7,  8,  9,  10, 11,
+                                                          13, 13, 13, 15, 12, 13, 14, 15 };
 
             EXPECT_TRUE(
-                xt::all(xt::equal(xt::col(graph.impl().receivers(), 0), expected_fixed_receivers)));
+                xt::all(xt::equal(xt::col(graph.impl().receivers(), 0), expected_receivers)));
         }
 
         TEST_F(flow_graph, accumulate)
