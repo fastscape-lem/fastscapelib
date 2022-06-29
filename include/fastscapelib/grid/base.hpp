@@ -323,12 +323,12 @@ namespace fastscapelib
 
         using neighbors_cache_type = typename inner_types::neighbors_cache_type;
 
-        static constexpr std::uint8_t max_neighbors()
+        static constexpr std::uint8_t n_neighbors_max()
         {
-            return inner_types::max_neighbors;
+            return inner_types::n_neighbors_max;
         }
 
-        static_assert(neighbors_cache_type::cache_width >= max_neighbors(),
+        static_assert(neighbors_cache_type::cache_width >= n_neighbors_max(),
                       "Cache width is too small!");
 
         using neighbors_type = std::vector<neighbor>;
@@ -341,6 +341,8 @@ namespace fastscapelib
         using node_status_type = xt_tensor_t<xt_selector, node_status, inner_types::xt_ndims>;
 
         size_type size() const noexcept;
+
+        shape_type shape() const noexcept;
 
         const node_status_type& status_at_nodes() const;
 
@@ -407,7 +409,7 @@ namespace fastscapelib
     protected:
         using neighbors_indices_impl_type = typename neighbors_cache_type::neighbors_indices_type;
         using neighbors_distances_impl_type =
-            typename std::array<grid_data_type, inner_types::max_neighbors>;
+            typename std::array<grid_data_type, inner_types::n_neighbors_max>;
 
         grid(std::size_t size)
             : m_neighbors_indices_cache(neighbors_cache_type(size)){};
@@ -451,6 +453,15 @@ namespace fastscapelib
     inline auto grid<G>::size() const noexcept -> size_type
     {
         return derived_grid().m_size;
+    }
+
+    /**
+     * Returns the total number of grid nodes.
+     */
+    template <class G>
+    inline auto grid<G>::shape() const noexcept -> shape_type
+    {
+        return derived_grid().m_shape;
     }
 
     /**

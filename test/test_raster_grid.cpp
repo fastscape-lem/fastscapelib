@@ -75,7 +75,7 @@ namespace fastscapelib
         {
             EXPECT_EQ(fs::raster_grid::is_structured(), true);
             EXPECT_EQ(fs::raster_grid::is_uniform(), true);
-            EXPECT_EQ(fs::raster_grid::max_neighbors(), 8u);
+            EXPECT_EQ(fs::raster_grid::n_neighbors_max(), 8u);
             EXPECT_EQ(fs::raster_grid::xt_ndims(), 2);
         }
 
@@ -89,6 +89,12 @@ namespace fastscapelib
         {
             EXPECT_EQ(fixed_grid.size(), 50u);
             EXPECT_EQ(looped_grid.size(), 50u);
+        }
+
+        TEST_F(raster_grid, shape)
+        {
+            EXPECT_EQ(fixed_grid.shape(), shape_type({ 5, 10 }));
+            EXPECT_EQ(looped_grid.shape(), shape_type({ 5, 10 }));
         }
 
         TEST_F(raster_grid, length)

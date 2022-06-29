@@ -110,7 +110,7 @@ class TestRasterGrid:
     def test_static_props(self):
         assert RasterGrid.is_structured is True
         assert RasterGrid.is_uniform is True
-        assert RasterGrid.max_neighbors == 8
+        assert RasterGrid.n_neighbors_max == 8
 
     def test___init__(self):
         g1 = RasterGrid(

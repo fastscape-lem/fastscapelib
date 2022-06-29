@@ -56,7 +56,8 @@ namespace fastscapelib
 
             if (Nd == 1)
             {
-                using flow_graph_type = fs::flow_graph<fs::profile_grid, double>;
+                using flow_graph_type = fs::
+                    flow_graph<fs::profile_grid, fs::single_flow_router, fs::no_sink_resolver>;
                 using index_type = typename flow_graph_type::index_type;
 
                 double spacing = 300.;
@@ -64,9 +65,7 @@ namespace fastscapelib
                 auto grid = fs::profile_grid(ns, spacing, fs::node_status::fixed_value_boundary);
 
                 auto flow_graph
-                    = flow_graph_type(grid,
-                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+                    = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
                 double x0 = 300.;
                 double length = (ns - 1) * spacing;
@@ -102,7 +101,8 @@ namespace fastscapelib
 
             else if (Nd == 2)
             {
-                using flow_graph_type = fs::flow_graph<fs::raster_grid, double>;
+                using flow_graph_type
+                    = fs::flow_graph<fs::raster_grid, fs::single_flow_router, fs::no_sink_resolver>;
                 using index_type = typename flow_graph_type::index_type;
 
                 auto s = bms::FastscapeSetupBase<bms::surface_type::cone, T>(state.range(0));
@@ -111,9 +111,7 @@ namespace fastscapelib
                     { { ns, ns } }, { s.dy, s.dy }, fs::node_status::fixed_value_boundary);
 
                 auto flow_graph
-                    = flow_graph_type(grid,
-                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+                    = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
                 elevation = s.elevation;
                 erosion = xt::zeros_like(s.elevation);

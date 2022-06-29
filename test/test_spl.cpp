@@ -42,7 +42,8 @@ public:
     }
 
 protected:
-    using flow_graph_type = fs::flow_graph<fs::profile_grid, double>;
+    using flow_graph_type
+        = fs::flow_graph<fs::profile_grid, fs::single_flow_router, fs::no_sink_resolver>;
     using index_type = typename flow_graph_type::index_type;
 
     index_type n_corr = 0;
@@ -139,9 +140,7 @@ erode_power_profile_grid::get_steady_slope_analytical(double n_exp)
 
 TEST_F(erode_power_profile_grid, flow_graph)
 {
-    auto flow_graph = flow_graph_type(grid,
-                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
     flow_graph.update_routes(elevation);
 
@@ -151,17 +150,16 @@ TEST_F(erode_power_profile_grid, flow_graph)
     receivers(0) = 0;
     dist2receivers(0) = 0.;
 
-    EXPECT_TRUE(xt::all(xt::equal(receivers, xt::col(flow_graph.receivers(), 0))));
-    EXPECT_TRUE(xt::all(xt::equal(dist2receivers, xt::col(flow_graph.receivers_distance(), 0))));
-    EXPECT_TRUE(xt::all(xt::equal(stack, flow_graph.dfs_stack())));
+    EXPECT_TRUE(xt::all(xt::equal(receivers, xt::col(flow_graph.impl().receivers(), 0))));
+    EXPECT_TRUE(
+        xt::all(xt::equal(dist2receivers, xt::col(flow_graph.impl().receivers_distance(), 0))));
+    EXPECT_TRUE(xt::all(xt::equal(stack, flow_graph.impl().dfs_stack())));
 }
 
 
 TEST_F(erode_power_profile_grid, scalar_k_coef)
 {
-    auto flow_graph = flow_graph_type(grid,
-                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
     std::array<double, 3> n_exp_vals{ 1., 2., 4. };
 
@@ -184,9 +182,7 @@ TEST_F(erode_power_profile_grid, scalar_k_coef)
 
 TEST_F(erode_power_profile_grid, array_k_coef)
 {
-    auto flow_graph = flow_graph_type(grid,
-                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
     std::array<double, 3> n_exp_vals{ 1., 2., 4. };
 
@@ -210,9 +206,7 @@ TEST_F(erode_power_profile_grid, array_k_coef)
 
 TEST_F(erode_power_profile_grid, n_exp)
 {
-    auto flow_graph = flow_graph_type(grid,
-                                      std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                                      std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
     {
         SCOPED_TRACE("test arbitrary limitation of erosion");
@@ -229,7 +223,8 @@ TEST(erode_stream_pow, raster_grid)
 {
     namespace fs = fastscapelib;
 
-    using flow_graph_type = fs::flow_graph<fs::raster_grid, double>;
+    using flow_graph_type
+        = fs::flow_graph<fs::raster_grid, fs::single_flow_router, fs::no_sink_resolver>;
     using index_type = typename flow_graph_type::index_type;
 
     {
@@ -245,10 +240,7 @@ TEST(erode_stream_pow, raster_grid)
         auto grid
             = fs::raster_grid({ { 2, 2 } }, { dy, dy }, fs::node_status::fixed_value_boundary);
 
-        auto flow_graph
-            = flow_graph_type(grid,
-                              std::make_unique<fs::single_flow_router<flow_graph_type>>(),
-                              std::make_unique<fs::no_sink_resolver<flow_graph_type>>());
+        auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
         double h = 1.;
         double a = dy * dy;
@@ -258,13 +250,13 @@ TEST(erode_stream_pow, raster_grid)
         auto drainage_area = flow_graph.accumulate(1.);
 
         EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<index_type, 1>({ 0, 1, 0, 1 }),
-                                      xt::col(flow_graph.receivers(), 0))));
+                                      xt::col(flow_graph.impl().receivers(), 0))));
 
         EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 1>({ 0., 0., dy, dy }),
-                                      xt::col(flow_graph.receivers_distance(), 0))));
+                                      xt::col(flow_graph.impl().receivers_distance(), 0))));
 
-        EXPECT_TRUE(
-            xt::all(xt::equal(xt::xtensor<index_type, 1>({ 0, 2, 1, 3 }), flow_graph.dfs_stack())));
+        EXPECT_TRUE(xt::all(
+            xt::equal(xt::xtensor<index_type, 1>({ 0, 2, 1, 3 }), flow_graph.impl().dfs_stack())));
 
         EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 2>({ { 2 * a, 2 * a }, { a, a } }),
                                       flow_graph.accumulate(xt::ones_like(elevation)))));

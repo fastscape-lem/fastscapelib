@@ -150,7 +150,7 @@ namespace fastscapelib
     template <>
     struct raster_neighbors<raster_connect::queen> : public raster_neighbors_base
     {
-        static constexpr std::uint8_t _max_neighbors = 8u;
+        static constexpr std::uint8_t _n_neighbors_max = 8u;
 
         neighbors_offsets_type node_neighbors_offsets(std::ptrdiff_t up,
                                                       std::ptrdiff_t down,
@@ -224,7 +224,7 @@ namespace fastscapelib
     template <>
     struct raster_neighbors<raster_connect::rook> : public raster_neighbors_base
     {
-        static constexpr std::uint8_t _max_neighbors = 4u;
+        static constexpr std::uint8_t _n_neighbors_max = 4u;
 
         neighbors_offsets_type node_neighbors_offsets(std::ptrdiff_t up,
                                                       std::ptrdiff_t down,
@@ -293,7 +293,7 @@ namespace fastscapelib
     template <>
     struct raster_neighbors<raster_connect::bishop> : public raster_neighbors_base
     {
-        static constexpr std::uint8_t _max_neighbors = 4u;
+        static constexpr std::uint8_t _n_neighbors_max = 4u;
 
         neighbors_offsets_type node_neighbors_offsets(std::ptrdiff_t up,
                                                       std::ptrdiff_t down,
@@ -381,7 +381,7 @@ namespace fastscapelib
         using xt_selector = S;
         static constexpr std::size_t xt_ndims = 2;
 
-        static constexpr uint8_t max_neighbors = raster_neighbors<RC>::_max_neighbors;
+        static constexpr uint8_t n_neighbors_max = raster_neighbors<RC>::_n_neighbors_max;
         using neighbors_cache_type = C;
         using neighbors_count_type = typename raster_neighbors_base::neighbors_count_type;
 
@@ -400,7 +400,7 @@ namespace fastscapelib
      */
     template <class S,
               raster_connect RC,
-              class C = neighbors_cache<raster_neighbors<RC>::_max_neighbors>>
+              class C = neighbors_cache<raster_neighbors<RC>::_n_neighbors_max>>
     class raster_grid_xt
         : public structured_grid<raster_grid_xt<S, RC, C>>
         , public raster_neighbors<RC>

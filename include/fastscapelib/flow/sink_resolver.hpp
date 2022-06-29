@@ -9,83 +9,77 @@
 #ifndef FASTSCAPELIB_FLOW_SINK_RESOLVER_H
 #define FASTSCAPELIB_FLOW_SINK_RESOLVER_H
 
+#include "fastscapelib/flow/flow_graph_impl.hpp"
+
 
 namespace fastscapelib
 {
 
-    /**
-     * Base class for the implementation of depression
-     * filling or pit resolving.
-     *
-     * All derived classes must implement ``resolve1``
-     * and ``resolve2`` methods.
-     *
-     * @tparam FG The flow_graph class.
-     */
-    template <class FG>
-    class sink_resolver
+    namespace detail
     {
-    public:
-        using elevation_type = typename FG::elevation_type;
 
-        // Entity semantic
-        virtual ~sink_resolver() = default;
-
-        sink_resolver(const sink_resolver&) = delete;
-        sink_resolver(sink_resolver&&) = delete;
-        sink_resolver& operator=(const sink_resolver&) = delete;
-        sink_resolver& operator=(sink_resolver&&) = delete;
-
-        virtual const elevation_type& resolve1(const elevation_type& elevation, FG& fgraph) = 0;
-        virtual const elevation_type& resolve2(const elevation_type& elevation, FG& fgraph) = 0;
-
-    protected:
-        sink_resolver() = default;
-    };
-
-
-    /**
-     * A sink resolver with no action on the
-     * the topographic surface.
-     *
-     * @tparam FG The flow_graph class.
-     */
-    template <class FG>
-    class no_sink_resolver final : public sink_resolver<FG>
-    {
-    public:
-        using base_type = no_sink_resolver<FG>;
-        using elevation_type = typename base_type::elevation_type;
-
-        no_sink_resolver() = default;
-
-        virtual ~no_sink_resolver() = default;
-
-        const elevation_type& resolve1(const elevation_type& elevation, FG& /*fgraph*/) override
+        /**
+         * Common implementation for all sink resolving methods.
+         *
+         * @tparam FG The flow graph implementation type.
+         * @tparam SR The sink resolver type.
+         */
+        template <class FG, class SR>
+        class sink_resolver_impl_base
         {
-            return elevation;
-        }
+        public:
+            using graph_impl_type = FG;
+            using resolver_type = SR;
 
-        const elevation_type& resolve2(const elevation_type& elevation, FG& /*fgraph*/) override
+            sink_resolver_impl_base(graph_impl_type& graph_impl, const resolver_type& resolver)
+                : m_graph_impl(graph_impl)
+                , m_resolver(resolver){};
+
+        private:
+            graph_impl_type& m_graph_impl;
+            const resolver_type& m_resolver;
+        };
+
+
+        /**
+         * Sink resolving implementation.
+         *
+         * This class is used via template specialization (one for each
+         * flow routing method).
+         *
+         * The declaration for the generic case here contains the minimum that
+         * should be (re)implemented in specialized template classes.
+         *
+         * @tparam FG The flow graph type.
+         * @tparam SR The sink resolver type.
+         */
+        template <class FG, class SR>
+        class sink_resolver_impl : public sink_resolver_impl_base<FG, SR>
         {
-            return elevation;
-        }
-    };
+        public:
+            using graph_type = FG;
+            using resolver_type = SR;
+            using base_type = sink_resolver_impl_base<graph_type, resolver_type>;
 
+            using elevation_type = typename graph_type::elevation_type;
 
-    /**
-     * The possible sink resolvers.
-     *
-     */
-    enum class sink_resolver_methods
+            sink_resolver_impl(graph_type& graph, const resolver_type& resolver)
+                : base_type(graph, resolver){};
+
+            const elevation_type& resolve1(const elevation_type& elevation)
+            {
+                return elevation;
+            };
+            const elevation_type& resolve2(const elevation_type& elevation)
+            {
+                return elevation;
+            };
+        };
+    }
+
+    struct no_sink_resolver
     {
-        none = 0,
-        fill_pflood,
-        fill_mst_kruskal,
-        fill_mst_boruvka,
-        fill_auto,  // either pflood or mst depending on number of sinks
-        carve_mst_kruskal,
-        carve_mst_boruvka
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
     };
 }
 

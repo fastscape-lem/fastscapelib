@@ -20,7 +20,7 @@ auto
 erode_stream_power_py(xt::pyarray<T, xt::layout_type::row_major>& erosion,
                       const xt::pyarray<T, xt::layout_type::row_major>& elevation,
                       const xt::pyarray<T, xt::layout_type::row_major>& drainage_area,
-                      fs::detail::flow_graph_facade& flow_graph,
+                      fs::py_flow_graph& flow_graph,
                       const K k_coef,
                       double m_exp,
                       double n_exp,

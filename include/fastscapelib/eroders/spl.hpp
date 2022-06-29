@@ -73,11 +73,13 @@ namespace fastscapelib
             const auto drainage_area_flat = xt::flatten(drainage_area);
             const auto k_coef_arr = k_coef_as_array(k_coef, elevation_flat.shape());
 
-            const auto& receivers = flow_graph.receivers();
-            const auto& receivers_count = flow_graph.receivers_count();
-            const auto& receivers_distance = flow_graph.receivers_distance();
-            const auto& receivers_weight = flow_graph.receivers_weight();
-            const auto& dfs_stack = flow_graph.dfs_stack();
+            auto& flow_graph_impl = flow_graph.impl();
+
+            const auto& receivers = flow_graph_impl.receivers();
+            const auto& receivers_count = flow_graph.impl().receivers_count();
+            const auto& receivers_distance = flow_graph.impl().receivers_distance();
+            const auto& receivers_weight = flow_graph.impl().receivers_weight();
+            const auto& dfs_stack = flow_graph.impl().dfs_stack();
 
             index_type n_corr = 0;
 

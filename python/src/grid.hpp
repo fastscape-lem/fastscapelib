@@ -32,8 +32,8 @@ namespace fastscapelib
                                          [](py::object /*self*/) { return G::is_structured(); })
             .def_property_readonly_static("is_uniform",
                                           [](py::object /*self*/) { return G::is_uniform(); })
-            .def_property_readonly_static("max_neighbors",
-                                          [](py::object /*self*/) { return G::max_neighbors(); });
+            .def_property_readonly_static("n_neighbors_max",
+                                          [](py::object /*self*/) { return G::n_neighbors_max(); });
     }
 
     template <class G>
