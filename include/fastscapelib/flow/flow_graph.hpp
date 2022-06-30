@@ -50,6 +50,7 @@ namespace fastscapelib
 
         using data_type = typename grid_type::grid_data_type;
         using data_array_type = xt_array_t<xt_selector, data_type>;
+        using shape_type = typename data_array_type::shape_type;
 
         flow_graph(G& grid, const router_type& router, const resolver_type& resolver)
             : m_grid(grid)
@@ -76,6 +77,14 @@ namespace fastscapelib
         {
             return m_grid.size();
         };
+
+        shape_type grid_shape() const
+        {
+            // grid shape may have a different type (e.g., from xtensor containers)
+            auto shape = m_grid.shape();
+            shape_type data_array_shape(shape.begin(), shape.end());
+            return data_array_shape;
+        }
 
         const flow_graph_impl_type& impl() const
         {

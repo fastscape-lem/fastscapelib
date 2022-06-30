@@ -4,7 +4,6 @@
 #include "fastscapelib/grid/raster_grid.hpp"
 
 #include "xtensor/xtensor.hpp"
-#include "xtensor/xio.hpp"
 
 #include "gtest/gtest.h"
 
@@ -44,20 +43,27 @@ namespace fastscapelib
                 = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
             EXPECT_EQ(graph.size(), 16u);
+            EXPECT_TRUE(xt::same_shape(graph.grid_shape(), grid.shape()));
         }
 
         TEST_F(flow_graph, update_routes)
         {
             auto graph
                 = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+
+            auto new_elevation = graph.update_routes(elevation);
+
+            // re-run to check there is no memory effect
             graph.update_routes(elevation);
-            graph.update_routes(elevation);  // check there is not memory effect
 
-            xt::xtensor<size_type, 1> expected_receivers{ 4,  5,  6,  7,  8,  9,  10, 11,
-                                                          13, 13, 13, 15, 12, 13, 14, 15 };
+            EXPECT_TRUE(xt::all(xt::equal(new_elevation, elevation)));
 
-            EXPECT_TRUE(
-                xt::all(xt::equal(xt::col(graph.impl().receivers(), 0), expected_receivers)));
+            // more in-depth testing is done in flow router (methods) tests
+            auto actual = xt::col(graph.impl().receivers(), 0);
+            xt::xtensor<size_type, 1> expected{ 4,  5,  6,  7,  8,  9,  10, 11,
+                                                13, 13, 13, 15, 12, 13, 14, 15 };
+
+            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
         }
 
         TEST_F(flow_graph, accumulate)

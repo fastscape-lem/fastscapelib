@@ -207,8 +207,8 @@ namespace fastscapelib
     /**
      * Flow graph facade class for Python bindings.
      *
-     * It implements type erasure in order to expose
-     * a single class to Python for all grid types.
+     * It implements type erasure in order to expose a single class to Python
+     * for all grid, flow router and sink resolver types.
      *
      */
     class py_flow_graph;
@@ -223,10 +223,12 @@ namespace fastscapelib
             using size_type = std::size_t;
             using data_type = double;
             using data_array_type = xt_array_t<py_selector, data_type>;
+            using shape_type = data_array_type::shape_type;
 
             virtual ~flow_graph_wrapper_base(){};
 
             virtual size_type size() const = 0;
+            virtual shape_type grid_shape() const = 0;
 
             virtual const py_flow_graph_impl& impl() const = 0;
 
@@ -244,9 +246,6 @@ namespace fastscapelib
         public:
             using flow_graph_type = fs::flow_graph<G, FR, SR, fs::py_selector>;
 
-            using size_type = typename flow_graph_wrapper_base::size_type;
-            using data_type = typename flow_graph_wrapper_base::data_type;
-
             flow_graph_wrapper(G& grid, const FR& router, const SR& resolver)
             {
                 p_graph = std::make_unique<flow_graph_type>(grid, router, resolver);
@@ -258,6 +257,11 @@ namespace fastscapelib
             size_type size() const
             {
                 return p_graph->size();
+            };
+
+            shape_type grid_shape() const
+            {
+                return p_graph->grid_shape();
             };
 
             const py_flow_graph_impl& impl() const
@@ -300,25 +304,21 @@ namespace fastscapelib
         using size_type = std::size_t;
         using data_type = double;
         using data_array_type = xt_array_t<py_selector, data_type>;
+        using shape_type = data_array_type::shape_type;
 
         template <class G, class FR, class SR>
         py_flow_graph(G& grid, const FR& router, const SR& resolver)
             : p_wrapped_graph(
                 std::make_unique<detail::flow_graph_wrapper<G, FR, SR>>(grid, router, resolver)){};
-        // : p_grid(std::make_unique<py_grid>(grid))
-
-        // TODO: add `py_grid`, which wraps `fs::grid<D>` with type erasure
-        // and only exposes partial API (shape, size, etc. but no neighbors
-        // methods or iterators)
-
-        // py_grid& grid() const
-        // {
-        //     return *p_grid;
-        // }
 
         size_type size() const
         {
             return p_wrapped_graph->size();
+        };
+
+        shape_type grid_shape() const
+        {
+            return p_wrapped_graph->grid_shape();
         };
 
         const py_flow_graph_impl& impl() const
@@ -350,7 +350,6 @@ namespace fastscapelib
 
     private:
         std::unique_ptr<detail::flow_graph_wrapper_base> p_wrapped_graph;
-        // std::unique_ptr<py_grid> p_grid;
     };
 
 
