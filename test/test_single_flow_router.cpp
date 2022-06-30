@@ -60,7 +60,7 @@ namespace fastscapelib
                 SCOPED_TRACE("2nd column empty");
 
                 auto actual = xt::col(graph.impl().receivers(), 1);
-                auto expected = xt::ones<size_t>({ grid.size() }) * -1;
+                auto expected = xt::ones<int>({ grid.size() }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -209,6 +209,9 @@ namespace fastscapelib
         class single_flow_router__raster_queen
             : public single_flow_router__raster_base<fs::raster_connect::queen>
         {
+        protected:
+            // receiver / donors all columns except the 1st
+            size_type n0plus_cols = 7;
         };
 
 
@@ -230,7 +233,7 @@ namespace fastscapelib
                 SCOPED_TRACE("non-looped empty cols");
 
                 auto actual = xt::view(fixed_graph.impl().receivers(), 0, xt::range(1, 8));
-                auto expected = xt::ones<size_type>({ fixed_grid.size(), 7ul }) * -1;
+                auto expected = xt::ones<int>({ fixed_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -249,7 +252,7 @@ namespace fastscapelib
                 SCOPED_TRACE("looped empty cols");
 
                 auto actual = xt::view(looped_graph.impl().receivers(), 0, xt::range(1, 8));
-                auto expected = xt::ones<size_type>({ looped_grid.size(), 7ul }) * -1;
+                auto expected = xt::ones<int>({ looped_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -273,7 +276,7 @@ namespace fastscapelib
                 SCOPED_TRACE("non-looped empty cols");
 
                 auto actual = xt::view(fixed_graph.impl().receivers_distance(), 0, xt::range(1, 8));
-                auto expected = xt::ones<int>({ fixed_grid.size(), 7ul }) * -1;
+                auto expected = xt::ones<int>({ fixed_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -293,7 +296,7 @@ namespace fastscapelib
 
                 auto actual
                     = xt::view(looped_graph.impl().receivers_distance(), 0, xt::range(1, 8));
-                auto expected = xt::ones<int>({ looped_grid.size(), 7ul }) * -1;
+                auto expected = xt::ones<int>({ looped_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -339,7 +342,7 @@ namespace fastscapelib
                 SCOPED_TRACE("non-looped empty cols");
 
                 auto actual = xt::view(fixed_graph.impl().receivers_weight(), 0, xt::range(1, 8));
-                auto expected = xt::zeros<double>({ fixed_grid.size(), 7ul }) * -1;
+                auto expected = xt::zeros<double>({ fixed_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -357,7 +360,7 @@ namespace fastscapelib
                 SCOPED_TRACE("looped empty cols");
 
                 auto actual = xt::view(looped_graph.impl().receivers_weight(), 0, xt::range(1, 8));
-                auto expected = xt::zeros<double>({ looped_grid.size(), 7ul }) * -1;
+                auto expected = xt::zeros<double>({ looped_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -458,6 +461,9 @@ namespace fastscapelib
         class single_flow_router__raster_rook
             : public single_flow_router__raster_base<fs::raster_connect::rook>
         {
+        protected:
+            // receiver / donors all columns except the 1st
+            size_type n0plus_cols = 3;
         };
 
 
@@ -479,7 +485,7 @@ namespace fastscapelib
                 SCOPED_TRACE("non-looped empty cols");
 
                 auto actual = xt::view(fixed_graph.impl().receivers(), 0, xt::range(1, 8));
-                auto expected = xt::ones<size_type>({ fixed_grid.size(), 3ul }) * -1;
+                auto expected = xt::ones<int>({ fixed_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -498,7 +504,7 @@ namespace fastscapelib
                 SCOPED_TRACE("looped empty cols");
 
                 auto actual = xt::view(looped_graph.impl().receivers(), 0, xt::range(1, 8));
-                auto expected = xt::ones<size_type>({ looped_grid.size(), 3ul }) * -1;
+                auto expected = xt::ones<int>({ looped_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -522,7 +528,7 @@ namespace fastscapelib
                 SCOPED_TRACE("non-looped empty cols");
 
                 auto actual = xt::view(fixed_graph.impl().receivers_distance(), 0, xt::range(1, 8));
-                auto expected = xt::ones<int>({ fixed_grid.size(), 3ul }) * -1;
+                auto expected = xt::ones<int>({ fixed_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -542,7 +548,7 @@ namespace fastscapelib
 
                 auto actual
                     = xt::view(looped_graph.impl().receivers_distance(), 0, xt::range(1, 8));
-                auto expected = xt::ones<int>({ looped_grid.size(), 3ul }) * -1;
+                auto expected = xt::ones<int>({ looped_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -588,7 +594,7 @@ namespace fastscapelib
                 SCOPED_TRACE("non-looped empty cols");
 
                 auto actual = xt::view(fixed_graph.impl().receivers_weight(), 0, xt::range(1, 8));
-                auto expected = xt::zeros<double>({ fixed_grid.size(), 3ul }) * -1;
+                auto expected = xt::zeros<double>({ fixed_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -606,7 +612,7 @@ namespace fastscapelib
                 SCOPED_TRACE("looped empty cols");
 
                 auto actual = xt::view(looped_graph.impl().receivers_weight(), 0, xt::range(1, 8));
-                auto expected = xt::zeros<double>({ looped_grid.size(), 3ul }) * -1;
+                auto expected = xt::zeros<double>({ looped_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -703,6 +709,9 @@ namespace fastscapelib
         class single_flow_router__raster_bishop
             : public single_flow_router__raster_base<fs::raster_connect::bishop>
         {
+        protected:
+            // receiver / donors all columns except the 1st
+            size_type n0plus_cols = 3;
         };
 
 
@@ -724,7 +733,7 @@ namespace fastscapelib
                 SCOPED_TRACE("non-looped empty cols");
 
                 auto actual = xt::view(fixed_graph.impl().receivers(), 0, xt::range(1, 8));
-                auto expected = xt::ones<size_type>({ fixed_grid.size(), 3ul }) * -1;
+                auto expected = xt::ones<int>({ fixed_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -743,7 +752,7 @@ namespace fastscapelib
                 SCOPED_TRACE("looped empty cols");
 
                 auto actual = xt::view(looped_graph.impl().receivers(), 0, xt::range(1, 8));
-                auto expected = xt::ones<size_type>({ looped_grid.size(), 3ul }) * -1;
+                auto expected = xt::ones<int>({ looped_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -767,7 +776,7 @@ namespace fastscapelib
                 SCOPED_TRACE("non-looped empty cols");
 
                 auto actual = xt::view(fixed_graph.impl().receivers_distance(), 0, xt::range(1, 8));
-                auto expected = xt::ones<int>({ fixed_grid.size(), 3ul }) * -1;
+                auto expected = xt::ones<int>({ fixed_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -787,7 +796,7 @@ namespace fastscapelib
 
                 auto actual
                     = xt::view(looped_graph.impl().receivers_distance(), 0, xt::range(1, 8));
-                auto expected = xt::ones<int>({ looped_grid.size(), 3ul }) * -1;
+                auto expected = xt::ones<int>({ looped_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -833,7 +842,7 @@ namespace fastscapelib
                 SCOPED_TRACE("non-looped empty cols");
 
                 auto actual = xt::view(fixed_graph.impl().receivers_weight(), 0, xt::range(1, 8));
-                auto expected = xt::zeros<double>({ fixed_grid.size(), 3ul }) * -1;
+                auto expected = xt::zeros<double>({ fixed_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
@@ -851,7 +860,7 @@ namespace fastscapelib
                 SCOPED_TRACE("looped empty cols");
 
                 auto actual = xt::view(looped_graph.impl().receivers_weight(), 0, xt::range(1, 8));
-                auto expected = xt::zeros<double>({ looped_grid.size(), 3ul }) * -1;
+                auto expected = xt::zeros<double>({ looped_grid.size(), n0plus_cols }) * -1;
 
                 EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
             }
