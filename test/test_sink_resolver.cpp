@@ -27,28 +27,28 @@ namespace fastscapelib
             : public sink_resolver_impl_base<FG, test_sink_resolver>
         {
         public:
-            using graph_type = FG;
-            using base_type = sink_resolver_impl_base<graph_type, test_sink_resolver>;
+            using graph_impl_type = FG;
+            using base_type = sink_resolver_impl_base<graph_impl_type, test_sink_resolver>;
 
-            using elevation_type = typename graph_type::elevation_type;
+            using data_array_type = typename graph_impl_type::data_array_type;
 
-            sink_resolver_impl(graph_type& graph, const test_sink_resolver& resolver)
+            sink_resolver_impl(graph_impl_type& graph, const test_sink_resolver& resolver)
                 : base_type(graph, resolver)
-                , m_elevation(elevation_type({ 0 })){};
+                , m_elevation(data_array_type({ 0 })){};
 
-            const elevation_type& resolve1(const elevation_type& elevation)
+            const data_array_type& resolve1(const data_array_type& elevation)
             {
                 m_elevation = elevation + 10.;
                 return m_elevation;
             };
-            const elevation_type& resolve2(const elevation_type& elevation)
+            const data_array_type& resolve2(const data_array_type& elevation)
             {
                 m_elevation = elevation + 5.;
                 return m_elevation;
             };
 
         private:
-            elevation_type m_elevation;
+            data_array_type m_elevation;
         };
     }
 
