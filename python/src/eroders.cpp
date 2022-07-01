@@ -9,26 +9,13 @@
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
 
+#include "grid.hpp"
 #include "flow_graph.hpp"
 #include "pytensor_utils.hpp"
 
 
 namespace py = pybind11;
 namespace fs = fastscapelib;
-
-
-template <class K, class T>
-void
-erode_linear_diffusion_py(xt::pytensor<T, 2>& erosion,
-                          const xt::pytensor<T, 2>& elevation,
-                          const K k_coef,
-                          double dt,
-                          double dx,
-                          double dy)
-{
-    py::gil_scoped_release release;
-    fs::erode_linear_diffusion(erosion, elevation, k_coef, dt, dx, dy);
-}
 
 
 void
@@ -64,18 +51,26 @@ add_spl_bindings(py::module& m)
 void
 add_diffusion_adi_bindings(py::module& m)
 {
-    m.def("erode_linear_diffusion_d",
-          &erode_linear_diffusion_py<double, double>,
-          "Compute hillslope erosion by linear diffusion on a 2-d regular "
-          "grid using finite differences with an Alternating Direction"
-          "Implicit (ADI) scheme.");
+    using py_diffusion_adi_eroder = fs::diffusion_adi_eroder<fs::py_raster_grid, fs::py_selector>;
+    using data_array_type = py_diffusion_adi_eroder::data_array_type;
 
-    m.def("erode_linear_diffusion_var_d",
-          &erode_linear_diffusion_py<xt::pytensor<double, 2>&, double>,
-          "Compute hillslope erosion by linear diffusion on a 2-d regular "
-          "grid using finite differences with an Alternating Direction"
-          "Implicit (ADI) scheme.\n\n"
-          "Version with spatially variable diffusion coefficient.");
+    py::class_<py_diffusion_adi_eroder>(m, "DiffusionADIEroder")
+        .def(py::init<fs::py_raster_grid&, double>())
+        .def(py::init<fs::py_raster_grid&, data_array_type&>())
+        .def_property("k_coef",
+                      &py_diffusion_adi_eroder::k_coef,
+                      [](py_diffusion_adi_eroder& self, py::object value)
+                      {
+                          if (py::isinstance<py::float_>(value))
+                          {
+                              self.set_k_coef(value.cast<double>());
+                          }
+                          else if (py::isinstance<data_array_type>(value))
+                          {
+                              self.set_k_coef(value.cast<data_array_type>());
+                          }
+                      })
+        .def("erode", &py_diffusion_adi_eroder::erode, py::call_guard<py::gil_scoped_release>());
 }
 
 

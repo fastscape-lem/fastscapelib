@@ -22,7 +22,7 @@ using namespace xt::placeholders;
 namespace fs = fastscapelib;
 
 
-TEST(erode_stream_pow, ctor)
+TEST(spl_eroder, ctor)
 {
     using grid_type = fs::raster_grid;
     using size_type = grid_type::size_type;
@@ -69,10 +69,10 @@ TEST(erode_stream_pow, ctor)
  * Drainage area along the profile is estimated using Hack's law.
  *
  */
-class erode_power_profile_grid : public ::testing::Test
+class spl_eroder__profile_grid : public ::testing::Test
 {
 public:
-    erode_power_profile_grid()
+    spl_eroder__profile_grid()
     {
         uplift(0) = 0.;
     }
@@ -128,7 +128,7 @@ protected:
  */
 template <class K>
 xt::xtensor<double, 1>
-erode_power_profile_grid::get_steady_slope_numerical(
+spl_eroder__profile_grid::get_steady_slope_numerical(
     flow_graph_type& flow_graph, const K& k_coef, double slope_exp, double dt, double tolerance)
 {
     auto eroder = spl_eroder_type(flow_graph, k_coef, area_exp, slope_exp, tolerance);
@@ -175,7 +175,7 @@ erode_power_profile_grid::get_steady_slope_numerical(
  * ``k_coef`` is invariant in space!
  */
 xt::xtensor<double, 1>
-erode_power_profile_grid::get_steady_slope_analytical(double slope_exp)
+spl_eroder__profile_grid::get_steady_slope_analytical(double slope_exp)
 {
     // exclude 1st node for proper comparison with the numerical solution
     auto drainage_area_ = xt::view(drainage_area, xt::range(1, _));
@@ -187,7 +187,7 @@ erode_power_profile_grid::get_steady_slope_analytical(double slope_exp)
 }
 
 
-TEST_F(erode_power_profile_grid, flow_graph)
+TEST_F(spl_eroder__profile_grid, update_routes)
 {
     // not really testing SPL eroder but might useful to diagnose other tests
     auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
@@ -207,7 +207,7 @@ TEST_F(erode_power_profile_grid, flow_graph)
 }
 
 
-TEST_F(erode_power_profile_grid, scalar_k_coef)
+TEST_F(spl_eroder__profile_grid, erode__k_coef_scalar)
 {
     auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
@@ -230,7 +230,7 @@ TEST_F(erode_power_profile_grid, scalar_k_coef)
 }
 
 
-TEST_F(erode_power_profile_grid, array_k_coef)
+TEST_F(spl_eroder__profile_grid, erode__k_coef_array)
 {
     auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
@@ -254,7 +254,7 @@ TEST_F(erode_power_profile_grid, array_k_coef)
     }
 }
 
-TEST_F(erode_power_profile_grid, stability_threshold)
+TEST_F(spl_eroder__profile_grid, stability_threshold)
 {
     auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
@@ -270,7 +270,7 @@ TEST_F(erode_power_profile_grid, stability_threshold)
 }
 
 
-TEST(erode_stream_pow, raster_grid)
+TEST(spl_eroder__raster_grid, erode)
 {
     namespace fs = fastscapelib;
 

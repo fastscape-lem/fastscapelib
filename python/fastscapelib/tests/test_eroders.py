@@ -1,11 +1,7 @@
 import numpy as np
 import pytest
 
-from fastscapelib.eroders import (
-    SPLEroder,
-    erode_linear_diffusion_d,
-    erode_linear_diffusion_var_d,
-)
+from fastscapelib.eroders import DiffusionADIEroder, SPLEroder
 from fastscapelib.flow import FlowGraph, NoSinkResolver, SingleFlowRouter
 from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
 
@@ -126,33 +122,56 @@ def _compute_l2_norm(a1, a2):
     return 1.0 / a1.size * np.sum(a2**2 - a1**2)
 
 
-@pytest.mark.parametrize("k_coef_type", ["constant", "variable"])
-def test_erode_linear_diffusion(k_coef_type):
-    x, y = np.meshgrid(np.linspace(-20, 20, 51), np.linspace(-20, 20, 101))
-    dy = 0.4
-    dx = 0.8
+class TestDiffusionADIEroder:
+    def test_constructor_properties(self):
+        bstatus = RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY)
+        grid = RasterGrid([2, 2], [1.0, 1.0], bstatus, [])
 
-    k_coef = 1e-3
-    dt = 1e3
+        eroder = DiffusionADIEroder(grid, 1e-3)
 
-    t0 = 2e3
+        np.testing.assert_equal(eroder.k_coef, np.full(grid.shape, 1e-3))
 
-    elevation_init = _solve_diffusion_analytical(x, y, k_coef, t0)
-    erosion = np.empty_like(elevation_init)
+        k_coef_arr = np.full(grid.shape, 1e-2)
+        eroder.k_coef = k_coef_arr
+        np.testing.assert_equal(eroder.k_coef, k_coef_arr)
 
-    elevation_analytical = _solve_diffusion_analytical(x, y, k_coef, t0 + dt)
+        k_coef = 1e-5
+        eroder.k_coef = k_coef
+        np.testing.assert_equal(eroder.k_coef, np.full(grid.shape, 1e-5))
 
-    if k_coef_type == "constant":
-        func = erode_linear_diffusion_d
-        k = k_coef
-    else:
-        # k_coef_type == "variable"
-        func = erode_linear_diffusion_var_d
-        k = np.full_like(x, k_coef)
+        with pytest.raises(RuntimeError, match=".*shape mismatch"):
+            eroder.k_coef = np.ones((4, 5))
 
-    func(erosion, elevation_init, k, dt, dx, dy)
-    elevation_numerical = elevation_init - erosion
+    @pytest.mark.parametrize("k_coef_type", ["scalar", "array"])
+    def test_erode_linear_diffusion(self, k_coef_type):
+        x, y = np.meshgrid(np.linspace(-20, 20, 51), np.linspace(-20, 20, 101))
+        dy = 0.4
+        dx = 0.8
 
-    l2_norm = _compute_l2_norm(elevation_analytical, elevation_numerical)
+        grid = RasterGrid(
+            [101, 51],
+            [dy, dx],
+            RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+            [],
+        )
 
-    assert l2_norm < 1e-9
+        k_coef = 1e-3
+        eroder = DiffusionADIEroder(grid, k_coef)
+
+        dt = 1e3
+        t0 = 2e3
+
+        elevation_init = _solve_diffusion_analytical(x, y, k_coef, t0)
+        erosion = np.empty_like(elevation_init)
+
+        elevation_analytical = _solve_diffusion_analytical(x, y, k_coef, t0 + dt)
+
+        if k_coef_type == "array":
+            eroder.k_coef = np.full_like(x, k_coef)
+
+        erosion = eroder.erode(elevation_init, dt)
+        elevation_numerical = elevation_init - erosion
+
+        l2_norm = _compute_l2_norm(elevation_analytical, elevation_numerical)
+
+        assert l2_norm < 1e-9

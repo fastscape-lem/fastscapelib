@@ -16,300 +16,297 @@
 #include "xtensor/xview.hpp"
 #include "xtensor/xmanipulation.hpp"
 
+#include "fastscapelib/grid/structured_grid.hpp"
 #include "fastscapelib/utils/utils.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib
 {
-
-    namespace detail
+    template <class G>
+    struct is_raster_grid
     {
+        static constexpr bool value = G::is_structured() && G::is_uniform() && G::xt_ndims() == 2;
+    };
 
 
-        /*
-         * Solve tri-diagonal system of equations using Thomas' algorithm (TDMA).
-         */
-        template <class L, class D, class U, class V>
-        auto solve_tridiagonal(L& lower, D& diag, U& upper, V& vec)
+    template <class G, class S = typename G::xt_selector>
+    class diffusion_adi_eroder
+    {
+    public:
+        using grid_type = G;
+        using xt_selector = S;
+
+        using data_type = typename grid_type::grid_data_type;
+        using data_array_type = xt_array_t<xt_selector, data_type>;
+        using data_tensor_type = xt_tensor_t<xt_selector, data_type, grid_type::xt_ndims()>;
+
+        template <class K>
+        diffusion_adi_eroder(G& grid,
+                             K&& k_coef,
+                             typename std::enable_if_t<is_raster_grid<G>::value>* = 0)
+            : m_grid(grid)
         {
-            auto n = static_cast<sshape_t>(vec.size());
+            auto grid_shape = m_grid.shape();
+            m_nrows = grid_shape[0];
+            m_ncols = grid_shape[1];
 
-            auto result = xt::empty_like(vec);
-            auto gam = xt::empty_like(vec);
+            m_erosion.resize({ m_nrows, m_ncols });
 
-            if (diag(0) == 0)
+            set_k_coef(k_coef);
+        };
+
+        data_array_type k_coef()
+        {
+            if (m_k_coef_is_scalar)
+            {
+                return xt::ones<data_type>(m_grid.shape()) * m_k_coef_scalar;
+            }
+            else
+            {
+                return m_k_coef_array;
+            }
+        }
+
+        template <class T>
+        void set_k_coef(T value, typename std::enable_if_t<std::is_floating_point<T>::value>* = 0)
+        {
+            m_k_coef_is_scalar = true;
+            m_k_coef_scalar = value;
+            m_k_coef_array.resize({ 0 });
+            set_factors();
+        };
+
+        template <class K>
+        void set_k_coef(K&& value, typename std::enable_if_t<xt::is_xexpression<K>::value>* = 0)
+        {
+            if (!xt::same_shape(value.shape(), m_grid.shape()))
+            {
+                throw std::runtime_error("cannot set k_coef value: shape mismatch");
+            }
+
+            m_k_coef_is_scalar = false;
+            m_k_coef_array = value;
+            set_factors();
+        };
+
+        const data_array_type& erode(const data_array_type& elevation, double dt);
+
+    private:
+        grid_type& m_grid;
+
+        using size_type = typename grid_type::size_type;
+        using shape_type = typename grid_type::shape_type;
+        size_type m_nrows, m_ncols;
+
+        data_array_type m_erosion;
+
+        bool m_k_coef_is_scalar;
+        data_type m_k_coef_scalar;
+        data_tensor_type m_k_coef_array;
+
+        using factors_type = xt::xtensor<data_type, 3>;
+        factors_type m_factors_row;
+        factors_type m_factors_col;
+
+        void set_factors();
+
+        // tridiagonal matrix system arrays
+        xt::xtensor<data_type, 1> m_vec;
+        xt::xtensor<data_type, 1> m_lower;
+        xt::xtensor<data_type, 1> m_diag;
+        xt::xtensor<data_type, 1> m_upper;
+
+        void resize_tridiagonal(size_type size);
+        xt::xtensor<data_type, 1> solve_tridiagonal();
+
+        template <class E, class F1, class F2>
+        auto solve_adi_row(E&& elevation,
+                           F1&& factors_row,
+                           F2&& factors_col,
+                           size_type nrows,
+                           size_type ncols,
+                           double dt);
+    };
+
+    /*
+     * Set constant ADI factors
+     */
+    template <class G, class S>
+    void diffusion_adi_eroder<G, S>::set_factors()
+    {
+        auto spacing = m_grid.spacing();
+        data_type dx = spacing[1];
+        data_type dy = spacing[0];
+
+        std::array<size_type, 3> factors_shape({ { 3, m_nrows, m_ncols } });
+        data_type fr, fc;
+
+        if (m_k_coef_is_scalar)
+        {
+            fr = m_k_coef_scalar * 0.5 / (dy * dy);
+            fc = m_k_coef_scalar * 0.5 / (dx * dx);
+
+            m_factors_row = xt::ones<data_type>(factors_shape) * fr;
+            m_factors_col = xt::ones<data_type>(factors_shape) * fc;
+        }
+        else
+        {
+            fr = 0.25 / (dy * dy);
+            fc = 0.25 / (dx * dx);
+
+            m_factors_row = xt::empty<data_type>(factors_shape);
+            m_factors_col = xt::empty<data_type>(factors_shape);
+
+            const auto& k = m_k_coef_array;
+
+            for (size_type r = 1; r < m_nrows - 1; ++r)
+            {
+                for (size_type c = 1; c < m_ncols - 1; ++c)
+                {
+                    m_factors_row(0, r, c) = fr * (k(r - 1, c) + k(r, c));
+                    m_factors_row(1, r, c) = fr / 2 * (k(r - 1, c) + 2 * k(r, c) + k(r + 1, c));
+                    m_factors_row(2, r, c) = fr * (k(r, c) + k(r + 1, c));
+
+                    m_factors_col(0, r, c) = fc * (k(r, c - 1) + k(r, c));
+                    m_factors_col(1, r, c) = fc / 2 * (k(r, c - 1) + 2 * k(r, c) + k(r, c + 1));
+                    m_factors_col(2, r, c) = fc * (k(r, c) + k(r, c + 1));
+                }
+            }
+        }
+    }
+
+
+    template <class G, class S>
+    void diffusion_adi_eroder<G, S>::resize_tridiagonal(size_type size)
+    {
+        m_vec.resize({ size });
+        m_upper.resize({ size });
+        m_diag.resize({ size });
+        m_lower.resize({ size });
+    }
+
+
+    /*
+     * Solve tri-diagonal system of equations using Thomas' algorithm (TDMA).
+     */
+    template <class G, class S>
+    auto diffusion_adi_eroder<G, S>::solve_tridiagonal() -> xt::xtensor<data_type, 1>
+    {
+        size_type n = m_vec.size();
+
+        auto result = xt::empty_like(m_vec);
+        auto gam = xt::empty_like(m_vec);
+
+        if (m_diag(0) == 0)
+        {
+            throw std::runtime_error("division by zero while solving tri-diagonal system");
+        }
+
+        auto bet = m_diag(0);
+        result(0) = m_vec(0) / bet;
+
+        for (size_type i = 1; i < n; ++i)
+        {
+            gam(i) = m_upper(i - 1) / bet;
+            bet = m_diag(i) - m_lower(i) * gam(i);
+
+            if (bet == 0)
             {
                 throw std::runtime_error("division by zero while solving tri-diagonal system");
             }
 
-            auto bet = diag(0);
-            result(0) = vec(0) / bet;
-
-            for (index_t i = 1; i < n; ++i)
-            {
-                gam(i) = upper(i - 1) / bet;
-                bet = diag(i) - lower(i) * gam(i);
-
-                if (bet == 0)
-                {
-                    throw std::runtime_error("division by zero while solving tri-diagonal system");
-                }
-
-                result(i) = (vec(i) - lower(i) * result(i - 1)) / bet;
-            }
-
-            for (index_t i = n - 2; i > -1; --i)
-            {
-                result(i) -= gam(i + 1) * result(i + 1);
-            }
-
-            return result;
+            result(i) = (m_vec(i) - m_lower(i) * result(i - 1)) / bet;
         }
 
-
-        /*
-         * Get factors for linear diffusion ADI with a spatially uniform
-         * diffusion coefficent (i.e., any scalar like float, double, etc.).
-         */
-        template <class T>
-        auto get_adi_factors(T k_coef,
-                             double dt,
-                             double dx,
-                             double dy,
-                             sshape_t nrows,
-                             sshape_t ncols,
-                             typename std::enable_if_t<std::is_arithmetic<T>::value>* = 0)
+        for (int i = static_cast<int>(n) - 2; i > -1; --i)
         {
-            std::array<std::size_t, 1> shape_cols{ static_cast<std::size_t>(ncols) };
-
-            auto fr = xt::empty<double>(shape_cols);
-            auto fc = xt::empty<double>(shape_cols);
-
-            fr.fill(k_coef * 0.5 * dt / (dy * dy));
-            fc.fill(k_coef * 0.5 * dt / (dx * dx));
-
-            std::array<std::size_t, 3> f_shape{ 3,
-                                                static_cast<std::size_t>(nrows),
-                                                static_cast<std::size_t>(ncols) };
-
-            // TODO: don't use eval when xbroadcast will have strides
-            //       (required for transpose views: see xtensor #917)
-            auto&& factors_row = xt::eval(xt::broadcast(std::move(fr), f_shape));
-            auto&& factors_col = xt::eval(xt::broadcast(std::move(fc), f_shape));
-
-            return std::make_pair(factors_row, factors_col);
+            result(i) -= gam(i + 1) * result(i + 1);
         }
 
-
-        /*
-         * Get factors for linear diffusion ADI with a spatially variable
-         * diffusion coefficent (i.e., any xt::xexpression).
-         */
-        template <class K>
-        auto get_adi_factors(K&& k_coef,
-                             double dt,
-                             double dx,
-                             double dy,
-                             sshape_t nrows,
-                             sshape_t ncols,
-                             typename std::enable_if_t<xt::is_xexpression<K>::value>* = 0)
-        {
-            std::array<size_t, 3> f_shape{ 3,
-                                           static_cast<std::size_t>(nrows),
-                                           static_cast<std::size_t>(ncols) };
-
-            auto factors_row = xt::empty<double>(f_shape);
-            auto factors_col = xt::empty<double>(f_shape);
-
-            double fr = 0.25 * dt / (dy * dy);
-            double fc = 0.25 * dt / (dx * dx);
-
-            for (index_t r = 1; r < nrows - 1; ++r)
-            {
-                for (index_t c = 1; c < ncols - 1; ++c)
-                {
-                    factors_row(0, r, c) = fr * (k_coef(r - 1, c) + k_coef(r, c));
-                    factors_row(1, r, c)
-                        = fr / 2 * (k_coef(r - 1, c) + 2 * k_coef(r, c) + k_coef(r + 1, c));
-                    factors_row(2, r, c) = fr * (k_coef(r, c) + k_coef(r + 1, c));
-
-                    factors_col(0, r, c) = fc * (k_coef(r, c - 1) + k_coef(r, c));
-                    factors_col(1, r, c)
-                        = fc / 2 * (k_coef(r, c - 1) + 2 * k_coef(r, c) + k_coef(r, c + 1));
-                    factors_col(2, r, c) = fc * (k_coef(r, c) + k_coef(r, c + 1));
-                }
-            }
-
-            return std::make_pair(factors_row, factors_col);
-        }
-
-
-        /*
-         * Solve linear diffusion for the row direction.
-         */
-        template <class Ei, class Fr, class Fc>
-        auto solve_diffusion_adi_row(
-            Ei&& elevation, Fr&& factors_row, Fc&& factors_col, sshape_t nrows, sshape_t ncols)
-        {
-            xt::xtensor<double, 2> elevation_out = elevation;
-
-            std::array<std::size_t, 1> shape_cols{ static_cast<std::size_t>(ncols) };
-
-            auto vec = xt::empty<double>(shape_cols);
-            auto lower = xt::empty_like(vec);
-            auto diag = xt::empty_like(vec);
-            auto upper = xt::empty_like(vec);
-
-            for (index_t r = 1; r < nrows - 1; ++r)
-            {
-                xt::noalias(lower) = -1 * xt::view(factors_col, 0, r, xt::all());
-                xt::noalias(diag) = 1 + 2 * xt::view(factors_col, 1, r, xt::all());
-                xt::noalias(upper) = -1 * xt::view(factors_col, 2, r, xt::all());
-
-                for (index_t c = 1; c < ncols - 1; ++c)
-                {
-                    vec(c) = ((1 - 2 * factors_row(1, r, c)) * elevation(r, c)
-                              + factors_row(0, r, c) * elevation(r - 1, c)
-                              + factors_row(2, r, c) * elevation(r + 1, c));
-                }
-
-                // boundary conditions
-                auto ilast = ncols - 1;
-
-                lower(0) = 0;
-                lower(ilast) = 0;
-                diag(0) = 1;
-                diag(ilast) = 1;
-                upper(0) = 0;
-                upper(ilast) = 0;
-                vec(0) = elevation(r, 0);
-                vec(ilast) = elevation(r, ilast);
-                // TODO: the code below works with xtensor 0.17.1 but not with later versions
-                // auto lower_bounds = xt::view(lower, xt::keep(0, -1));
-                // lower_bounds = 0;
-                // auto diag_bounds = xt::view(diag, xt::keep(0, -1));
-                // diag_bounds = 1;
-                // auto upper_bounds = xt::view(upper, xt::keep(0, -1));
-                // upper_bounds = 0;
-                // auto vec_bounds = xt::view(vec, xt::keep(0, -1));
-                // vec_bounds = xt::view(elevation, r, xt::keep(0, -1));
-
-                auto elevation_out_r = xt::view(elevation_out, r, xt::all());
-
-                elevation_out_r = solve_tridiagonal(lower, diag, upper, vec);
-            }
-
-            return elevation_out;
-        }
-
-
-        /*
-         * Hillslope erosion by linear diffusion (ADI) implementation.
-         *
-         * Note: this assumes row-major layout.
-         */
-        template <class Er, class El, class K>
-        void erode_linear_diffusion_impl(
-            Er&& erosion, El&& elevation, K&& k_coef, double dt, double dx, double dy)
-        {
-            auto shape = elevation.shape();
-            auto nrows = static_cast<sshape_t>(shape[0]);
-            auto ncols = static_cast<sshape_t>(shape[1]);
-
-            // TODO: optimize 0-d xexpression or xcalar using static_cast<double>?
-            //       and/or assert k_coef.shape == elevation.shape?
-
-            auto factors = get_adi_factors(std::forward<K>(k_coef), dt, dx, dy, nrows, ncols);
-
-            // solve for rows
-            auto elevation_tmp = solve_diffusion_adi_row(
-                std::forward<El>(elevation), factors.first, factors.second, nrows, ncols);
-
-            // solve for cols (i.e., transpose)
-            auto tranposed_dims = std::array<std::size_t, 3>{ 0, 2, 1 };
-
-            auto elevation_next
-                = solve_diffusion_adi_row(xt::transpose(elevation_tmp),
-                                          xt::transpose(factors.second, tranposed_dims),
-                                          xt::transpose(factors.first, tranposed_dims),
-                                          ncols,
-                                          nrows);
-
-            auto erosion_v = xt::view(erosion, xt::all(), xt::all());
-            erosion_v = elevation - xt::transpose(elevation_next);
-        }
-
-    }  // namespace detail
-
-
-    /**
-     * Compute hillslope erosion by linear diffusion on a 2-d regular grid
-     * using finite differences with an Alternating Direction Implicit
-     * (ADI) scheme.
-     *
-     * This numerical scheme is implicit and unconditionally stable. It is
-     * second order in time and space (its accuracy still depends on the
-     * values chosen for step duration, grid resolution and diffusivity).
-     *
-     * This implementation assumes fixed (Dirichlet) boundary conditions
-     * on the four sides of the grid.
-     *
-     * @param erosion : ``[intent=out, shape=(nrows, ncols)]``
-     *     Erosion at grid node.
-     * @param elevation : ``[intent=in, shape=(nrows, ncols)]``
-     *     Elevation at grid node.
-     * @param k_coef : ``[intent=in]``
-     *     Diffusion coefficient.
-     * @param dt : ``[intent=in]``
-     *     Time step duration.
-     * @param dx : ``[intent=in]``
-     *     Grid spacing in x
-     * @param dy : ``[intent=in]``
-     *     Grid spacing in y
-     */
-    template <class Er, class El>
-    void erode_linear_diffusion(xtensor_t<Er>& erosion,
-                                const xtensor_t<El>& elevation,
-                                double k_coef,
-                                double dt,
-                                double dx,
-                                double dy)
-    {
-        detail::erode_linear_diffusion_impl(
-            erosion.derived_cast(), elevation.derived_cast(), k_coef, dt, dx, dy);
+        return result;
     }
 
 
-    /**
-     * Compute hillslope erosion by linear diffusion on a 2-d regular grid
-     * using finite differences with an Alternating Direction Implicit
-     * (ADI) scheme.
-     *
-     * This version accepts a spatially variable diffusion coefficient.
-     *
-     * @param erosion : ``[intent=out, shape=(nrows, ncols)]``
-     *     Erosion at grid node.
-     * @param elevation : ``[intent=in, shape=(nrows, ncols)]``
-     *     Elevation at grid node.
-     * @param k_coef : ``[intent=in, shape=(nrows, ncols)]``
-     *     Diffusion coefficient.
-     * @param dt : ``[intent=in]``
-     *     Time step duration.
-     * @param dx : ``[intent=in]``
-     *     Grid spacing in x
-     * @param dy : ``[intent=in]``
-     *     Grid spacing in y
+    /*
+     * Solve ADI linear diffusion for the row direction.
      */
-    template <class Er, class El, class K>
-    void erode_linear_diffusion(xtensor_t<Er>& erosion,
-                                const xtensor_t<El>& elevation,
-                                const xtensor_t<K>& k_coef,
-                                double dt,
-                                double dx,
-                                double dy)
+    template <class G, class S>
+    template <class E, class F1, class F2>
+    auto diffusion_adi_eroder<G, S>::solve_adi_row(E&& elevation,
+                                                   F1&& factors_row,
+                                                   F2&& factors_col,
+                                                   size_type nrows,
+                                                   size_type ncols,
+                                                   double dt)
     {
-        detail::erode_linear_diffusion_impl(
-            erosion.derived_cast(), elevation.derived_cast(), k_coef.derived_cast(), dt, dx, dy);
+        xt::xtensor<double, 2> elevation_out = elevation;
+
+        for (size_type r = 1; r < nrows - 1; ++r)
+        {
+            m_lower = -1 * xt::view(factors_col, 0, r, xt::all()) * dt;
+            m_diag = 1 + 2 * xt::view(factors_col, 1, r, xt::all()) * dt;
+            m_upper = -1 * xt::view(factors_col, 2, r, xt::all()) * dt;
+
+            for (size_type c = 1; c < ncols - 1; ++c)
+            {
+                m_vec(c) = ((1 - 2 * factors_row(1, r, c) * dt) * elevation(r, c)
+                            + factors_row(0, r, c) * elevation(r - 1, c) * dt
+                            + factors_row(2, r, c) * elevation(r + 1, c) * dt);
+            }
+
+            // ignore grid boundary status and assume fixed value boundary conditions
+            auto ilast = ncols - 1;
+
+            m_lower(0) = 0;
+            m_lower(ilast) = 0;
+            m_diag(0) = 1;
+            m_diag(ilast) = 1;
+            m_upper(0) = 0;
+            m_upper(ilast) = 0;
+            m_vec(0) = elevation(r, 0);
+            m_vec(ilast) = elevation(r, ilast);
+
+            auto elevation_out_r = xt::view(elevation_out, r, xt::all());
+
+            elevation_out_r = solve_tridiagonal();
+        }
+
+        return elevation_out;
+    }
+
+
+    template <class G, class S>
+    auto diffusion_adi_eroder<G, S>::erode(const data_array_type& elevation, double dt)
+        -> const data_array_type&
+    {
+        // solve for rows
+        resize_tridiagonal(m_ncols);
+        auto elevation_tmp
+            = solve_adi_row(elevation, m_factors_row, m_factors_col, m_nrows, m_ncols, dt);
+
+        // solve for cols (i.e., transpose)
+        resize_tridiagonal(m_nrows);
+        auto tranposed_dims = std::array<std::size_t, 3>{ 0, 2, 1 };
+
+        auto elevation_next = solve_adi_row(xt::transpose(elevation_tmp),
+                                            xt::transpose(m_factors_col, tranposed_dims),
+                                            xt::transpose(m_factors_row, tranposed_dims),
+                                            m_ncols,
+                                            m_nrows,
+                                            dt);
+
+        auto erosion_v = xt::view(m_erosion, xt::all(), xt::all());
+        erosion_v = elevation - xt::transpose(elevation_next);
+
+        return m_erosion;
+    }
+
+
+    template <class G, class K>
+    diffusion_adi_eroder<G> make_diffusion_adi_eroder(G& grid, K&& k_coef)
+    {
+        return diffusion_adi_eroder<G>(grid, k_coef);
     }
 
 }  // namespace fastscapelib

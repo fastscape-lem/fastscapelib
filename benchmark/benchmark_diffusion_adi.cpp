@@ -49,18 +49,19 @@ namespace fastscapelib
             auto ns = static_cast<std::size_t>(state.range(0));
             std::array<std::size_t, 2> shape = { ns, ns };
 
-            xt::xtensor<double, 2> elevation = xt::random::rand<T>(shape);
-            auto erosion = xt::empty_like(elevation);
+            auto grid = fs::raster_grid(shape, { 0.4, 0.4 }, fs::node_status::fixed_value_boundary);
 
-            double dx = 0.4;
-            double dy = 0.4;
+            xt::xtensor<double, 2> elevation = xt::random::rand<T>(shape);
+
+            auto eroder = fs::make_diffusion_adi_eroder(grid, 1e-3);
+            eroder.set_k_coef(get_k_coef<K>(elevation.shape()));
+
             double dt = 1e4;
 
-            K k_coef = get_k_coef<K>(elevation.shape());
 
             for (auto _ : state)
             {
-                fs::erode_linear_diffusion(erosion, elevation, k_coef, dt, dx, dy);
+                eroder.erode(elevation, dt);
             }
         }
 
