@@ -178,7 +178,8 @@ class TestSingleFlowRouter:
 
     def test_donors_count(self):
         npt.assert_equal(
-            self.profile_flow_graph.impl().donors_count(), np.r_[1, 0, 2, 1, 0, 0, 1, 1]
+            self.profile_flow_graph.impl().donors_count(),
+            np.array([1, 0, 2, 1, 0, 0, 1, 1]),
         )
 
         npt.assert_equal(
@@ -188,12 +189,13 @@ class TestSingleFlowRouter:
 
     def test_dfs_stack(self):
         npt.assert_equal(
-            self.profile_flow_graph.impl().dfs_stack(), np.r_[0, 1, 2, 3, 4, 7, 6, 5]
+            self.profile_flow_graph.impl().dfs_stack(),
+            np.array([0, 1, 2, 3, 4, 7, 6, 5]),
         )
 
         npt.assert_equal(
             self.raster_flow_graph.impl().dfs_stack(),
-            np.array([12, 13, 8, 4, 0, 9, 5, 1, 10, 6, 2, 14, 15, 11, 7, 3]),
+            np.array([12, 13, 8, 9, 10, 6, 2, 5, 1, 4, 0, 14, 15, 11, 7, 3]),
         )
 
 

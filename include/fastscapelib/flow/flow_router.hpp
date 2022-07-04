@@ -9,6 +9,8 @@
 #ifndef FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 #define FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 
+#include <stack>
+
 #include "fastscapelib/algo/flow_routing.hpp"
 #include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/grid/base.hpp"
@@ -154,26 +156,6 @@ namespace fastscapelib
 
         private:
             using size_type = typename graph_impl_type::size_type;
-            using stack_type = typename graph_impl_type::stack_type;
-            using donors_count_type = typename graph_impl_type::donors_count_type;
-            using donors_type = typename graph_impl_type::donors_type;
-
-            void add2stack(size_type& nstack,
-                           stack_type& stack,
-                           const donors_count_type& ndonors,
-                           const donors_type& donors,
-                           const size_type inode)
-            {
-                for (size_type k = 0; k < ndonors(inode); ++k)
-                {
-                    const auto idonor = donors(inode, k);
-                    if (idonor != inode)
-                    {
-                        stack(nstack++) = idonor;
-                        add2stack(nstack, stack, ndonors, donors, idonor);
-                    }
-                }
-            }
 
             void compute_dfs_stack()
             {
@@ -182,16 +164,38 @@ namespace fastscapelib
                 const auto& donors_count = this->m_graph_impl.m_donors_count;
 
                 auto& stack = this->m_graph_impl.m_dfs_stack;
+
+                auto size = this->m_graph_impl.size();
                 size_type nstack = 0;
 
-                for (size_type i = 0; i < this->m_graph_impl.size(); ++i)
+                std::stack<size_type> tmp;
+
+                for (size_type i = 0; i < size; ++i)
                 {
                     if (receivers(i, 0) == i)
                     {
+                        tmp.push(i);
                         stack(nstack++) = i;
-                        add2stack(nstack, stack, donors_count, donors, i);
+                    }
+
+                    while (!tmp.empty())
+                    {
+                        size_type istack = tmp.top();
+                        tmp.pop();
+
+                        for (size_type k = 0; k < donors_count(istack); ++k)
+                        {
+                            const auto idonor = donors(istack, k);
+                            if (idonor != istack)
+                            {
+                                stack(nstack++) = idonor;
+                                tmp.push(idonor);
+                            }
+                        }
                     }
                 }
+
+                assert(nstack == size);
             };
         };
     }
