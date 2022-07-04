@@ -126,6 +126,7 @@ set(FASTSCAPELIB_BENCHMARK_SRC
   benchmark_pflood.cpp
   benchmark_profile_grid.cpp
   benchmark_raster_grid.cpp
+  benchmark_single_flow_router.cpp
   benchmark_spl.cpp
 )
 
