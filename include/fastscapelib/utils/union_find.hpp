@@ -21,15 +21,16 @@
  * to find().
  * Amortized complexity of Union and Find: optimal O(alpha(m, n))
  */
-template<class T_Class>
+template <class T_Class>
 class UnionFind_T
 {
 public:
-
     /**
      * @brief UnionFind Constructor
      */
-    UnionFind_T(){}
+    UnionFind_T()
+    {
+    }
 
     /**
      * @brief UnionFind Constructor
@@ -76,7 +77,7 @@ public:
     {
         parent.push_back(c);
         rank.push_back(0);
-        if (c != parent.size()-1 && !rank[c])
+        if (c != parent.size() - 1 && !rank[c])
             rank[c] = 1;
     }
 
@@ -102,7 +103,10 @@ public:
      * @brief size
      * @return the initial number of elements in the union find structure
      */
-    size_t size() {return parent.size();}
+    size_t size()
+    {
+        return parent.size();
+    }
 
     /**
      * @brief merge two equivalence class
@@ -135,10 +139,9 @@ public:
      */
     T_Class find(T_Class x)
     {
-
         // find class
         T_Class c = x;
-        while(c != parent[c])
+        while (c != parent[c])
             c = parent[c];
 
         // set class
@@ -154,7 +157,6 @@ public:
     }
 
 private:
-
     std::vector<T_Class> parent;
     std::vector<index_t> rank;
 };
