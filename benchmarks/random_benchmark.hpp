@@ -14,7 +14,11 @@ class RegisterRandom
 {
 public:
     RegisterRandom(std::string name, RandomFunctionType func)
-        : _internal(name, "random", std::bind(random_run, std::placeholders::_1, std::placeholders::_2, func)) {}
+        : _internal(name,
+                    "random",
+                    std::bind(random_run, std::placeholders::_1, std::placeholders::_2, func))
+    {
+    }
 
     Benchmark::Register _internal;
 };
