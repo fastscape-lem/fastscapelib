@@ -196,14 +196,14 @@ TEST_F(spl_eroder__profile_grid, update_routes)
 
     xt::xtensor<index_t, 1> receivers = xt::arange<index_t>(-1, nnodes - 1);
     xt::xtensor<double, 1> dist2receivers = xt::ones<double>({ nnodes }) * spacing;
-    xt::xtensor<index_t, 1> stack = xt::arange<index_t>(0, nnodes);
+    xt::xtensor<index_t, 1> dfs_indices = xt::arange<index_t>(0, nnodes);
     receivers(0) = 0;
     dist2receivers(0) = 0.;
 
     EXPECT_TRUE(xt::all(xt::equal(receivers, xt::col(flow_graph.impl().receivers(), 0))));
     EXPECT_TRUE(
         xt::all(xt::equal(dist2receivers, xt::col(flow_graph.impl().receivers_distance(), 0))));
-    EXPECT_TRUE(xt::all(xt::equal(stack, flow_graph.impl().dfs_stack())));
+    EXPECT_TRUE(xt::all(xt::equal(dfs_indices, flow_graph.impl().dfs_indices())));
 }
 
 
@@ -321,7 +321,7 @@ TEST(spl_eroder__raster_grid, erode)
                                       xt::col(flow_graph.impl().receivers_distance(), 0))));
 
         EXPECT_TRUE(xt::all(
-            xt::equal(xt::xtensor<size_type, 1>({ 0, 2, 1, 3 }), flow_graph.impl().dfs_stack())));
+            xt::equal(xt::xtensor<size_type, 1>({ 0, 2, 1, 3 }), flow_graph.impl().dfs_indices())));
 
         EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 2>({ { 2 * a, 2 * a }, { a, a } }),
                                       flow_graph.accumulate(1.))));

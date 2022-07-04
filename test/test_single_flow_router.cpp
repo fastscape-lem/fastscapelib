@@ -145,11 +145,11 @@ namespace fastscapelib
             EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
         }
 
-        TEST_F(single_flow_router__profile, dfs_stack)
+        TEST_F(single_flow_router__profile, dfs_indices)
         {
             update();
 
-            auto actual = graph.impl().dfs_stack();
+            auto actual = graph.impl().dfs_indices();
             xt::xtensor<std::uint8_t, 1> expected{ 0, 1, 2, 3, 4, 7, 6, 5 };
 
             EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
@@ -432,14 +432,14 @@ namespace fastscapelib
             }
         }
 
-        TEST_F(single_flow_router__raster_queen, dfs_stack)
+        TEST_F(single_flow_router__raster_queen, dfs_indices)
         {
             update();
 
             {
                 SCOPED_TRACE("non-looped");
 
-                auto actual = fixed_graph.impl().dfs_stack();
+                auto actual = fixed_graph.impl().dfs_indices();
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 13, 8, 9,  10, 6,  2, 4,
                                                        5,  1,  0, 14, 15, 11, 7, 3 };
 
@@ -449,7 +449,7 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("looped");
 
-                auto actual = looped_graph.impl().dfs_stack();
+                auto actual = looped_graph.impl().dfs_indices();
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 13, 8,  9, 10, 6, 2,  4,
                                                        5,  7,  11, 3, 1,  0, 14, 15 };
 
@@ -680,14 +680,14 @@ namespace fastscapelib
             }
         }
 
-        TEST_F(single_flow_router__raster_rook, dfs_stack)
+        TEST_F(single_flow_router__raster_rook, dfs_indices)
         {
             update();
 
             {
                 SCOPED_TRACE("non-looped");
 
-                auto actual = fixed_graph.impl().dfs_stack();
+                auto actual = fixed_graph.impl().dfs_indices();
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 8,  4, 0, 13, 9,  5, 1,
                                                        14, 10, 6, 2, 15, 11, 7, 3 };
 
@@ -697,7 +697,7 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("looped");
 
-                auto actual = looped_graph.impl().dfs_stack();
+                auto actual = looped_graph.impl().dfs_indices();
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 8, 4, 11, 7,  3, 0, 13,
                                                        9,  5, 1, 14, 10, 6, 2, 15 };
 
@@ -928,14 +928,14 @@ namespace fastscapelib
             }
         }
 
-        TEST_F(single_flow_router__raster_bishop, dfs_stack)
+        TEST_F(single_flow_router__raster_bishop, dfs_indices)
         {
             update();
 
             {
                 SCOPED_TRACE("non-looped");
 
-                auto actual = fixed_graph.impl().dfs_stack();
+                auto actual = fixed_graph.impl().dfs_indices();
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 9, 4, 6, 3, 1,  13, 8,
                                                        10, 7, 5, 0, 2, 14, 11, 15 };
 
@@ -945,7 +945,7 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("looped");
 
-                auto actual = looped_graph.impl().dfs_stack();
+                auto actual = looped_graph.impl().dfs_indices();
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 9,  11, 4, 6, 1, 3,  13,
                                                        8,  10, 5,  7, 0, 2, 14, 15 };
 

@@ -149,7 +149,7 @@ namespace fastscapelib
                     donors(receivers(i, 0), donors_count(receivers(i, 0))++) = i;
                 }
 
-                compute_dfs_stack();
+                compute_dfs_indices();
             };
 
             void route2(const data_array_type& /*elevation*/){};
@@ -157,13 +157,17 @@ namespace fastscapelib
         private:
             using size_type = typename graph_impl_type::size_type;
 
-            void compute_dfs_stack()
+            /*
+             * Perform depth-first search and store the node indices for faster
+             * graph traversal.
+             */
+            void compute_dfs_indices()
             {
                 const auto& receivers = this->m_graph_impl.m_receivers;
                 const auto& donors = this->m_graph_impl.m_donors;
                 const auto& donors_count = this->m_graph_impl.m_donors_count;
 
-                auto& stack = this->m_graph_impl.m_dfs_stack;
+                auto& dfs_indices = this->m_graph_impl.m_dfs_indices;
 
                 auto size = this->m_graph_impl.size();
                 size_type nstack = 0;
@@ -175,7 +179,7 @@ namespace fastscapelib
                     if (receivers(i, 0) == i)
                     {
                         tmp.push(i);
-                        stack(nstack++) = i;
+                        dfs_indices(nstack++) = i;
                     }
 
                     while (!tmp.empty())
@@ -188,7 +192,7 @@ namespace fastscapelib
                             const auto idonor = donors(istack, k);
                             if (idonor != istack)
                             {
-                                stack(nstack++) = idonor;
+                                dfs_indices(nstack++) = idonor;
                                 tmp.push(idonor);
                             }
                         }

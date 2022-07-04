@@ -54,7 +54,7 @@ namespace fastscapelib
             using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
             using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
-            using stack_type = xt_tensor_t<py_selector, size_type, 1>;
+            using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
 
             virtual ~flow_graph_impl_wrapper_base(){};
 
@@ -70,7 +70,7 @@ namespace fastscapelib
 
             virtual const donors_count_type& donors_count() const = 0;
 
-            virtual const stack_type& dfs_stack() const = 0;
+            virtual const dfs_indices_type& dfs_indices() const = 0;
         };
 
 
@@ -93,7 +93,7 @@ namespace fastscapelib
                 typename flow_graph_impl_wrapper_base::receivers_weight_type;
             using receivers_distance_type =
                 typename flow_graph_impl_wrapper_base::receivers_distance_type;
-            using stack_type = typename flow_graph_impl_wrapper_base::stack_type;
+            using dfs_indices_type = typename flow_graph_impl_wrapper_base::dfs_indices_type;
 
             virtual ~flow_graph_impl_wrapper(){};
 
@@ -130,9 +130,9 @@ namespace fastscapelib
                 return p_graph_impl.donors_count();
             };
 
-            const stack_type& dfs_stack() const
+            const dfs_indices_type& dfs_indices() const
             {
-                return p_graph_impl.dfs_stack();
+                return p_graph_impl.dfs_indices();
             };
 
         private:
@@ -156,7 +156,7 @@ namespace fastscapelib
         using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
         using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
-        using stack_type = xt_tensor_t<py_selector, size_type, 1>;
+        using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
 
 
         template <class FG>
@@ -194,9 +194,9 @@ namespace fastscapelib
             return p_wrapped_graph_impl->donors_count();
         };
 
-        const stack_type& dfs_stack() const
+        const dfs_indices_type& dfs_indices() const
         {
-            return p_wrapped_graph_impl->dfs_stack();
+            return p_wrapped_graph_impl->dfs_indices();
         };
 
     private:

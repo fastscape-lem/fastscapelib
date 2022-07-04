@@ -187,14 +187,14 @@ class TestSingleFlowRouter:
             np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 3, 0, 1]),
         )
 
-    def test_dfs_stack(self):
+    def test_dfs_indices(self):
         npt.assert_equal(
-            self.profile_flow_graph.impl().dfs_stack(),
+            self.profile_flow_graph.impl().dfs_indices(),
             np.array([0, 1, 2, 3, 4, 7, 6, 5]),
         )
 
         npt.assert_equal(
-            self.raster_flow_graph.impl().dfs_stack(),
+            self.raster_flow_graph.impl().dfs_indices(),
             np.array([12, 13, 8, 9, 10, 6, 2, 5, 1, 4, 0, 14, 15, 11, 7, 3]),
         )
 
