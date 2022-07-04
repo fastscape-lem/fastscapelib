@@ -4,17 +4,33 @@ Install Fastscapelib
 ====================
 
 This library is header only and uses C++14 standards. It depends on
-xtensor_. You can install xtensor, e.g., using conda_:
+xtensor_ (>0.18).
 
-.. code-block:: bash
-
-  $ conda install xtensor -c conda-forge
+.. _xtensor: https://github.com/QuantStack/xtensor
 
 Install the C++ library
 -----------------------
 
+Using conda
+~~~~~~~~~~~
+
+Fastscapelib is available as a conda_ package in the conda-forge channel.
+
+.. code-block:: bash
+
+   $ conda install fastscapelib -c conda-forge
+
+.. _conda: https://conda.io/docs/
+
 From source using cmake
 ~~~~~~~~~~~~~~~~~~~~~~~
+
+You need to first install the dependencies. You can install xtensor,
+e.g., using conda_:
+
+.. code-block:: bash
+
+  $ conda install xtensor -c conda-forge
 
 Run the commands below from the source directory to install the
 fastscapelib's header files using cmake (on Unix platforms):
@@ -39,11 +55,18 @@ On Windows platforms:
   $ nmake
   $ nmake install
 
-.. _xtensor: https://github.com/QuantStack/xtensor
-.. _conda: https://conda.io/docs/
-
 Install the Python library
 --------------------------
+
+Using conda
+~~~~~~~~~~~
+
+Fastscapelib's Python bindings is available as a separate conda_
+package, still in the conda-forge channel.
+
+.. code-block:: bash
+
+   $ conda install fastscapelib-python -c conda-forge
 
 From source using pip
 ~~~~~~~~~~~~~~~~~~~~~

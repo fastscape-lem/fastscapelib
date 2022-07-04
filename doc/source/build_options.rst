@@ -17,6 +17,10 @@ default). See below for more explanations.
   instead of downloading them.
 - ``BUILD_PYTHON_MODULE``: enables building fastscapelib as a Python
   extension.
+- ``DOWNLOAD_XTENSOR``: downloads xtensor development version (master
+  branch on github) and uses it to build fastscapelib (useful for
+  testing - might be needed for building fastscapelib development
+  version).
 
 Build and run tests
 -------------------
@@ -67,7 +71,7 @@ Fastscapelib has Python bindings, which can be built by enabling
    $ mkdir build
    $ cd build
    $ cmake -DBUILD_PYTHON_MODULE=ON ..
-   $ make run_tests
+   $ make _fastscapelib_py
 
 Note that the created Python library is not intended to be directly
 used within a regular Python installation. The preferred way to build

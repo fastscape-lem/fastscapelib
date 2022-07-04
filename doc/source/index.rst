@@ -11,10 +11,11 @@ Documentation index
 -------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    install
    release_notes
+   citation
 
 .. toctree::
    :caption: API Reference
@@ -25,7 +26,7 @@ Documentation index
 
 .. toctree::
    :caption: Developer Zone
-   :maxdepth: 2
+   :maxdepth: 1
 
    build_options
 
@@ -36,3 +37,9 @@ This project is supported by the `Earth Surface Process Modelling`_
 group of the GFZ Helmholtz Centre Potsdam.
 
 .. _`Earth Surface Process Modelling`: http://www.gfz-potsdam.de/en/section/earth-surface-process-modelling/
+
+Citing fastscapelib
+-------------------
+
+If you use fastscapelib in a scientific publication, we would
+certainly appreciate a citation (see :doc:`citation` section).

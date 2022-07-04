@@ -38,6 +38,9 @@
 # Build directory
 build/
 
+# cmake modules temp files
+CMakeFiles/
+
 # Test build artefacts
 test/test_xtensor
 test/CMakeCache.txt
@@ -58,7 +61,6 @@ doc/*.tmp
 *.pc
 
 # emacs
-.dir-locals.el
 .projectile
 
 # Python Byte-compiled / optimized / DLL files
@@ -87,6 +89,7 @@ wheels/
 
 # Python tests
 .pytest_cache
+.cache
 
 # Installer logs
 pip-log.txt
@@ -96,3 +99,10 @@ pip-log.txt
 
 # misc
 .DS_Store
+
+# IDE / editors
+.ccls
+.ccls-cache/
+.vscode/
+compile_commands.json
+.dir-locals.el

@@ -1,59 +1,108 @@
 cmake_minimum_required(VERSION 3.1)
+
 project(fastscapelib)
 
 set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# Versionning
-# ===========
+OPTION(DOWNLOAD_XTENSOR "Download xtensor from github (master)" OFF)
+OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
+OPTION(BUILD_TESTS "build fastscapelib test suite" OFF)
+OPTION(BUILD_BENCHMARK "build fastscapelib benchmark suite" OFF)
+OPTION(BUILD_PYTHON_MODULE "build fastscapelib Python bindings" OFF)
 
-file(
-  STRINGS
-    "${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/config.hpp"
-    fastscapelib_version_defines
-  REGEX
-    "#define FASTSCAPELIB_VERSION_(MAJOR|MINOR|PATCH)"
-)
+set(CMAKE_MODULE_PATH
+    ${CMAKE_SOURCE_DIR}/cmake
+    ${CMAKE_MODULE_PATH})
 
-foreach(ver ${fastscapelib_version_defines})
-  if(ver MATCHES "#define FASTSCAPELIB_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
-    set(FASTSCAPELIB_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
-  endif()
-endforeach()
+# Versioning
+# ==========
 
-set(${PROJECT_NAME}_VERSION
-    ${FASTSCAPELIB_VERSION_MAJOR}.${FASTSCAPELIB_VERSION_MINOR}.${FASTSCAPELIB_VERSION_PATCH})
-
-message(STATUS "Building fastscapelib v${${PROJECT_NAME}_VERSION}")
+include(VersionUtils)
+set_version_str("${FASTSCAPELIB_INCLUDE_DIR}")
+message(STATUS "Building fastscapelib v${VERSION_STR}")
 
 # Dependencies
 # ============
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+# -- xtensor (optionally from source download)
+if(DOWNLOAD_XTENSOR)
+    configure_file(downloadXTensor.cmake.in
+      xtensor-download/CMakeLists.txt)
 
-# TODO: xtl should be found by xtensor config.
-# fix upstream"find_dependency(xtl REQUIRED)" in xtensorConfig.cmake?
-find_package(xtl REQUIRED)
-message(STATUS "Found xtl: ${xtl_INCLUDE_DIRS}/xtl")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xtensor-download
+    )
 
-find_package(xtensor REQUIRED)
+    if(result)
+        message(FATAL_ERROR "CMake configuration step for xtensor failed: ${result}")
+    endif()
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} --build .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xtensor-download
+    )
+
+    if(result)
+        message(FATAL_ERROR "CMake build step for xtensor failed: ${result}")
+    endif()
+
+    set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_BINARY_DIR}/xtensor-build ${CMAKE_MODULE_PATH}")
+    find_package(xtensor REQUIRED PATHS "${CMAKE_CURRENT_BINARY_DIR}/xtensor-build" NO_DEFAULT_PATH)
+else()
+    find_package(xtensor REQUIRED)
+endif()
+
+get_target_property(xtensor_INCLUDE_DIRS xtensor INTERFACE_INCLUDE_DIRECTORIES)
 message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 
-# Build
-# =====
+# Installation directories
+# ========================
 
+include(GNUInstallDirs)
+message("-- CMake install prefix: " ${CMAKE_INSTALL_PREFIX})
+
+set(CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}" CACHE
+    STRING "install path for fastscapelibConfig.cmake")
+
+message("  -> binaries: " ${CMAKE_INSTALL_BINDIR})
+message("  -> libs: " ${CMAKE_INSTALL_LIBDIR})
+message("  -> includes: " ${CMAKE_INSTALL_INCLUDEDIR})
+message("  -> cmake config: " ${CMAKECONFIG_INSTALL_DIR})
+
+include(CMakePackageConfigHelpers)
+
+# Configure/Build
+# ===============
+
+# -- fastscapelib
 set(FASTSCAPELIB_HEADERS
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/fastscapelib.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/bedrock_chanel.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/config.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/consts.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/sinks.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow_routing.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/basin_graph.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/union_find.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/Profile.h
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/bedrock_channel.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/richdem.hpp
+  # Algo
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/algo/flow_routing.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/algo/pflood.hpp
+  # Eroders
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/diffusion_adi.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/spl.hpp
+  # Flow
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_graph_impl.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_graph.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_router.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/sink_resolver.hpp
+  # Grid
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/base.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/profile_grid.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/raster_grid.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/structured_grid.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/unstructured_mesh.hpp
+  # Utils
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/consts.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/iterators.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/utils.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/xtensor_utils.hpp
+  # Version
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/version.hpp
 )
 
 set(FASTSCAPELIB_TARGET fastscapelib)
@@ -68,59 +117,15 @@ target_include_directories(${FASTSCAPELIB_TARGET}
 
 target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor)
 
-OPTION(BUILD_TESTS "build fastscapelib test suite" OFF)
-OPTION(BUILD_BENCHMARK "build fastscapelib benchmark suite" OFF)
-OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
-OPTION(BUILD_BENCHMARKS "fastscapelib benchmarks local-mininma" OFF)
-OPTION(DOWNLOAD_GBENCHMARK "download google benchmark and build from source" ON)
-OPTION(BUILD_PYTHON_MODULE "build fastscapelib Python bindings" OFF)
-OPTION(ENABLE_RICHDEM "enable richdem features" OFF)
-OPTION(DOWNLOAD_RICHDEM "download richdem" OFF)
+target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_14)
 
-include(ExternalProject)
-
-if(ENABLE_RICHDEM)
-  if(DOWNLOAD_RICHDEM)
-    ExternalProject_Add(richdem
-      GIT_REPOSITORY    "https://github.com/r-barnes/richdem.git"
-      GIT_TAG           "v2.2.9"
-      GIT_SHALLOW       1
-      GIT_PROGRESS      1
-      SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/richdem-src"
-      # TODO: remove when fixed upstream
-      PATCH_COMMAND     git apply -v --whitespace=fix ${CMAKE_CURRENT_SOURCE_DIR}/cmake/richdem_fix_duplicate_symbols.patch
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND     ""
-      INSTALL_COMMAND   ""
-      TEST_COMMAND      ""
-      )
-
-    ExternalProject_Get_Property(richdem SOURCE_DIR)
-    set(richdem_INCLUDE_DIRS ${SOURCE_DIR}/include)
-    message(STATUS "Will download richdem during build")
-  else()
-    # TODO: write Findrichdem.cmake
-    find_package(richdem REQUIRED)
-    message(STATUS "Found richdem: ${richdem_INCLUDE_DIRS}/richdem")
-  endif()
-
-  add_definitions(-DENABLE_RICHDEM)
-  include_directories(${richdem_INCLUDE_DIRS})
-  # TODO: use cmake target/properties for richdem options
-  string(TIMESTAMP COMPILE_TIME "\"%Y-%m-%d %H:%M:%S\"")
-  add_definitions(
-    -DRICHDEM_GIT_HASH="v2.2.9"
-    -DRICHDEM_COMPILE_TIME=${COMPILE_TIME}
-    -DNOPROGRESS
-#    -DNDEBUG
-    )
-endif()
-
+# -- optional subdirectories
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
   set(BUILD_TESTS ON)
 endif()
 
 if(BUILD_TESTS)
+  enable_testing()
   add_subdirectory(test)
 endif()
 
@@ -129,71 +134,56 @@ if(BUILD_BENCHMARK)
 endif()
 
 if(BUILD_PYTHON_MODULE)
-  include_directories(${FASTSCAPELIB_INCLUDE_DIR})
   add_subdirectory(python)
 endif()
 
-if(BUILD_BENCHMARKS)
-  include_directories(${FASTSCAPELIB_INCLUDE_DIR})
-  add_subdirectory(benchmarks)
-endif()
+# -- CMake configuration
 
+#    o Package config (makes the package importable using find_package in another project)
+configure_package_config_file(${PROJECT_NAME}Config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION ${CMAKECONFIG_INSTALL_DIR})
+
+#    o pkg-config
+configure_file(${PROJECT_NAME}.pc.in
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+    @ONLY)
 
 # Installation
 # ============
 
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
-
-# -- install header files
+# -- fastscapelib header files
 install(FILES ${FASTSCAPELIB_HEADERS}
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fastscapelib
-)
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fastscapelib)
 
-# -- create/install targets (also importable from the build dir)
+# -- CMake configuration
+#    o create/install targets
 install(TARGETS ${FASTSCAPELIB_TARGET}
-  EXPORT ${PROJECT_NAME}-targets
-)
+        EXPORT ${PROJECT_NAME}-targets)
 
 install(EXPORT ${PROJECT_NAME}-targets
-  FILE ${PROJECT_NAME}Targets.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-)
+        FILE ${PROJECT_NAME}Targets.cmake
+        DESTINATION ${CMAKECONFIG_INSTALL_DIR})
 
+#    o make targets also importable from the build dir
 export(EXPORT ${PROJECT_NAME}-targets
-  FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake
-)
+       FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake)
 
-# -- create/install cmake config
-configure_package_config_file(${PROJECT_NAME}Config.cmake.in
-  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-)
-
-# fastscapelib is header-only and does not depend on the architecture.
-# Remove CMAKE_SIZEOF_VOID_P from fastscapelibConfigVersion.cmake
-# so that a fastscapelibConfig.cmake generated for a 64 bit target
-# can be used for 32 bit targets and vice versa.
+#    o version file (fastscapelib is header-only and does not depend on the architecture)
 set(_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 unset(CMAKE_SIZEOF_VOID_P)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-  VERSION ${${PROJECT_NAME}_VERSION}
-  COMPATIBILITY AnyNewerVersion
-)
+                                 VERSION ${VERSION_STR}
+                                 COMPATIBILITY AnyNewerVersion)
 set(CMAKE_SIZEOF_VOID_P ${_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P})
 
+#    o Package config
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-)
+  DESTINATION ${CMAKECONFIG_INSTALL_DIR})
 
-# -- create/install pkg-config
-configure_file(${PROJECT_NAME}.pc.in
-  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
-  @ONLY
-)
+#    o pkg-config
 install(
-  FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/"
-)
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/")

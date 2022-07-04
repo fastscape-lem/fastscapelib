@@ -21,17 +21,7 @@ signatures.
 
 The fastscapelib library is organized into different topics listed
 here below. The namespace ``fastscapelib`` is used for the public
-API. You can either include all functions in your project at once:
-
-.. code-block:: cpp
-
-   #include "fastscapelib/fastscapelib.hpp"
-
-or include just a subset of the functions (by topic), e.g.,
-
-.. code-block:: cpp
-
-   #include "fastscapelib/flow_routing.hpp"
+API.
 
 Sinks (depressions)
 -------------------
@@ -94,5 +84,21 @@ Functions used to drive the evolution of bedrock channels.
 
 Defined in ``fastscapelib/bedrock_channel.hpp``.
 
-.. doxygenfunction:: fastscapelib::erode_stream_power
+.. doxygenfunction:: fastscapelib::erode_stream_power(xtensor_t<Er>&, const xtensor_t<El>&, const xtensor_t<S>&, const xtensor_t<R>&, const xtensor_t<Di>&, const xtensor_t<Dr>&, double, double, double, double, double)
+   :project: fastscapelib
+
+.. doxygenfunction:: fastscapelib::erode_stream_power(xtensor_t<Er>&, const xtensor_t<El>&, const xtensor_t<S>&, const xtensor_t<R>&, const xtensor_t<Di>&, const xtensor_t<Dr>&, const xtensor_t<K>&, double, double, double, double)
+   :project: fastscapelib
+
+Hillslope
+---------
+
+Functions used to drive the evolution of hillslopes.
+
+Defined in ``fastscapelib/hillslope.hpp``.
+
+.. doxygenfunction:: fastscapelib::erode_linear_diffusion(xtensor_t<Er>&, const xtensor_t<El>&, double, double, double, double)
+   :project: fastscapelib
+
+.. doxygenfunction:: fastscapelib::erode_linear_diffusion(xtensor_t<Er>&, const xtensor_t<El>&, const xtensor_t<K>&, double, double, double)
    :project: fastscapelib
