@@ -22,7 +22,7 @@ add_flow_graph_bindings(py::module& m)
         .def("receivers_weight", &fs::py_flow_graph_impl::receivers_weight)
         .def("donors", &fs::py_flow_graph_impl::donors)
         .def("donors_count", &fs::py_flow_graph_impl::donors_count)
-        .def("dfs_stack", &fs::py_flow_graph_impl::dfs_stack);
+        .def("dfs_indices", &fs::py_flow_graph_impl::dfs_indices);
 
     py::class_<fs::py_flow_graph> pyfgraph(m, "FlowGraph");
 

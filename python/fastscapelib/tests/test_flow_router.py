@@ -120,14 +120,7 @@ class TestSingleFlowRouter:
             self.profile_flow_graph.impl().receivers_weight()[:, 0], np.ones(8)
         )
         npt.assert_equal(
-            self.profile_flow_graph.impl().receivers_weight()[:, 1], np.zeros(8)
-        )
-
-        npt.assert_equal(
             self.raster_flow_graph.impl().receivers_weight()[:, 0], np.ones(16)
-        )
-        npt.assert_equal(
-            self.raster_flow_graph.impl().receivers_weight()[:, 1:], np.zeros((16, 7))
         )
 
     def test_donors(self):
@@ -178,7 +171,8 @@ class TestSingleFlowRouter:
 
     def test_donors_count(self):
         npt.assert_equal(
-            self.profile_flow_graph.impl().donors_count(), np.r_[1, 0, 2, 1, 0, 0, 1, 1]
+            self.profile_flow_graph.impl().donors_count(),
+            np.array([1, 0, 2, 1, 0, 0, 1, 1]),
         )
 
         npt.assert_equal(
@@ -186,14 +180,15 @@ class TestSingleFlowRouter:
             np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 3, 0, 1]),
         )
 
-    def test_dfs_stack(self):
+    def test_dfs_indices(self):
         npt.assert_equal(
-            self.profile_flow_graph.impl().dfs_stack(), np.r_[0, 1, 2, 3, 4, 7, 6, 5]
+            self.profile_flow_graph.impl().dfs_indices(),
+            np.array([0, 1, 2, 3, 4, 7, 6, 5]),
         )
 
         npt.assert_equal(
-            self.raster_flow_graph.impl().dfs_stack(),
-            np.array([12, 13, 8, 4, 0, 9, 5, 1, 10, 6, 2, 14, 15, 11, 7, 3]),
+            self.raster_flow_graph.impl().dfs_indices(),
+            np.array([12, 13, 8, 9, 10, 6, 2, 5, 1, 4, 0, 14, 15, 11, 7, 3]),
         )
 
 

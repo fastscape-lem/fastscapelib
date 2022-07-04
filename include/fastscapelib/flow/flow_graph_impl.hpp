@@ -52,16 +52,24 @@ namespace fastscapelib
             using receivers_count_type = donors_count_type;
             using receivers_distance_type = xt_tensor_t<xt_selector, data_type, 2>;
             using receivers_weight_type = xt_tensor_t<xt_selector, data_type, 2>;
-            using stack_type = xt_tensor_t<S, size_type, 1>;
+            using dfs_indices_type = xt_tensor_t<S, size_type, 1>;
 
             // using const_dfs_iterator = const size_type*;
             // using const_reverse_dfs_iterator = std::reverse_iterator<const size_type*>;
 
-            flow_graph_impl(grid_type& grid)
+            template <class FR>
+            flow_graph_impl(grid_type& grid, const FR& router)
                 : m_grid(grid)
             {
+                size_type n_receivers_max = grid_type::n_neighbors_max();
+
+                if (router.is_single)
+                {
+                    n_receivers_max = 1;
+                }
+
                 using shape_type = std::array<size_type, 2>;
-                const shape_type receivers_shape = { grid.size(), grid_type::n_neighbors_max() };
+                const shape_type receivers_shape = { grid.size(), n_receivers_max };
                 const shape_type donors_shape = { grid.size(), grid_type::n_neighbors_max() + 1 };
 
                 m_receivers = xt::ones<size_type>(receivers_shape) * -1;
@@ -72,7 +80,7 @@ namespace fastscapelib
                 m_donors = xt::ones<size_type>(donors_shape) * -1;
                 m_donors_count = xt::zeros<size_type>({ grid.size() });
 
-                m_dfs_stack = xt::ones<size_type>({ grid.size() }) * -1;
+                m_dfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
             };
 
             G& grid()
@@ -115,29 +123,29 @@ namespace fastscapelib
                 return m_donors_count;
             };
 
-            const stack_type& dfs_stack() const
+            const dfs_indices_type& dfs_indices() const
             {
-                return m_dfs_stack;
+                return m_dfs_indices;
             };
 
             // const_dfs_iterator dfs_cbegin()
             // {
-            //     return m_dfs_stack.cbegin();
+            //     return m_dfs_indices.cbegin();
             // };
 
             // const_dfs_iterator dfs_cend()
             // {
-            //     return m_dfs_stack.cend();
+            //     return m_dfs_indices.cend();
             // };
 
             // const_reverse_dfs_iterator dfs_crbegin()
             // {
-            //     return m_dfs_stack.crbegin();
+            //     return m_dfs_indices.crbegin();
             // };
 
             // const_reverse_dfs_iterator dfs_crend()
             // {
-            //     return m_dfs_stack.crend();
+            //     return m_dfs_indices.crend();
             // };
 
             template <class T>
@@ -157,7 +165,7 @@ namespace fastscapelib
             receivers_distance_type m_receivers_distance;
             receivers_weight_type m_receivers_weight;
 
-            stack_type m_dfs_stack;
+            dfs_indices_type m_dfs_indices;
 
             template <class FG, class FR>
             friend class flow_router_impl;
@@ -184,7 +192,7 @@ namespace fastscapelib
             // re-init accumulated values
             acc.fill(0);
 
-            for (auto inode = m_dfs_stack.crbegin(); inode != m_dfs_stack.crend(); ++inode)
+            for (auto inode = m_dfs_indices.crbegin(); inode != m_dfs_indices.crend(); ++inode)
             {
                 acc.flat(*inode) += m_grid.node_area(*inode) * src_arr(*inode);
 
