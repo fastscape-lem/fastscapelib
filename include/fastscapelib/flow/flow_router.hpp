@@ -146,6 +146,7 @@ namespace fastscapelib
                             dist2receivers(i, 0) = n.distance;
                         }
                     }
+
                     donors(receivers(i, 0), donors_count(receivers(i, 0))++) = i;
                 }
 

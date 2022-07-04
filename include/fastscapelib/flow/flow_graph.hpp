@@ -54,7 +54,7 @@ namespace fastscapelib
 
         flow_graph(G& grid, const router_type& router, const resolver_type& resolver)
             : m_grid(grid)
-            , m_graph_impl(grid)
+            , m_graph_impl(grid, router)
             , m_router_impl(m_graph_impl, router)
             , m_resolver_impl(m_graph_impl, resolver){};
 

@@ -57,11 +57,19 @@ namespace fastscapelib
             // using const_dfs_iterator = const size_type*;
             // using const_reverse_dfs_iterator = std::reverse_iterator<const size_type*>;
 
-            flow_graph_impl(grid_type& grid)
+            template <class FR>
+            flow_graph_impl(grid_type& grid, const FR& router)
                 : m_grid(grid)
             {
+                size_type n_receivers_max = grid_type::n_neighbors_max();
+
+                if (router.is_single)
+                {
+                    n_receivers_max = 1;
+                }
+
                 using shape_type = std::array<size_type, 2>;
-                const shape_type receivers_shape = { grid.size(), grid_type::n_neighbors_max() };
+                const shape_type receivers_shape = { grid.size(), n_receivers_max };
                 const shape_type donors_shape = { grid.size(), grid_type::n_neighbors_max() + 1 };
 
                 m_receivers = xt::ones<size_type>(receivers_shape) * -1;

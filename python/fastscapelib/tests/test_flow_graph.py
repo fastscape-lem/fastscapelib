@@ -41,9 +41,6 @@ class TestFlowGraph:
         npt.assert_equal(
             flow_graph.impl().receivers_weight()[:, 0], np.ones(elevation.size)
         )
-        npt.assert_equal(
-            flow_graph.impl().receivers_weight()[:, 1], np.zeros(elevation.size)
-        )
 
         m = np.iinfo(np.uint64).max
         npt.assert_equal(

@@ -120,14 +120,7 @@ class TestSingleFlowRouter:
             self.profile_flow_graph.impl().receivers_weight()[:, 0], np.ones(8)
         )
         npt.assert_equal(
-            self.profile_flow_graph.impl().receivers_weight()[:, 1], np.zeros(8)
-        )
-
-        npt.assert_equal(
             self.raster_flow_graph.impl().receivers_weight()[:, 0], np.ones(16)
-        )
-        npt.assert_equal(
-            self.raster_flow_graph.impl().receivers_weight()[:, 1:], np.zeros((16, 7))
         )
 
     def test_donors(self):
