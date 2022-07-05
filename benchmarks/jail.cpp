@@ -6,7 +6,7 @@
 #include "examples.hpp"
 
 
-template <fs::ConnectType connect, class Elev_T, class Water_T, class Angle_T, class Active_T>
+template <fs::sink_route_method connect, class Elev_T, class Water_T, class Angle_T, class Active_T>
 void
 fastscape(Elev_T& elevation, Water_T& water, Angle_T& angles, const Active_T& active_nodes)
 {
@@ -37,17 +37,17 @@ fastscape(Elev_T& elevation, Water_T& water, Angle_T& angles, const Active_T& ac
         fastscapelib::compute_donors(ndonors, donors, receivers);
         fastscapelib::compute_stack(stack, ndonors, donors, receivers);
 
-        fastscapelib::correct_flowrouting<fs::BasinAlgo::Boruvka, connect>(bg,
-                                                                           basins,
-                                                                           receivers,
-                                                                           dist2receivers,
-                                                                           ndonors,
-                                                                           donors,
-                                                                           stack,
-                                                                           active_nodes,
-                                                                           elevation,
-                                                                           dx,
-                                                                           dy);
+        fastscapelib::correct_flowrouting<fs::mst_method::boruvka, connect>(bg,
+                                                                            basins,
+                                                                            receivers,
+                                                                            dist2receivers,
+                                                                            ndonors,
+                                                                            donors,
+                                                                            stack,
+                                                                            active_nodes,
+                                                                            elevation,
+                                                                            dx,
+                                                                            dy);
 
         if (s != num_iter - 1)
         {
@@ -105,13 +105,13 @@ example_jail()
 
     xt::xtensor<double, 2> elev_simple = elevation;
     xt::xtensor<double, 2> water_simple(shape);
-    fastscape<fs::ConnectType::Simple>(elev_simple, water_simple, angles, active_nodes);
+    fastscape<fs::sink_route_method::basic>(elev_simple, water_simple, angles, active_nodes);
     xt::xtensor<double, 2> elev_carved = elevation;
     xt::xtensor<double, 2> water_carved(shape);
-    fastscape<fs::ConnectType::Carved>(elev_carved, water_carved, angles, active_nodes);
+    fastscape<fs::sink_route_method::carve>(elev_carved, water_carved, angles, active_nodes);
     xt::xtensor<double, 2> elev_sloped = elevation;
     xt::xtensor<double, 2> water_sloped(shape);
-    fastscape<fs::ConnectType::Sloped>(elev_sloped, water_sloped, angles, active_nodes);
+    fastscape<fs::sink_route_method::fill_sloped>(elev_sloped, water_sloped, angles, active_nodes);
 
 
     dbg_out("results/jail/elevation-", 0, elevation, shape);

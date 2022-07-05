@@ -488,8 +488,8 @@ namespace fastscapelib
     }
 
 
-    template <BasinAlgo algo,
-              ConnectType connect,
+    template <mst_method algo,
+              sink_route_method connect,
               class BasinGraph_T,
               class Basins_XT,
               class Rcv_XT,
@@ -606,7 +606,7 @@ namespace fastscapelib
     }
 
 
-    template <BasinAlgo algo, ConnectType connect, class Elevation_XT, class Active_XT>
+    template <mst_method algo, sink_route_method connect, class Elevation_XT, class Active_XT>
     void fill_sinks_flat_basin_graph(Elevation_XT& elevation,
                                      const Active_XT& active_nodes,
                                      typename Elevation_XT::value_type dx,

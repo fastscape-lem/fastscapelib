@@ -74,7 +74,7 @@ example_vornoi()
     fastscapelib::compute_donors(ndonors, donors, receivers);
     fastscapelib::compute_stack(stack, ndonors, donors, receivers);
 
-    fastscapelib::correct_flowrouting<fs::BasinAlgo::Boruvka, fs::ConnectType::Carved>(
+    fastscapelib::correct_flowrouting<fs::mst_method::boruvka, fs::sink_route_method::carve>(
         bg,
         basins,
         receivers,
@@ -154,18 +154,18 @@ example_vornoi()
         fastscapelib::compute_donors(ndonors, donors, receivers);
         fastscapelib::compute_stack(stack, ndonors, donors, receivers);
 
-        fastscapelib::correct_flowrouting<fs::BasinAlgo::Boruvka, fs::ConnectType::Sloped>(
-            bg,
-            basins,
-            receivers,
-            dist2receivers,
-            ndonors,
-            donors,
-            stack,
-            active_nodes,
-            elevation,
-            dx,
-            dy);
+        fastscapelib::correct_flowrouting<fs::mst_method::boruvka,
+                                          fs::sink_route_method::fill_sloped>(bg,
+                                                                              basins,
+                                                                              receivers,
+                                                                              dist2receivers,
+                                                                              ndonors,
+                                                                              donors,
+                                                                              stack,
+                                                                              active_nodes,
+                                                                              elevation,
+                                                                              dx,
+                                                                              dy);
     }
 
     xt::xtensor<double, 1> water(shape1D);

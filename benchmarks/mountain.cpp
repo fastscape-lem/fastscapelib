@@ -117,18 +117,18 @@ fastscape(Elev_T& elevation,
         fastscapelib::compute_stack(stack, ndonors, donors, receivers);
 
         if (correct_flow)
-            fastscapelib::correct_flowrouting<fs::BasinAlgo::Boruvka, fs::ConnectType::Carved>(
-                bg,
-                basins,
-                receivers,
-                dist2receivers,
-                ndonors,
-                donors,
-                stack,
-                active_nodes,
-                elevation,
-                dx,
-                dy);
+            fastscapelib::correct_flowrouting<fs::mst_method::boruvka,
+                                              fs::sink_route_method::carve>(bg,
+                                                                            basins,
+                                                                            receivers,
+                                                                            dist2receivers,
+                                                                            ndonors,
+                                                                            donors,
+                                                                            stack,
+                                                                            active_nodes,
+                                                                            elevation,
+                                                                            dx,
+                                                                            dy);
 
         fs::compute_drainage_area(area, stack, receivers, dx, dy);
         fs::erode_spower(erosion,
@@ -292,16 +292,16 @@ example_mountain()
                                                      double dy)>;
 
     std::map<std::string, FastscapeFunctionType> funcs;
-    /*funcs["Kruskal simple"] = benchmark_fastscape_basin<fs::BasinAlgo::Kruskal,
-    fs::ConnectType::Simple>; funcs["Boruvka simple"] =
-    benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Simple>; funcs["Kruskal
-    carved"] = benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Carved>;
-    funcs["Boruvka carved"] = benchmark_fastscape_basin<fs::BasinAlgo::Boruvka,
-    fs::ConnectType::Carved>;*/
+    /*funcs["Kruskal simple"] = benchmark_fastscape_basin<fs::mst_method::kruskal,
+    fs::sink_route_method::basic>; funcs["Boruvka simple"] =
+    benchmark_fastscape_basin<fs::mst_method::boruvka, fs::sink_route_method::basic>; funcs["Kruskal
+    carved"] = benchmark_fastscape_basin<fs::mst_method::kruskal, fs::sink_route_method::carve>;
+    funcs["Boruvka carved"] = benchmark_fastscape_basin<fs::mst_method::boruvka,
+    fs::sink_route_method::carve>;*/
     funcs["Kruskal sloped"]
-        = benchmark_fastscape_basin<fs::BasinAlgo::Kruskal, fs::ConnectType::Sloped>;
+        = benchmark_fastscape_basin<fs::mst_method::kruskal, fs::sink_route_method::fill_sloped>;
     funcs["Boruvka sloped"]
-        = benchmark_fastscape_basin<fs::BasinAlgo::Boruvka, fs::ConnectType::Sloped>;
+        = benchmark_fastscape_basin<fs::mst_method::boruvka, fs::sink_route_method::fill_sloped>;
     funcs["Sinks"] = benchmark_fastscape_sinks;
 #ifdef ENABLE_RICHDEM
     funcs["Wei2018"] = benchmark_fastscape_wei2018;

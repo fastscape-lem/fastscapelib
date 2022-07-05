@@ -12,6 +12,11 @@
 
 namespace fastscapelib
 {
+
+    template <class FG>
+    class basin_graph;
+
+
     namespace detail
     {
 
@@ -39,6 +44,7 @@ namespace fastscapelib
             using self_type = flow_graph_impl<G, S, flow_graph_fixed_array_tag>;
             using grid_type = G;
             using xt_selector = S;
+            using tag = flow_graph_fixed_array_tag;
 
             using size_type = typename grid_type::size_type;
             using neighbors_count_type = typename grid_type::neighbors_count_type;
@@ -52,10 +58,12 @@ namespace fastscapelib
             using receivers_count_type = donors_count_type;
             using receivers_distance_type = xt_tensor_t<xt_selector, data_type, 2>;
             using receivers_weight_type = xt_tensor_t<xt_selector, data_type, 2>;
-            using dfs_indices_type = xt_tensor_t<S, size_type, 1>;
+            using dfs_indices_type = xt_tensor_t<xt_selector, size_type, 1>;
 
             // using const_dfs_iterator = const size_type*;
             // using const_reverse_dfs_iterator = std::reverse_iterator<const size_type*>;
+
+            using basins_type = xt_tensor_t<xt_selector, size_type, 1>;
 
             template <class FR>
             flow_graph_impl(grid_type& grid, const FR& router)
@@ -167,11 +175,16 @@ namespace fastscapelib
 
             dfs_indices_type m_dfs_indices;
 
+            basins_type m_basins;
+
             template <class FG, class FR>
             friend class flow_router_impl;
 
             template <class FG, class SR>
             friend class sink_resolver_impl;
+
+            template <class FG>
+            friend class basin_graph;
         };
 
         template <class G, class S>

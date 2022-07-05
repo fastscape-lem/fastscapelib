@@ -65,7 +65,7 @@ namespace fastscapelib
                 fs::compute_stack(s.stack, s.ndonors, s.donors, s.receivers);
             }
 
-            template <fs::BasinAlgo basin_algo, fs::ConnectType connect_type>
+            template <fs::mst_method basin_algo, fs::sink_route_method connect_type>
             void resolve_basin_graph()
             {
                 fs::compute_receivers_d8(
@@ -123,15 +123,15 @@ namespace fastscapelib
 
                 case Method::kruskal_sloped:
                     resolve_func = [&]() {
-                        rs.template resolve_basin_graph<fs::BasinAlgo::Kruskal,
-                                                        fs::ConnectType::Sloped>();
+                        rs.template resolve_basin_graph<fs::mst_method::kruskal,
+                                                        fs::sink_route_method::fill_sloped>();
                     };
                     break;
 
                 case Method::boruvka_sloped:
                     resolve_func = [&]() {
-                        rs.template resolve_basin_graph<fs::BasinAlgo::Boruvka,
-                                                        fs::ConnectType::Sloped>();
+                        rs.template resolve_basin_graph<fs::mst_method::boruvka,
+                                                        fs::sink_route_method::fill_sloped>();
                     };
                     break;
 

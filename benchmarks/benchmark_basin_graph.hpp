@@ -7,7 +7,7 @@
 
 extern int boruvka_perf;
 
-template <fastscapelib::BasinAlgo algo, fastscapelib::ConnectType connect>
+template <fastscapelib::mst_method algo, fastscapelib::sink_route_method connect>
 void
 benchmark_fastscape_basin(xt::xtensor<bm_index, 1>& stack,
                           xt::xtensor<bm_index, 1>& receivers,
