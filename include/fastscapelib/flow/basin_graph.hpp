@@ -80,18 +80,18 @@ namespace fastscapelib
 
 
         basin_graph(flow_graph_impl_type& flow_graph_impl,
-                    mst_method mst_meth,
-                    sink_route_method sink_route_meth)
+                    mst_method basin_method,
+                    sink_route_method route_method)
             : m_flow_graph_impl(flow_graph_impl)
-            , m_mst_method(mst_meth)
-            , m_sink_route_method(sink_route_meth)
+            , m_mst_method(basin_method)
+            , m_sink_route_method(route_method)
         {
             m_perf_boruvka = -1;
 
             // TODO: check shape of receivers (should be single flow)
         }
 
-        size_type basins_count()
+        size_type basins_count() const
         {
             return m_outlets.size();
         }
@@ -105,12 +105,15 @@ namespace fastscapelib
         {
             return m_edges;
         }
-        const std::vector<index_t>& tree() const
+
+        const std::vector<size_type>& tree() const
         {
             return m_tree;
         }
 
         void compute_basins();
+
+        void update_routes(const data_array_type& elevation);
 
         template <mst_method algo,
                   sink_route_method connect,
@@ -139,11 +142,9 @@ namespace fastscapelib
 
         void compute_tree_kruskal();
 
-        template <int max_low_degree = 16>  // 16 for d8, 8 for plannar graph
         void compute_tree_boruvka();
 
-        template <bool keep_order>
-        void reorder_tree();
+        void orient_edges();
 
         template <class Rcv_XT, class DistRcv_XT, class Elevation_XT>
         void update_pits_receivers(Rcv_XT& receivers,
@@ -175,9 +176,9 @@ namespace fastscapelib
 
         std::vector<size_type> m_outlets;  // bottom nodes of basins
         std::vector<edge> m_edges;
-        std::vector<index_t> m_tree;  // indices of edges
+        std::vector<size_type> m_tree;  // indices of edges
 
-        // root is used as a virtual basin "node" to which all outer basins are
+        // root is used as a virtual basin graph node to which all outer basins are
         // connected, thus collecting the flow from the whole modeled domain. It
         // is used for the computation of the basin tree (minimum spanning
         // tree). As an implementation detail, this virtual node is actually
@@ -190,44 +191,66 @@ namespace fastscapelib
         std::vector<size_type> m_edge_positions_tmp;
 
         // kruskal
-        std::vector<index_t> edges_indices;
-        UnionFind_T<size_type> basin_uf;
+        std::vector<size_type> m_edges_indices;
+        detail::union_find<size_type> m_basins_uf;
 
         // boruvka
-        std::vector<std::array<index_t, 2>> link_basins;
+        std::vector<std::array<size_type, 2>> m_link_basins;
+
         struct Connect
         {
-            index_t begin;
-            size_t size;
+            size_type begin;
+            size_type size;
         };
-        std::vector<Connect> adjacency;
+
+        std::vector<Connect> m_adjacency;
+
         struct EdgeParse
         {
-            index_t link_id;
-            index_t next;
+            size_type link_id;
+            size_type next;
         };
-        std::vector<EdgeParse> adjacency_list;
-        std::vector<index_t> low_degrees, large_degrees;
-        std::vector<index_t> edge_bucket;
-        std::vector<index_t> edge_in_bucket;
 
-        // reorder tree
-        std::vector<size_t> nodes_connects_size;
-        std::vector<size_t> nodes_connects_ptr;
-        std::vector<index_t> nodes_adjacency;
-        std::vector<std::tuple<size_type /*node*/,
-                               size_type /*parent*/,
-                               /**/ data_type /*pass height */,
-                               data_type /* parent pass height */>>
-            reorder_stack;
+        std::vector<EdgeParse> m_adjacency_list;
+        std::vector<size_type> m_low_degrees;
+        std::vector<size_type> m_large_degrees;
+        std::vector<size_type> m_edge_bucket;
+        std::vector<size_type> m_edge_in_bucket;
 
-        // reoder_tree, keep order
-        std::vector<index_t /*link id*/> pass_stack;
-        std::vector<index_t> parent_basins;
+        // TODO: make it an option
+        // 16 for 8-connectivity raster grid, 8 for plannar graph
+        int m_max_low_degree = 16;
 
-        friend class ::BasinGraph_Test;
+        template <class T>
+        inline void check_capacity(std::vector<T> vec) const
+        {
+            assert(vec.size() < vec.capacity());
+        }
 
         size_t m_perf_boruvka;
+
+        inline void increase_perf_boruvka()
+        {
+            ++m_perf_boruvka;
+        }
+
+        // reorder tree
+        std::vector<size_type> m_nodes_connects_size;
+        std::vector<size_type> m_nodes_connects_ptr;
+        std::vector<size_type> m_nodes_adjacency;
+        std::vector<std::tuple<size_type /* node */,
+                               size_type /* parent */,
+                               data_type /* pass elevation */,
+                               data_type /* parent pass elevation */>>
+            m_reorder_stack;
+
+        // TODO: make it an option (true for sink route fill sloped)
+        bool m_keep_order = true;
+
+        std::vector<size_type> m_pass_stack;
+        std::vector<size_type> m_parent_basins;
+
+        friend class ::BasinGraph_Test;
     };
 
 
@@ -258,6 +281,23 @@ namespace fastscapelib
     }
 
     template <class FG>
+    void basin_graph<FG>::update_routes(const data_array_type& elevation)
+    {
+        connect_basin(elevation);
+
+        if (m_mst_method == mst_method::kruskal)
+        {
+            compute_tree_kruskal();
+        }
+        else
+        {
+            compute_tree_boruvka();
+        }
+
+        orient_edges();
+    }
+
+    template <class FG>
     void basin_graph<FG>::connect_basins(const data_array_type& elevation)
     {
         using neighbors_type = typename flow_graph_impl_type::grid_type::neighbors_type;
@@ -272,9 +312,6 @@ namespace fastscapelib
         const auto& status_at_nodes = grid.status_at_nodes();
 
         neighbors_type neighbors;
-
-        const auto elev_shape = elevation.shape();
-        const size_type ncols = (size_type) elev_shape[1];
 
         size_type ibasin;
         size_type current_basin = -1;
@@ -342,15 +379,16 @@ namespace fastscapelib
                     // -> update current basin and reset its visited neighbor basins
                     if (current_basin != ibasin)
                     {
-                        for (const auto& iused : m_edge_positions_tmp)
+                        for (const auto& ivisited : m_edge_positions_tmp)
                         {
-                            m_edge_positions[iused] = -1;
+                            m_edge_positions[ivisited] = -1;
                         }
                         m_edge_positions_tmp.clear();
                         current_basin = ibasin;
                     }
 
-                    // try getting the position (index) of the edge towards the adjacent basin:
+                    // try getting the position (index) of the edge connecting
+                    // with the adjacent basin:
                     // - if it is undefined (-1), add a new edge
                     // - if it is defined, update the edge if a pass of lower elevation is found
                     const size_type edge_idx = m_edge_positions[nbasin];
@@ -379,135 +417,134 @@ namespace fastscapelib
         m_tree.clear();
 
         // sort edges indices by edge weight (pass elevation)
-        edges_indices.resize(m_edges.size());
-        std::iota(edges_indices.begin(), edges_indices.end(), 0);
-        std::sort(edges_indices.begin(),
-                  edges_indices.end(),
-                  [&m_edges = m_edges](const index_t& i0, const index_t& i1)
-                  { return m_edges[i0].weight < m_edges[i1].weight; });
+        m_edges_indices.resize(m_edges.size());
+        std::iota(m_edges_indices.begin(), m_edges_indices.end(), 0);
+        std::sort(m_edges_indices.begin(),
+                  m_edges_indices.end(),
+                  [&m_edges = m_edges](const size_type& i0, const size_type& i1)
+                  { return m_edges[i0].pass_elevation < m_edges[i1].pass_elevation; });
 
-        basin_uf.resize(basins_count());
-        basin_uf.clear();
+        m_basins_uf.resize(basins_count());
+        m_basins_uf.clear();
 
-        for (index_t edge_idx : edges_indices)
+        for (size_type edge_idx : m_edges_indices)
         {
             size_type* link = m_edges[edge_idx].link;
 
-            if (basin_uf.find(link[0]) != basin_uf.find(link[1]))
+            if (m_basins_uf.find(link[0]) != m_basins_uf.find(link[1]))
             {
                 m_tree.push_back(edge_idx);
-                basin_uf.merge(link[0], link[1]);
+                m_basins_uf.merge(link[0], link[1]);
             }
         }
     }
 
     template <class FG>
-    template <int max_low_degree>  // 16 for d8, 8 for plannar graph
     void basin_graph<FG>::compute_tree_boruvka()
     {
-        adjacency.clear();
-        adjacency.resize(m_outlets.size(), { 0, 0 });
-        low_degrees.reserve(m_outlets.size());
-        large_degrees.reserve(m_outlets.size());
+        const auto nbasins = basins_count();
 
-        edge_bucket.clear();
-        edge_bucket.resize(m_outlets.size(), -1);
+        m_adjacency.clear();
+        m_adjacency.resize(nbasins, { 0, 0 });
+        m_low_degrees.reserve(nbasins);
+        m_large_degrees.reserve(nbasins);
+
+        m_edge_bucket.clear();
+        m_edge_bucket.resize(nbasins, -1);
 
         // copy link basins
-        link_basins.resize(m_edges.size());
-        for (size_t i = 0; i < link_basins.size(); ++i)
+        m_link_basins.resize(m_edges.size());
+        for (size_t i = 0; i < m_link_basins.size(); ++i)
         {
-            link_basins[i][0] = m_edges[i].basins[0];
-            link_basins[i][1] = m_edges[i].basins[1];
+            m_link_basins[i][0] = m_edges[i].link[0];
+            m_link_basins[i][1] = m_edges[i].link[1];
         }
 
         // first pass: create edge vector and compute adjacency size
         for (size_t lid = 0; lid < m_edges.size(); ++lid)
         {
-            ++adjacency[link_basins[lid][0]].size;
-            ++adjacency[link_basins[lid][1]].size;
+            ++m_adjacency[m_link_basins[lid][0]].size;
+            ++m_adjacency[m_link_basins[lid][1]].size;
         }
 
         // compute adjacency pointers
-        adjacency[0].begin = 0;
-        for (size_t nid = 1; nid < m_outlets.size(); ++nid)
+        m_adjacency[0].begin = 0;
+        for (size_t nid = 1; nid < nbasins; ++nid)
         {
-            adjacency[nid].begin = adjacency[nid - 1].begin + adjacency[nid - 1].size;
-            adjacency[nid - 1].size = 0;
+            m_adjacency[nid].begin = m_adjacency[nid - 1].begin + m_adjacency[nid - 1].size;
+            m_adjacency[nid - 1].size = 0;
         }
 
-        adjacency_list.resize(adjacency.back().begin + adjacency.back().size);
-        adjacency.back().size = 0;
+        m_adjacency_list.resize(m_adjacency.back().begin + m_adjacency.back().size);
+        m_adjacency.back().size = 0;
 
-        for (size_t adj_data_i = 0; adj_data_i < adjacency_list.size(); ++adj_data_i)
-            adjacency_list[adj_data_i].next = adj_data_i + 1;
+        for (size_t adj_data_i = 0; adj_data_i < m_adjacency_list.size(); ++adj_data_i)
+            m_adjacency_list[adj_data_i].next = adj_data_i + 1;
 
         // second pass on edges: fill adjacency list
         for (size_t lid = 0; lid < m_edges.size(); ++lid)
         {
-            auto& basins = link_basins[lid];
+            auto& basins = m_link_basins[lid];
 
-            adjacency_list[adjacency[basins[0]].begin + adjacency[basins[0]].size].link_id = lid;
-            adjacency_list[adjacency[basins[1]].begin + adjacency[basins[1]].size].link_id = lid;
+            m_adjacency_list[m_adjacency[basins[0]].begin + m_adjacency[basins[0]].size].link_id
+                = lid;
+            m_adjacency_list[m_adjacency[basins[1]].begin + m_adjacency[basins[1]].size].link_id
+                = lid;
 
-            ++adjacency[basins[0]].size;
-            ++adjacency[basins[1]].size;
+            ++m_adjacency[basins[0]].size;
+            ++m_adjacency[basins[1]].size;
         }
 
-#define CHECK_CAPACITY(a) assert(a.size() < a.capacity())
-
-        for (size_t nid = 0; nid < m_outlets.size(); ++nid)
+        for (size_t nid = 0; nid < nbasins; ++nid)
         {
-            CHECK_CAPACITY(low_degrees);
-            CHECK_CAPACITY(large_degrees);
+            check_capacity(m_low_degrees);
+            check_capacity(m_large_degrees);
             // if degree is low enough
-            if (adjacency[nid].size <= max_low_degree)
-                low_degrees.push_back(nid);
+            if (m_adjacency[nid].size <= m_max_low_degree)
+                m_low_degrees.push_back(nid);
             else
-                large_degrees.push_back(nid);
+                m_large_degrees.push_back(nid);
         }
 
         m_perf_boruvka = 0;
-#define PERF_INCREASE ++m_perf_boruvka
-
 
         // compute the min span tree
-        m_tree.reserve(m_outlets.size() - 1);
+        m_tree.reserve(nbasins - 1);
         m_tree.clear();
 
-        while (low_degrees.size())
+        while (m_low_degrees.size())
         {
-            for (index_t nid : low_degrees)
+            for (size_type nid : m_low_degrees)
             {
                 // the node may have large degree after collapse
-                if (adjacency[nid].size > max_low_degree)
+                if (m_adjacency[nid].size > m_max_low_degree)
                 {
-                    CHECK_CAPACITY(large_degrees);
-                    large_degrees.push_back(nid);
+                    check_capacity(m_large_degrees);
+                    m_large_degrees.push_back(nid);
                     continue;
                 }
 
                 // get the minimal weight edge that leaves that node
-                index_t found_edge = -1;
-                index_t node_B_id = -1;
+                size_type found_edge = -1;
+                size_type node_B_id = -1;
                 data_type found_edge_weight = std::numeric_limits<data_type>::max();
 
-                index_t adjacency_data_ptr = adjacency[nid].begin;
-                for (size_t step = 0; step < adjacency[nid].size; ++step)
+                size_type adjacency_data_ptr = m_adjacency[nid].begin;
+                for (size_t step = 0; step < m_adjacency[nid].size; ++step)
                 {
-                    PERF_INCREASE;
+                    increase_perf_boruvka();
 
                     // find next adjacent edge in the list
-                    index_t parsed_edge_id = adjacency_list[adjacency_data_ptr].link_id;
-                    adjacency_data_ptr = adjacency_list[adjacency_data_ptr].next;
+                    size_type parsed_edge_id = m_adjacency_list[adjacency_data_ptr].link_id;
+                    adjacency_data_ptr = m_adjacency_list[adjacency_data_ptr].next;
 
                     // check if the edge is valid (connected to a existing node)
                     // and if the weight is better than the previously found one
-                    index_t opp_node = link_basins[parsed_edge_id][0];
+                    size_type opp_node = m_link_basins[parsed_edge_id][0];
                     if (opp_node == nid)
-                        opp_node = link_basins[parsed_edge_id][1];
+                        opp_node = m_link_basins[parsed_edge_id][1];
 
-                    if (opp_node != nid && adjacency[opp_node].size > 0
+                    if (opp_node != nid && m_adjacency[opp_node].size > 0
                         && m_edges[parsed_edge_id].weight < found_edge_weight)
                     {
                         found_edge = parsed_edge_id;
@@ -520,78 +557,78 @@ namespace fastscapelib
                     continue;  // TODO does it happens?
 
                 // add edge to the tree
-                CHECK_CAPACITY(m_tree);
+                check_capacity(m_tree);
                 m_tree.push_back(found_edge);
 
                 //  and collapse it toward opposite node
 
                 // rename all A to B in adjacency of A
-                adjacency_data_ptr = adjacency[nid].begin;
-                for (size_t step = 0; step < adjacency[nid].size; ++step)
+                adjacency_data_ptr = m_adjacency[nid].begin;
+                for (size_t step = 0; step < m_adjacency[nid].size; ++step)
                 {
-                    PERF_INCREASE;
+                    increase_perf_boruvka();
 
                     // find next adjacent edge in the list
-                    index_t edge_AC_id = adjacency_list[adjacency_data_ptr].link_id;
+                    size_type edge_AC_id = m_adjacency_list[adjacency_data_ptr].link_id;
 
                     // TODO optimize that out?
-                    if (step != adjacency[nid].size - 1)
-                        adjacency_data_ptr = adjacency_list[adjacency_data_ptr].next;
+                    if (step != m_adjacency[nid].size - 1)
+                        adjacency_data_ptr = m_adjacency_list[adjacency_data_ptr].next;
 
                     // avoid self loop. A doesn't exist anymore, so edge AB
                     // will be discarded
 
-                    if (link_basins[edge_AC_id][0] == nid)
-                        link_basins[edge_AC_id][0] = node_B_id;
+                    if (m_link_basins[edge_AC_id][0] == nid)
+                        m_link_basins[edge_AC_id][0] = node_B_id;
                     else
-                        link_basins[edge_AC_id][1] = node_B_id;
+                        m_link_basins[edge_AC_id][1] = node_B_id;
                 }
 
                 // Append adjacency of B at the end of A
-                adjacency_list[adjacency_data_ptr].next = adjacency[node_B_id].begin;
+                m_adjacency_list[adjacency_data_ptr].next = m_adjacency[node_B_id].begin;
 
                 // And collapse A into B
-                adjacency[node_B_id].begin = adjacency[nid].begin;
-                adjacency[node_B_id].size += adjacency[nid].size;
+                m_adjacency[node_B_id].begin = m_adjacency[nid].begin;
+                m_adjacency[node_B_id].size += m_adjacency[nid].size;
 
                 // Remove the node from the graph
-                adjacency[nid].size = 0;
+                m_adjacency[nid].size = 0;
             }
 
-            low_degrees.clear();
+            m_low_degrees.clear();
 
             // Clean up graph (many edges are duplicates or self loops).
             int cur_large_degree = 0;
-            for (index_t node_A_id : large_degrees)
+            for (size_type node_A_id : m_large_degrees)
             {
                 // we will store all edges from A in the bucket, so that each edge
                 // can appear only once
-                edge_in_bucket.clear();
-                index_t adjacency_data_ptr = adjacency[node_A_id].begin;
+                m_edge_in_bucket.clear();
+                size_type adjacency_data_ptr = m_adjacency[node_A_id].begin;
 
-                for (size_t step = 0; step < adjacency[node_A_id].size; ++step)
+                for (size_t step = 0; step < m_adjacency[node_A_id].size; ++step)
                 {
-                    PERF_INCREASE;
+                    increase_perf_boruvka();
 
-                    index_t edge_AB_id = adjacency_list[adjacency_data_ptr].link_id;
-                    adjacency_data_ptr = adjacency_list[adjacency_data_ptr].next;
+                    size_type edge_AB_id = m_adjacency_list[adjacency_data_ptr].link_id;
+                    adjacency_data_ptr = m_adjacency_list[adjacency_data_ptr].next;
 
                     // find node B
-                    index_t node_B_id = link_basins[edge_AB_id][0];
+                    size_type node_B_id = m_link_basins[edge_AB_id][0];
                     if (node_B_id == node_A_id)
-                        node_B_id = link_basins[edge_AB_id][1];
+                        node_B_id = m_link_basins[edge_AB_id][1];
 
-                    if (adjacency[node_B_id].size > 0 && node_B_id != node_A_id)
+                    if (m_adjacency[node_B_id].size > 0 && node_B_id != node_A_id)
                     {
                         // edge_bucket contain the edge_id connecting to opp_node_id
                         // or NodeId(-1)) if this is the first time we see it
-                        index_t edge_AB_id_in_bucket = edge_bucket[node_B_id];
+                        size_type edge_AB_id_in_bucket = m_edge_bucket[node_B_id];
 
                         // first time we see
                         if (edge_AB_id_in_bucket == -1)
                         {
-                            edge_bucket[node_B_id] = edge_AB_id;
-                            edge_in_bucket.push_back(node_B_id);
+                            m_edge_bucket[node_B_id] = edge_AB_id;
+                            m_edge_in_bucket.push_back(node_B_id);
                         }
                         else
                         {
@@ -602,137 +639,138 @@ namespace fastscapelib
                             // if both weight are the same, we choose edge
                             // with min id
                             if (weight_in_bucket == weight_AB)
-                                edge_bucket[node_B_id] = std::min(edge_AB_id_in_bucket, edge_AB_id);
+                                m_edge_bucket[node_B_id]
+                                    = std::min(edge_AB_id_in_bucket, edge_AB_id);
                             else if (weight_AB < weight_in_bucket)
-                                edge_bucket[node_B_id] = edge_AB_id;
+                                m_edge_bucket[node_B_id] = edge_AB_id;
                         }
                     }
                 }
 
                 // recompute connectivity of node A
-                index_t cur_ptr = adjacency[node_A_id].begin;
-                adjacency[node_A_id].size = edge_in_bucket.size();
+                size_type cur_ptr = m_adjacency[node_A_id].begin;
+                m_adjacency[node_A_id].size = m_edge_in_bucket.size();
 
-                for (index_t node_B_id : edge_in_bucket)
+                for (size_type node_B_id : m_edge_in_bucket)
                 {
-                    PERF_INCREASE;
+                    increase_perf_boruvka();
 
-                    adjacency_list[cur_ptr].link_id = edge_bucket[node_B_id];
-                    cur_ptr = adjacency_list[cur_ptr].next;
+                    m_adjacency_list[cur_ptr].link_id = m_edge_bucket[node_B_id];
+                    cur_ptr = m_adjacency_list[cur_ptr].next;
 
                     // clean occupency of edge_bucket for latter use
-                    edge_bucket[node_B_id] = -1;
+                    m_edge_bucket[node_B_id] = -1;
                 }
 
 
                 // update low degree information, if node A has low degree
-                if (adjacency[node_A_id].size <= max_low_degree)
+                if (m_adjacency[node_A_id].size <= m_max_low_degree)
                 {
-                    CHECK_CAPACITY(low_degrees);
+                    check_capacity(m_low_degrees);
                     // add the node in low degree list
-                    if (adjacency[node_A_id].size > 0)
-                        low_degrees.push_back(node_A_id);
+                    if (m_adjacency[node_A_id].size > 0)
+                        m_low_degrees.push_back(node_A_id);
                 }
                 else
-                    large_degrees[cur_large_degree++] = node_A_id;
+                    m_large_degrees[cur_large_degree++] = node_A_id;
             }
-            large_degrees.resize(cur_large_degree);
-            CHECK_CAPACITY(large_degrees);
+            m_large_degrees.resize(cur_large_degree);
+            check_capacity(m_large_degrees);
         }
     }
 
+    /*
+     * Orient the edges of the basin graph (tree) in the upward (or counter)
+     * flow direction.
+     *
+     * If needed, swap the link (i.e., basin node indices) and pass (i.e., grid
+     * node indices) of the edges.
+     */
     template <class FG>
-    template <bool keep_order>
-    void basin_graph<FG>::reorder_tree()
+    void basin_graph<FG>::orient_edges()
     {
-        /*Orient the graph (tree) of basins so that the edges are directed in
-            the inverse of the flow direction.
-
-            If needed, swap values given for each edges (row) in `conn_basins`
-            and `conn_nodes`.
-
-        */
+        const auto nbasins = basins_count();
 
         // nodes connections
-        nodes_connects_size.resize(m_outlets.size());
-        std::fill(nodes_connects_size.begin(), nodes_connects_size.end(), size_t(0));
-        nodes_connects_ptr.resize(m_outlets.size());
+        m_nodes_connects_size.resize(nbasins);
+        std::fill(m_nodes_connects_size.begin(), m_nodes_connects_size.end(), size_t(0));
+        m_nodes_connects_ptr.resize(nbasins);
 
         // parse the edges to compute the number of edges per node
-        for (index_t l_id : m_tree)
+        for (size_type l_id : m_tree)
         {
-            nodes_connects_size[m_edges[l_id].basins[0]] += 1;
-            nodes_connects_size[m_edges[l_id].basins[1]] += 1;
+            m_nodes_connects_size[m_edges[l_id].basins[0]] += 1;
+            m_nodes_connects_size[m_edges[l_id].basins[1]] += 1;
         }
 
         // compute the id of first edge in adjacency table
-        nodes_connects_ptr[0] = 0;
-        for (size_t i = 1; i < m_outlets.size(); ++i)
+        m_nodes_connects_ptr[0] = 0;
+        for (size_t i = 1; i < nbasins; ++i)
         {
-            nodes_connects_ptr[i] = (nodes_connects_ptr[i - 1] + nodes_connects_size[i - 1]);
-            nodes_connects_size[i - 1] = 0;
+            m_nodes_connects_ptr[i] = (m_nodes_connects_ptr[i - 1] + m_nodes_connects_size[i - 1]);
+            m_nodes_connects_size[i - 1] = 0;
         }
 
         // create the adjacency table
-        nodes_adjacency.resize(nodes_connects_ptr.back() + nodes_connects_size.back());
-        nodes_connects_size.back() = 0;
+        m_nodes_adjacency.resize(m_nodes_connects_ptr.back() + m_nodes_connects_size.back());
+        m_nodes_connects_size.back() = 0;
 
         // parse the edges to update the adjacency
-        for (index_t l_id : m_tree)
+        for (size_type l_id : m_tree)
         {
             size_type n0 = m_edges[l_id].basins[0];
             size_type n1 = m_edges[l_id].basins[1];
-            nodes_adjacency[nodes_connects_ptr[n0] + nodes_connects_size[n0]] = l_id;
-            nodes_adjacency[nodes_connects_ptr[n1] + nodes_connects_size[n1]] = l_id;
-            nodes_connects_size[n0] += 1;
-            nodes_connects_size[n1] += 1;
+            m_nodes_adjacency[m_nodes_connects_ptr[n0] + m_nodes_connects_size[n0]] = l_id;
+            m_nodes_adjacency[m_nodes_connects_ptr[n1] + m_nodes_connects_size[n1]] = l_id;
+            m_nodes_connects_size[n0] += 1;
+            m_nodes_connects_size[n1] += 1;
         }
 
         // depth-first parse of the tree, starting from basin0
         // stack of node, parent
-        reorder_stack.reserve(m_outlets.size());
-        reorder_stack.clear();
+        m_reorder_stack.reserve(nbasins);
+        m_reorder_stack.clear();
 
-        reorder_stack.push_back({ m_root,
-                                  m_root,
-                                  std::numeric_limits<data_type>::min(),
-                                  std::numeric_limits<data_type>::min() });
+        m_reorder_stack.push_back({ m_root,
+                                    m_root,
+                                    std::numeric_limits<data_type>::min(),
+                                    std::numeric_limits<data_type>::min() });
 
-        if (keep_order)
+        if (m_keep_order)
         {
-            pass_stack.clear();
-            parent_basins.resize(m_outlets.size());
-            parent_basins[m_root] = m_root;
+            m_pass_stack.clear();
+            m_parent_basins.resize(nbasins);
+            m_parent_basins[m_root] = m_root;
         }
 
-        while (reorder_stack.size())
+        while (m_reorder_stack.size())
         {
             size_type node, parent;
-            data_type pass_height, parent_pass_height;
-            std::tie(node, parent, pass_height, parent_pass_height) = reorder_stack.back();
-            reorder_stack.pop_back();
+            data_type pass_elevation, parent_pass_elevation;
+            std::tie(node, parent, pass_elevation, parent_pass_elevation) = m_reorder_stack.back();
+            m_reorder_stack.pop_back();
 
 
-            for (size_t i = nodes_connects_ptr[node];
-                 i < nodes_connects_ptr[node] + nodes_connects_size[node];
+            for (size_t i = m_nodes_connects_ptr[node];
+                 i < m_nodes_connects_ptr[node] + m_nodes_connects_size[node];
                  ++i)
             {
-                edge& link = m_edges[nodes_adjacency[i]];
+                edge& edg = m_edges[m_nodes_adjacency[i]];
 
                 // the edge comming from the parent node has already been updated.
                 // in this case, the edge is (parent, node)
-                if (link.basins[0] == parent && node != parent)
+                if (edg.link[0] == parent && node != parent)
                 {
-                    if (keep_order)
+                    if (m_keep_order)
                     {
                         // force children of base nodes to be parsed
-                        if (pass_height <= parent_pass_height && link.nodes[0] != -1)
+                        if (pass_elevation <= parent_pass_elevation && edg.pass[0] != -1)
                             // the pass is bellow the water level of the parent basin
-                            parent_basins[link.basins[1]] = parent_basins[link.basins[0]];
+                            m_parent_basins[edg.link[1]] = m_parent_basins[edg.link[0]];
                         else
                         {
-                            parent_basins[link.basins[1]] = link.basins[1];
-                            pass_stack.push_back(nodes_adjacency[i]);
+                            m_parent_basins[edg.link[1]] = edg.link[1];
+                            m_pass_stack.push_back(m_nodes_adjacency[i]);
                         }
                     }
                 }
@@ -740,16 +778,16 @@ namespace fastscapelib
                 {
                     // we want the edge to be (node, next), where next is upper in flow order
                     // we check if the first node of the edge is not "node"
-                    if (node != link.basins[0])
+                    if (node != edg.link[0])
                     {
-                        std::swap(link.basins[0], link.basins[1]);
-                        std::swap(link.nodes[0], link.nodes[1]);
+                        std::swap(edg.link[0], edg.link[1]);
+                        std::swap(edg.pass[0], edg.pass[1]);
                     }
 
-                    reorder_stack.push_back({ link.basins[1],
-                                              node,
-                                              std::max(link.pass_elevation, pass_height),
-                                              pass_height });
+                    m_reorder_stack.push_back({ edg.link[1],
+                                                node,
+                                                std::max(edg.pass_elevation, pass_elevation),
+                                                pass_elevation });
                 }
             }
         }
@@ -807,13 +845,13 @@ namespace fastscapelib
         */
 
         const auto elev_shape = elevation.shape();
-        const index_t nrows = (index_t) elev_shape[0];
-        const index_t ncols = (index_t) elev_shape[1];
+        const size_type nrows = (size_type) elev_shape[0];
+        const size_type ncols = (size_type) elev_shape[1];
 
         const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
 
 
-        for (index_t l_id : m_tree)
+        for (size_type l_id : m_tree)
         {
             edge& link = m_edges[l_id];
 
@@ -854,12 +892,12 @@ namespace fastscapelib
                                                       double dy)
     {
         const auto elev_shape = elevation.shape();
-        const index_t nrows = (index_t) elev_shape[0];
-        const index_t ncols = (index_t) elev_shape[1];
+        const size_type nrows = (size_type) elev_shape[0];
+        const size_type ncols = (size_type) elev_shape[1];
 
         const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
 
-        for (index_t l_id : m_tree)
+        for (size_type l_id : m_tree)
         {
             edge& link = m_edges[l_id];
 #define OUTFLOW 0  // to
@@ -909,8 +947,8 @@ namespace fastscapelib
                                                        double dy)
     {
         const auto elev_shape = elevation.shape();
-        const index_t nrows = (index_t) elev_shape[0];
-        const index_t ncols = (index_t) elev_shape[1];
+        const size_type nrows = (size_type) elev_shape[0];
+        const size_type ncols = (size_type) elev_shape[1];
 
         const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
         std::array<double, 9> d8_distances_inv;
@@ -928,7 +966,7 @@ namespace fastscapelib
         std::vector<Tag> tag(nrows * ncols, Tag::UnParsed);
 
         // parse in basin order
-        for (const index_t pass : pass_stack)
+        for (const size_type pass : m_pass_stack)
         {
             const edge& l = m_edges[pass];
 #define OUTFLOW 0  // to
@@ -949,7 +987,7 @@ namespace fastscapelib
             tag[l.nodes[OUTFLOW]] = Tag::WithRcv;
             tag[l.nodes[INFLOW]] = Tag::InQueue;
             const size_type parsed_basin = l.basins[INFLOW];
-            assert(parsed_basin == parent_basins[parsed_basin]);
+            assert(parsed_basin == m_parent_basins[parsed_basin]);
 
             auto outflow_coords = detail::coords(l.nodes[OUTFLOW], static_cast<size_type>(ncols));
 
@@ -971,15 +1009,15 @@ namespace fastscapelib
                 // parse neighbors
                 for (int k = 1; k < 9; ++k)
                 {
-                    index_t rr = coords.first + fastscapelib::consts::d8_row_offsets[k];
-                    index_t cc = coords.second + fastscapelib::consts::d8_col_offsets[k];
+                    size_type rr = coords.first + fastscapelib::consts::d8_row_offsets[k];
+                    size_type cc = coords.second + fastscapelib::consts::d8_col_offsets[k];
 
                     if (detail::in_bounds(elev_shape, rr, cc))
                     {
                         const size_type ineighbor = detail::index(rr, cc, ncols);
 
                         if ((ineighbor != l.nodes[OUTFLOW]
-                             && parent_basins[basins(ineighbor)] != parsed_basin)
+                             && m_parent_basins[basins(ineighbor)] != parsed_basin)
                             || elevation(ineighbor) > elev)
                             continue;
 
@@ -1057,7 +1095,7 @@ namespace fastscapelib
             compute_tree_boruvka();
         }
 
-        reorder_tree<connect == sink_route_method::fill_sloped>();
+        orient_edges();
 
         switch (connect)
         {
