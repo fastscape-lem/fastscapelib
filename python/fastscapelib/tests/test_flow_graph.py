@@ -62,7 +62,7 @@ class TestFlowGraph:
             flow_graph.impl().donors_count, np.array([1, 0, 2, 1, 0, 0, 1, 1])
         )
 
-    def test_accumulate(self):
+    def test_accumulate_basins(self):
         # --- test profile grid
         grid = ProfileGrid(8, 2.0, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
         flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
@@ -136,3 +136,14 @@ class TestFlowGraph:
 
         npt.assert_almost_equal(flow_graph.accumulate(1.0), expected)
         npt.assert_almost_equal(flow_graph.accumulate(src), expected)
+
+        expected = np.array(
+            [
+                [1, 1, 1, 3],
+                [1, 1, 1, 3],
+                [1, 1, 1, 3],
+                [0, 1, 2, 3],
+            ]
+        )
+        npt.assert_array_equal(flow_graph.basins(), expected)
+        npt.assert_array_equal(flow_graph.basins().flatten(), flow_graph.impl().basins)

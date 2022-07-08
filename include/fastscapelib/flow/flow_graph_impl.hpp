@@ -89,6 +89,9 @@ namespace fastscapelib
                 m_donors_count = xt::zeros<size_type>({ grid.size() });
 
                 m_dfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
+
+                // TODO: basins are not always needed (only init on-demand)
+                m_basins = xt::empty<size_type>({ grid.size() });
             };
 
             G& grid()
@@ -156,6 +159,13 @@ namespace fastscapelib
             //     return m_dfs_indices.crend();
             // };
 
+            const basins_type& basins() const
+            {
+                return m_basins;
+            };
+
+            void compute_basins();
+
             template <class T>
             void accumulate(data_array_type& acc, T&& src) const;
 
@@ -176,15 +186,13 @@ namespace fastscapelib
             dfs_indices_type m_dfs_indices;
 
             basins_type m_basins;
+            std::vector<size_type> m_outlets;
 
             template <class FG, class FR>
             friend class flow_router_impl;
 
             template <class FG, class SR>
             friend class sink_resolver_impl;
-
-            template <class FG>
-            friend class basin_graph;
         };
 
         template <class G, class S>
@@ -228,6 +236,29 @@ namespace fastscapelib
             data_array_type acc = data_array_type::from_shape(m_grid.shape());
             accumulate(acc, std::forward<T>(src));
             return acc;
+        }
+
+        template <class G, class S>
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_basins()
+        {
+            size_type current_basin;
+            current_basin = -1;
+
+            m_outlets.clear();
+
+            for (const auto& idfs : m_dfs_indices)
+            {
+                // outlet node has only one receiver: itself
+                if (idfs == m_receivers(idfs, 0))
+                {
+                    m_outlets.push_back(idfs);
+                    current_basin++;
+                }
+
+                m_basins(idfs) = current_basin;
+            }
+
+            assert(m_outlets.size() == current_basin + 1);
         }
     }
 }

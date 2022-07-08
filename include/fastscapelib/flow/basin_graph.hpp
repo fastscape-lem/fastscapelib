@@ -91,14 +91,14 @@ namespace fastscapelib
             // TODO: check shape of receivers (should be single flow)
         }
 
-        size_type basins_count() const
+        inline size_type basins_count() const
         {
-            return m_outlets.size();
+            return m_flow_graph_impl.m_outlets.size();
         }
 
-        std::vector<size_type>& outlets() const
+        inline std::vector<size_type>& outlets() const
         {
-            return m_outlets;
+            return m_flow_graph_impl.m_outlets;
         }
 
         const std::vector<edge>& edges() const
@@ -110,8 +110,6 @@ namespace fastscapelib
         {
             return m_tree;
         }
-
-        void compute_basins();
 
         void update_routes(const data_array_type& elevation);
 
@@ -255,35 +253,12 @@ namespace fastscapelib
 
 
     template <class FG>
-    void basin_graph<FG>::compute_basins()
-    {
-        auto& basins = m_flow_graph_impl->m_basins;
-        const auto& receivers = m_flow_graph_impl.receivers();
-        const auto& dfs_indices = m_flow_graph_impl.dfs_indices();
-
-        size_type current_basin;
-        current_basin = -1;
-
-        m_outlets.clear();
-
-        for (const auto& idfs : dfs_indices)
-        {
-            if (idfs == receivers(idfs))
-            {
-                m_outlets.push_back(idfs);
-                current_basin++;
-            }
-
-            basins(idfs) = current_basin;
-        }
-
-        assert(m_outlets.size() == current_basin + 1);
-    }
-
-    template <class FG>
     void basin_graph<FG>::update_routes(const data_array_type& elevation)
     {
-        connect_basin(elevation);
+        // make sure the basins are up-to-date
+        m_flow_graph_impl.compute_basins();
+
+        connect_basins(elevation);
 
         if (m_mst_method == mst_method::kruskal)
         {
@@ -366,7 +341,7 @@ namespace fastscapelib
                     // already connected adjacent basin unless the latter is an
                     // outer basin
                     bool skip = ibasin >= nbasin;
-                    node_status nstatus = status_at_nodes.flat(m_outlets[nbasin]);
+                    node_status nstatus = status_at_nodes.flat(outlets()[nbasin]);
                     bool is_inner_nbasin = nstatus != node_status::fixed_value_boundary;
                     if (skip && is_inner_nbasin)
                     {
@@ -866,7 +841,7 @@ namespace fastscapelib
             if (link.nodes[OUTFLOW] == -1)
                 continue;
 
-            size_type outlet_inflow = m_outlets[link.basins[INFLOW]];
+            size_type outlet_inflow = outlets()[link.basins[INFLOW]];
 
             dist2receivers[outlet_inflow] = std::numeric_limits<double>::max();
 
@@ -907,7 +882,7 @@ namespace fastscapelib
             if (link.nodes[OUTFLOW] == -1)
                 continue;
 
-            size_type outlet_inflow = m_outlets[link.basins[INFLOW]];
+            size_type outlet_inflow = outlets()[link.basins[INFLOW]];
             size_type cur_node = link.nodes[INFLOW];
             size_type next_node = receivers(cur_node);
             data_type previous_dist = dist2receivers[cur_node];

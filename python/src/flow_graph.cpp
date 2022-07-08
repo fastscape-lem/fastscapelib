@@ -48,4 +48,6 @@ add_flow_graph_bindings(py::module& m)
              py::overload_cast<const data_array_type&>(&fs::py_flow_graph::accumulate, py::const_))
         .def("accumulate",
              py::overload_cast<data_type>(&fs::py_flow_graph::accumulate, py::const_));
+
+    pyfgraph.def("basins", &fs::py_flow_graph::basins);
 }

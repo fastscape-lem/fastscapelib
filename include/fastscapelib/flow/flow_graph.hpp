@@ -12,6 +12,8 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "xtensor/xstrided_view.hpp"
+
 #include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
@@ -51,6 +53,7 @@ namespace fastscapelib
         using data_type = typename grid_type::grid_data_type;
         using data_array_type = xt_array_t<xt_selector, data_type>;
         using shape_type = typename data_array_type::shape_type;
+        using data_array_size_type = xt_array_t<xt_selector, size_type>;
 
         flow_graph(G& grid, const router_type& router, const resolver_type& resolver)
             : m_grid(grid)
@@ -107,6 +110,17 @@ namespace fastscapelib
         {
             return m_graph_impl.accumulate(src);
         };
+
+        data_array_size_type basins()
+        {
+            data_array_size_type basins = data_array_type::from_shape(m_grid.shape());
+            auto basins_flat = xt::flatten(basins);
+
+            m_graph_impl.compute_basins();
+            basins_flat = m_graph_impl.basins();
+
+            return basins;
+        }
 
     private:
         grid_type& m_grid;

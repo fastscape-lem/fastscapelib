@@ -116,7 +116,6 @@ namespace fastscapelib
 
             const data_array_type& resolve2(const data_array_type& elevation)
             {
-                m_basin_graph.compute_basins();
                 m_basin_graph.update_routes(elevation);
 
                 return elevation;
