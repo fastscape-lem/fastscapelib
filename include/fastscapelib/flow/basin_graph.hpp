@@ -74,7 +74,7 @@ namespace fastscapelib
             {
                 return link[0] == other.link[0] && link[1] == other.link[1]
                        && pass[0] == other.pass[0] && pass[1] == other.pass[1]
-                       && pass_elevation == other.weight;
+                       && pass_elevation == other.pass_elevation;
             }
         };
 
@@ -93,12 +93,12 @@ namespace fastscapelib
 
         inline size_type basins_count() const
         {
-            return m_flow_graph_impl.m_outlets.size();
+            return m_flow_graph_impl.outlets().size();
         }
 
-        inline std::vector<size_type>& outlets() const
+        inline const std::vector<size_type>& outlets() const
         {
-            return m_flow_graph_impl.m_outlets;
+            return m_flow_graph_impl.outlets();
         }
 
         const std::vector<edge>& edges() const
@@ -279,7 +279,7 @@ namespace fastscapelib
 
         auto nbasins = basins_count();
 
-        auto& basins = m_flow_graph_impl->m_basins;
+        const auto& basins = m_flow_graph_impl.basins();
         const auto& receivers = m_flow_graph_impl.receivers();
         const auto& dfs_indices = m_flow_graph_impl.dfs_indices();
 
@@ -520,10 +520,10 @@ namespace fastscapelib
                         opp_node = m_link_basins[parsed_edge_id][1];
 
                     if (opp_node != nid && m_adjacency[opp_node].size > 0
-                        && m_edges[parsed_edge_id].weight < found_edge_weight)
+                        && m_edges[parsed_edge_id].pass_elevation < found_edge_weight)
                     {
                         found_edge = parsed_edge_id;
-                        found_edge_weight = m_edges[parsed_edge_id].weight;
+                        found_edge_weight = m_edges[parsed_edge_id].pass_elevation;
                         node_B_id = opp_node;
                     }
                 }
@@ -608,8 +608,9 @@ namespace fastscapelib
                         else
                         {
                             // get weight of AB and of previously stored weight
-                            data_type weight_in_bucket = m_edges[edge_AB_id_in_bucket].weight;
-                            data_type weight_AB = m_edges[edge_AB_id].weight;
+                            data_type weight_in_bucket
+                                = m_edges[edge_AB_id_in_bucket].pass_elevation;
+                            data_type weight_AB = m_edges[edge_AB_id].pass_elevation;
 
                             // if both weight are the same, we choose edge
                             // with min id
@@ -674,8 +675,8 @@ namespace fastscapelib
         // parse the edges to compute the number of edges per node
         for (size_type l_id : m_tree)
         {
-            m_nodes_connects_size[m_edges[l_id].basins[0]] += 1;
-            m_nodes_connects_size[m_edges[l_id].basins[1]] += 1;
+            m_nodes_connects_size[m_edges[l_id].link[0]] += 1;
+            m_nodes_connects_size[m_edges[l_id].link[1]] += 1;
         }
 
         // compute the id of first edge in adjacency table
@@ -693,8 +694,8 @@ namespace fastscapelib
         // parse the edges to update the adjacency
         for (size_type l_id : m_tree)
         {
-            size_type n0 = m_edges[l_id].basins[0];
-            size_type n1 = m_edges[l_id].basins[1];
+            size_type n0 = m_edges[l_id].link[0];
+            size_type n1 = m_edges[l_id].link[1];
             m_nodes_adjacency[m_nodes_connects_ptr[n0] + m_nodes_connects_size[n0]] = l_id;
             m_nodes_adjacency[m_nodes_connects_ptr[n1] + m_nodes_connects_size[n1]] = l_id;
             m_nodes_connects_size[n0] += 1;

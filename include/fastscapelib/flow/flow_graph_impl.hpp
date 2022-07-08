@@ -159,6 +159,11 @@ namespace fastscapelib
             //     return m_dfs_indices.crend();
             // };
 
+            const std::vector<size_type>& outlets() const
+            {
+                return m_outlets;
+            }
+
             const basins_type& basins() const
             {
                 return m_basins;

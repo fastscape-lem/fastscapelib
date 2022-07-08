@@ -36,7 +36,7 @@ namespace fastscapelib
                 : m_graph_impl(graph_impl)
                 , m_resolver(resolver){};
 
-        private:
+        protected:
             graph_impl_type& m_graph_impl;
             const resolver_type& m_resolver;
         };
@@ -103,6 +103,8 @@ namespace fastscapelib
             using graph_impl_type = FG;
             using base_type = sink_resolver_impl_base<graph_impl_type, basin_mst_sink_resolver>;
 
+            using size_type = typename graph_impl_type::size_type;
+            using data_type = typename graph_impl_type::data_type;
             using data_array_type = typename graph_impl_type::data_array_type;
 
             sink_resolver_impl(graph_impl_type& graph, const basin_mst_sink_resolver& resolver)
@@ -118,12 +120,68 @@ namespace fastscapelib
             {
                 m_basin_graph.update_routes(elevation);
 
+                update_routes_sinks_basic(elevation);
+
                 return elevation;
             };
 
         private:
             basin_graph<FG> m_basin_graph;
+
+            // basin graph edges are oriented in the counter flow direction
+            static constexpr std::uint8_t outflow = 0;
+            static constexpr std::uint8_t inflow = 1;
+
+            void update_routes_sinks_basic(const data_array_type& elevation);
         };
+
+
+        template <class FG>
+        void sink_resolver_impl<FG, basin_mst_sink_resolver>::update_routes_sinks_basic(
+            const data_array_type& elevation)
+        {
+            auto& receivers = this->m_graph_impl.m_receivers;
+            auto& dist2receivers = this->m_graph_impl.m_receivers_distance;
+
+            // pits corresponds to outlets in inner basins
+            const auto& pits = m_basin_graph.outlets();
+
+            for (size_type edge_idx : m_basin_graph.tree())
+            {
+                auto& edge = m_basin_graph.edges()[edge_idx];
+
+                // skip outer basins
+                if (edge.pass[outflow] == -1)
+                {
+                    continue;
+                }
+
+                size_type pit_inflow = pits[edge.link[inflow]];
+
+                // set infinite distance from the pit node to its receiver
+                // (i.e., one of the two pass nodes).
+                dist2receivers(pit_inflow, 0) = std::numeric_limits<data_type>::max();
+
+                if (elevation.flat(edge.pass[inflow]) < elevation.flat(edge.pass[outflow]))
+                {
+                    receivers(pit_inflow, 0) = edge.pass[outflow];
+                }
+                else
+                {
+                    // we also need to resolve (revert) the flow between the two
+                    // nodes forming the pass, i.e., route flow
+                    // pit -> pass (inflow) -> pass (outflow)
+                    receivers(pit_inflow, 0) = edge.pass[inflow];
+                    receivers(edge.pass[inflow], 0) = edge.pass[outflow];
+
+                    // TODO: do we need to update dist2receivers from pass
+                    // (inflow) to pass (outflow)? Not sure: the two nodes are
+                    // still the same grid neighbors and this still separated by
+                    // the same distance. Unless in the case where the pass
+                    // (inflow) is itself a pit?
+                }
+            }
+        }
     }
 }
 

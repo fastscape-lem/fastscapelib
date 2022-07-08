@@ -96,14 +96,17 @@ namespace fastscapelib
              * Complexity O(_size - size())
              * @param _size the new size
              */
-            void resize(index_t _size)
+            void resize(size_t _size)
             {
                 size_t old_size = size();
 
                 parent.resize(_size);
                 rank.resize(_size, 0);
 
-                std::iota(parent.begin() + old_size, parent.end(), old_size);
+                // TODO: this causes seg fault when used from the py bindings
+                // -> regenerate the whole sequence as a workaround
+                // std::iota(parent.begin() + old_size, parent.end(), old_size);
+                std::iota(parent.begin(), parent.end(), 0);
             }
 
             /**
@@ -165,7 +168,7 @@ namespace fastscapelib
 
         private:
             std::vector<T> parent;
-            std::vector<index_t> rank;
+            std::vector<size_t> rank;
         };
     }
 }
