@@ -35,16 +35,16 @@ class TestFlowGraph:
         npt.assert_array_equal(elevation, new_elevation)
 
         npt.assert_equal(
-            flow_graph.impl().receivers()[:, 0], np.array([0, 0, 2, 2, 3, 6, 7, 7])
+            flow_graph.impl().receivers[:, 0], np.array([0, 0, 2, 2, 3, 6, 7, 7])
         )
-        npt.assert_equal(flow_graph.impl().receivers_count(), np.ones(elevation.size))
+        npt.assert_equal(flow_graph.impl().receivers_count, np.ones(elevation.size))
         npt.assert_equal(
-            flow_graph.impl().receivers_weight()[:, 0], np.ones(elevation.size)
+            flow_graph.impl().receivers_weight[:, 0], np.ones(elevation.size)
         )
 
         m = np.iinfo(np.uint64).max
         npt.assert_equal(
-            flow_graph.impl().donors(),
+            flow_graph.impl().donors,
             np.array(
                 [
                     [1, m, m],
@@ -59,7 +59,7 @@ class TestFlowGraph:
             ),
         )
         npt.assert_equal(
-            flow_graph.impl().donors_count(), np.array([1, 0, 2, 1, 0, 0, 1, 1])
+            flow_graph.impl().donors_count, np.array([1, 0, 2, 1, 0, 0, 1, 1])
         )
 
     def test_accumulate(self):
