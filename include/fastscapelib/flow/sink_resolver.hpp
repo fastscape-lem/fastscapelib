@@ -251,17 +251,12 @@ namespace fastscapelib
                 }
                 else
                 {
-                    // we also need to resolve (revert) the flow between the two
-                    // nodes forming the pass, i.e., route flow
+                    // also need to resolve the flow between the two
+                    // nodes forming the pass, i.e., route the flow like this:
                     // pit -> pass (inflow) -> pass (outflow)
                     receivers(pit_inflow, 0) = edge.pass[inflow];
                     receivers(edge.pass[inflow], 0) = edge.pass[outflow];
-
-                    // TODO: do we need to update dist2receivers from pass
-                    // (inflow) to pass (outflow)? Not sure: the two nodes are
-                    // still the same grid neighbors and this still separated by
-                    // the same distance. Unless in the case where the pass
-                    // (inflow) is itself a pit?
+                    dist2receivers(edge.pass[inflow], 0) = edge.pass_length;
                 }
             }
         }
@@ -288,18 +283,21 @@ namespace fastscapelib
 
                 size_type pit_inflow = pits[edge.link[inflow]];
 
-                // start at the pass and follow flow receivers in sink until the pit
+                // start at the pass (inflow) and then below follow the
+                // receivers until the pit is found
                 size_type current_node = edge.pass[inflow];
                 size_type next_node = receivers(current_node, 0);
                 data_type previous_dist = dist2receivers(current_node, 0);
 
+                // re-route the pass inflow to the pass outflow
                 receivers(current_node, 0) = edge.pass[outflow];
-                // TODO: update dist2receivers?
+                dist2receivers(current_node, 0) = edge.pass_length;
 
                 while (current_node != pit_inflow)
                 {
                     auto rec_next_node = receivers(next_node, 0);
                     receivers(next_node, 0) = current_node;
+                    std::swap(dist2receivers(next_node, 0), previous_dist);
                     current_node = next_node;
                     next_node = rec_next_node;
                 }

@@ -46,21 +46,28 @@ namespace fastscapelib
         using data_array_type = typename flow_graph_impl_type::data_array_type;
 
         /*
-         * Represents an edge of the graph of flow basins. It contains the indices
-         * of the two connected basins as well as the indices of the grid nodes
-         * forming the pass crossing the basins (+ the elevation of the pass).
+         * Represents an edge of the graph of flow basins. It contains the
+         * indices of the two connected basins as well as the indices of the
+         * grid nodes forming the pass crossing the basins (+ the elevation of
+         * the pass, i.e., the max. elevation among the two pass nodes, and the
+         * pass length, i.e., the distance between the two pass nodes).
          */
         struct edge
         {
             size_type link[2];
             size_type pass[2];
             data_type pass_elevation;
+            data_type pass_length;
 
+            /*
+             * Create a new edge with no assigned pass yet.
+             */
             static edge make_edge(const size_type& from, const size_type& to)
             {
                 return edge{ { from, to },
                              { size_type(-1), size_type(-1) },
-                             std::numeric_limits<data_type>::lowest() };
+                             std::numeric_limits<data_type>::lowest(),
+                             0. };
             }
 
             bool operator==(const edge& other)
@@ -219,8 +226,7 @@ namespace fastscapelib
     template <class FG>
     void basin_graph<FG>::connect_basins(const data_array_type& elevation)
     {
-        using neighbors_indices_type =
-            typename flow_graph_impl_type::grid_type::neighbors_indices_type;
+        using neighbors_type = typename flow_graph_impl_type::grid_type::neighbors_type;
 
         auto nbasins = basins_count();
 
@@ -231,7 +237,7 @@ namespace fastscapelib
         auto& grid = m_flow_graph_impl.grid();
         const auto& status_at_nodes = grid.status_at_nodes();
 
-        neighbors_indices_type neighbors_indices;
+        neighbors_type neighbors;
 
         size_type ibasin;
         size_type current_basin = -1;
@@ -278,9 +284,9 @@ namespace fastscapelib
             {
                 const data_type ielev = elevation.flat(idfs);
 
-                for (auto n_idx : grid.neighbors_indices(idfs, neighbors_indices))
+                for (auto n : grid.neighbors(idfs, neighbors))
                 {
-                    const size_type nbasin = basins(n_idx);
+                    const size_type nbasin = basins(n.idx);
 
                     // skip if neighbor node is in the same basin or in an
                     // already connected adjacent basin unless the latter is an
@@ -293,7 +299,7 @@ namespace fastscapelib
                         continue;
                     }
 
-                    const data_type pass_elevation = std::max(ielev, elevation.flat(n_idx));
+                    const data_type pass_elevation = std::max(ielev, elevation.flat(n.idx));
 
                     // just jumped from one basin to another
                     // -> update current basin and reset its visited neighbor basins
@@ -318,12 +324,14 @@ namespace fastscapelib
                         m_edge_positions[nbasin] = m_edges.size();
                         m_edge_positions_tmp.push_back(nbasin);
 
-                        m_edges.push_back({ { ibasin, nbasin }, { idfs, n_idx }, pass_elevation });
+                        m_edges.push_back(
+                            { { ibasin, nbasin }, { idfs, n.idx }, pass_elevation, n.distance });
                     }
                     else if (pass_elevation < m_edges[edge_idx].pass_elevation)
                     {
-                        m_edges[edge_idx]
-                            = edge{ { ibasin, nbasin }, { idfs, n_idx }, pass_elevation };
+                        m_edges[edge_idx] = edge{
+                            { ibasin, nbasin }, { idfs, n.idx }, pass_elevation, n.distance
+                        };
                     }
                 }
             }
