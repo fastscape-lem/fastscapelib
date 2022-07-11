@@ -134,12 +134,11 @@ namespace fastscapelib
     enum class mst_route_method
     {
         basic,
-        carve,
-        fill_sloped
+        carve
     };
 
 
-    struct basin_mst_sink_resolver
+    struct mst_sink_resolver
     {
         using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
         mst_method basin_method = mst_method::kruskal;
@@ -151,18 +150,18 @@ namespace fastscapelib
     {
 
         template <class FG>
-        class sink_resolver_impl<FG, basin_mst_sink_resolver>
-            : public sink_resolver_impl_base<FG, basin_mst_sink_resolver>
+        class sink_resolver_impl<FG, mst_sink_resolver>
+            : public sink_resolver_impl_base<FG, mst_sink_resolver>
         {
         public:
             using graph_impl_type = FG;
-            using base_type = sink_resolver_impl_base<graph_impl_type, basin_mst_sink_resolver>;
+            using base_type = sink_resolver_impl_base<graph_impl_type, mst_sink_resolver>;
 
             using size_type = typename graph_impl_type::size_type;
             using data_type = typename graph_impl_type::data_type;
             using data_array_type = typename graph_impl_type::data_array_type;
 
-            sink_resolver_impl(graph_impl_type& graph, const basin_mst_sink_resolver& resolver)
+            sink_resolver_impl(graph_impl_type& graph, const mst_sink_resolver& resolver)
                 : base_type(graph, resolver)
                 , m_basin_graph(graph, resolver.basin_method){};
 
@@ -184,8 +183,15 @@ namespace fastscapelib
 
                 m_basin_graph.update_routes(elevation);
 
-                // update_routes_sinks_basic(elevation);
-                update_routes_sinks_carve();
+                if (this->m_resolver.route_method == mst_route_method::basic)
+                {
+                    update_routes_sinks_basic(elevation);
+                }
+                else
+                {
+                    // carve
+                    update_routes_sinks_carve();
+                }
 
                 // finalize flow route update (donors and dfs graph traversal indices)
                 this->m_graph_impl.compute_donors();
@@ -214,7 +220,7 @@ namespace fastscapelib
 
 
         template <class FG>
-        void sink_resolver_impl<FG, basin_mst_sink_resolver>::update_routes_sinks_basic(
+        void sink_resolver_impl<FG, mst_sink_resolver>::update_routes_sinks_basic(
             const data_array_type& elevation)
         {
             auto& receivers = this->m_graph_impl.m_receivers;
@@ -262,7 +268,7 @@ namespace fastscapelib
 
 
         template <class FG>
-        void sink_resolver_impl<FG, basin_mst_sink_resolver>::update_routes_sinks_carve()
+        void sink_resolver_impl<FG, mst_sink_resolver>::update_routes_sinks_carve()
         {
             auto& receivers = this->m_graph_impl.m_receivers;
             auto& dist2receivers = this->m_graph_impl.m_receivers_distance;
@@ -302,7 +308,7 @@ namespace fastscapelib
 
 
         template <class FG>
-        void sink_resolver_impl<FG, basin_mst_sink_resolver>::fill_sinks_sloped(
+        void sink_resolver_impl<FG, mst_sink_resolver>::fill_sinks_sloped(
             const data_array_type& elevation)
         {
             m_filled_elevation = elevation;
