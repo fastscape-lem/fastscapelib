@@ -388,6 +388,7 @@ namespace fastscapelib
     {
         pyfg.def(py::init<G&, single_flow_router&, no_sink_resolver&>())
             .def(py::init<G&, multiple_flow_router&, no_sink_resolver&>())
+            .def(py::init<G&, single_flow_router&, pflood_sink_resolver&>())
             .def(py::init<G&, single_flow_router&, basin_mst_sink_resolver&>());
     }
 }

@@ -98,7 +98,7 @@ namespace fastscapelib
              */
             void resize(size_t _size)
             {
-                size_t old_size = size();
+                // size_t old_size = size();
 
                 parent.resize(_size);
                 rank.resize(_size, 0);

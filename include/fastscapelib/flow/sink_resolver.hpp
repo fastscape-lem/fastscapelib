@@ -9,6 +9,9 @@
 #ifndef FASTSCAPELIB_FLOW_SINK_RESOLVER_H
 #define FASTSCAPELIB_FLOW_SINK_RESOLVER_H
 
+#include <limits>
+
+#include "fastscapelib/algo/pflood.hpp"
 #include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/flow/basin_graph.hpp"
 
@@ -80,7 +83,59 @@ namespace fastscapelib
 
     struct no_sink_resolver
     {
+        // TODO: flow graph implementation agnostic
         using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+    };
+
+
+    struct pflood_sink_resolver
+    {
+        // TODO: flow graph implementation agnostic
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+    };
+
+
+    namespace detail
+    {
+
+        template <class FG>
+        class sink_resolver_impl<FG, pflood_sink_resolver>
+            : public sink_resolver_impl_base<FG, pflood_sink_resolver>
+        {
+        public:
+            using graph_impl_type = FG;
+            using base_type = sink_resolver_impl_base<graph_impl_type, pflood_sink_resolver>;
+
+            using data_array_type = typename graph_impl_type::data_array_type;
+
+            sink_resolver_impl(graph_impl_type& graph, const pflood_sink_resolver& resolver)
+                : base_type(graph, resolver){};
+
+            const data_array_type& resolve1(const data_array_type& elevation)
+            {
+                m_filled_elevation = elevation;
+
+                fill_sinks_sloped(this->m_graph_impl.grid(), m_filled_elevation);
+
+                return m_filled_elevation;
+            };
+
+            const data_array_type& resolve2(const data_array_type& elevation)
+            {
+                return elevation;
+            };
+
+        private:
+            data_array_type m_filled_elevation;
+        };
+    }
+
+
+    enum class mst_route_method
+    {
+        basic,
+        carve,
+        fill_sloped
     };
 
 
@@ -88,7 +143,7 @@ namespace fastscapelib
     {
         using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
         mst_method basin_method = mst_method::kruskal;
-        sink_route_method route_method = sink_route_method::fill_sloped;
+        mst_route_method route_method = mst_route_method::carve;
     };
 
 
@@ -109,7 +164,7 @@ namespace fastscapelib
 
             sink_resolver_impl(graph_impl_type& graph, const basin_mst_sink_resolver& resolver)
                 : base_type(graph, resolver)
-                , m_basin_graph(graph, resolver.basin_method, resolver.route_method){};
+                , m_basin_graph(graph, resolver.basin_method){};
 
             const data_array_type& resolve1(const data_array_type& elevation)
             {
@@ -118,21 +173,43 @@ namespace fastscapelib
 
             const data_array_type& resolve2(const data_array_type& elevation)
             {
+                // make sure the basins are up-to-date
+                this->m_graph_impl.compute_basins();
+
+                if (this->m_graph_impl.pits().empty())
+                {
+                    // return early, no sink to resolve
+                    return elevation;
+                }
+
                 m_basin_graph.update_routes(elevation);
 
-                update_routes_sinks_basic(elevation);
+                // update_routes_sinks_basic(elevation);
+                update_routes_sinks_carve();
 
-                return elevation;
+                // finalize flow route update (donors and dfs graph traversal indices)
+                this->m_graph_impl.compute_donors();
+                this->m_graph_impl.compute_dfs_indices();
+
+                // fill sinks with tiny tilted surface
+                fill_sinks_sloped(elevation);
+
+                return m_filled_elevation;
             };
 
         private:
             basin_graph<FG> m_basin_graph;
+
+            data_array_type m_filled_elevation;
 
             // basin graph edges are oriented in the counter flow direction
             static constexpr std::uint8_t outflow = 0;
             static constexpr std::uint8_t inflow = 1;
 
             void update_routes_sinks_basic(const data_array_type& elevation);
+            void update_routes_sinks_carve();
+
+            void fill_sinks_sloped(const data_array_type& elevation);
         };
 
 
@@ -179,6 +256,76 @@ namespace fastscapelib
                     // still the same grid neighbors and this still separated by
                     // the same distance. Unless in the case where the pass
                     // (inflow) is itself a pit?
+                }
+            }
+        }
+
+
+        template <class FG>
+        void sink_resolver_impl<FG, basin_mst_sink_resolver>::update_routes_sinks_carve()
+        {
+            auto& receivers = this->m_graph_impl.m_receivers;
+            auto& dist2receivers = this->m_graph_impl.m_receivers_distance;
+
+            // pits corresponds to outlets in inner basins
+            const auto& pits = m_basin_graph.outlets();
+
+            for (size_type edge_idx : m_basin_graph.tree())
+            {
+                auto& edge = m_basin_graph.edges()[edge_idx];
+
+                // skip outer basins
+                if (edge.pass[outflow] == -1)
+                {
+                    continue;
+                }
+
+                size_type pit_inflow = pits[edge.link[inflow]];
+
+                // start at the pass and follow flow receivers in sink until the pit
+                size_type current_node = edge.pass[inflow];
+                size_type next_node = receivers(current_node, 0);
+                data_type previous_dist = dist2receivers(current_node, 0);
+
+                receivers(current_node, 0) = edge.pass[outflow];
+                // TODO: update dist2receivers?
+
+                while (current_node != pit_inflow)
+                {
+                    auto rec_next_node = receivers(next_node, 0);
+                    receivers(next_node, 0) = current_node;
+                    current_node = next_node;
+                    next_node = rec_next_node;
+                }
+            }
+        }
+
+
+        template <class FG>
+        void sink_resolver_impl<FG, basin_mst_sink_resolver>::fill_sinks_sloped(
+            const data_array_type& elevation)
+        {
+            m_filled_elevation = elevation;
+
+            const auto& dfs_indices = this->m_graph_impl.dfs_indices();
+            const auto& receivers = this->m_graph_impl.receivers();
+
+            for (const auto& idfs : dfs_indices)
+            {
+                const auto& irec = receivers(idfs, 0);
+
+                if (idfs == irec)
+                {
+                    continue;
+                }
+
+                const auto& irec_elev = m_filled_elevation.flat(irec);
+
+                if (m_filled_elevation.flat(idfs) <= m_filled_elevation.flat(irec))
+                {
+                    auto tiny_step
+                        = std::nextafter(irec_elev, std::numeric_limits<data_type>::infinity());
+                    m_filled_elevation.flat(idfs) = tiny_step;
                 }
             }
         }

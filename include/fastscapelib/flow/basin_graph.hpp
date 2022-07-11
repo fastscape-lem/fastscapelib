@@ -29,13 +29,6 @@ namespace fastscapelib
         boruvka
     };
 
-    enum class sink_route_method
-    {
-        basic,
-        carve,
-        fill_sloped
-    };
-
 
     template <class FG>
     class basin_graph
@@ -79,12 +72,9 @@ namespace fastscapelib
         };
 
 
-        basin_graph(flow_graph_impl_type& flow_graph_impl,
-                    mst_method basin_method,
-                    sink_route_method route_method)
+        basin_graph(flow_graph_impl_type& flow_graph_impl, mst_method basin_method)
             : m_flow_graph_impl(flow_graph_impl)
             , m_mst_method(basin_method)
-            , m_sink_route_method(route_method)
         {
             m_perf_boruvka = -1;
 
@@ -113,23 +103,6 @@ namespace fastscapelib
 
         void update_routes(const data_array_type& elevation);
 
-        template <mst_method algo,
-                  sink_route_method connect,
-                  class Basins_XT,
-                  class Rcv_XT,
-                  class DistRcv_XT,
-                  class Stack_XT,
-                  class Active_XT,
-                  class Elevation_XT>
-        void update_receivers(Rcv_XT& receivers,
-                              DistRcv_XT& dist2receivers,
-                              const Basins_XT& basins,
-                              const Stack_XT& stack,
-                              const Active_XT& active_nodes,
-                              const Elevation_XT& elevation,
-                              data_type dx,
-                              data_type dy);
-
         size_t perf_boruvka() const
         {
             return m_perf_boruvka;
@@ -137,40 +110,14 @@ namespace fastscapelib
 
     protected:
         void connect_basins(const data_array_type& elevation);
-
         void compute_tree_kruskal();
-
         void compute_tree_boruvka();
-
         void orient_edges();
-
-        template <class Rcv_XT, class DistRcv_XT, class Elevation_XT>
-        void update_pits_receivers(Rcv_XT& receivers,
-                                   DistRcv_XT& dist2receivers,
-                                   const Elevation_XT& elevation,
-                                   double dx,
-                                   double dy);
-
-        template <class Rcv_XT, class DistRcv_XT, class Elevation_XT>
-        void update_pits_receivers_carve(Rcv_XT& receivers,
-                                         DistRcv_XT& dist2receivers,
-                                         const Elevation_XT& elevation,
-                                         double dx,
-                                         double dy);
-
-        template <class Rcv_XT, class DistRcv_XT, class Elevation_XT, class Basins_XT>
-        void update_pits_receivers_sloped(Rcv_XT& receivers,
-                                          DistRcv_XT& dist2receivers,
-                                          const Elevation_XT& elevation,
-                                          const Basins_XT&,
-                                          double dx,
-                                          double dy);
 
     private:
         flow_graph_impl_type& m_flow_graph_impl;
 
         mst_method m_mst_method;
-        sink_route_method m_sink_route_method;
 
         std::vector<size_type> m_outlets;  // bottom nodes of basins
         std::vector<edge> m_edges;
@@ -243,7 +190,7 @@ namespace fastscapelib
             m_reorder_stack;
 
         // TODO: make it an option (true for sink route fill sloped)
-        bool m_keep_order = true;
+        bool m_keep_order = false;
 
         std::vector<size_type> m_pass_stack;
         std::vector<size_type> m_parent_basins;
@@ -255,9 +202,6 @@ namespace fastscapelib
     template <class FG>
     void basin_graph<FG>::update_routes(const data_array_type& elevation)
     {
-        // make sure the basins are up-to-date
-        m_flow_graph_impl.compute_basins();
-
         connect_basins(elevation);
 
         if (m_mst_method == mst_method::kruskal)
@@ -483,7 +427,7 @@ namespace fastscapelib
 
         m_perf_boruvka = 0;
 
-        // compute the min span tree
+        // compute the minimum spanning tree
         m_tree.reserve(nbasins - 1);
         m_tree.clear();
 
@@ -768,327 +712,6 @@ namespace fastscapelib
             }
         }
     }
-
-    namespace detail
-    {
-        inline auto get_d8_distances_sep(double dx, double dy) -> std::array<double, 9>
-        {
-            std::array<double, 9> d8_dists;
-
-            for (int k = 0; k < 9; ++k)
-            {
-                double d8_dx = dx * double(k % 3 - 1);
-                double d8_dy = dy * double(k / 3 - 1);
-                d8_dists[k] = std::sqrt(d8_dy * d8_dy + d8_dx * d8_dx);
-            }
-
-            return d8_dists;
-        }
-
-        template <class T>
-        auto get_d8_distance_id(const T n1r, const T n1c, const T n2r, const T n2c)
-        {
-            T r = n1r - n2r + 1;
-            T c = n1c - n2c + 1;
-            return r + 3 * c;
-        }
-
-        template <class T>
-        auto get_d8_distance_id(const T n1, const T n2, const T ncols)
-        {
-            return get_d8_distance_id(n1 / ncols, n1 % ncols, n2 / ncols, n2 % ncols);
-        }
-
-    }
-
-    template <class FG>
-    template <class Rcv_XT, class DistRcv_XT, class Elevation_XT>
-    void basin_graph<FG>::update_pits_receivers(Rcv_XT& receivers,
-                                                DistRcv_XT& dist2receivers,
-                                                const Elevation_XT& elevation,
-                                                double dx,
-                                                double dy)
-    {
-        /* Update receivers of pit nodes (and possibly lowest pass nodes)
-            based on basin connectivity.
-
-            Distances to receivers are also updated. An infinite distance is
-            arbitrarily assigned to pit nodes.
-
-            A minimum spanning tree of the basin graph is used here. Edges of
-            the graph are also assumed to be oriented in the inverse of flow direction.
-
-        */
-
-        const auto elev_shape = elevation.shape();
-        const size_type nrows = (size_type) elev_shape[0];
-        const size_type ncols = (size_type) elev_shape[1];
-
-        const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
-
-
-        for (size_type l_id : m_tree)
-        {
-            edge& link = m_edges[l_id];
-
-            // for readibility, hum...
-#define OUTFLOW 0  // to
-#define INFLOW 1   // from
-
-            //    node_to = conn_nodes[i, 0]
-            //  node_from = conn_nodes[i, 1]
-
-            // skip open basins
-            if (link.nodes[OUTFLOW] == -1)
-                continue;
-
-            size_type outlet_inflow = outlets()[link.basins[INFLOW]];
-
-            dist2receivers[outlet_inflow] = std::numeric_limits<double>::max();
-
-            if (elevation[link.nodes[INFLOW]] < elevation[link.nodes[OUTFLOW]])
-                receivers[outlet_inflow] = link.nodes[OUTFLOW];
-            else
-            {
-                receivers[outlet_inflow] = link.nodes[INFLOW];
-                receivers[link.nodes[INFLOW]] = link.nodes[OUTFLOW];
-
-                dist2receivers(link.nodes[INFLOW]) = d8_distances[detail::get_d8_distance_id(
-                    link.nodes[INFLOW], link.nodes[OUTFLOW], static_cast<size_type>(ncols))];
-            }
-        }
-    }
-
-    template <class FG>
-    template <class Rcv_XT, class DistRcv_XT, class Elevation_XT>
-    void basin_graph<FG>::update_pits_receivers_carve(Rcv_XT& receivers,
-                                                      DistRcv_XT& dist2receivers,
-                                                      const Elevation_XT& elevation,
-                                                      double dx,
-                                                      double dy)
-    {
-        const auto elev_shape = elevation.shape();
-        const size_type nrows = (size_type) elev_shape[0];
-        const size_type ncols = (size_type) elev_shape[1];
-
-        const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
-
-        for (size_type l_id : m_tree)
-        {
-            edge& link = m_edges[l_id];
-#define OUTFLOW 0  // to
-#define INFLOW 1   // from
-
-            // skip open basins
-            if (link.nodes[OUTFLOW] == -1)
-                continue;
-
-            size_type outlet_inflow = outlets()[link.basins[INFLOW]];
-            size_type cur_node = link.nodes[INFLOW];
-            size_type next_node = receivers(cur_node);
-            data_type previous_dist = dist2receivers[cur_node];
-
-            receivers(cur_node) = link.nodes[OUTFLOW];
-            // std::cerr << "+ [" << cur_node << "]" << dist2receivers(cur_node);
-            dist2receivers(cur_node) = d8_distances[detail::get_d8_distance_id(
-                cur_node, link.nodes[OUTFLOW], static_cast<size_type>(ncols))];
-
-            // std::cerr << "->" << dist2receivers(cur_node)<< std::endl;
-
-            // std::cout << "Pass " << cur_node << " -> " << link.nodes[OUTFLOW] << std::endl;
-
-            while (cur_node != outlet_inflow)
-            {
-                // std::cerr << "  [" << next_node << "]" << dist2receivers(next_node);
-                std::swap(dist2receivers(next_node), previous_dist);
-                // std::cerr << "->" << dist2receivers(cur_node)<< std::endl;
-
-
-                size_type rcv_next_node = receivers(next_node);
-                receivers(next_node) = cur_node;
-                // std::cout << next_node << " -> " << cur_node << std::endl;
-                cur_node = next_node;
-                next_node = rcv_next_node;
-            }
-        }
-    }
-
-    template <class FG>
-    template <class Rcv_XT, class DistRcv_XT, class Elevation_XT, class Basins_XT>
-    void basin_graph<FG>::update_pits_receivers_sloped(Rcv_XT& receivers,
-                                                       DistRcv_XT& dist2receivers,
-                                                       const Elevation_XT& elevation,
-                                                       const Basins_XT& basins,
-                                                       double dx,
-                                                       double dy)
-    {
-        const auto elev_shape = elevation.shape();
-        const size_type nrows = (size_type) elev_shape[0];
-        const size_type ncols = (size_type) elev_shape[1];
-
-        const auto d8_distances = detail::get_d8_distances_sep(dx, dy);
-        std::array<double, 9> d8_distances_inv;
-        for (size_t i = 0; i < 9; ++i)
-            d8_distances_inv[i] = 1.0 / d8_distances[i];
-
-        std::queue<size_type> queue;
-
-        enum class Tag : char
-        {
-            UnParsed = 0,
-            InQueue = 1,
-            WithRcv = 2
-        };
-        std::vector<Tag> tag(nrows * ncols, Tag::UnParsed);
-
-        // parse in basin order
-        for (const size_type pass : m_pass_stack)
-        {
-            const edge& l = m_edges[pass];
-#define OUTFLOW 0  // to
-#define INFLOW 1   // from
-
-            if (l.nodes[OUTFLOW] == -1)
-            {
-                continue;
-            }
-
-            // receivers[l.nodes[INFLOW]] = l.nodes[OUTFLOW];
-            // dist2receivers(l.nodes[INFLOW]) =
-            // d8_distances[detail::get_d8_distance_id(l.nodes[INFLOW], l.nodes[OUTFLOW], ncols)];
-
-            assert(tag[l.nodes[INFLOW]] == Tag::UnParsed);
-
-            queue.push(l.nodes[INFLOW]);
-            tag[l.nodes[OUTFLOW]] = Tag::WithRcv;
-            tag[l.nodes[INFLOW]] = Tag::InQueue;
-            const size_type parsed_basin = l.basins[INFLOW];
-            assert(parsed_basin == m_parent_basins[parsed_basin]);
-
-            auto outflow_coords = detail::coords(l.nodes[OUTFLOW], static_cast<size_type>(ncols));
-
-            const data_type elev = l.pass_elevation;
-
-            while (!queue.empty())
-            {
-                size_type node = queue.front();
-
-                queue.pop();
-
-                const auto coords = detail::coords(node, static_cast<size_type>(ncols));
-
-                size_type rcv = -1;
-                double rcv_cost = std::numeric_limits<double>::lowest();
-                double cost_r = double(outflow_coords.first - coords.first);
-                double cost_c = double(outflow_coords.second - coords.second);
-
-                // parse neighbors
-                for (int k = 1; k < 9; ++k)
-                {
-                    size_type rr = coords.first + fastscapelib::consts::d8_row_offsets[k];
-                    size_type cc = coords.second + fastscapelib::consts::d8_col_offsets[k];
-
-                    if (detail::in_bounds(elev_shape, rr, cc))
-                    {
-                        const size_type ineighbor = detail::index(rr, cc, ncols);
-
-                        if ((ineighbor != l.nodes[OUTFLOW]
-                             && m_parent_basins[basins(ineighbor)] != parsed_basin)
-                            || elevation(ineighbor) > elev)
-                            continue;
-
-                        // neighbor is already parsed, in the same basin. Could be a receiver
-                        if (tag[ineighbor] == Tag::WithRcv)
-                        {
-                            // cost is an angular distance to the outflow - node line.
-                            double cost
-                                = cost_r * double(fastscapelib::consts::d8_row_offsets[k])
-                                  + cost_c * double(fastscapelib::consts::d8_col_offsets[k]);
-                            cost *= d8_distances_inv[detail::get_d8_distance_id(
-                                coords.first,
-                                coords.second,
-                                static_cast<size_type>(rr),
-                                static_cast<size_type>(cc))];
-
-                            if (cost > rcv_cost)
-                            {
-                                rcv = ineighbor;
-                                rcv_cost = cost;
-                            }
-                        }
-
-                        else if (tag[ineighbor] == Tag::UnParsed)
-                        {
-                            queue.push(ineighbor);
-                            tag[ineighbor] = Tag::InQueue;
-                        }
-                    }
-                }
-
-                assert(rcv != -1);
-                receivers(node) = rcv;
-                dist2receivers(node) = d8_distances[detail::get_d8_distance_id(
-                    node, rcv, static_cast<size_type>(ncols))];
-                tag[node] = Tag::WithRcv;
-            }
-        }
-    }
-
-    template <class FG>
-    template <mst_method algo,
-              sink_route_method connect,
-              class Basins_XT,
-              class Rcv_XT,
-              class DistRcv_XT,
-              class Stack_XT,
-              class Active_XT,
-              class Elevation_XT>
-    void basin_graph<FG>::update_receivers(Rcv_XT& receivers,
-                                           DistRcv_XT& dist2receivers,
-                                           const Basins_XT& basins,
-                                           const Stack_XT& stack,
-                                           const Active_XT& active_nodes,
-                                           const Elevation_XT& elevation,
-                                           data_type dx,
-                                           data_type dy)
-    {
-        connect_basins(basins, receivers, stack, active_nodes, elevation);
-        //        for(auto l : m_edges)
-        //            std::cout << "[(" << l.basins[0] << ',' <<l.basins[1]<<")("
-        //                      << l.nodes[0] << ',' <<l.nodes[1]<<") "<< l.weight << "] ";
-        //        std::cout << std::endl;
-
-        if (algo == mst_method::kruskal)
-        {
-            compute_tree_kruskal();
-            //        for(auto t : _tree)
-            //            std::cout << "(" << m_edges[t].basins[0] << ','
-            //            <<m_edges[t].basins[1]<<")";
-            //        std::cout << std::endl;
-        }
-        else
-        {
-            compute_tree_boruvka();
-        }
-
-        orient_edges();
-
-        switch (connect)
-        {
-            case sink_route_method::basic:
-                update_pits_receivers(receivers, dist2receivers, elevation, dx, dy);
-                break;
-            case sink_route_method::carve:
-                update_pits_receivers_carve(receivers, dist2receivers, elevation, dx, dy);
-                break;
-            case sink_route_method::fill_sloped:
-                update_pits_receivers_sloped(receivers, dist2receivers, elevation, basins, dx, dy);
-                break;
-            default:
-                break;
-        }
-    }
-
 }
 
 #endif

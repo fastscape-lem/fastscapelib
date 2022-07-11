@@ -2,11 +2,13 @@
 #define FASTSCAPELIB_FLOW_GRAPH_IMPL_H_
 
 #include <array>
+#include <stack>
 
 #include "xtensor/xbroadcast.hpp"
 #include "xtensor/xstrided_view.hpp"
 #include "xtensor/xview.hpp"
 
+#include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
 
 
@@ -94,7 +96,7 @@ namespace fastscapelib
                 m_basins = xt::empty<size_type>({ grid.size() });
             };
 
-            G& grid()
+            G& grid() const
             {
                 return m_grid;
             };
@@ -134,10 +136,14 @@ namespace fastscapelib
                 return m_donors_count;
             };
 
+            void compute_donors();
+
             const dfs_indices_type& dfs_indices() const
             {
                 return m_dfs_indices;
             };
+
+            void compute_dfs_indices();
 
             // const_dfs_iterator dfs_cbegin()
             // {
@@ -163,6 +169,8 @@ namespace fastscapelib
             {
                 return m_outlets;
             }
+
+            const std::vector<size_type>& pits();
 
             const basins_type& basins() const
             {
@@ -192,6 +200,7 @@ namespace fastscapelib
 
             basins_type m_basins;
             std::vector<size_type> m_outlets;
+            std::vector<size_type> m_pits;
 
             template <class FG, class FR>
             friend class flow_router_impl;
@@ -199,6 +208,105 @@ namespace fastscapelib
             template <class FG, class SR>
             friend class sink_resolver_impl;
         };
+
+
+        template <class G, class S>
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_donors()
+        {
+            m_donors_count.fill(0);
+
+            for (size_type i = 0; i < size(); ++i)
+            {
+                if (m_receivers(i, 0) != i)
+                {
+                    // TODO: make it work with multiple flow
+                    auto irec = m_receivers(i, 0);
+                    m_donors(irec, m_donors_count(irec)++) = i;
+                }
+            }
+        }
+
+
+        /*
+         * Perform depth-first search and store the node indices for faster
+         * graph traversal.
+         */
+        template <class G, class S>
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices()
+        {
+            size_type nstack = 0;
+
+            std::stack<size_type> tmp;
+
+            for (size_type i = 0; i < size(); ++i)
+            {
+                if (m_receivers(i, 0) == i)
+                {
+                    tmp.push(i);
+                    m_dfs_indices(nstack++) = i;
+                }
+
+                while (!tmp.empty())
+                {
+                    size_type istack = tmp.top();
+                    tmp.pop();
+
+                    for (size_type k = 0; k < m_donors_count(istack); ++k)
+                    {
+                        const auto idonor = m_donors(istack, k);
+                        if (idonor != istack)
+                        {
+                            m_dfs_indices(nstack++) = idonor;
+                            tmp.push(idonor);
+                        }
+                    }
+                }
+            }
+
+            assert(nstack == size());
+        }
+
+
+        template <class G, class S>
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_basins()
+        {
+            size_type current_basin = 0;
+
+            m_outlets.clear();
+
+            for (const auto& idfs : m_dfs_indices)
+            {
+                // outlet node has only one receiver: itself
+                if (idfs == m_receivers(idfs, 0))
+                {
+                    m_outlets.push_back(idfs);
+                    current_basin++;
+                }
+
+                m_basins(idfs) = current_basin - 1;
+            }
+
+            assert(m_outlets.size() == current_basin);
+        }
+
+
+        template <class G, class S>
+        auto flow_graph_impl<G, S, flow_graph_fixed_array_tag>::pits()
+            -> const std::vector<size_type>&
+        {
+            const auto& status_at_nodes = grid().status_at_nodes();
+            m_pits.clear();
+
+            for (const auto outlet : m_outlets)
+            {
+                if (status_at_nodes.flat(outlet) != node_status::fixed_value_boundary)
+                {
+                    m_pits.push_back(outlet);
+                }
+            }
+
+            return m_pits;
+        }
 
         template <class G, class S>
         template <class T>
@@ -241,29 +349,6 @@ namespace fastscapelib
             data_array_type acc = data_array_type::from_shape(m_grid.shape());
             accumulate(acc, std::forward<T>(src));
             return acc;
-        }
-
-        template <class G, class S>
-        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_basins()
-        {
-            size_type current_basin;
-            current_basin = -1;
-
-            m_outlets.clear();
-
-            for (const auto& idfs : m_dfs_indices)
-            {
-                // outlet node has only one receiver: itself
-                if (idfs == m_receivers(idfs, 0))
-                {
-                    m_outlets.push_back(idfs);
-                    current_basin++;
-                }
-
-                m_basins(idfs) = current_basin;
-            }
-
-            assert(m_outlets.size() == current_basin + 1);
         }
     }
 }
