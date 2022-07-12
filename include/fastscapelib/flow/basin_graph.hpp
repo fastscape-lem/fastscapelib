@@ -18,8 +18,6 @@
 #include "fastscapelib/utils/union_find.hpp"
 
 
-class BasinGraph_Test;
-
 namespace fastscapelib
 {
 
@@ -28,6 +26,13 @@ namespace fastscapelib
         kruskal,
         boruvka
     };
+
+
+    namespace testing
+    {
+        // The corresponding test needs to access private members of basin_graph
+        class basin_graph_orient_edges_Test;
+    }
 
 
     template <class FG>
@@ -74,16 +79,17 @@ namespace fastscapelib
             {
                 return link[0] == other.link[0] && link[1] == other.link[1]
                        && pass[0] == other.pass[0] && pass[1] == other.pass[1]
-                       && pass_elevation == other.pass_elevation;
+                       && pass_elevation == other.pass_elevation
+                       && pass_length == other.pass_length;
             }
         };
 
 
-        basin_graph(flow_graph_impl_type& flow_graph_impl, mst_method basin_method)
+        basin_graph(const flow_graph_impl_type& flow_graph_impl, mst_method basin_method)
             : m_flow_graph_impl(flow_graph_impl)
             , m_mst_method(basin_method)
         {
-            m_perf_boruvka = -1;
+            m_perf_boruvka = 0;
 
             // TODO: check shape of receivers (should be single flow)
         }
@@ -122,7 +128,7 @@ namespace fastscapelib
         void orient_edges();
 
     private:
-        flow_graph_impl_type& m_flow_graph_impl;
+        const flow_graph_impl_type& m_flow_graph_impl;
 
         mst_method m_mst_method;
 
@@ -171,12 +177,12 @@ namespace fastscapelib
 
         // TODO: make it an option
         // 16 for 8-connectivity raster grid, 8 for plannar graph
-        int m_max_low_degree = 16;
+        size_type m_max_low_degree = 16;
 
         template <class T>
         inline void check_capacity(std::vector<T> vec) const
         {
-            assert(vec.size() < vec.capacity());
+            assert(vec.size() <= vec.capacity());
         }
 
         size_t m_perf_boruvka;
@@ -202,7 +208,7 @@ namespace fastscapelib
         std::vector<size_type> m_pass_stack;
         std::vector<size_type> m_parent_basins;
 
-        friend class ::BasinGraph_Test;
+        friend class testing::basin_graph_orient_edges_Test;
     };
 
 
@@ -237,21 +243,24 @@ namespace fastscapelib
         auto& grid = m_flow_graph_impl.grid();
         const auto& status_at_nodes = grid.status_at_nodes();
 
+        // used to (re)initalize container index / position
+        size_type init_idx = static_cast<size_type>(-1);
+
         neighbors_type neighbors;
 
         size_type ibasin;
-        size_type current_basin = -1;
+        size_type current_basin = init_idx;
 
         // assume iteration starts at a base level node (outer basin)!
         bool is_inner_basin = false;
 
         // reset
-        m_root = -1;
+        m_root = init_idx;
         m_edges.clear();
         m_edges.reserve(4 * nbasins);
 
         m_edge_positions.resize(nbasins);
-        std::fill(m_edge_positions.begin(), m_edge_positions.end(), -1);
+        std::fill(m_edge_positions.begin(), m_edge_positions.end(), init_idx);
         m_edge_positions_tmp.reserve(nbasins);
         m_edge_positions_tmp.clear();
 
@@ -267,7 +276,7 @@ namespace fastscapelib
 
                 if (!is_inner_basin)
                 {
-                    if (m_root == -1)
+                    if (m_root == init_idx)
                     {
                         // assign root to an existing outer basin
                         m_root = ibasin;
@@ -307,7 +316,7 @@ namespace fastscapelib
                     {
                         for (const auto& ivisited : m_edge_positions_tmp)
                         {
-                            m_edge_positions[ivisited] = -1;
+                            m_edge_positions[ivisited] = init_idx;
                         }
                         m_edge_positions_tmp.clear();
                         current_basin = ibasin;
@@ -319,7 +328,7 @@ namespace fastscapelib
                     // - if it is defined, update the edge if a pass of lower elevation is found
                     const size_type edge_idx = m_edge_positions[nbasin];
 
-                    if (edge_idx == -1)
+                    if (edge_idx == init_idx)
                     {
                         m_edge_positions[nbasin] = m_edges.size();
                         m_edge_positions_tmp.push_back(nbasin);
@@ -372,13 +381,16 @@ namespace fastscapelib
     {
         const auto nbasins = basins_count();
 
+        // used to (re)initalize container index / position
+        size_type init_idx = static_cast<size_type>(-1);
+
         m_adjacency.clear();
         m_adjacency.resize(nbasins, { 0, 0 });
         m_low_degrees.reserve(nbasins);
         m_large_degrees.reserve(nbasins);
 
         m_edge_bucket.clear();
-        m_edge_bucket.resize(nbasins, -1);
+        m_edge_bucket.resize(nbasins, init_idx);
 
         // copy link basins
         m_link_basins.resize(m_edges.size());
@@ -453,8 +465,8 @@ namespace fastscapelib
                 }
 
                 // get the minimal weight edge that leaves that node
-                size_type found_edge = -1;
-                size_type node_B_id = -1;
+                size_type found_edge = init_idx;
+                size_type node_B_id = init_idx;
                 data_type found_edge_weight = std::numeric_limits<data_type>::max();
 
                 size_type adjacency_data_ptr = m_adjacency[nid].begin;
@@ -481,7 +493,7 @@ namespace fastscapelib
                     }
                 }
 
-                if (found_edge == -1)
+                if (found_edge == init_idx)
                     continue;  // TODO does it happens?
 
                 // add edge to the tree
@@ -526,7 +538,7 @@ namespace fastscapelib
             m_low_degrees.clear();
 
             // Clean up graph (many edges are duplicates or self loops).
-            int cur_large_degree = 0;
+            size_type cur_large_degree = 0;
             for (size_type node_A_id : m_large_degrees)
             {
                 // we will store all edges from A in the bucket, so that each edge
@@ -553,7 +565,7 @@ namespace fastscapelib
                         size_type edge_AB_id_in_bucket = m_edge_bucket[node_B_id];
 
                         // first time we see
-                        if (edge_AB_id_in_bucket == -1)
+                        if (edge_AB_id_in_bucket == init_idx)
                         {
                             m_edge_bucket[node_B_id] = edge_AB_id;
                             m_edge_in_bucket.push_back(node_B_id);
@@ -587,8 +599,8 @@ namespace fastscapelib
                     m_adjacency_list[cur_ptr].link_id = m_edge_bucket[node_B_id];
                     cur_ptr = m_adjacency_list[cur_ptr].next;
 
-                    // clean occupency of edge_bucket for latter use
-                    m_edge_bucket[node_B_id] = -1;
+                    // reset occupency of edge_bucket for latter use
+                    m_edge_bucket[node_B_id] = init_idx;
                 }
 
 
@@ -619,6 +631,9 @@ namespace fastscapelib
     void basin_graph<FG>::orient_edges()
     {
         const auto nbasins = basins_count();
+
+        // used to (re)initalize container index / position
+        size_type init_idx = static_cast<size_type>(-1);
 
         // nodes connections
         m_nodes_connects_size.resize(nbasins);
@@ -693,7 +708,7 @@ namespace fastscapelib
                     if (m_keep_order)
                     {
                         // force children of base nodes to be parsed
-                        if (pass_elevation <= parent_pass_elevation && edg.pass[0] != -1)
+                        if (pass_elevation <= parent_pass_elevation && edg.pass[0] != init_idx)
                             // the pass is bellow the water level of the parent basin
                             m_parent_basins[edg.link[1]] = m_parent_basins[edg.link[0]];
                         else
