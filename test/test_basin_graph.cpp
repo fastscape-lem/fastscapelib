@@ -45,7 +45,7 @@ namespace fastscapelib
 
             // planar surface tilted along the y-axis
             // + one closed depression with pit at row/col index (2, 2)
-            //   and pass between (2, 2) and (1, 3)
+            //   and pass between (2, 2) and (3, 1)
             xt::xtensor<double, 2> elevation{ { 1.00, 1.00, 1.00, 1.00, 1.00 },
                                               { 0.70, 0.70, 0.70, 0.20, 0.70 },
                                               { 0.50, 0.50, 0.10, 0.50, 0.50 },
@@ -136,8 +136,9 @@ namespace fastscapelib
                                     { { 0, 4 }, { 12, 18 }, 0.20, diag },
                                     { { 0, 1 }, { 11, 10 }, 0.50, 1.0 },
                                     { { 0, 5 }, { 8, 14 }, 0.50, diag },
-                                    // all outer basins connected to virtual root basin
-                                    // (assigned to basin 1 as the 1st parsed outer basin)
+                                    // all outer basins connected to the virtual
+                                    // root basin (assigned to basin 1 as it is
+                                    // the 1st parsed outer basin)
                                     { { 1, 2 }, { init_idx, init_idx }, init_elev, 0.0 },
                                     { { 1, 3 }, { init_idx, init_idx }, init_elev, 0.0 },
                                     { { 1, 4 }, { init_idx, init_idx }, init_elev, 0.0 },
