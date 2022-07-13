@@ -50,7 +50,8 @@ namespace fastscapelib
 #define BENCH_ALL_SURF(NAME)                                                                       \
     BENCH_SURF(NAME, surf_type::cone)                                                              \
     BENCH_SURF(NAME, surf_type::cone_inv)                                                          \
-    BENCH_SURF(NAME, surf_type::cone_noise)
+    BENCH_SURF(NAME, surf_type::cone_noise)                                                        \
+    BENCH_SURF(NAME, surf_type::flat_noise)
 
 
         BENCH_ALL_SURF(fill_sinks_flat);

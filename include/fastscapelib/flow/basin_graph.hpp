@@ -182,6 +182,7 @@ namespace fastscapelib
         template <class T>
         inline void check_capacity(std::vector<T> vec) const
         {
+            ((void) (vec));
             assert(vec.size() <= vec.capacity());
         }
 
