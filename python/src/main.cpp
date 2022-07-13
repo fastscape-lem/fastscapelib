@@ -28,19 +28,6 @@ void
 add_eroders_bindings(py::module_&);
 
 
-#ifdef ENABLE_RICHDEM
-
-template <class T>
-void
-fill_sinks_wei2018_py(xt::pytensor<T, 2>& elevation)
-{
-    py::gil_scoped_release release;
-    fs::fill_sinks_wei2018(elevation);
-}
-
-#endif
-
-
 PYBIND11_MODULE(_fastscapelib_py, m)
 {
     m.doc() = "A collection of efficient algorithms"
