@@ -234,7 +234,7 @@ namespace fastscapelib
                 auto& edge = m_basin_graph.edges()[edge_idx];
 
                 // skip outer basins
-                if (edge.pass[outflow] == -1)
+                if (edge.pass[outflow] == static_cast<size_type>(-1))
                 {
                     continue;
                 }
@@ -276,7 +276,7 @@ namespace fastscapelib
                 auto& edge = m_basin_graph.edges()[edge_idx];
 
                 // skip outer basins
-                if (edge.pass[outflow] == -1)
+                if (edge.pass[outflow] == static_cast<size_type>(-1))
                 {
                     continue;
                 }

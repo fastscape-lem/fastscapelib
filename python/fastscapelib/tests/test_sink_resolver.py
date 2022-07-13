@@ -56,7 +56,7 @@ def test_no_sink_resolver(grid, elevation):
 
     # flow trapped in pit
     pit_idx_flat = 8
-    assert graph.impl().receivers[pit_idx_flat] == pit_idx_flat
+    assert graph.impl().receivers[pit_idx_flat, 0] == pit_idx_flat
 
 
 def test_pflood_sink_resolver(grid, elevation):
@@ -72,10 +72,10 @@ def test_pflood_sink_resolver(grid, elevation):
     assert new_elevation[1, 3] > new_elevation[2, 2]
 
     # resolved flow
-    assert graph.impl().receivers[8] == 12
-    assert graph.impl().receivers_distance[8] == np.sqrt(2)
-    assert graph.impl().receivers[12] == 16
-    assert graph.impl().receivers_distance[12] == np.sqrt(2)
+    assert graph.impl().receivers[8, 0] == 12
+    assert graph.impl().receivers_distance[8, 0] == np.sqrt(2)
+    assert graph.impl().receivers[12, 0] == 16
+    assert graph.impl().receivers_distance[12, 0] == np.sqrt(2)
 
 
 class TestMSTSinkResolver:
@@ -116,10 +116,10 @@ class TestMSTSinkResolver:
         assert new_elevation[2, 2] > new_elevation[1, 3]
 
         # only pit node is updated
-        assert graph.impl().receivers[8] == 16
-        assert graph.impl().receivers_distance[8] > 1e99  # infinity
-        assert graph.impl().receivers[12] == 8
-        assert graph.impl().receivers_distance[12] == np.sqrt(2)
+        assert graph.impl().receivers[8, 0] == 16
+        assert graph.impl().receivers_distance[8, 0] > 1e99  # infinity
+        assert graph.impl().receivers[12, 0] == 8
+        assert graph.impl().receivers_distance[12, 0] == np.sqrt(2)
 
     @pytest.mark.parametrize("mst_method", [MSTMethod.KRUSKAL, MSTMethod.BORUVKA])
     def test_resolve_carve(self, grid, elevation, mst_method):
@@ -139,10 +139,10 @@ class TestMSTSinkResolver:
         assert new_elevation[1, 3] > new_elevation[2, 2]
 
         # resolved flow
-        assert graph.impl().receivers[8] == 12
+        assert graph.impl().receivers[8, 0] == 12
         assert graph.impl().receivers_distance[8] == np.sqrt(2)
-        assert graph.impl().receivers[12] == 16
-        assert graph.impl().receivers_distance[12] == np.sqrt(2)
+        assert graph.impl().receivers[12, 0] == 16
+        assert graph.impl().receivers_distance[12, 0] == np.sqrt(2)
 
 
 @pytest.mark.parametrize(
