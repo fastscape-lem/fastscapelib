@@ -11,7 +11,6 @@ namespace fastscapelib
     namespace consts
     {
 
-
         /*
          * @brief Row index offsets (from a central grid point) of D8
          *  neighbour directions.
