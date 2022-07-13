@@ -4,6 +4,7 @@
 #include "fastscapelib/grid/raster_grid.hpp"
 
 #include "xtensor/xtensor.hpp"
+#include "xtensor/xstrided_view.hpp"
 
 #include "gtest/gtest.h"
 
@@ -87,6 +88,24 @@ namespace fastscapelib
 
             EXPECT_TRUE(xt::allclose(expected, graph.accumulate(src)));
             EXPECT_TRUE(xt::allclose(expected, graph.accumulate(1.)));
+        }
+
+        TEST_F(flow_graph, basins)
+        {
+            auto graph
+                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+
+            graph.update_routes(elevation);
+
+            auto actual = graph.basins();
+
+            xt::xtensor<size_t, 2> expected{
+                { 1, 1, 1, 3 }, { 1, 1, 1, 3 }, { 1, 1, 1, 3 }, { 0, 1, 2, 3 }
+            };
+
+            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+
+            EXPECT_TRUE(xt::all(xt::equal(xt::flatten(actual), graph.impl().basins())));
         }
     }
 }

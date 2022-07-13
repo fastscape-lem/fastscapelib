@@ -147,61 +147,15 @@ namespace fastscapelib
                         }
                     }
 
-                    donors(receivers(i, 0), donors_count(receivers(i, 0))++) = i;
+                    // fastpath for single flow
+                    auto irec = receivers(i, 0);
+                    donors(irec, donors_count(irec)++) = i;
                 }
 
-                compute_dfs_indices();
+                this->m_graph_impl.compute_dfs_indices();
             };
 
             void route2(const data_array_type& /*elevation*/){};
-
-        private:
-            using size_type = typename graph_impl_type::size_type;
-
-            /*
-             * Perform depth-first search and store the node indices for faster
-             * graph traversal.
-             */
-            void compute_dfs_indices()
-            {
-                const auto& receivers = this->m_graph_impl.m_receivers;
-                const auto& donors = this->m_graph_impl.m_donors;
-                const auto& donors_count = this->m_graph_impl.m_donors_count;
-
-                auto& dfs_indices = this->m_graph_impl.m_dfs_indices;
-
-                auto size = this->m_graph_impl.size();
-                size_type nstack = 0;
-
-                std::stack<size_type> tmp;
-
-                for (size_type i = 0; i < size; ++i)
-                {
-                    if (receivers(i, 0) == i)
-                    {
-                        tmp.push(i);
-                        dfs_indices(nstack++) = i;
-                    }
-
-                    while (!tmp.empty())
-                    {
-                        size_type istack = tmp.top();
-                        tmp.pop();
-
-                        for (size_type k = 0; k < donors_count(istack); ++k)
-                        {
-                            const auto idonor = donors(istack, k);
-                            if (idonor != istack)
-                            {
-                                dfs_indices(nstack++) = idonor;
-                                tmp.push(idonor);
-                            }
-                        }
-                    }
-                }
-
-                assert(nstack == size);
-            };
         };
     }
 

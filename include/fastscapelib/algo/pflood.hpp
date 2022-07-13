@@ -142,7 +142,6 @@ namespace fastscapelib
             using neighbors_indices_type = typename G::neighbors_indices_type;
             using elev_t = typename std::decay_t<E>::value_type;
 
-            auto elevation_flat = xt::flatten(elevation);
             neighbors_indices_type neighbors_indices;
 
             pflood_pr_queue<G, elev_t> open;
@@ -177,15 +176,15 @@ namespace fastscapelib
                         continue;
                     }
 
-                    if (elevation_flat(n_idx) <= elev_tiny_step)
+                    if (elevation.flat(n_idx) <= elev_tiny_step)
                     {
-                        elevation_flat(n_idx) = elev_tiny_step;
-                        knode = pflood_node<G, elev_t>(n_idx, elevation_flat(n_idx));
+                        elevation.flat(n_idx) = elev_tiny_step;
+                        knode = pflood_node<G, elev_t>(n_idx, elevation.flat(n_idx));
                         pit.emplace(knode);
                     }
                     else
                     {
-                        knode = pflood_node<G, elev_t>(n_idx, elevation_flat(n_idx));
+                        knode = pflood_node<G, elev_t>(n_idx, elevation.flat(n_idx));
                         open.emplace(knode);
                     }
 
