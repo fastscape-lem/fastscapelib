@@ -4,7 +4,7 @@
 #include "fastscapelib/grid/raster_grid.hpp"
 
 #include "xtensor/xtensor.hpp"
-#include "xtensor/xio.hpp"
+#include "xtensor/xstrided_view.hpp"
 
 #include "gtest/gtest.h"
 
@@ -24,15 +24,18 @@ namespace fastscapelib
             using grid_type = fs::raster_grid;
             using size_type = typename grid_type::size_type;
 
-            fs::node_status fb = fs::node_status::fixed_value_boundary;
-            fs::raster_boundary_status fixed_value_status{ fb };
+            // bottom border base-level
+            fs::node_status fixed = fs::node_status::fixed_value_boundary;
+            fs::node_status core = fs::node_status::core;
+            fs::raster_boundary_status bottom_base_level{ { core, core, core, fixed } };
 
-            grid_type grid = grid_type({ 4, 4 }, { 1.1, 1.2 }, fixed_value_status);
+            grid_type grid = grid_type({ 4, 4 }, { 1.0, 1.0 }, bottom_base_level);
 
-            xt::xtensor<double, 2> elevation{ { 0.82, 0.16, 0.14, 0.20 },
-                                              { 0.71, 0.97, 0.41, 0.09 },
-                                              { 0.49, 0.01, 0.19, 0.38 },
-                                              { 0.29, 0.82, 0.09, 0.88 } };
+            // planar surface tilted along the y-axis + small carved channel
+            xt::xtensor<double, 2> elevation{ { 0.6, 0.6, 0.6, 0.6 },
+                                              { 0.4, 0.4, 0.4, 0.4 },
+                                              { 0.2, 0.2, 0.2, 0.2 },
+                                              { 0.1, 0.0, 0.1, 0.1 } };
         };
 
         TEST_F(flow_graph, ctor)
@@ -40,49 +43,69 @@ namespace fastscapelib
             auto graph
                 = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
-            EXPECT_EQ(graph.grid().size(), 16u);  // dummy test
+            EXPECT_EQ(graph.size(), 16u);
+            EXPECT_TRUE(xt::same_shape(graph.grid_shape(), grid.shape()));
         }
 
         TEST_F(flow_graph, update_routes)
         {
             auto graph
                 = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+
+            auto new_elevation = graph.update_routes(elevation);
+
+            // re-run to check there is no memory effect
             graph.update_routes(elevation);
-            graph.update_routes(elevation);  // check there is not memory effect
 
-            xt::xtensor<size_type, 1> expected_fixed_receivers{ 1, 2, 7, 7, 9, 9, 7, 7,
-                                                                9, 9, 9, 7, 9, 9, 9, 14 };
+            EXPECT_TRUE(xt::all(xt::equal(new_elevation, elevation)));
 
-            EXPECT_TRUE(
-                xt::all(xt::equal(xt::col(graph.impl().receivers(), 0), expected_fixed_receivers)));
+            // more in-depth testing is done in flow router (methods) tests
+            auto actual = xt::col(graph.impl().receivers(), 0);
+            xt::xtensor<size_type, 1> expected{ 4,  5,  6,  7,  8,  9,  10, 11,
+                                                13, 13, 13, 15, 12, 13, 14, 15 };
+
+            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
         }
 
         TEST_F(flow_graph, accumulate)
         {
             auto graph
                 = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+
             graph.update_routes(elevation);
 
-            xt::xtensor<double, 2> data1 = xt::ones_like(elevation);
-            xt::xtensor<double, 2> data2{ { 1.1, 1.0, 1.1, 1.0 },
-                                          { 1.1, 1.0, 1.1, 1.0 },
-                                          { 1.1, 1.0, 1.1, 1.0 },
-                                          { 1.1, 1.0, 1.1, 1.0 } };
+            xt::xarray<double> acc = xt::empty_like(elevation);
+            xt::xtensor<double, 2> src = xt::ones_like(elevation);
+            xt::xtensor<double, 2> expected{
+                { 1., 1., 1., 1. }, { 2., 2., 2., 2. }, { 3., 3., 3., 3. }, { 1., 10., 1., 4. }
+            };
 
-            xt::xtensor<double, 2> expected1{ { 1.32, 2.64, 3.96, 1.32 },
-                                              { 1.32, 1.32, 1.32, 9.24 },
-                                              { 1.32, 11.88, 1.32, 1.32 },
-                                              { 1.32, 1.32, 2.64, 1.32 } };
+            graph.accumulate(acc, 1.);
+            EXPECT_TRUE(xt::allclose(expected, acc));
 
-            xt::xtensor<double, 2> expected2{ { 1.452, 2.772, 4.224, 1.32 },
-                                              { 1.452, 1.32, 1.452, 9.636 },
-                                              { 1.452, 12.54, 1.452, 1.32 },
-                                              { 1.452, 1.32, 2.772, 1.32 } };
+            graph.accumulate(acc, src);
+            EXPECT_TRUE(xt::allclose(expected, acc));
 
-            EXPECT_TRUE(xt::allclose(expected1, graph.accumulate(data1)));
-            EXPECT_TRUE(xt::allclose(expected1, graph.accumulate(1.)));
-            EXPECT_TRUE(xt::allclose(expected1 * 5., graph.accumulate(5.)));
-            EXPECT_TRUE(xt::allclose(expected2, graph.accumulate(data2)));
+            EXPECT_TRUE(xt::allclose(expected, graph.accumulate(src)));
+            EXPECT_TRUE(xt::allclose(expected, graph.accumulate(1.)));
+        }
+
+        TEST_F(flow_graph, basins)
+        {
+            auto graph
+                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+
+            graph.update_routes(elevation);
+
+            auto actual = graph.basins();
+
+            xt::xtensor<size_t, 2> expected{
+                { 1, 1, 1, 3 }, { 1, 1, 1, 3 }, { 1, 1, 1, 3 }, { 0, 1, 2, 3 }
+            };
+
+            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+
+            EXPECT_TRUE(xt::all(xt::equal(xt::flatten(actual), graph.impl().basins())));
         }
     }
 }

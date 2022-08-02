@@ -44,9 +44,9 @@ namespace fastscapelib
         public:
             using neighbors_count_type = std::uint8_t;
             using grid_data_type = double;
-            using index_type = std::size_t;
+            using size_type = std::size_t;
 
-            using donors_type = xt_tensor_t<py_selector, index_type, 2>;
+            using donors_type = xt_tensor_t<py_selector, size_type, 2>;
             using donors_count_type = xt_tensor_t<py_selector, neighbors_count_type, 1>;
 
             using receivers_type = donors_type;
@@ -54,7 +54,9 @@ namespace fastscapelib
             using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
             using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
-            using stack_type = xt_tensor_t<py_selector, index_type, 1>;
+            using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
+
+            using basins_type = xt_tensor_t<py_selector, size_type, 1>;
 
             virtual ~flow_graph_impl_wrapper_base(){};
 
@@ -70,7 +72,9 @@ namespace fastscapelib
 
             virtual const donors_count_type& donors_count() const = 0;
 
-            virtual const stack_type& dfs_stack() const = 0;
+            virtual const dfs_indices_type& dfs_indices() const = 0;
+
+            virtual const basins_type& basins() const = 0;
         };
 
 
@@ -80,7 +84,7 @@ namespace fastscapelib
         public:
             using flow_graph_impl_type = FG;
 
-            using index_type = typename flow_graph_impl_wrapper_base::index_type;
+            using size_type = typename flow_graph_impl_wrapper_base::size_type;
             using neighbors_count_type =
                 typename flow_graph_impl_wrapper_base::neighbors_count_type;
             using grid_data_type = typename flow_graph_impl_wrapper_base::grid_data_type;
@@ -93,7 +97,8 @@ namespace fastscapelib
                 typename flow_graph_impl_wrapper_base::receivers_weight_type;
             using receivers_distance_type =
                 typename flow_graph_impl_wrapper_base::receivers_distance_type;
-            using stack_type = typename flow_graph_impl_wrapper_base::stack_type;
+            using dfs_indices_type = typename flow_graph_impl_wrapper_base::dfs_indices_type;
+            using basins_type = typename flow_graph_impl_wrapper_base::basins_type;
 
             virtual ~flow_graph_impl_wrapper(){};
 
@@ -130,9 +135,14 @@ namespace fastscapelib
                 return p_graph_impl.donors_count();
             };
 
-            const stack_type& dfs_stack() const
+            const dfs_indices_type& dfs_indices() const
             {
-                return p_graph_impl.dfs_stack();
+                return p_graph_impl.dfs_indices();
+            };
+
+            const basins_type& basins() const
+            {
+                return p_graph_impl.basins();
             };
 
         private:
@@ -144,11 +154,11 @@ namespace fastscapelib
     class py_flow_graph_impl
     {
     public:
-        using index_type = std::size_t;
+        using size_type = std::size_t;
         using neighbors_count_type = std::uint8_t;
         using grid_data_type = double;
 
-        using donors_type = xt_tensor_t<py_selector, index_type, 2>;
+        using donors_type = xt_tensor_t<py_selector, size_type, 2>;
         using donors_count_type = xt_tensor_t<py_selector, neighbors_count_type, 1>;
 
         using receivers_type = donors_type;
@@ -156,8 +166,9 @@ namespace fastscapelib
         using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
         using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
-        using stack_type = xt_tensor_t<py_selector, index_type, 1>;
+        using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
 
+        using basins_type = xt_tensor_t<py_selector, size_type, 1>;
 
         template <class FG>
         py_flow_graph_impl(FG& graph_impl)
@@ -194,9 +205,14 @@ namespace fastscapelib
             return p_wrapped_graph_impl->donors_count();
         };
 
-        const stack_type& dfs_stack() const
+        const dfs_indices_type& dfs_indices() const
         {
-            return p_wrapped_graph_impl->dfs_stack();
+            return p_wrapped_graph_impl->dfs_indices();
+        };
+
+        const basins_type& basins() const
+        {
+            return p_wrapped_graph_impl->basins();
         };
 
     private:
@@ -207,8 +223,8 @@ namespace fastscapelib
     /**
      * Flow graph facade class for Python bindings.
      *
-     * It implements type erasure in order to expose
-     * a single class to Python for all grid types.
+     * It implements type erasure in order to expose a single class to Python
+     * for all grid, flow router and sink resolver types.
      *
      */
     class py_flow_graph;
@@ -220,20 +236,27 @@ namespace fastscapelib
         class flow_graph_wrapper_base
         {
         public:
-            using index_type = std::size_t;
-            using data_type = xt_array_t<py_selector, double>;
+            using size_type = std::size_t;
+            using data_type = double;
+            using data_array_type = xt_array_t<py_selector, data_type>;
+            using shape_type = data_array_type::shape_type;
+            using data_array_size_type = xt_array_t<py_selector, size_type>;
 
             virtual ~flow_graph_wrapper_base(){};
 
-            virtual index_type size() const = 0;
+            virtual size_type size() const = 0;
+            virtual shape_type grid_shape() const = 0;
 
             virtual const py_flow_graph_impl& impl() const = 0;
 
-            virtual const data_type& update_routes(const data_type& elevation) = 0;
+            virtual const data_array_type& update_routes(const data_array_type& elevation) = 0;
 
-            virtual data_type accumulate(const data_type& data) const = 0;
+            virtual void accumulate(data_array_type& acc, const data_array_type& src) const = 0;
+            virtual void accumulate(data_array_type& acc, data_type src) const = 0;
+            virtual data_array_type accumulate(const data_array_type& src) const = 0;
+            virtual data_array_type accumulate(data_type src) const = 0;
 
-            virtual data_type accumulate(const double& data) const = 0;
+            virtual data_array_size_type basins() = 0;
         };
 
         template <class G, class FR, class SR>
@@ -241,9 +264,6 @@ namespace fastscapelib
         {
         public:
             using flow_graph_type = fs::flow_graph<G, FR, SR, fs::py_selector>;
-
-            using index_type = typename flow_graph_wrapper_base::index_type;
-            using data_type = typename flow_graph_wrapper_base::data_type;
 
             flow_graph_wrapper(G& grid, const FR& router, const SR& resolver)
             {
@@ -253,9 +273,14 @@ namespace fastscapelib
 
             virtual ~flow_graph_wrapper(){};
 
-            index_type size() const
+            size_type size() const
             {
                 return p_graph->size();
+            };
+
+            shape_type grid_shape() const
+            {
+                return p_graph->grid_shape();
             };
 
             const py_flow_graph_impl& impl() const
@@ -263,19 +288,31 @@ namespace fastscapelib
                 return *p_graph_impl;
             };
 
-            const data_type& update_routes(const data_type& elevation)
+            const data_array_type& update_routes(const data_array_type& elevation)
             {
                 return p_graph->update_routes(elevation);
             };
 
-            data_type accumulate(const data_type& data) const
+            void accumulate(data_array_type& acc, const data_array_type& src) const
             {
-                return p_graph->accumulate(data);
+                return p_graph->accumulate(acc, src);
+            };
+            void accumulate(data_array_type& acc, data_type src) const
+            {
+                return p_graph->accumulate(acc, src);
+            };
+            data_array_type accumulate(const data_array_type& src) const
+            {
+                return p_graph->accumulate(src);
+            };
+            data_array_type accumulate(data_type src) const
+            {
+                return p_graph->accumulate(src);
             };
 
-            data_type accumulate(const double& data) const
+            data_array_size_type basins()
             {
-                return p_graph->accumulate(data);
+                return p_graph->basins();
             };
 
         private:
@@ -288,17 +325,25 @@ namespace fastscapelib
     class py_flow_graph
     {
     public:
-        using index_type = std::size_t;
-        using data_type = xt_array_t<py_selector, double>;
+        using size_type = std::size_t;
+        using data_type = double;
+        using data_array_type = xt_array_t<py_selector, data_type>;
+        using shape_type = data_array_type::shape_type;
+        using data_array_size_type = xt_array_t<py_selector, size_type>;
 
         template <class G, class FR, class SR>
         py_flow_graph(G& grid, const FR& router, const SR& resolver)
             : p_wrapped_graph(
                 std::make_unique<detail::flow_graph_wrapper<G, FR, SR>>(grid, router, resolver)){};
 
-        index_type size() const
+        size_type size() const
         {
             return p_wrapped_graph->size();
+        };
+
+        shape_type grid_shape() const
+        {
+            return p_wrapped_graph->grid_shape();
         };
 
         const py_flow_graph_impl& impl() const
@@ -306,19 +351,31 @@ namespace fastscapelib
             return p_wrapped_graph->impl();
         };
 
-        const data_type& update_routes(const data_type& elevation)
+        const data_array_type& update_routes(const data_array_type& elevation)
         {
             return p_wrapped_graph->update_routes(elevation);
         };
 
-        data_type accumulate(const data_type& data) const
+        void accumulate(data_array_type& acc, const data_array_type& src) const
         {
-            return p_wrapped_graph->accumulate(data);
+            return p_wrapped_graph->accumulate(acc, src);
+        };
+        void accumulate(data_array_type& acc, data_type src) const
+        {
+            return p_wrapped_graph->accumulate(acc, src);
+        };
+        data_array_type accumulate(const data_array_type& src) const
+        {
+            return p_wrapped_graph->accumulate(src);
+        };
+        data_array_type accumulate(data_type src) const
+        {
+            return p_wrapped_graph->accumulate(src);
         };
 
-        data_type accumulate(const double& data) const
+        data_array_size_type basins()
         {
-            return p_wrapped_graph->accumulate(data);
+            return p_wrapped_graph->basins();
         };
 
     private:
@@ -330,7 +387,9 @@ namespace fastscapelib
     void add_init_methods(py::class_<py_flow_graph>& pyfg)
     {
         pyfg.def(py::init<G&, single_flow_router&, no_sink_resolver&>())
-            .def(py::init<G&, multiple_flow_router&, no_sink_resolver&>());
+            .def(py::init<G&, multiple_flow_router&, no_sink_resolver&>())
+            .def(py::init<G&, single_flow_router&, pflood_sink_resolver&>())
+            .def(py::init<G&, single_flow_router&, mst_sink_resolver&>());
     }
 }
 

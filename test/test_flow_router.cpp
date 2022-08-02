@@ -17,6 +17,7 @@ namespace fastscapelib
     struct test_flow_router
     {
         using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        static constexpr bool is_single = true;
     };
 
 
@@ -28,18 +29,18 @@ namespace fastscapelib
             : public flow_router_impl_base<FG, test_flow_router>
         {
         public:
-            using graph_type = FG;
-            using base_type = flow_router_impl_base<graph_type, test_flow_router>;
+            using graph_impl_type = FG;
+            using base_type = flow_router_impl_base<graph_impl_type, test_flow_router>;
 
-            using elevation_type = typename graph_type::elevation_type;
+            using data_array_type = typename graph_impl_type::data_array_type;
 
             static constexpr size_t n_receivers = 0;
 
-            flow_router_impl(graph_type& graph, const test_flow_router& router)
+            flow_router_impl(graph_impl_type& graph, const test_flow_router& router)
                 : base_type(graph, router){};
 
-            void route1(const elevation_type& /*elevation*/){};
-            void route2(const elevation_type& /*elevation*/){};
+            void route1(const data_array_type& /*elevation*/){};
+            void route2(const data_array_type& /*elevation*/){};
         };
     }
 

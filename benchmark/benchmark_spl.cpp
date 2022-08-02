@@ -58,44 +58,31 @@ namespace fastscapelib
             {
                 using flow_graph_type = fs::
                     flow_graph<fs::profile_grid, fs::single_flow_router, fs::no_sink_resolver>;
-                using index_type = typename flow_graph_type::index_type;
 
                 double spacing = 300.;
+                double x0 = 300.;
+                double length = (ns - 1.0) * spacing;
+                xt::xtensor<double, 1> x = xt::linspace<double>(length + x0, x0, ns);
+                elevation = (length + x0 - x) * 1e-4;
 
                 auto grid = fs::profile_grid(ns, spacing, fs::node_status::fixed_value_boundary);
 
                 auto flow_graph
                     = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
-                double x0 = 300.;
-                double length = (ns - 1) * spacing;
-
-                xt::xtensor<double, 1> x = xt::linspace<double>(length + x0, x0, ns);
-                erosion = xt::zeros_like(x);
-                elevation = (length + x0 - x) * 1e-4;
+                K k_coef = get_k_coef<K>(elevation.shape());
+                double area_exp = 0.5;
+                double slope_exp = 1;
+                auto eroder = fs::make_spl_eroder(flow_graph, k_coef, area_exp, slope_exp, 1e-3);
 
                 flow_graph.update_routes(elevation);
-
                 auto drainage_area = flow_graph.accumulate(1.);
 
-                K k_coef = get_k_coef<K>(elevation.shape());
-                double m_exp = 0.5;
-                double n_exp = 1;
                 double dt = 1e4;
-
-                index_type ncorr;
 
                 for (auto _ : state)
                 {
-                    ncorr = fs::erode_stream_power(erosion,
-                                                   elevation,
-                                                   drainage_area,
-                                                   flow_graph,
-                                                   k_coef,
-                                                   m_exp,
-                                                   n_exp,
-                                                   dt,
-                                                   1e-3);
+                    eroder.erode(elevation, drainage_area, dt);
                 }
             }
 
@@ -103,9 +90,9 @@ namespace fastscapelib
             {
                 using flow_graph_type
                     = fs::flow_graph<fs::raster_grid, fs::single_flow_router, fs::no_sink_resolver>;
-                using index_type = typename flow_graph_type::index_type;
 
                 auto s = bms::FastscapeSetupBase<bms::surface_type::cone, T>(state.range(0));
+                elevation = s.elevation;
 
                 auto grid = fs::raster_grid(
                     { { ns, ns } }, { s.dy, s.dy }, fs::node_status::fixed_value_boundary);
@@ -113,30 +100,19 @@ namespace fastscapelib
                 auto flow_graph
                     = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
 
-                elevation = s.elevation;
-                erosion = xt::zeros_like(s.elevation);
-                flow_graph.update_routes(elevation);
+                K k_coef = get_k_coef<K>(elevation.shape());
+                double area_exp = 0.5;
+                double slope_exp = 1;
+                auto eroder = fs::make_spl_eroder(flow_graph, k_coef, area_exp, slope_exp, 1e-3);
 
+                flow_graph.update_routes(elevation);
                 auto drainage_area = flow_graph.accumulate(1.);
 
-                K k_coef = get_k_coef<K>(elevation.shape());
-                double m_exp = 0.5;
-                double n_exp = 1;
                 double dt = 1e4;
-
-                index_type ncorr;
 
                 for (auto _ : state)
                 {
-                    ncorr = fs::erode_stream_power(erosion,
-                                                   elevation,
-                                                   drainage_area,
-                                                   flow_graph,
-                                                   k_coef,
-                                                   m_exp,
-                                                   n_exp,
-                                                   dt,
-                                                   1e-3);
+                    eroder.erode(elevation, drainage_area, dt);
                 }
             }
         }

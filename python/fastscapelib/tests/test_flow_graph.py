@@ -21,108 +21,129 @@ class TestFlowGraph:
         )
 
         FlowGraph(profile_grid, SingleFlowRouter(), NoSinkResolver())
-        FlowGraph(profile_grid, MultipleFlowRouter(1.0, 1.1), NoSinkResolver())
+        FlowGraph(raster_grid, MultipleFlowRouter(1.0, 1.1), NoSinkResolver())
 
     def test_update_routes(self):
         grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
         flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
-        elevation = np.r_[0.82, 0.16, 0.14, 0.20, 0.71, 0.97, 0.41, 0.09]
 
-        graph_elevation = flow_graph.update_routes(elevation)
+        # pit at 3rd node
+        elevation = np.array([0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0])
+
+        new_elevation = flow_graph.update_routes(elevation)
+
+        npt.assert_array_equal(elevation, new_elevation)
 
         npt.assert_equal(
-            flow_graph.impl().receivers()[:, 0], np.r_[1, 2, 2, 2, 3, 6, 7, 7]
+            flow_graph.impl().receivers[:, 0], np.array([0, 0, 2, 2, 3, 6, 7, 7])
         )
-        npt.assert_equal(flow_graph.impl().receivers_count(), np.ones(elevation.size))
+        npt.assert_equal(flow_graph.impl().receivers_count, np.ones(elevation.size))
         npt.assert_equal(
-            flow_graph.impl().receivers_weight()[:, 0], np.ones(elevation.size)
-        )
-        npt.assert_equal(
-            flow_graph.impl().receivers_weight()[:, 1], np.zeros(elevation.size)
+            flow_graph.impl().receivers_weight[:, 0], np.ones(elevation.size)
         )
 
         m = np.iinfo(np.uint64).max
         npt.assert_equal(
-            flow_graph.impl().donors(),
+            flow_graph.impl().donors,
             np.array(
                 [
+                    [1, m, m],
                     [m, m, m],
-                    [0, m, m],
-                    [1, 2, 3],
+                    [2, 3, m],
                     [4, m, m],
                     [m, m, m],
                     [m, m, m],
                     [5, m, m],
-                    [6, 7, m],
+                    [6, m, m],
                 ]
             ),
         )
         npt.assert_equal(
-            flow_graph.impl().donors_count(), np.r_[0, 1, 3, 1, 0, 0, 1, 2]
+            flow_graph.impl().donors_count, np.array([1, 0, 2, 1, 0, 0, 1, 1])
         )
 
-        npt.assert_equal(graph_elevation, elevation)
-
-    def test_accumulate(self):
-        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+    def test_accumulate_basins(self):
+        # --- test profile grid
+        grid = ProfileGrid(8, 2.0, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
         flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
-        elevation = np.r_[0.82, 0.16, 0.14, 0.20, 0.71, 0.97, 0.41, 0.09]
 
-        graph_elevation = flow_graph.update_routes(elevation)
+        # pit at 3rd node
+        elevation = np.array([0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0])
 
-        npt.assert_almost_equal(
-            flow_graph.accumulate(np.ones(elevation.shape)),
-            np.r_[2.2, 4.4, 11.0, 4.4, 2.2, 2.2, 4.4, 6.6],
-        )
+        new_elevation = flow_graph.update_routes(elevation)
 
+        npt.assert_array_equal(elevation, new_elevation)
+
+        acc = np.empty_like(elevation)
+        src = np.ones_like(elevation)
+        expected = np.array([4.0, 2.0, 6.0, 4.0, 2.0, 2.0, 4.0, 6.0])
+
+        flow_graph.accumulate(acc, 1.0)
+        npt.assert_array_equal(acc, expected)
+
+        flow_graph.accumulate(acc, src)
+        npt.assert_array_equal(acc, expected)
+
+        npt.assert_almost_equal(flow_graph.accumulate(1.0), expected)
+        npt.assert_almost_equal(flow_graph.accumulate(src), expected)
+
+        # bottom border base-level
+        bottom_base_level = [
+            NodeStatus.CORE,
+            NodeStatus.CORE,
+            NodeStatus.CORE,
+            NodeStatus.FIXED_VALUE_BOUNDARY,
+        ]
+
+        # --- test raster grid
         grid = RasterGrid(
             [4, 4],
-            [1.1, 1.2],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+            [1.0, 1.0],
+            RasterBoundaryStatus(bottom_base_level),
             [],
         )
         flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
+
+        # planar surface tilted along the y-axis + small carved channel
         elevation = np.array(
             [
-                [0.82, 0.16, 0.14, 0.20],
-                [0.71, 0.97, 0.41, 0.09],
-                [0.49, 0.01, 0.19, 0.38],
-                [0.29, 0.82, 0.09, 0.88],
+                [0.6, 0.6, 0.6, 0.6],
+                [0.4, 0.4, 0.4, 0.4],
+                [0.2, 0.2, 0.2, 0.2],
+                [0.1, 0.0, 0.1, 0.1],
             ]
         )
 
-        graph_elevation = flow_graph.update_routes(elevation)
+        new_elevation = flow_graph.update_routes(elevation)
+        npt.assert_array_equal(elevation, new_elevation)
 
+        acc = np.empty_like(elevation)
+        src = np.ones_like(elevation)
         expected = np.array(
             [
-                [1.32, 2.64, 3.96, 1.32],
-                [1.32, 1.32, 1.32, 9.24],
-                [1.32, 11.88, 1.32, 1.32],
-                [1.32, 1.32, 2.64, 1.32],
+                [1.0, 1.0, 1.0, 1.0],
+                [2.0, 2.0, 2.0, 2.0],
+                [3.0, 3.0, 3.0, 3.0],
+                [1.0, 10.0, 1.0, 4.0],
             ]
         )
-        npt.assert_almost_equal(
-            flow_graph.accumulate(np.ones(elevation.shape)), expected
-        )
+
+        flow_graph.accumulate(acc, 1.0)
+        npt.assert_array_equal(acc, expected)
+
+        flow_graph.accumulate(acc, src)
+        npt.assert_array_equal(acc, expected)
 
         npt.assert_almost_equal(flow_graph.accumulate(1.0), expected)
+        npt.assert_almost_equal(flow_graph.accumulate(src), expected)
 
-        npt.assert_almost_equal(flow_graph.accumulate(5.0), 5 * expected)
-
-        data = np.array(
-            [
-                [1.1, 1.0, 1.1, 1.0],
-                [1.1, 1.0, 1.1, 1.0],
-                [1.1, 1.0, 1.1, 1.0],
-                [1.1, 1.0, 1.1, 1.0],
-            ]
-        )
         expected = np.array(
             [
-                [1.452, 2.772, 4.224, 1.32],
-                [1.452, 1.32, 1.452, 9.636],
-                [1.452, 12.54, 1.452, 1.32],
-                [1.452, 1.32, 2.772, 1.32],
+                [1, 1, 1, 3],
+                [1, 1, 1, 3],
+                [1, 1, 1, 3],
+                [0, 1, 2, 3],
             ]
         )
-        npt.assert_almost_equal(flow_graph.accumulate(data), expected)
+        npt.assert_array_equal(flow_graph.basins(), expected)
+        npt.assert_array_equal(flow_graph.basins().flatten(), flow_graph.impl().basins)

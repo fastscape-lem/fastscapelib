@@ -12,6 +12,8 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "xtensor/xstrided_view.hpp"
+
 #include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
@@ -37,26 +39,29 @@ namespace fastscapelib
         using grid_type = G;
         using router_type = FR;
         using resolver_type = SR;
+        using xt_selector = S;
 
         static_assert(std::is_same<typename router_type::flow_graph_impl_tag,
                                    typename resolver_type::flow_graph_impl_tag>::value,
                       "incompatible flow router and sink resolver types");
         using flow_graph_impl_tag = typename router_type::flow_graph_impl_tag;
-        using flow_graph_impl_type = detail::flow_graph_impl<grid_type, S, flow_graph_impl_tag>;
+        using flow_graph_impl_type
+            = detail::flow_graph_impl<grid_type, xt_selector, flow_graph_impl_tag>;
 
-        using index_type = typename grid_type::size_type;
-        using elevation_type = xt_array_t<S, typename grid_type::grid_data_type>;
+        using size_type = typename grid_type::size_type;
 
-        template <class T>
-        using data_type = xt_array_t<S, T>;
+        using data_type = typename grid_type::grid_data_type;
+        using data_array_type = xt_array_t<xt_selector, data_type>;
+        using shape_type = typename data_array_type::shape_type;
+        using data_array_size_type = xt_array_t<xt_selector, size_type>;
 
         flow_graph(G& grid, const router_type& router, const resolver_type& resolver)
             : m_grid(grid)
-            , m_graph_impl(grid)
+            , m_graph_impl(grid, router)
             , m_router_impl(m_graph_impl, router)
             , m_resolver_impl(m_graph_impl, resolver){};
 
-        const elevation_type& update_routes(const elevation_type& elevation)
+        const data_array_type& update_routes(const data_array_type& elevation)
         {
             const auto& modified_elevation = m_resolver_impl.resolve1(elevation);
             m_router_impl.route1(modified_elevation);
@@ -66,28 +71,59 @@ namespace fastscapelib
             return final_elevation;
         }
 
-        G& grid()
+        grid_type& grid() const
         {
             return m_grid;
-        };
+        }
 
-        index_type size() const
+        size_type size() const
         {
             return m_grid.size();
         };
+
+        shape_type grid_shape() const
+        {
+            // grid shape may have a different type (e.g., from xtensor containers)
+            auto shape = m_grid.shape();
+            shape_type data_array_shape(shape.begin(), shape.end());
+            return data_array_shape;
+        }
 
         const flow_graph_impl_type& impl() const
         {
             return m_graph_impl;
         }
 
-        template <class T>
-        T accumulate(const T& data) const;
+        void accumulate(data_array_type& acc, const data_array_type& src) const
+        {
+            return m_graph_impl.accumulate(acc, src);
+        };
+        void accumulate(data_array_type& acc, data_type src) const
+        {
+            return m_graph_impl.accumulate(acc, src);
+        };
+        data_array_type accumulate(const data_array_type& src) const
+        {
+            return m_graph_impl.accumulate(src);
+        };
+        data_array_type accumulate(data_type src) const
+        {
+            return m_graph_impl.accumulate(src);
+        };
 
-        data_type<double> accumulate(const double& data) const;
+        data_array_size_type basins()
+        {
+            data_array_size_type basins = data_array_type::from_shape(m_grid.shape());
+            auto basins_flat = xt::flatten(basins);
+
+            m_graph_impl.compute_basins();
+            basins_flat = m_graph_impl.basins();
+
+            return basins;
+        }
 
     private:
-        G& m_grid;
+        grid_type& m_grid;
 
         flow_graph_impl_type m_graph_impl;
 
@@ -99,19 +135,6 @@ namespace fastscapelib
         router_impl_type m_router_impl;
         resolver_impl_type m_resolver_impl;
     };
-
-    template <class G, class FR, class SR, class S>
-    template <class T>
-    auto flow_graph<G, FR, SR, S>::accumulate(const T& data) const -> T
-    {
-        return m_graph_impl.accumulate(data);
-    }
-
-    template <class G, class FR, class SR, class S>
-    auto flow_graph<G, FR, SR, S>::accumulate(const double& data) const -> data_type<double>
-    {
-        return m_graph_impl.accumulate(data);
-    }
 
 
     template <class G, class FR, class SR, class S = typename G::xt_selector>

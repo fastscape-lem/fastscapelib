@@ -9,8 +9,11 @@
 #ifndef FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 #define FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 
+#include <stack>
+
 #include "fastscapelib/algo/flow_routing.hpp"
 #include "fastscapelib/flow/flow_graph_impl.hpp"
+#include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
 
 
@@ -65,14 +68,14 @@ namespace fastscapelib
             using flow_router_type = FR;
             using base_type = flow_router_impl_base<graph_impl_type, flow_router_type>;
 
-            using elevation_type = typename graph_impl_type::elevation_type;
+            using data_array_type = typename graph_impl_type::data_array_type;
 
             // we don't want to instantiate a generic implementation
             // -> only support calling a specialized class template constructor
             flow_router_impl(graph_impl_type& graph_impl, const flow_router_type& router) = delete;
 
-            void route1(const elevation_type& /*elevation*/){};
-            void route2(const elevation_type& /*elevation*/){};
+            void route1(const data_array_type& /*elevation*/){};
+            void route2(const data_array_type& /*elevation*/){};
         };
     }
 
@@ -95,12 +98,18 @@ namespace fastscapelib
             using graph_impl_type = FG;
             using base_type = flow_router_impl_base<graph_impl_type, single_flow_router>;
 
-            using elevation_type = typename graph_impl_type::elevation_type;
+            using data_array_type = typename graph_impl_type::data_array_type;
 
             flow_router_impl(graph_impl_type& graph_impl, const single_flow_router& router)
-                : base_type(graph_impl, router){};
+                : base_type(graph_impl, router)
+            {
+                // single flow -> constant weights and receiver_count
+                this->m_graph_impl.m_receivers_count.fill(1);
+                auto weights = xt::col(this->m_graph_impl.m_receivers_weight, 0);
+                weights.fill(1.);
+            };
 
-            void route1(const elevation_type& elevation)
+            void route1(const data_array_type& elevation)
             {
                 using neighbors_type = typename graph_impl_type::grid_type::neighbors_type;
 
@@ -121,6 +130,11 @@ namespace fastscapelib
                     dist2receivers(i, 0) = 0;
                     slope_max = std::numeric_limits<double>::min();
 
+                    if (grid.status_at_nodes().data()[i] == node_status::fixed_value_boundary)
+                    {
+                        continue;
+                    }
+
                     for (auto n : grid.neighbors(i, neighbors))
                     {
                         slope = (elevation.data()[i] - elevation.data()[n.idx]) / n.distance;
@@ -132,60 +146,16 @@ namespace fastscapelib
                             dist2receivers(i, 0) = n.distance;
                         }
                     }
-                    donors(receivers(i, 0), donors_count(receivers(i, 0))++) = i;
+
+                    // fastpath for single flow
+                    auto irec = receivers(i, 0);
+                    donors(irec, donors_count(irec)++) = i;
                 }
 
-                this->m_graph_impl.m_receivers_count.fill(1);
-
-                auto weights = xt::col(this->m_graph_impl.m_receivers_weight, 0);
-                weights.fill(1.);
-
-                compute_dfs_stack();
+                this->m_graph_impl.compute_dfs_indices();
             };
 
-            void route2(const elevation_type& /*elevation*/){};
-
-        private:
-            using index_type = typename graph_impl_type::index_type;
-            using stack_type = typename graph_impl_type::stack_type;
-            using donors_count_type = typename graph_impl_type::donors_count_type;
-            using donors_type = typename graph_impl_type::donors_type;
-
-            void add2stack(index_type& nstack,
-                           stack_type& stack,
-                           const donors_count_type& ndonors,
-                           const donors_type& donors,
-                           const index_type inode)
-            {
-                for (index_type k = 0; k < ndonors(inode); ++k)
-                {
-                    const auto idonor = donors(inode, k);
-                    if (idonor != inode)
-                    {
-                        stack(nstack++) = idonor;
-                        add2stack(nstack, stack, ndonors, donors, idonor);
-                    }
-                }
-            }
-
-            void compute_dfs_stack()
-            {
-                const auto& receivers = this->m_graph_impl.m_receivers;
-                const auto& donors = this->m_graph_impl.m_donors;
-                const auto& donors_count = this->m_graph_impl.m_donors_count;
-
-                auto& stack = this->m_graph_impl.m_dfs_stack;
-                index_type nstack = 0;
-
-                for (index_type i = 0; i < this->m_graph_impl.size(); ++i)
-                {
-                    if (receivers(i, 0) == i)
-                    {
-                        stack(nstack++) = i;
-                        add2stack(nstack, stack, donors_count, donors, i);
-                    }
-                }
-            };
+            void route2(const data_array_type& /*elevation*/){};
         };
     }
 
@@ -214,15 +184,15 @@ namespace fastscapelib
             using graph_impl_type = FG;
             using base_type = flow_router_impl_base<graph_impl_type, multiple_flow_router>;
 
-            using elevation_type = typename graph_impl_type::elevation_type;
+            using data_array_type = typename graph_impl_type::data_array_type;
 
             static constexpr size_t n_receivers = graph_impl_type::grid_type::n_neighbors_max();
 
             flow_router_impl(graph_impl_type& graph_impl, const multiple_flow_router& router)
                 : base_type(graph_impl, router){};
 
-            void route1(const elevation_type& /*elevation*/){};
-            void route2(const elevation_type& /*elevation*/){};
+            void route1(const data_array_type& /*elevation*/){};
+            void route2(const data_array_type& /*elevation*/){};
         };
     }
 }

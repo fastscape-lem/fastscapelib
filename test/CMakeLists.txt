@@ -90,6 +90,7 @@ endif()
 # =====
 
 set(FASTSCAPELIB_TEST_SRC
+    test_basin_graph.cpp
     test_diffusion_adi.cpp
     test_flow_graph.cpp
     test_flow_router.cpp

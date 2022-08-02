@@ -86,6 +86,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/diffusion_adi.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/spl.hpp
   # Flow
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/basin_graph.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_graph_impl.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_graph.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_router.hpp
@@ -99,6 +100,7 @@ set(FASTSCAPELIB_HEADERS
   # Utils
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/consts.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/iterators.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/union_find.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/utils.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/xtensor_utils.hpp
   # Version
