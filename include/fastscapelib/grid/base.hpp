@@ -328,7 +328,8 @@ namespace fastscapelib
             return inner_types::n_neighbors_max;
         }
 
-        static_assert(neighbors_cache_type::cache_width >= n_neighbors_max(),
+        static_assert(neighbors_cache_type::cache_width == 0
+                          || neighbors_cache_type::cache_width >= n_neighbors_max(),
                       "Cache width is too small!");
 
         using neighbors_type = std::vector<neighbor>;
