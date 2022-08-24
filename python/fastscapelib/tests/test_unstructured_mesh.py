@@ -44,7 +44,7 @@ class TestUnstructuredMesh:
     def test_static_properties(self):
         assert UnstructuredMesh.is_structured is False
         assert UnstructuredMesh.is_uniform is False
-        assert UnstructuredMesh.n_neighbors_max == 50
+        assert UnstructuredMesh.n_neighbors_max == 30
 
     def test_constructor(self, mesh_args):
         mesh = UnstructuredMesh(*mesh_args.values(), [])
