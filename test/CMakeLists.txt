@@ -105,6 +105,7 @@ set(FASTSCAPELIB_TEST_SRC
     test_structured_grid.cpp
     test_sink_resolver.cpp
     test_spl.cpp
+    test_unstructured_mesh.cpp
 )
 
 # -- build a target for each test

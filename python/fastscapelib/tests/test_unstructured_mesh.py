@@ -71,3 +71,6 @@ class TestUnstructuredMesh:
         expected[2] = 1
 
         npt.assert_array_equal(actual, expected)
+
+        with pytest.raises(ValueError, match=".*not allowed.*"):
+            UnstructuredMesh(*mesh_args.values(), [Node(2, NodeStatus.LOOPED_BOUNDARY)])
