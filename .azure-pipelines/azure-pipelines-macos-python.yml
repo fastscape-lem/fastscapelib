@@ -5,7 +5,7 @@ jobs:
         python_38:
           python_version: '3.8'
     pool:
-      vmImage: 'macOS-10.15'
+      vmImage: 'macOS-11'
     variables:
         CC: clang
         CXX: clang++
