@@ -112,6 +112,6 @@ set(FASTSCAPELIB_TEST_SRC
 foreach(filename IN LISTS FASTSCAPELIB_TEST_SRC)
     string(REPLACE ".cpp" "" targetname ${filename})
     add_executable(${targetname} ${filename})
-    target_link_libraries(${targetname} PRIVATE fastscapelib GTest::GTest GTest::Main)
+    target_link_libraries(${targetname} PRIVATE fastscapelib GTest::gtest_main)
     add_test(${targetname} ${targetname})
 endforeach()
