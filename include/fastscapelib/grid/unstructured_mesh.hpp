@@ -60,6 +60,21 @@ namespace fastscapelib
 
         using node_status_type = typename base_type::node_status_type;
 
+        void set_status_at_nodes(const std::vector<node>& status_at_nodes);
+
+        //indices_type& neighbors_count();
+
+
+
+        //inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept; //why is this protected here but not in profile_grid?
+
+        //std::array<neighbors_count_type, 30> m_neighbors_indices_ptr;
+        auto build_neighbors_count();
+
+        auto neighbors_indices_impl();
+
+        auto build_neighbors_distances_type();
+
         unstructured_mesh_xt(const points_type& points,
                              const indices_type& neighbors_indices_ptr,
                              const indices_type& neighbors_indices,
@@ -83,13 +98,22 @@ namespace fastscapelib
 
         node_status_type m_status_at_nodes;
 
-        void set_status_at_nodes(const std::vector<node>& status_at_nodes);
-        inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
+        // void set_status_at_nodes(const std::vector<node>& status_at_nodes);
 
-        void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
-                                    const size_type& idx) const;
+        // //indices_type& neighbors_count();
 
-        const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx) const;
+
+
+        // //inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept; //why is this protected here but not in profile_grid?
+
+        // //std::array<neighbors_count_type, 30> m_neighbors_indices_ptr;
+        // auto build_neighbors_count();
+
+        // auto neighbors_indices_impl();
+
+        // auto build_neighbors_distances_type();
+
+        //inline const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx);
 
         friend class grid<self_type>;
     };
@@ -114,7 +138,18 @@ namespace fastscapelib
         m_size = points.shape()[0];
         m_shape = { static_cast<typename shape_type::value_type>(m_size) };
         set_status_at_nodes(status_at_nodes);
+        neighbors_indices_impl();
+        build_neighbors_distances_type();
+        build_neighbors_count();
+        //build_neighbors_distances_type
     }
+
+    //template <class S, unsigned int N> 
+    //void inline unstructured_mesh_xt<S, N>::build_neighbors_count(const size_type& idx)
+
+    // {
+    //     return m_convex_hull_indices;
+    // } 
 
     template <class S, unsigned int N>
     void unstructured_mesh_xt<S, N>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
@@ -144,6 +179,29 @@ namespace fastscapelib
 
         m_status_at_nodes = temp_status_at_nodes;
     }
+
+    template <class S, unsigned int N> 
+    auto unstructured_mesh_xt<S, N>::build_neighbors_count() 
+
+         {
+            return m_neighbors_indices_ptr;
+         }
+
+        
+    template <class S, unsigned int N> 
+        auto unstructured_mesh_xt<S, N>::neighbors_indices_impl()
+
+            {
+                return m_neighbors_indices;
+            }
+
+    template <class S, unsigned int N> 
+        auto unstructured_mesh_xt<S, N>::build_neighbors_distances_type()
+
+            {
+                return m_convex_hull_indices;
+            }
+
 
     /**
      * @typedef unstructured_mesh
