@@ -57,25 +57,23 @@ namespace fastscapelib
             EXPECT_EQ(mesh.shape(), shape_type({ mesh_size }));
             EXPECT_EQ(mesh.neighbors_count(idx), indptr);
             EXPECT_EQ(mesh.neighbors_indices_impl(idx), indices);
-            EXPECT_EQ(mesh._neighbors_distances(idx), convex_hull_indices); 
+            EXPECT_EQ(mesh._neighbors_distances(idx), convex_hull_indices);
             EXPECT_EQ(mesh.build_areas(), areas);
-            //EXPECT_EQ(mesh.neighbors_count(), neighbors_count_type);
+            // EXPECT_EQ(mesh.neighbors_count(), neighbors_count_type);
         }
 
-        //TEST_F(unstructured_mesh, neighbor)
+        // TEST_F(unstructured_mesh, neighbor)
 
         TEST_F(unstructured_mesh, size)
-        {   
-
-            EXPECT_EQ(mesh_size, size_type({ 5 })); //placeholder
-            
+        {
+            EXPECT_EQ(mesh_size, size_type({ 5 }));  // placeholder
         }
 
         TEST_F(unstructured_mesh, neighbor);
         {
 
             Expect_EQ()
-            
+
         }
 
 

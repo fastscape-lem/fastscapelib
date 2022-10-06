@@ -62,13 +62,13 @@ namespace fastscapelib
 
         void set_status_at_nodes(const std::vector<node>& status_at_nodes);
 
-        //indices_type& neighbors_count();
+        // indices_type& neighbors_count();
 
 
+        // inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
+        // //why is this protected here but not in profile_grid?
 
-        //inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept; //why is this protected here but not in profile_grid?
-
-        //std::array<neighbors_count_type, 30> m_neighbors_indices_ptr;
+        // std::array<neighbors_count_type, 30> m_neighbors_indices_ptr;
         auto neighbors_count(size_type& idx);
 
         auto neighbors_indices_impl(size_type& idx);
@@ -106,8 +106,8 @@ namespace fastscapelib
         // //indices_type& neighbors_count();
 
 
-
-        // //inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept; //why is this protected here but not in profile_grid?
+        // //inline const neighbors_count_type& neighbors_count(const size_type& idx) const
+        // noexcept; //why is this protected here but not in profile_grid?
 
         // //std::array<neighbors_count_type, 30> m_neighbors_indices_ptr;
         // auto build_neighbors_count();
@@ -116,7 +116,8 @@ namespace fastscapelib
 
         // auto build_neighbors_distances_type();
 
-        //inline const neighbors_distances_impl_type& neighbors_distances_impl(const size_type& idx);
+        // inline const neighbors_distances_impl_type& neighbors_distances_impl(const size_type&
+        // idx);
 
         friend class grid<self_type>;
     };
@@ -146,21 +147,21 @@ namespace fastscapelib
         neighbors_distances();
         neighbors_count();
         build_areas();
-        //build_neighbors_distances_type
+        // build_neighbors_distances_type
     }
 
-    //template <class S, unsigned int N> 
-    //void inline unstructured_mesh_xt<S, N>::build_neighbors_count(const size_type& idx)
+    // template <class S, unsigned int N>
+    // void inline unstructured_mesh_xt<S, N>::build_neighbors_count(const size_type& idx)
 
     // {
     //     return m_convex_hull_indices;
-    // } 
+    // }
 
     template <class S, unsigned int N>
     auto unstructured_mesh_xt<S, N>::build_areas()
-        {
-            return m_areas;
-        }
+    {
+        return m_areas;
+    }
 
     template <class S, unsigned int N>
     void unstructured_mesh_xt<S, N>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
@@ -191,39 +192,40 @@ namespace fastscapelib
         m_status_at_nodes = temp_status_at_nodes;
     }
 
-    template <class S, unsigned int N> 
-        auto unstructured_mesh_xt<S, N>::neighbors_count(size_type& idx) 
+    template <class S, unsigned int N>
+    auto unstructured_mesh_xt<S, N>::neighbors_count(size_type& idx)
 
-         {
-            int start_idx = m_neighbors_indices_ptr[idx];
-            int stop_idx = m_neighbors_indices_ptr[idx+1];
+    {
+        int start_idx = m_neighbors_indices_ptr[idx];
+        int stop_idx = m_neighbors_indices_ptr[idx + 1];
 
-            return stop_idx - start_idx;
-         }
+        return stop_idx - start_idx;
+    }
 
-        
-    template <class S, unsigned int N> 
-        auto unstructured_mesh_xt<S, N>::neighbors_indices_impl(size_type& idx)
 
-            {
-                int start_idx = m_neighbors_indices_ptr[idx];
-                int stop_idx = m_neighbors_indices_ptr[idx+1];
+    template <class S, unsigned int N>
+    auto unstructured_mesh_xt<S, N>::neighbors_indices_impl(size_type& idx)
 
-                for (auto i = 0; i == (stop_idx - start_idx);)
-                {
-                    m_neighbors_indices[i] = m_neighbors_indices[start_idx+i]; //neighbor or neighbors?
-                }
-                return m_neighbors_indices; // should be len (or cpp equivalent) 
-                //needs to be both outputs from indptr and indices of scipy delauney iml boilerplate in 
-                //base.hpp
-            }
+    {
+        int start_idx = m_neighbors_indices_ptr[idx];
+        int stop_idx = m_neighbors_indices_ptr[idx + 1];
 
-    template <class S, unsigned int N> 
-        auto unstructured_mesh_xt<S, N>::neighbors_distances(areas_type& idx)
+        for (auto i = 0; i == (stop_idx - start_idx);)
+        {
+            m_neighbors_indices[i] = m_neighbors_indices[start_idx + i];  // neighbor or neighbors?
+        }
+        return m_neighbors_indices;  // should be len (or cpp equivalent)
+        // needs to be both outputs from indptr and indices of scipy delauney iml boilerplate in
+        // base.hpp
+    }
 
-            {
-                return m_convex_hull_indices; // for this look at indices, this should hold an array of pre-computed distances
-            }
+    template <class S, unsigned int N>
+    auto unstructured_mesh_xt<S, N>::neighbors_distances(areas_type& idx)
+
+    {
+        return m_convex_hull_indices;  // for this look at indices, this should hold an array of
+                                       // pre-computed distances
+    }
 
 
     /**
