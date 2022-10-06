@@ -55,27 +55,7 @@ namespace fastscapelib
 
             EXPECT_EQ(mesh.size(), mesh_size);
             EXPECT_EQ(mesh.shape(), shape_type({ mesh_size }));
-            EXPECT_EQ(mesh.neighbors_count(idx), indptr);
-            EXPECT_EQ(mesh.neighbors_indices_impl(idx), indices);
-            EXPECT_EQ(mesh._neighbors_distances(idx), convex_hull_indices);
-            EXPECT_EQ(mesh.build_areas(), areas);
-            // EXPECT_EQ(mesh.neighbors_count(), neighbors_count_type);
         }
-
-        // TEST_F(unstructured_mesh, neighbor)
-
-        TEST_F(unstructured_mesh, size)
-        {
-            EXPECT_EQ(mesh_size, size_type({ 5 }));  // placeholder
-        }
-
-        TEST_F(unstructured_mesh, neighbor);
-        {
-
-            Expect_EQ()
-
-        }
-
 
         TEST_F(unstructured_mesh, status_at_nodes)
         {
@@ -125,6 +105,15 @@ namespace fastscapelib
                                                    { { 2, fs::node_status::looped_boundary } }),
                              std::invalid_argument);
             }
+        }
+
+        TEST_F(unstructured_mesh, neighbors_count)
+        {
+            grid_type mesh
+                = fs::unstructured_mesh(points, indptr, indices, convex_hull_indices, areas, {});
+
+            EXPECT_EQ(mesh.neighbors_count(4), 4);
+            EXPECT_EQ(mesh.neighbors_count(0), 3);
         }
 
     }

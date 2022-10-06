@@ -60,6 +60,8 @@ add_grid_bindings(py::module& m)
         .def_property_readonly("shape", &fs::py_unstructured_mesh::shape)
         .def_property_readonly("status_at_nodes", &fs::py_unstructured_mesh::status_at_nodes);
 
+    fs::add_neighbor_methods(umesh);
+
     // ==== Binding of the profile_boundary_status class ==== //
     py::class_<fs::profile_boundary_status>(m, "ProfileBoundaryStatus")
         .def(py::init<const fs::node_status>())

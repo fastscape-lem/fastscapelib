@@ -74,3 +74,9 @@ class TestUnstructuredMesh:
 
         with pytest.raises(ValueError, match=".*not allowed.*"):
             UnstructuredMesh(*mesh_args.values(), [Node(2, NodeStatus.LOOPED_BOUNDARY)])
+
+    def test_neighbors_count(self, mesh_args):
+        mesh = UnstructuredMesh(*mesh_args.values(), [])
+
+        assert mesh.neighbors_count(4) == 4
+        assert mesh.neighbors_count(0) == 3
