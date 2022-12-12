@@ -85,14 +85,11 @@ class TestUnstructuredMesh:
         mesh = UnstructuredMesh(*mesh_args.values(), [])
 
         assert mesh.indices[1:3] == np.array([4, 3, 1])
-        #distance tested below
-        #status tested above
+        # distance tested below
+        # status tested above
 
     def test_neighbors_distances(self, mesh_args):
         mesh = UnstructuredMesh(*mesh_args.values(), [])
-        #neighbors_distances = np.array(([0.5, 0.70710678, 0.70710678, np.nan], [0.5, 0.70710678, 0.70710678, np.nan], [0.5, 0.70710678, 0.70710678, np.nan], [0.70710678, 0.5, 0.70710678, np.nan], [0.5, 0.5, 0.5, 0.5],))
+        # neighbors_distances = np.array(([0.5, 0.70710678, 0.70710678, np.nan], [0.5, 0.70710678, 0.70710678, np.nan], [0.5, 0.70710678, 0.70710678, np.nan], [0.70710678, 0.5, 0.70710678, np.nan], [0.5, 0.5, 0.5, 0.5],))
 
-
-
-        assert neighbors_distances[4,:] == np.array([0.5, 0.5, 0.5, 0.5])
-
+        assert neighbors_distances[4, :] == np.array([0.5, 0.5, 0.5, 0.5])
