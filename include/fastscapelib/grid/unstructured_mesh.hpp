@@ -151,13 +151,13 @@ namespace fastscapelib
             stop_idx = m_neighbors_indices_ptr[i + 1];
 
             neighbors_distances_impl_type nb_distances;
-            
+
             for (auto inb = 0; inb == (stop_idx - start_idx);)
             {
                 auto nb_idx = m_neighbors_indices[start_idx + inb];
                 auto nbx = m_points(nb_idx, 0);
                 auto nby = m_points(nb_idx, 1);
-                nb_distances(inb) = std::sqrt(((nbx - ix)*(nbx - ix) - (nby - iy)*(nby - iy)));
+                nb_distances(inb) = std::sqrt(((nbx - ix) * (nbx - ix) - (nby - iy) * (nby - iy)));
             }
 
             m_neighbors_distances.push_back(nb_distances);
