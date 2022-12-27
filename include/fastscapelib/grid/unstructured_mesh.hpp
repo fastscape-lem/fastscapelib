@@ -79,12 +79,13 @@ namespace fastscapelib
 
         shape_type m_shape;
         size_type m_size;
-        neighbors_distances_type m_distances; 
+        
         grid_data_type m_node_area;
 
         points_type m_points;
         indices_type m_neighbors_indices_ptr;
         indices_type m_neighbors_indices;
+        std::vector<neighbors_distances_impl_type> m_neighbors_distances;
         indices_type m_convex_hull_indices;
         areas_type m_areas;
 
@@ -96,19 +97,9 @@ namespace fastscapelib
         inline const neighbors_distances_impl_type& neighbors_distances_impl(
             const size_type& idx) const;
 
+        void compute_neighbors_distances();
+
         friend class grid<self_type>;
-
-        // void neighbors_distances_impl(neighbors_distances_impl_type& neighbors_distances, 
-        //                             const size_type& idx) const;
-
-        neighbors_distances_type& neighbors_distances[m_size];
-
-        for (const auto x : points):
-            idx = neighbors[x] //uses the neighbors derived from indices (i.e. from scipy neighbors = indices[indptr[x]:indptr[x+1]])
-            for (const auto y : neighbors);
-                neighbors_distances = sqrt((pow((pointstest[neighbors[y]][0])-(points[x][0])))+(pow((pointstest[neighbors[y]][1])-(points[x][1]))));
-
-
     };
 
 
@@ -132,8 +123,34 @@ namespace fastscapelib
         m_size = points.shape()[0];
         m_shape = { static_cast<typename shape_type::value_type>(m_size) };
         set_status_at_nodes(status_at_nodes);
-        // TODO: pre-compute neighbor distances
-        m_neighbors_distances = neighbors_distances;
+        compute_neighbors_distances();
+    }
+
+    template <class S, unsigned int N>
+    void unstructured_mesh_xt<S, N>::compute_neighbors_distances()
+    {
+        m_neighbors_distances.clear();
+
+        for (const auto i = 0; i < m_points.shape[0]; i++)
+        {
+            auto ix = m_points(i, 0);
+            auto iy = m_points(i, 1);
+
+            start_idx = m_neighbors_indices_ptr[i];
+            stop_idx = m_neighbors_indices_ptr[i + 1];
+
+            neighbors_distances_impl_type nb_distances;
+            
+            for (auto inb = 0; inb == (stop_idx - start_idx);)
+            {
+                auto nb_idx = m_neighbors_indices[start_idx + inb];
+                auto nbx = m_points(nb_idx, 0);
+                auto nby = m_points(nb_idx, 1);
+                nb_distances(inb) = std::sqrt(((nbx - ix)*(nbx - ix) - (nby - iy)*(nby - iy)));
+            }
+
+            m_neighbors_distances.push_back(nb_distances);
+        }
     }
 
     template <class S, unsigned int N>
@@ -193,8 +210,7 @@ namespace fastscapelib
     auto unstructured_mesh_xt<S, N>::neighbors_distances_impl(const size_type& idx) const
         -> const neighbors_distances_impl_type&
     {
-        return neighbors_distances_impl_type();  // for this look at indices, this should hold an
-                                                 // array of pre-computed distances
+        return m_neighbors_distances[idx];
     }
 
 
