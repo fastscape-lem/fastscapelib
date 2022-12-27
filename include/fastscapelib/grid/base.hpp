@@ -337,7 +337,9 @@ namespace fastscapelib
         // using xt:xtensor for indices as not all containers support resizing
         // (e.g., using pyarray may cause segmentation faults with Python)
         using neighbors_indices_type = xt::xtensor<size_type, 1>;
-        using neighbors_distances_type = xt_tensor_t<xt_selector, grid_data_type, 1>; //should this be 2d? - [x,y] of the euclidian distance?
+        using neighbors_distances_type
+            = xt_tensor_t<xt_selector, grid_data_type, 1>;  // should this be 2d? - [x,y] of the
+                                                            // euclidian distance?
 
         using node_status_type = xt_tensor_t<xt_selector, node_status, inner_types::xt_ndims>;
 

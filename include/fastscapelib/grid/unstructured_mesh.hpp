@@ -79,7 +79,7 @@ namespace fastscapelib
 
         shape_type m_shape;
         size_type m_size;
-        
+        neighbors_distances_type m_distances;
         grid_data_type m_node_area;
 
         points_type m_points;
@@ -100,6 +100,17 @@ namespace fastscapelib
         void compute_neighbors_distances();
 
         friend class grid<self_type>;
+
+        // void neighbors_distances_impl(neighbors_distances_impl_type& neighbors_distances,
+        //                             const size_type& idx) const;
+
+        neighbors_distances_type& neighbors_distances[m_size];
+
+        for (const auto x : points):
+            idx = neighbors[x] //uses the neighbors derived from indices (i.e. from scipy neighbors = indices[indptr[x]:indptr[x+1]])
+            for (const auto y : neighbors);
+        neighbors_distances = sqrt((pow((pointstest[neighbors[y]][0]) - (points[x][0])))
+                                   + (pow((pointstest[neighbors[y]][1]) - (points[x][1]))));
     };
 
 
