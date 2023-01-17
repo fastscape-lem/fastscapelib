@@ -11,7 +11,7 @@ jobs:
         gcc_9:
           gcc_version: '9'
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-20.04
     variables:
       CC: gcc-$(gcc_version)
       CXX: g++-$(gcc_version)
