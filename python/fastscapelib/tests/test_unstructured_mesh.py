@@ -2,7 +2,7 @@ import numpy as np
 import numpy.testing as npt
 import pytest
 
-from fastscapelib.grid import Node, NodeStatus, UnstructuredMesh
+from fastscapelib.grid import Neighbor, Node, NodeStatus, UnstructuredMesh
 
 
 @pytest.fixture
@@ -81,15 +81,30 @@ class TestUnstructuredMesh:
         assert mesh.neighbors_count(4) == 4
         assert mesh.neighbors_count(0) == 3
 
-    def test_neighbors(self, mesh_args):
+    def test_neighbors_indices(self, mesh_args):
         mesh = UnstructuredMesh(*mesh_args.values(), [])
 
-        assert mesh.indices[1:3] == np.array([4, 3, 1])
-        # distance tested below
-        # status tested above
+        npt.assert_equal(mesh.neighbors_indices(3), [2, 4, 0])
+        npt.assert_equal(mesh.neighbors_indices(4), [2, 3, 1, 0])
 
     def test_neighbors_distances(self, mesh_args):
         mesh = UnstructuredMesh(*mesh_args.values(), [])
-        # neighbors_distances = np.array(([0.5, 0.70710678, 0.70710678, np.nan], [0.5, 0.70710678, 0.70710678, np.nan], [0.5, 0.70710678, 0.70710678, np.nan], [0.70710678, 0.5, 0.70710678, np.nan], [0.5, 0.5, 0.5, 0.5],))
 
-        assert neighbors_distances[4, :] == np.array([0.5, 0.5, 0.5, 0.5])
+        dist_diag = np.sqrt(0.5**2 + 0.5**2)
+
+        npt.assert_equal(mesh.neighbors_distances(3), [dist_diag, 0.5, dist_diag])
+        npt.assert_equal(mesh.neighbors_distances(4), [0.5] * 4)
+
+    def test_neighbors(self, mesh_args):
+        mesh = UnstructuredMesh(*mesh_args.values(), [])
+
+        dist_diag = np.sqrt(0.5**2 + 0.5**2)
+
+        assert mesh.neighbors(3) == [
+            Neighbor(2, dist_diag, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(4, 0.5, NodeStatus.CORE),
+            Neighbor(0, dist_diag, NodeStatus.FIXED_VALUE_BOUNDARY),
+        ]
+
+        with pytest.raises(IndexError, match="grid index out of range"):
+            mesh.neighbors(111)

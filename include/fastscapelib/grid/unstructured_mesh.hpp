@@ -27,7 +27,7 @@ namespace fastscapelib
         static constexpr std::size_t xt_ndims = 1;
 
         static constexpr uint8_t n_neighbors_max = N;
-        using neighbors_cache_type = neighbors_no_cache<0>;
+        using neighbors_cache_type = neighbors_no_cache<N>;
         using neighbors_count_type = std::uint8_t;
     };
 
@@ -64,7 +64,8 @@ namespace fastscapelib
 
         void set_status_at_nodes(const std::vector<node>& status_at_nodes);
 
-        const neighbors_count_type neighbors_count(const size_type& idx) const;
+        inline grid_data_type node_area(const size_type& idx) const noexcept;
+        const neighbors_count_type& neighbors_count(const size_type& idx) const;
 
         unstructured_mesh_xt(const points_type& points,
                              const indices_type& neighbors_indices_ptr,
@@ -85,11 +86,13 @@ namespace fastscapelib
         points_type m_points;
         indices_type m_neighbors_indices_ptr;
         indices_type m_neighbors_indices;
-        std::vector<neighbors_distances_impl_type> m_neighbors_distances;
         indices_type m_convex_hull_indices;
         areas_type m_areas;
 
         node_status_type m_status_at_nodes;
+
+        std::vector<neighbors_distances_impl_type> m_neighbors_distances;
+        std::vector<neighbors_count_type> m_neighbors_counts;
 
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                     const size_type& idx) const;
@@ -97,20 +100,10 @@ namespace fastscapelib
         inline const neighbors_distances_impl_type& neighbors_distances_impl(
             const size_type& idx) const;
 
+        void compute_neighbors_counts();
         void compute_neighbors_distances();
 
         friend class grid<self_type>;
-
-        // void neighbors_distances_impl(neighbors_distances_impl_type& neighbors_distances,
-        //                             const size_type& idx) const;
-
-        neighbors_distances_type& neighbors_distances[m_size];
-
-        for (const auto x : points):
-            idx = neighbors[x] //uses the neighbors derived from indices (i.e. from scipy neighbors = indices[indptr[x]:indptr[x+1]])
-            for (const auto y : neighbors);
-        neighbors_distances = sqrt((pow((pointstest[neighbors[y]][0]) - (points[x][0])))
-                                   + (pow((pointstest[neighbors[y]][1]) - (points[x][1]))));
     };
 
 
@@ -129,38 +122,58 @@ namespace fastscapelib
         , m_convex_hull_indices(convex_hull_indices)
         , m_areas(areas)
     {
-        // TODO: check that all array shapes are consistent?
+        // TODO: sanity checks, e.g., all array shapes are consistent
 
         m_size = points.shape()[0];
         m_shape = { static_cast<typename shape_type::value_type>(m_size) };
         set_status_at_nodes(status_at_nodes);
+
+        // counts must be called before distances, both after setting m_size
+        compute_neighbors_counts();
         compute_neighbors_distances();
+    }
+
+    // pre-compute and store the number of neighbors wastes memory for such trivial operation
+    // but it is needed since the `neighbors_count` public method returns a const reference
+    template <class S, unsigned int N>
+    void unstructured_mesh_xt<S, N>::compute_neighbors_counts()
+    {
+        m_neighbors_counts.clear();
+        m_neighbors_counts.resize(m_size);
+
+        for (size_t i = 0; i < m_size; i++)
+        {
+            size_type start_idx = m_neighbors_indices_ptr[i];
+            size_type stop_idx = m_neighbors_indices_ptr[i + 1];
+
+            m_neighbors_counts[i] = static_cast<neighbors_count_type>(stop_idx - start_idx);
+        }
     }
 
     template <class S, unsigned int N>
     void unstructured_mesh_xt<S, N>::compute_neighbors_distances()
     {
         m_neighbors_distances.clear();
+        m_neighbors_distances.resize(m_size);
 
-        for (const auto i = 0; i < m_points.shape[0]; i++)
+        for (size_t i = 0; i < m_size; i++)
         {
-            auto ix = m_points(i, 0);
-            auto iy = m_points(i, 1);
+            const auto ix = m_points(i, 0);
+            const auto iy = m_points(i, 1);
 
-            start_idx = m_neighbors_indices_ptr[i];
-            stop_idx = m_neighbors_indices_ptr[i + 1];
+            size_type start_idx = m_neighbors_indices_ptr[i];
 
             neighbors_distances_impl_type nb_distances;
 
-            for (auto inb = 0; inb == (stop_idx - start_idx);)
+            for (size_type inb = 0; inb < m_neighbors_counts[i]; inb++)
             {
-                auto nb_idx = m_neighbors_indices[start_idx + inb];
-                auto nbx = m_points(nb_idx, 0);
-                auto nby = m_points(nb_idx, 1);
-                nb_distances(inb) = std::sqrt(((nbx - ix) * (nbx - ix) - (nby - iy) * (nby - iy)));
+                const auto nb_idx = m_neighbors_indices[start_idx + inb];
+                const auto nbx = m_points(nb_idx, 0);
+                const auto nby = m_points(nb_idx, 1);
+                nb_distances[inb] = std::sqrt(((nbx - ix) * (nbx - ix) + (nby - iy) * (nby - iy)));
             }
 
-            m_neighbors_distances.push_back(nb_distances);
+            m_neighbors_distances[i] = nb_distances;
         }
     }
 
@@ -194,24 +207,27 @@ namespace fastscapelib
     }
 
     template <class S, unsigned int N>
-    auto unstructured_mesh_xt<S, N>::neighbors_count(const size_type& idx) const
-        -> const neighbors_count_type
+    inline auto unstructured_mesh_xt<S, N>::node_area(const size_type& idx) const noexcept
+        -> grid_data_type
     {
-        size_type start_idx = m_neighbors_indices_ptr[idx];
-        size_type stop_idx = m_neighbors_indices_ptr[idx + 1];
-
-        return static_cast<neighbors_count_type>(stop_idx - start_idx);
+        return m_areas[idx];
     }
 
+    template <class S, unsigned int N>
+    auto unstructured_mesh_xt<S, N>::neighbors_count(const size_type& idx) const
+        -> const neighbors_count_type&
+    {
+        return m_neighbors_counts[idx];
+    }
 
     template <class S, unsigned int N>
     void unstructured_mesh_xt<S, N>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                                             const size_type& idx) const
     {
-        int start_idx = m_neighbors_indices_ptr[idx];
-        int stop_idx = m_neighbors_indices_ptr[idx + 1];
+        size_type start_idx = m_neighbors_indices_ptr[idx];
+        size_type stop_idx = m_neighbors_indices_ptr[idx + 1];
 
-        for (auto i = 0; i == (stop_idx - start_idx);)
+        for (size_type i = 0; i < (stop_idx - start_idx); i++)
         {
             neighbors[i] = m_neighbors_indices[start_idx + i];
         }
