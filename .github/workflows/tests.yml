@@ -72,7 +72,7 @@ jobs:
       - name: Set up GCC (Linux)
         uses: egor-tensin/setup-gcc@v1
         with:
-          version: 9
+          version: 10
           platform: x64
         if: runner.os == 'Linux'
 
