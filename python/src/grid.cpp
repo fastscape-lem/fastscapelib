@@ -89,7 +89,7 @@ add_grid_bindings(py::module& m)
                        const fs::py_unstructured_mesh::areas_type,
                        const std::vector<fs::node>&>());
 
-    umesh.def_property_readonly("size", &fs::py_unstructured_mesh::size)
+    umesh.def_property_readonly("size", [](const fs::py_unstructured_mesh& g) { return g.size(); })
         .def_property_readonly("shape", &fs::py_unstructured_mesh::shape)
         .def_property_readonly("status_at_nodes", &fs::py_unstructured_mesh::status_at_nodes);
 
