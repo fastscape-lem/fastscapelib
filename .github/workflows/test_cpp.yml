@@ -39,7 +39,7 @@ jobs:
       - name: Configure Fastscapelib (CMake)
         shell: bash -l {0}
         run: |
-          $CONDA/bin/conda  activate fastscapelib
+          $CONDA/bin/activate fastscapelib
           cmake -S . -B build \
             -DDOWNLOAD_GTEST=ON \
             -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
@@ -47,12 +47,12 @@ jobs:
       - name: Build Fastscapelib
         shell: bash -l {0}
         run: |
-          $CONDA/bin/conda activate fastscapelib
+          $CONDA/bin/activate fastscapelib
           cmake --build build
 
       - name: Run tests
         shell: bash -l {0}
         run: |
-          $CONDA/bin/conda activate fastscapelib
+          $CONDA/bin/activate fastscapelib
           cd build
           ctest -T test --output-on-failure .
