@@ -226,6 +226,7 @@ namespace fastscapelib
 
             for (auto inode = stack.crbegin(); inode != stack.crend(); ++inode)
             {
+                std::cout << *inode << std::endl;
                 if (receivers(*inode) != *inode)
                 {
                     drainage_area_flat(receivers(*inode)) += drainage_area_flat(*inode);
