@@ -497,7 +497,7 @@ namespace fastscapelib
                                double dx,
                                double dy)
     {
-        xt::xtensor<double, 0> cell_area = dx * dy;
+        xt::xtensor<double, 1> cell_area = { dx * dy };
         compute_drainage_area(drainage_area, cell_area, stack, receivers);
     }
 }  // namespace fastscapelib
