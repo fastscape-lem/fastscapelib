@@ -146,5 +146,5 @@ TEST(flow_routing, compute_drainage_area)
 
         EXPECT_TRUE(xt::all(xt::equal(drainage_area, expected_area_2d)));
     }
-#endif
 }
+#endif
