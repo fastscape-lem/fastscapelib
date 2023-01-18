@@ -8,7 +8,7 @@ name: Tests
 
 jobs:
   test_cpp:
-    name: Tests C++ (${{ matrix.cfg.label }})
+    name: Test C++ (${{ matrix.cfg.label }})
     runs-on: ${{ matrix.cfg.os }}
     strategy:
       fail-fast: false
@@ -68,13 +68,6 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-
-      - name: Set up GCC (Linux)
-        uses: egor-tensin/setup-gcc@v1
-        with:
-          version: 10
-          platform: x64
-        if: runner.os == 'Linux'
 
       - name: Install dependencies (Conda)
         shell: bash -l {0}
