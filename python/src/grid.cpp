@@ -16,9 +16,32 @@ namespace py = pybind11;
 namespace fs = fastscapelib;
 
 
+template <class Derived>
+class Base
+{
+public:
+    int foo()
+    {
+        return static_cast<const Derived*>(this)->m_foo;
+    }
+};
+
+class Derived : public Base<Derived>
+{
+public:
+    Derived() = default;
+
+private:
+    int m_foo = 1;
+    friend class Base<Derived>;
+};
+
+
 void
 add_grid_bindings(py::module& m)
 {
+    py::class_<Derived>(m, "Derived").def(py::init<>()).def_property_readonly("foo", &Derived::foo);
+
     // ==== Binding of the node_status enumeration ==== //
     py::enum_<fs::node_status> node_status(
         m,
