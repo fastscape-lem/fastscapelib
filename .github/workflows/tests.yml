@@ -58,12 +58,12 @@ jobs:
           ctest -T test --output-on-failure .
 
   test_py:
-    name: Tests Python (${{ matrix.os }} / ${{ matrix.python-version }})
+    name: Test Python (${{ matrix.os }} / ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "macos-latest"]
+        os: ["ubuntu-20.04", "macos-latest"]
         python-version: ["3.9", "3.10", "3.11"]
     steps:
       - name: Checkout repo
