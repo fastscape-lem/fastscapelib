@@ -162,10 +162,3 @@ class TestProfileGrid:
 
         with pytest.raises(IndexError, match="grid index out of range"):
             self.g.neighbors(11)
-
-
-def test_derived():
-    from fastscapelib.grid import Derived
-
-    d = Derived()
-    assert d.foo == 1
