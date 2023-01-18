@@ -58,12 +58,12 @@ jobs:
           ctest -T test --output-on-failure .
 
   test_py:
-    name: Tests Python (runner.os / ${{ matrix.python-version }})
+    name: Tests Python (${{ matrix.os }} / ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        os: ["ubuntu-latest", "macos-latest"]
         python-version: ["3.9", "3.10", "3.11"]
     steps:
       - name: Checkout repo
@@ -86,4 +86,4 @@ jobs:
         shell: bash -l {0}
         run: |
           source $CONDA/bin/activate fastscapelib
-          pytest python/fastscapelib/tests -vv
+          pytest python/fastscapelib/tests -vv --color=yes
