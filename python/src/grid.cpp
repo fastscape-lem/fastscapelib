@@ -20,27 +20,37 @@ template <class Derived>
 class Base
 {
 public:
-    int foo()
+    inline const Derived& derived() const noexcept
     {
-        return static_cast<const Derived*>(this)->m_foo;
+        return *static_cast<const Derived*>(this);
+    }
+
+    int foo() const
+    {
+        return derived().m_foo;
     }
 };
 
-class Derived : public Base<Derived>
+template <int N>
+class Derived : public Base<Derived<N>>
 {
 public:
     Derived() = default;
 
 private:
     int m_foo = 1;
-    friend class Base<Derived>;
+    friend class Base<Derived<N>>;
 };
+
+using PyDerived = Derived<1>;
 
 
 void
 add_grid_bindings(py::module& m)
 {
-    py::class_<Derived>(m, "Derived").def(py::init<>()).def_property_readonly("foo", &Derived::foo);
+    py::class_<PyDerived>(m, "Derived")
+        .def(py::init<>())
+        .def_property_readonly("foo", &PyDerived::foo);
 
     // ==== Binding of the node_status enumeration ==== //
     py::enum_<fs::node_status> node_status(
