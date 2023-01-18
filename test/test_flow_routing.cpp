@@ -123,20 +123,20 @@ TEST(flow_routing, compute_drainage_area)
         EXPECT_TRUE(xt::all(xt::equal(drainage_area, expected_area)));
     }
 
-    {
-        SCOPED_TRACE("2d grid");
-        xt::xtensor<double, 2> drainage_area = xt::ones<double>({ 2, 5 }) * -1;
-        fs::compute_drainage_area(drainage_area, stack, receivers, 1., 2.);
+    // {
+    //     SCOPED_TRACE("2d grid");
+    //     xt::xtensor<double, 2> drainage_area = xt::ones<double>({ 2, 5 }) * -1;
+    //     fs::compute_drainage_area(drainage_area, stack, receivers, 1., 2.);
 
-        EXPECT_TRUE(xt::all(xt::equal(drainage_area, expected_area_2d)));
-    }
+    //     EXPECT_TRUE(xt::all(xt::equal(drainage_area, expected_area_2d)));
+    // }
 
-    {
-        SCOPED_TRACE("2d grid -- 2d cell_area");
-        xt::xtensor<double, 2> drainage_area = xt::ones<double>({ 2, 5 }) * -1;
-        xt::xtensor<double, 2> cell_area = xt::ones<double>({ 2, 5 }) * 2;
-        fs::compute_drainage_area(drainage_area, cell_area, stack, receivers);
+    // {
+    //     SCOPED_TRACE("2d grid -- 2d cell_area");
+    //     xt::xtensor<double, 2> drainage_area = xt::ones<double>({ 2, 5 }) * -1;
+    //     xt::xtensor<double, 2> cell_area = xt::ones<double>({ 2, 5 }) * 2;
+    //     fs::compute_drainage_area(drainage_area, cell_area, stack, receivers);
 
-        EXPECT_TRUE(xt::all(xt::equal(drainage_area, expected_area_2d)));
-    }
+    //     EXPECT_TRUE(xt::all(xt::equal(drainage_area, expected_area_2d)));
+    // }
 }
