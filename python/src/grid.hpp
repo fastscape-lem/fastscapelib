@@ -3,8 +3,11 @@
 
 #include <functional>
 #include <stdexcept>
+#include <type_traits>
 
 #include "pybind11/pybind11.h"
+
+#include "xtensor-python/pytensor.hpp"
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
@@ -26,7 +29,7 @@ namespace fastscapelib
     using py_unstructured_mesh = fs::unstructured_mesh_xt<fs::py_selector>;
 
     template <class G>
-    void add_grid_static_properties(py::class_<G>& pyg)
+    void register_grid_static_properties(py::class_<G>& pyg)
     {
         pyg.def_property_readonly_static("is_structured",
                                          [](py::object /*self*/) { return G::is_structured(); })
@@ -34,6 +37,36 @@ namespace fastscapelib
                                           [](py::object /*self*/) { return G::is_uniform(); })
             .def_property_readonly_static("n_neighbors_max",
                                           [](py::object /*self*/) { return G::n_neighbors_max(); });
+    }
+
+    /*
+    ** Use lambdas since directly using method pointers doesn't seem to
+    ** always work (issues with GCC 11)
+    */
+    template <class G>
+    void register_base_grid_properties(py::class_<G>& pyg)
+    {
+        pyg.def_property_readonly("size", [](const G& g) { return g.size(); });
+        pyg.def_property_readonly("shape", [](const G& g) { return g.shape(); });
+        pyg.def_property_readonly("status_at_nodes",
+                                  [](const G& g) { return g.status_at_nodes(); });
+    }
+
+    /*
+    ** Use lambdas since directly using method pointers doesn't seem to
+    ** always work (issues with GCC 11)
+    */
+    template <class G>
+    void register_structured_grid_properties(py::class_<G>& pyg)
+    {
+        static_assert(G::is_structured(),
+                      "cannot register structured grid properties to a non-structured grid type");
+
+        using property_t = std::
+            conditional_t<std::is_same<G, py_raster_grid>::value, xt::pytensor<double, 1>, double>;
+
+        pyg.def_property_readonly("spacing", [](const G& g) -> property_t { return g.spacing(); });
+        pyg.def_property_readonly("length", [](const G& g) -> property_t { return g.length(); });
     }
 
     template <class G>
@@ -87,7 +120,7 @@ namespace fastscapelib
     };
 
     template <class G>
-    void add_neighbor_methods(py::class_<G>& pyg)
+    void register_neighbor_methods(py::class_<G>& pyg)
     {
         auto grid_funcs = py_grid_funcs<G>();
 

@@ -44,10 +44,12 @@ add_grid_bindings(py::module& m)
         .def_readwrite("distance", &fs::neighbor::distance, "Neighbor distance.")
         .def_readwrite("status", &fs::neighbor::status, "Neighbor status.");
 
+    /*
+    ** Unstructured Mesh
+    */
+
     // ==== Binding of the UnstructuredMesh class ==== //
     py::class_<fs::py_unstructured_mesh> umesh(m, "UnstructuredMesh");
-
-    fs::add_grid_static_properties(umesh);
 
     umesh.def(py::init<const fs::py_unstructured_mesh::points_type,
                        const fs::py_unstructured_mesh::indices_type,
@@ -56,11 +58,13 @@ add_grid_bindings(py::module& m)
                        const fs::py_unstructured_mesh::areas_type,
                        const std::vector<fs::node>&>());
 
-    umesh.def_property_readonly("size", &fs::py_unstructured_mesh::size)
-        .def_property_readonly("shape", &fs::py_unstructured_mesh::shape)
-        .def_property_readonly("status_at_nodes", &fs::py_unstructured_mesh::status_at_nodes);
+    fs::register_grid_static_properties(umesh);
+    fs::register_base_grid_properties(umesh);
+    fs::register_neighbor_methods(umesh);
 
-    fs::add_neighbor_methods(umesh);
+    /*
+    ** Profile Grid
+    */
 
     // ==== Binding of the profile_boundary_status class ==== //
     py::class_<fs::profile_boundary_status>(m, "ProfileBoundaryStatus")
@@ -76,8 +80,6 @@ add_grid_bindings(py::module& m)
 
     // ==== Binding of the ProfileGrid class ==== //
     py::class_<fs::py_profile_grid> pgrid(m, "ProfileGrid");
-
-    fs::add_grid_static_properties(pgrid);
 
     pgrid.def(py::init<fs::py_profile_grid::size_type,
                        fs::py_profile_grid::spacing_type,
@@ -99,13 +101,14 @@ add_grid_bindings(py::module& m)
 
     pgrid.def_static("from_length", &fs::py_profile_grid::from_length);
 
-    pgrid.def_property_readonly("size", &fs::py_profile_grid::size)
-        .def_property_readonly("shape", &fs::py_profile_grid::shape)
-        .def_property_readonly("spacing", &fs::py_profile_grid::spacing)
-        .def_property_readonly("length", &fs::py_profile_grid::length)
-        .def_property_readonly("status_at_nodes", &fs::py_profile_grid::status_at_nodes);
+    fs::register_grid_static_properties(pgrid);
+    fs::register_base_grid_properties(pgrid);
+    fs::register_structured_grid_properties(pgrid);
+    fs::register_neighbor_methods(pgrid);
 
-    fs::add_neighbor_methods(pgrid);
+    /*
+    ** Raster Grid
+    */
 
     // ==== Binding of the raster_node structure ==== //
     py::class_<fs::raster_node>(m, "RasterNode")
@@ -143,8 +146,6 @@ add_grid_bindings(py::module& m)
     // ==== Binding of the RasterGrid class ==== //
     py::class_<fs::py_raster_grid> rgrid(m, "RasterGrid");
 
-    fs::add_grid_static_properties(rgrid);
-
     rgrid.def(py::init<const fs::py_raster_grid::shape_type&,
                        const xt::pytensor<double, 1>&,
                        const fs::raster_boundary_status&,
@@ -157,17 +158,10 @@ add_grid_bindings(py::module& m)
                         const std::vector<fs::raster_node> status)
                      { return fs::py_raster_grid::from_length(shape, length, boundary, status); });
 
-    rgrid.def_property_readonly("size", &fs::py_raster_grid::size)
-        .def_property_readonly("shape", &fs::py_raster_grid::shape)
-        .def_property_readonly("spacing",
-                               [](const fs::py_raster_grid& g) -> xt::pytensor<double, 1>
-                               { return g.spacing(); })
-        .def_property_readonly("length",
-                               [](const fs::py_raster_grid& g) -> xt::pytensor<double, 1>
-                               { return g.length(); })
-        .def_property_readonly("status_at_nodes", &fs::py_raster_grid::status_at_nodes);
-
-    fs::add_neighbor_methods(rgrid);
+    fs::register_grid_static_properties(rgrid);
+    fs::register_base_grid_properties(rgrid);
+    fs::register_structured_grid_properties(rgrid);
+    fs::register_neighbor_methods(rgrid);
 
     auto raster_grid_funcs = fs::py_raster_grid_funcs();
 
