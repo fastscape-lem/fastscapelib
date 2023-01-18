@@ -18,7 +18,7 @@ jobs:
           - {os: ubuntu-latest,  gcc: 11, label: "linux / gcc 11"}
           - {os: macos-11, label: "macos 11"}
           - {os: macos-12, label: "macos 12"}
-          #- {os: windows-latest}
+          - {os: windows-latest, label: "windows"}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -30,30 +30,31 @@ jobs:
           platform: x64
         if: runner.os == 'Linux'
 
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: fastscapelib-test
+          channels: conda-forge
+          channel-priority: strict
+
       - name: Install dependencies (Conda)
         shell: bash -l {0}
-        run: |
-          $CONDA/bin/conda config --set always_yes yes --set changeps1 no
-          $CONDA/bin/conda create -n fastscapelib cmake xtensor -c conda-forge
+        run: conda install cmake xtensor
 
       - name: Configure Fastscapelib (CMake)
         shell: bash -l {0}
         run: |
-          source $CONDA/bin/activate fastscapelib
           cmake -S . -B build \
             -DDOWNLOAD_GTEST=ON \
             -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
 
       - name: Build Fastscapelib
         shell: bash -l {0}
-        run: |
-          source $CONDA/bin/activate fastscapelib
-          cmake --build build
+        run: cmake --build build
 
       - name: Run tests
         shell: bash -l {0}
         run: |
-          source $CONDA/bin/activate fastscapelib
           cd build
           ctest -T test --output-on-failure .
 
@@ -63,7 +64,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-20.04", "ubuntu-latest", "macos-latest"]
+        os: ["ubuntu-20.04", "ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: ["3.9", "3.10", "3.11"]
     steps:
       - name: Checkout repo
