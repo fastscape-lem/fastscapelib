@@ -49,7 +49,18 @@ add_grid_bindings(py::module& m)
 
     fs::add_grid_static_properties(umesh);
 
-    umesh.def(py::init());
+    umesh.def(py::init<const fs::py_unstructured_mesh::points_type,
+                       const fs::py_unstructured_mesh::indices_type,
+                       const fs::py_unstructured_mesh::indices_type,
+                       const fs::py_unstructured_mesh::indices_type,
+                       const fs::py_unstructured_mesh::areas_type,
+                       const std::vector<fs::node>&>());
+
+    umesh.def_property_readonly("size", &fs::py_unstructured_mesh::size)
+        .def_property_readonly("shape", &fs::py_unstructured_mesh::shape)
+        .def_property_readonly("status_at_nodes", &fs::py_unstructured_mesh::status_at_nodes);
+
+    fs::add_neighbor_methods(umesh);
 
     // ==== Binding of the profile_boundary_status class ==== //
     py::class_<fs::profile_boundary_status>(m, "ProfileBoundaryStatus")

@@ -64,7 +64,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # -- Set compiler flags
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR (CMAKE_CXX_COMPILER_ID MATCHES "Intel" AND NOT WIN32))
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wunused-parameter")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-parameter")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wreorder")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion -Wsign-conversion")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast -Wunused-variable")
@@ -75,7 +75,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     if(NOT WIN32)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wunused-parameter")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wreorder")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion -Wsign-conversion")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast -Wunused-variable")
@@ -106,12 +105,13 @@ set(FASTSCAPELIB_TEST_SRC
     test_structured_grid.cpp
     test_sink_resolver.cpp
     test_spl.cpp
+    test_unstructured_mesh.cpp
 )
 
 # -- build a target for each test
 foreach(filename IN LISTS FASTSCAPELIB_TEST_SRC)
     string(REPLACE ".cpp" "" targetname ${filename})
     add_executable(${targetname} ${filename})
-    target_link_libraries(${targetname} PRIVATE fastscapelib GTest::GTest GTest::Main)
+    target_link_libraries(${targetname} PRIVATE fastscapelib GTest::gtest_main)
     add_test(${targetname} ${targetname})
 endforeach()

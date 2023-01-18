@@ -2,8 +2,6 @@ jobs:
   - job: 'Linux_1'
     strategy:
       matrix:
-        gcc_6:
-          gcc_version: '6'
         gcc_7:
           gcc_version: '7'
         gcc_8:
@@ -11,7 +9,7 @@ jobs:
         gcc_9:
           gcc_version: '9'
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-20.04
     variables:
       CC: gcc-$(gcc_version)
       CXX: g++-$(gcc_version)
@@ -19,7 +17,7 @@ jobs:
     steps:
 
       - script: |
-          if [[ $(gcc_version) == '6' || $(gcc_version) == '7' || $(gcc_version) == '8' ]]; then
+          if [[ $(gcc_version) == '7' || $(gcc_version) == '8' ]]; then
             sudo add-apt-repository ppa:ubuntu-toolchain-r/test
             sudo apt-get update
             sudo apt-get --no-install-suggests --no-install-recommends install g++-$(gcc_version)
