@@ -69,6 +69,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Set up GCC (Linux)
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: 9
+          platform: x64
+        if: runner.os == 'Linux'
+
       - name: Install dependencies (Conda)
         shell: bash -l {0}
         run: |
