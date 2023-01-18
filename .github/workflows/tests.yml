@@ -58,7 +58,7 @@ jobs:
           ctest -T test --output-on-failure .
 
   test_py:
-    name: Tests Python (${{ runner.os }} / ${{ matrix.python-version }})
+    name: Tests Python (runner.os / ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
