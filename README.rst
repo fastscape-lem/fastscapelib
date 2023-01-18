@@ -9,7 +9,7 @@ and landscape evolution modeling.
 This library currently has Python bindings and is easily extensible to
 other languages.
 
-.. |Build Status| image:: https://github.com/fastscape-lem/fastscapelib/actions/workflows/tests/badge.svg?branch=main
+.. |Build Status| image:: https://github.com/fastscape-lem/fastscapelib/actions/workflows/tests.yml/badge.svg?branch=main
    :target: https://github.com/fastscape-lem/fastscapelib/actions/workflows/tests.yml
    :alt: Build Status
 .. |Doc Status| image:: http://readthedocs.org/projects/fastscapelib/badge/?version=latest
