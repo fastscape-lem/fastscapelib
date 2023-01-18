@@ -14,9 +14,9 @@ jobs:
       fail-fast: false
       matrix:
         cfg:
-          - {os: ubuntu-latest,  gcc: 7, label: "linux (gcc 7)"}
-          - {os: ubuntu-latest,  gcc: 9, label: "linux (gcc 9)"}
-          - {os: ubuntu-latest,  gcc: 11, label: "linux (gcc 11)"}
+          - {os: ubuntu-latest,  gcc: 7, label: "linux / gcc 7"}
+          - {os: ubuntu-latest,  gcc: 9, label: "linux / gcc 9"}
+          - {os: ubuntu-latest,  gcc: 11, label: "linux / gcc 11"}
           - {os: macos-11, label: "macos 11"}
           - {os: macos-12, label: "macos 12"}
           #- {os: windows-latest}
@@ -27,7 +27,7 @@ jobs:
       - name: Set up GCC (Linux)
         uses: egor-tensin/setup-gcc@v1
         with:
-          version: ${{ matrix.gcc }}
+          version: ${{ matrix.cfg.gcc }}
           platform: x64
         if: runner.os == 'Linux'
 
@@ -43,8 +43,7 @@ jobs:
           source activate fastscapelib
           cmake -S . -B build \
             -DDOWNLOAD_GTEST=ON \
-            -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
-            -DCMAKE_EXTRA_ARGS
+            -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
 
       - name: Build Fastscapelib
         shell: bash -l {0}
