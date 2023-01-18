@@ -1,0 +1,60 @@
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+name: Tests C++
+
+jobs:
+  test:
+    name: Tests C++ (${{ matrix.cfg.label }})
+    runs-on: ${{ matrix.cfg.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        cfg:
+          - {os: ubuntu-latest,  gcc: 7, label: "linux (gcc 7)"}
+          - {os: ubuntu-latest,  gcc: 9, label: "linux (gcc 9)"}
+          - {os: ubuntu-latest,  gcc: 11, label: "linux (gcc 11)"}
+          - {os: macos-11, label: "macos 11"}
+          - {os: macos-12, label: "macos 12"}
+          #- {os: windows-latest}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up GCC (Linux)
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: ${{ matrix.gcc }}
+          platform: x64
+        if: runner.os == 'Linux'
+
+      - name: Install dependencies (Conda)
+        shell: bash -l {0}
+        run: |
+          $CONDA/bin/conda config --set always_yes yes --set changeps1 no
+          $CONDA/bin/conda create -n fastscapelib cmake xtensor -c conda-forge
+
+      - name: Configure Fastscapelib (CMake)
+        shell: bash -l {0}
+        run: |
+          source activate fastscapelib
+          cmake -S . -B build \
+            -DDOWNLOAD_GTEST=ON \
+            -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
+            -DCMAKE_EXTRA_ARGS
+
+      - name: Build Fastscapelib
+        shell: bash -l {0}
+        run: |
+          source activate fastscapelib
+          cmake --build build
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: |
+          source activate fastscapelib
+          cd build
+          ctest -T test --output-on-failure .
