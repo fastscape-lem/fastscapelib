@@ -9,6 +9,7 @@
 #ifndef FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 #define FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 
+#include <cmath>
 #include <stack>
 
 #include "fastscapelib/algo/flow_routing.hpp"
@@ -160,39 +161,150 @@ namespace fastscapelib
     }
 
 
-    struct multiple_flow_router
+    struct multi_flow_router
     {
         using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
         static constexpr bool is_single = false;
-        double p1;
-        double p2;
+        double slope_exp = 1.0;
     };
 
 
     namespace detail
     {
 
-        /**
-         * TODO: not yet operational.
-         *
-         */
         template <class FG>
-        class flow_router_impl<FG, multiple_flow_router>
-            : public flow_router_impl_base<FG, multiple_flow_router>
+        class flow_router_impl<FG, multi_flow_router>
+            : public flow_router_impl_base<FG, multi_flow_router>
         {
         public:
             using graph_impl_type = FG;
-            using base_type = flow_router_impl_base<graph_impl_type, multiple_flow_router>;
+            using base_type = flow_router_impl_base<graph_impl_type, multi_flow_router>;
 
             using data_array_type = typename graph_impl_type::data_array_type;
 
             static constexpr size_t n_receivers = graph_impl_type::grid_type::n_neighbors_max();
 
-            flow_router_impl(graph_impl_type& graph_impl, const multiple_flow_router& router)
+            flow_router_impl(graph_impl_type& graph_impl, const multi_flow_router& router)
                 : base_type(graph_impl, router){};
 
-            void route1(const data_array_type& /*elevation*/){};
+            void route1(const data_array_type& elevation)
+            {
+                using neighbors_type = typename graph_impl_type::grid_type::neighbors_type;
+                using nrec_type = typename graph_impl_type::grid_type::neighbors_count_type;
+
+                double slope;
+                double weight, weights_sum;
+                neighbors_type neighbors;
+                nrec_type nrec;
+
+                auto& grid = this->m_graph_impl.grid();
+                auto& donors = this->m_graph_impl.m_donors;
+                auto& donors_count = this->m_graph_impl.m_donors_count;
+                auto& receivers = this->m_graph_impl.m_receivers;
+                auto& receivers_count = this->m_graph_impl.m_receivers_count;
+                auto& receivers_weight = this->m_graph_impl.m_receivers_weight;
+                auto& dist2receivers = this->m_graph_impl.m_receivers_distance;
+
+                donors_count.fill(0);
+
+                for (auto i : grid.nodes_indices())
+                {
+                    if (grid.status_at_nodes().data()[i] == node_status::fixed_value_boundary)
+                    {
+                        receivers_count(i) = 1;
+                        receivers(i, 0) = i;
+                        receivers_weight(i, 0) = 1;
+                        dist2receivers(i, 0) = 0;
+                        continue;
+                    }
+
+                    nrec = 0;
+                    weights_sum = 0;
+
+                    for (auto n : grid.neighbors(i, neighbors))
+                    {
+                        if (elevation.data()[i] > elevation.data()[n.idx])
+                        {
+                            slope = (elevation.data()[i] - elevation.data()[n.idx]) / n.distance;
+
+                            receivers(i, nrec) = n.idx;
+                            weight = std::pow(slope, this->m_router.slope_exp);
+                            weights_sum += weight;
+                            receivers_weight(i, nrec) = weight;
+                            dist2receivers(i, nrec) = n.distance;
+
+                            // update donors (note: not thread safe if later parallelization)
+                            donors(n.idx, donors_count(n.idx)++) = i;
+
+                            nrec++;
+                        }
+                    }
+
+                    receivers_count(i) = nrec;
+
+                    // normalize weights
+                    for (auto j = 0; j < nrec; j++)
+                    {
+                        receivers_weight(i, j) /= weights_sum;
+                    }
+                }
+
+                // DFS upstream->downstream so that it works with multi-directions flow
+                this->m_graph_impl.compute_dfs_indices_updown();
+            };
+
             void route2(const data_array_type& /*elevation*/){};
+        };
+    }
+
+
+    class singlemulti_flow_router
+    {
+    public:
+        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        static constexpr bool is_single = false;
+        double slope_exp = 1.0;
+        bool copy_graph_unresolved = false;
+        bool copy_graph_resolved = false;
+    };
+
+
+    namespace detail
+    {
+        template <class FG>
+        class flow_router_impl<FG, singlemulti_flow_router>
+            : public flow_router_impl_base<FG, singlemulti_flow_router>
+        {
+        public:
+            using graph_impl_type = FG;
+            using base_type = flow_router_impl_base<graph_impl_type, singlemulti_flow_router>;
+
+            using data_array_type = typename graph_impl_type::data_array_type;
+
+            flow_router_impl(graph_impl_type& graph_impl, const singlemulti_flow_router& router)
+                : base_type(graph_impl, router)
+                , m_single_router_impl(graph_impl, single_flow_router())
+                , m_multi_router_impl(graph_impl, { router.slope_exp }){};
+
+            void route1(const data_array_type& elevation)
+            {
+                // weights and receiver_count not reset in `single_flow_router::route1`
+                // -> do it here
+                this->m_graph_impl.m_receivers_count.fill(1);
+                auto weights = xt::col(this->m_graph_impl.m_receivers_weight, 0);
+                weights.fill(1.);
+
+                m_single_router_impl.route1(elevation);
+            };
+
+            void route2(const data_array_type& elevation)
+            {
+                m_multi_router_impl.route1(elevation);
+            };
+
+        private:
+            flow_router_impl<FG, single_flow_router> m_single_router_impl;
+            flow_router_impl<FG, multi_flow_router> m_multi_router_impl;
         };
     }
 }

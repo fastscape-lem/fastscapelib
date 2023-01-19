@@ -3,9 +3,10 @@ import numpy.testing as npt
 
 from fastscapelib.flow import (
     FlowGraph,
-    MultipleFlowRouter,
+    MultiFlowRouter,
     NoSinkResolver,
     SingleFlowRouter,
+    SingleMultiFlowRouter,
 )
 from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
 
@@ -21,7 +22,8 @@ class TestFlowGraph:
         )
 
         FlowGraph(profile_grid, SingleFlowRouter(), NoSinkResolver())
-        FlowGraph(raster_grid, MultipleFlowRouter(1.0, 1.1), NoSinkResolver())
+        FlowGraph(raster_grid, MultiFlowRouter(1.0), NoSinkResolver())
+        FlowGraph(raster_grid, SingleMultiFlowRouter(1.0), NoSinkResolver())
 
     def test_update_routes(self):
         grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])

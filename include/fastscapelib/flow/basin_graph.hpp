@@ -90,8 +90,6 @@ namespace fastscapelib
             , m_mst_method(basin_method)
         {
             m_perf_boruvka = 0;
-
-            // TODO: check shape of receivers (should be single flow)
         }
 
         inline size_type basins_count() const
@@ -216,6 +214,8 @@ namespace fastscapelib
     template <class FG>
     void basin_graph<FG>::update_routes(const data_array_type& elevation)
     {
+        // TODO: check single flow (flow graph receivers_count all equal to 1)
+
         connect_basins(elevation);
 
         if (m_mst_method == mst_method::kruskal)

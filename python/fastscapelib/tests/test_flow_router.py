@@ -4,9 +4,10 @@ import pytest
 
 from fastscapelib.flow import (
     FlowGraph,
-    MultipleFlowRouter,
+    MultiFlowRouter,
     NoSinkResolver,
     SingleFlowRouter,
+    SingleMultiFlowRouter,
 )
 from fastscapelib.grid import (
     Node,
@@ -192,12 +193,17 @@ class TestSingleFlowRouter:
         )
 
 
-class TestMultipleFlowRouter:
+class TestMultiFlowRouter:
     def test___init__(self):
-        MultipleFlowRouter(1.0, 1.5)
+        MultiFlowRouter(2.0)
 
         with pytest.raises(TypeError):
-            MultipleFlowRouter(1.0)
+            MultiFlowRouter(1.0, "a")
+
+
+class TestSingleMultiFlowRouter:
+    def test___init__(self):
+        SingleMultiFlowRouter(2.0)
 
         with pytest.raises(TypeError):
-            MultipleFlowRouter(1.0, "a")
+            SingleMultiFlowRouter(1.0, "a")

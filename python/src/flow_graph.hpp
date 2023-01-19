@@ -384,12 +384,15 @@ namespace fastscapelib
 
 
     template <class G>
-    void add_init_methods(py::class_<py_flow_graph>& pyfg)
+    void register_init_methods(py::class_<py_flow_graph>& pyfg)
     {
         pyfg.def(py::init<G&, single_flow_router&, no_sink_resolver&>())
-            .def(py::init<G&, multiple_flow_router&, no_sink_resolver&>())
+            .def(py::init<G&, multi_flow_router&, no_sink_resolver&>())
             .def(py::init<G&, single_flow_router&, pflood_sink_resolver&>())
-            .def(py::init<G&, single_flow_router&, mst_sink_resolver&>());
+            .def(py::init<G&, single_flow_router&, mst_sink_resolver&>())
+            .def(py::init<G&, singlemulti_flow_router&, no_sink_resolver&>())
+            .def(py::init<G&, singlemulti_flow_router&, pflood_sink_resolver&>())
+            .def(py::init<G&, singlemulti_flow_router&, mst_sink_resolver&>());
     }
 }
 

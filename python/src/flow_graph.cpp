@@ -27,8 +27,8 @@ add_flow_graph_bindings(py::module& m)
 
     py::class_<fs::py_flow_graph> pyfgraph(m, "FlowGraph");
 
-    fs::add_init_methods<fs::py_profile_grid>(pyfgraph);
-    fs::add_init_methods<fs::py_raster_grid>(pyfgraph);
+    fs::register_init_methods<fs::py_profile_grid>(pyfgraph);
+    fs::register_init_methods<fs::py_raster_grid>(pyfgraph);
 
     pyfgraph.def("impl", &fs::py_flow_graph::impl, py::return_value_policy::reference);
 
