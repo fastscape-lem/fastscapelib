@@ -9,7 +9,9 @@
 #ifndef FASTSCAPELIB_FLOW_FLOW_GRAPH_H
 #define FASTSCAPELIB_FLOW_FLOW_GRAPH_H
 
+#include <map>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 #include "xtensor/xstrided_view.hpp"
@@ -92,6 +94,11 @@ namespace fastscapelib
         const flow_graph_impl_type& impl() const
         {
             return m_graph_impl;
+        }
+
+        const std::map<std::string, flow_graph_impl_type>& embedded_graphs() const
+        {
+            return m_router_impl.embedded_graphs();
         }
 
         void accumulate(data_array_type& acc, const data_array_type& src) const

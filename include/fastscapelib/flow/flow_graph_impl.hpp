@@ -6,8 +6,6 @@
 #include <vector>
 
 #include "xtensor/xbroadcast.hpp"
-#include "xtensor/xstrided_view.hpp"
-#include "xtensor/xview.hpp"
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"

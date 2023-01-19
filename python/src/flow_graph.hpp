@@ -241,6 +241,7 @@ namespace fastscapelib
             using data_array_type = xt_array_t<py_selector, data_type>;
             using shape_type = data_array_type::shape_type;
             using data_array_size_type = xt_array_t<py_selector, size_type>;
+            using embedded_graphs_type = std::map<std::string, std::unique_ptr<py_flow_graph_impl>>;
 
             virtual ~flow_graph_wrapper_base(){};
 
@@ -248,6 +249,7 @@ namespace fastscapelib
             virtual shape_type grid_shape() const = 0;
 
             virtual const py_flow_graph_impl& impl() const = 0;
+            virtual const embedded_graphs_type& embedded_graphs() const = 0;
 
             virtual const data_array_type& update_routes(const data_array_type& elevation) = 0;
 
@@ -269,6 +271,12 @@ namespace fastscapelib
             {
                 p_graph = std::make_unique<flow_graph_type>(grid, router, resolver);
                 p_graph_impl = std::make_unique<py_flow_graph_impl>(p_graph->impl());
+
+                for (auto const& item : p_graph->embedded_graphs())
+                {
+                    m_embedded_graphs.insert(
+                        { item.first, std::make_unique<py_flow_graph_impl>(item.second) });
+                }
             }
 
             virtual ~flow_graph_wrapper(){};
@@ -287,6 +295,11 @@ namespace fastscapelib
             {
                 return *p_graph_impl;
             };
+
+            const embedded_graphs_type& embedded_graphs() const
+            {
+                return m_embedded_graphs;
+            }
 
             const data_array_type& update_routes(const data_array_type& elevation)
             {
@@ -318,6 +331,7 @@ namespace fastscapelib
         private:
             std::unique_ptr<flow_graph_type> p_graph;
             std::unique_ptr<py_flow_graph_impl> p_graph_impl;
+            embedded_graphs_type m_embedded_graphs;
         };
     }
 
@@ -330,6 +344,7 @@ namespace fastscapelib
         using data_array_type = xt_array_t<py_selector, data_type>;
         using shape_type = data_array_type::shape_type;
         using data_array_size_type = xt_array_t<py_selector, size_type>;
+        using embedded_graphs_type = std::map<std::string, std::unique_ptr<py_flow_graph_impl>>;
 
         template <class G, class FR, class SR>
         py_flow_graph(G& grid, const FR& router, const SR& resolver)
@@ -350,6 +365,11 @@ namespace fastscapelib
         {
             return p_wrapped_graph->impl();
         };
+
+        const embedded_graphs_type& embedded_graphs() const
+        {
+            return p_wrapped_graph->embedded_graphs();
+        }
 
         const data_array_type& update_routes(const data_array_type& elevation)
         {

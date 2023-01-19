@@ -31,6 +31,8 @@ add_flow_graph_bindings(py::module& m)
     fs::register_init_methods<fs::py_raster_grid>(pyfgraph);
 
     pyfgraph.def("impl", &fs::py_flow_graph::impl, py::return_value_policy::reference);
+    pyfgraph.def(
+        "embedded_graphs", &fs::py_flow_graph::embedded_graphs, py::return_value_policy::reference);
 
     pyfgraph.def("update_routes", &fs::py_flow_graph::update_routes);
 

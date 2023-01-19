@@ -10,7 +10,11 @@
 #define FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 
 #include <cmath>
+#include <map>
 #include <stack>
+#include <string>
+
+#include "xtensor/xview.hpp"
 
 #include "fastscapelib/algo/flow_routing.hpp"
 #include "fastscapelib/flow/flow_graph_impl.hpp"
@@ -37,6 +41,13 @@ namespace fastscapelib
             using graph_impl_type = FG;
             using router_type = FR;
 
+            using embedded_graphs_type = std::map<std::string, graph_impl_type>;
+
+            const embedded_graphs_type& embedded_graphs() const
+            {
+                return m_embedded_graphs;
+            }
+
         protected:
             flow_router_impl_base(graph_impl_type& graph_impl, const router_type& router)
                 : m_graph_impl(graph_impl)
@@ -46,6 +57,7 @@ namespace fastscapelib
 
             graph_impl_type& m_graph_impl;
             const router_type& m_router;
+            embedded_graphs_type m_embedded_graphs;
         };
 
 
@@ -264,8 +276,8 @@ namespace fastscapelib
         using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
         static constexpr bool is_single = false;
         double slope_exp = 1.0;
-        bool copy_graph_unresolved = false;
-        bool copy_graph_resolved = false;
+        bool store_single_unresolved = false;
+        bool store_single_resolved = false;
     };
 
 
@@ -284,7 +296,24 @@ namespace fastscapelib
             flow_router_impl(graph_impl_type& graph_impl, const singlemulti_flow_router& router)
                 : base_type(graph_impl, router)
                 , m_single_router_impl(graph_impl, single_flow_router())
-                , m_multi_router_impl(graph_impl, { router.slope_exp }){};
+                , m_multi_router_impl(graph_impl, { router.slope_exp })
+                , m_store_single_unresolved(router.store_single_unresolved)
+                , m_store_single_resolved(router.store_single_resolved)
+            {
+                auto& grid = graph_impl.grid();
+                single_flow_router srouter;
+
+                if (m_store_single_unresolved)
+                {
+                    this->m_embedded_graphs.insert(
+                        { "single_unresolved", graph_impl_type(grid, srouter) });
+                }
+                if (m_store_single_resolved)
+                {
+                    this->m_embedded_graphs.insert(
+                        { "single_resolved", graph_impl_type(grid, srouter) });
+                }
+            };
 
             void route1(const data_array_type& elevation)
             {
@@ -295,16 +324,55 @@ namespace fastscapelib
                 weights.fill(1.);
 
                 m_single_router_impl.route1(elevation);
+
+                if (m_store_single_unresolved)
+                {
+                    copy_graph_impl("single_unresolved");
+                }
             };
 
             void route2(const data_array_type& elevation)
             {
+                if (m_store_single_resolved)
+                {
+                    copy_graph_impl("single_resolved");
+                }
+
                 m_multi_router_impl.route1(elevation);
             };
 
         private:
+            bool m_store_single_unresolved;
+            bool m_store_single_resolved;
+
             flow_router_impl<FG, single_flow_router> m_single_router_impl;
             flow_router_impl<FG, multi_flow_router> m_multi_router_impl;
+
+            /*
+             * Copy (multiple flow) graph implementation data to one of the
+             * embedded (single flow) graphs
+             */
+            void copy_graph_impl(std::string key)
+            {
+                const auto& mgraph = this->m_graph_impl;
+                auto& sgraph = this->m_embedded_graphs.at(key);
+
+                sgraph.m_receivers_count = mgraph.m_receivers_count;
+
+                auto receivers_col = xt::col(sgraph.m_receivers, 0);
+                receivers_col = xt::col(mgraph.m_receivers, 0);
+                auto receivers_distance_col = xt::col(sgraph.m_receivers_distance, 0);
+                receivers_distance_col = xt::col(mgraph.m_receivers_distance, 0);
+                auto receivers_weight_col = xt::col(sgraph.m_receivers_weight, 0);
+                receivers_weight_col = xt::col(mgraph.m_receivers_weight, 0);
+
+                sgraph.m_donors_count = mgraph.m_donors_count;
+
+                auto donors_col = xt::col(sgraph.m_donors, 0);
+                donors_col = xt::col(mgraph.m_donors, 0);
+
+                sgraph.m_dfs_indices = mgraph.m_dfs_indices;
+            }
         };
     }
 }
