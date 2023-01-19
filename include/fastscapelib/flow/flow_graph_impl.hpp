@@ -3,6 +3,7 @@
 
 #include <array>
 #include <stack>
+#include <vector>
 
 #include "xtensor/xbroadcast.hpp"
 #include "xtensor/xstrided_view.hpp"
@@ -143,7 +144,8 @@ namespace fastscapelib
                 return m_dfs_indices;
             };
 
-            void compute_dfs_indices();
+            void compute_dfs_indices_downup();
+            void compute_dfs_indices_updown();
 
             // const_dfs_iterator dfs_cbegin()
             // {
@@ -228,11 +230,11 @@ namespace fastscapelib
 
 
         /*
-         * Perform depth-first search and store the node indices for faster
-         * graph traversal.
+         * Perform depth-first search in the downstream->upstream direction
+         * and store the node indices for faster graph traversal.
          */
         template <class G, class S>
-        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices()
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices_downup()
         {
             size_type nstack = 0;
 
@@ -266,6 +268,47 @@ namespace fastscapelib
             assert(nstack == size());
         }
 
+        /*
+         * Perform depth-first search in the upstream->dowstream direction
+         * and store the node indices for faster graph traversal.
+         */
+        template <class G, class S>
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices_updown()
+        {
+            size_type nstack = 0;
+            std::stack<size_type> tmp;
+
+            std::vector<size_type> visited_count(size(), 0);
+
+            for (size_type i = 0; i < size(); ++i)
+            {
+                if (m_donors_count(i) == 0)
+                {
+                    tmp.push(i);
+                }
+
+                while (!tmp.empty())
+                {
+                    size_type istack = tmp.top();
+                    tmp.pop();
+
+                    m_dfs_indices(nstack++) = istack;
+
+                    for (size_type k = 0; k < m_receivers_count(istack); ++k)
+                    {
+                        const auto irec = m_receivers(istack, k);
+                        visited_count[irec]++;
+
+                        if (visited_count[irec] == m_donors_count(irec))
+                        {
+                            tmp.push(irec);
+                        }
+                    }
+                }
+            }
+
+            assert(nstack == size());
+        }
 
         template <class G, class S>
         void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_basins()

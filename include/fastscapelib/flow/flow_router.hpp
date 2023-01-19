@@ -152,7 +152,7 @@ namespace fastscapelib
                     donors(irec, donors_count(irec)++) = i;
                 }
 
-                this->m_graph_impl.compute_dfs_indices();
+                this->m_graph_impl.compute_dfs_indices_downup();
             };
 
             void route2(const data_array_type& /*elevation*/){};

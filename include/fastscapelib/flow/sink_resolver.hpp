@@ -195,7 +195,7 @@ namespace fastscapelib
 
                 // finalize flow route update (donors and dfs graph traversal indices)
                 this->m_graph_impl.compute_donors();
-                this->m_graph_impl.compute_dfs_indices();
+                this->m_graph_impl.compute_dfs_indices_downup();
 
                 // fill sinks with tiny tilted surface
                 fill_sinks_sloped(elevation);
