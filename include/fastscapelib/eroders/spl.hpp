@@ -158,6 +158,9 @@ namespace fastscapelib
 
         for (const auto& idfs : dfs_indices)
         {
+            // reset erosion
+            m_erosion.flat(idfs) = 0.;
+
             auto r_count = receivers_count[idfs];
 
             for (size_type r = 0; r < r_count; ++r)
@@ -178,12 +181,14 @@ namespace fastscapelib
                 if (irec_elevation >= idfs_elevation)
                 {
                     // may happen if flow is routed outside of a depression / flat area
-                    m_erosion.flat(idfs) = 0.;
                     continue;
                 }
 
-                auto factor
-                    = (m_k_coef(idfs) * dt * std::pow(drainage_area.flat(idfs), m_area_exp));
+                data_type irec_weight = receivers_weight(idfs, r);
+                data_type irec_distance = receivers_distance(idfs, r);
+
+                auto factor = (m_k_coef(idfs) * dt
+                               * std::pow(drainage_area.flat(idfs) * irec_weight, m_area_exp));
 
                 data_type delta_0 = idfs_elevation - irec_elevation;
                 data_type delta_k;
@@ -191,14 +196,14 @@ namespace fastscapelib
                 if (m_slope_exp == 1)
                 {
                     // fast path for slope_exp = 1 (common use case)
-                    factor /= receivers_distance(idfs, r);
+                    factor /= irec_distance;
                     delta_k = delta_0 / (1. + factor);
                 }
 
                 else
                 {
                     // 1st order Newton-Raphson iterations (k)
-                    factor /= std::pow(receivers_distance(idfs, r), m_slope_exp);
+                    factor /= std::pow(irec_distance, m_slope_exp);
                     delta_k = delta_0;
 
                     // TODO: add convergence control parameters (max_iterations, atol, mtol)
@@ -236,7 +241,7 @@ namespace fastscapelib
                 }
                 else
                 {
-                    m_erosion.flat(idfs) += (delta_0 - delta_k) * receivers_weight(idfs, r);
+                    m_erosion.flat(idfs) += (delta_0 - delta_k) * irec_weight;
                 }
             }
         }
