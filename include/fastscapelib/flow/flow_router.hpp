@@ -41,11 +41,11 @@ namespace fastscapelib
             using graph_impl_type = FG;
             using router_type = FR;
 
-            using embedded_graphs_type = std::map<std::string, graph_impl_type>;
+            using impl_embedded_type = std::map<std::string, graph_impl_type>;
 
-            const embedded_graphs_type& embedded_graphs() const
+            const impl_embedded_type& impl_embedded() const
             {
-                return m_embedded_graphs;
+                return m_impl_embedded;
             }
 
         protected:
@@ -57,7 +57,7 @@ namespace fastscapelib
 
             graph_impl_type& m_graph_impl;
             const router_type& m_router;
-            embedded_graphs_type m_embedded_graphs;
+            impl_embedded_type m_impl_embedded;
         };
 
 
@@ -150,7 +150,7 @@ namespace fastscapelib
 
                     for (auto n : grid.neighbors(i, neighbors))
                     {
-                        slope = (elevation.data()[i] - elevation.data()[n.idx]) / n.distance;
+                        slope = (elevation.flat(i) - elevation.flat(n.idx)) / n.distance;
 
                         if (slope > slope_max)
                         {
@@ -225,7 +225,7 @@ namespace fastscapelib
                     {
                         receivers_count(i) = 1;
                         receivers(i, 0) = i;
-                        receivers_weight(i, 0) = 1;
+                        receivers_weight(i, 0) = 0;
                         dist2receivers(i, 0) = 0;
                         continue;
                     }
@@ -235,15 +235,16 @@ namespace fastscapelib
 
                     for (auto n : grid.neighbors(i, neighbors))
                     {
-                        if (elevation.data()[i] > elevation.data()[n.idx])
+                        if (elevation.flat(i) > elevation.flat(n.idx))
                         {
-                            slope = (elevation.data()[i] - elevation.data()[n.idx]) / n.distance;
+                            slope = (elevation.flat(i) - elevation.flat(n.idx)) / n.distance;
 
                             receivers(i, nrec) = n.idx;
+                            dist2receivers(i, nrec) = n.distance;
+
                             weight = std::pow(slope, this->m_router.slope_exp);
                             weights_sum += weight;
                             receivers_weight(i, nrec) = weight;
-                            dist2receivers(i, nrec) = n.distance;
 
                             // update donors (note: not thread safe if later parallelization)
                             donors(n.idx, donors_count(n.idx)++) = i;
@@ -305,12 +306,12 @@ namespace fastscapelib
 
                 if (m_store_single_unresolved)
                 {
-                    this->m_embedded_graphs.insert(
+                    this->m_impl_embedded.insert(
                         { "single_unresolved", graph_impl_type(grid, srouter) });
                 }
                 if (m_store_single_resolved)
                 {
-                    this->m_embedded_graphs.insert(
+                    this->m_impl_embedded.insert(
                         { "single_resolved", graph_impl_type(grid, srouter) });
                 }
             };
@@ -321,7 +322,7 @@ namespace fastscapelib
                 // -> do it here
                 this->m_graph_impl.m_receivers_count.fill(1);
                 auto weights = xt::col(this->m_graph_impl.m_receivers_weight, 0);
-                weights.fill(1.);
+                weights = 1;
 
                 m_single_router_impl.route1(elevation);
 
@@ -355,7 +356,7 @@ namespace fastscapelib
             void copy_graph_impl(std::string key)
             {
                 const auto& mgraph = this->m_graph_impl;
-                auto& sgraph = this->m_embedded_graphs.at(key);
+                auto& sgraph = this->m_impl_embedded.at(key);
 
                 sgraph.m_receivers_count = mgraph.m_receivers_count;
 

@@ -96,9 +96,9 @@ namespace fastscapelib
             return m_graph_impl;
         }
 
-        const std::map<std::string, flow_graph_impl_type>& embedded_graphs() const
+        const std::map<std::string, flow_graph_impl_type>& impl_embedded() const
         {
-            return m_router_impl.embedded_graphs();
+            return m_router_impl.impl_embedded();
         }
 
         void accumulate(data_array_type& acc, const data_array_type& src) const
