@@ -1,6 +1,7 @@
 #ifndef FASTSCAPELIB_FLOW_GRAPH_IMPL_H_
 #define FASTSCAPELIB_FLOW_GRAPH_IMPL_H_
 
+#include <algorithm>
 #include <array>
 #include <stack>
 #include <vector>
@@ -142,27 +143,27 @@ namespace fastscapelib
                 return m_dfs_indices;
             };
 
-            void compute_dfs_indices_downup();
-            void compute_dfs_indices_updown();
+            void compute_dfs_indices_bottomup();
+            void compute_dfs_indices_topdown();
 
-            // const_dfs_iterator dfs_cbegin()
-            // {
-            //     return m_dfs_indices.cbegin();
-            // };
-
-            // const_dfs_iterator dfs_cend()
-            // {
-            //     return m_dfs_indices.cend();
-            // };
-
-            // const_reverse_dfs_iterator dfs_crbegin()
+            // const_reverse_dfs_iterator topdown_begin() const
             // {
             //     return m_dfs_indices.crbegin();
             // };
 
-            // const_reverse_dfs_iterator dfs_crend()
+            // const_reverse_dfs_iterator topdown_end() const
             // {
             //     return m_dfs_indices.crend();
+            // };
+
+            // const_dfs_iterator bottomup_begin() const
+            // {
+            //     return m_dfs_indices.cbegin();
+            // };
+
+            // const_dfs_iterator bottomup_end() const
+            // {
+            //     return m_dfs_indices.cend();
             // };
 
             const std::vector<size_type>& outlets() const
@@ -232,7 +233,7 @@ namespace fastscapelib
          * and store the node indices for faster graph traversal.
          */
         template <class G, class S>
-        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices_downup()
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices_bottomup()
         {
             size_type nstack = 0;
 
@@ -269,9 +270,11 @@ namespace fastscapelib
         /*
          * Perform depth-first search in the upstream->dowstream direction
          * and store the node indices for faster graph traversal.
+         *
+         * Note: indices are stored in the downstream->upstream direction!
          */
         template <class G, class S>
-        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices_updown()
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices_topdown()
         {
             size_type nstack = 0;
             std::stack<size_type> tmp;
@@ -306,6 +309,9 @@ namespace fastscapelib
             }
 
             assert(nstack == size());
+
+            // downstream->upstream order
+            std::reverse(m_dfs_indices.begin(), m_dfs_indices.end());
         }
 
         template <class G, class S>

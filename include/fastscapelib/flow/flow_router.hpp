@@ -165,7 +165,7 @@ namespace fastscapelib
                     donors(irec, donors_count(irec)++) = i;
                 }
 
-                this->m_graph_impl.compute_dfs_indices_downup();
+                this->m_graph_impl.compute_dfs_indices_bottomup();
             };
 
             void route2(const data_array_type& /*elevation*/){};
@@ -262,7 +262,7 @@ namespace fastscapelib
                 }
 
                 // DFS upstream->downstream so that it works with multi-directions flow
-                this->m_graph_impl.compute_dfs_indices_updown();
+                this->m_graph_impl.compute_dfs_indices_topdown();
             };
 
             void route2(const data_array_type& /*elevation*/){};

@@ -194,9 +194,9 @@ namespace fastscapelib
                 }
 
                 // finalize flow route update (donors and dfs graph traversal indices)
-                // note: DFS down->up direction assumes single flow routing!
+                // note: DFS bottom->up direction assumes single flow routing!
                 this->m_graph_impl.compute_donors();
-                this->m_graph_impl.compute_dfs_indices_downup();
+                this->m_graph_impl.compute_dfs_indices_bottomup();
 
                 // fill sinks with tiny tilted surface
                 fill_sinks_sloped(elevation);
