@@ -261,6 +261,12 @@ namespace fastscapelib
             virtual data_array_size_type basins() = 0;
         };
 
+        // TODO: reuse this wrapper class for wrapping embedded flow graphs
+        // Maybe this approach would work?
+        // - add a template tag to select unique_ptr vs. const reference
+        // - add another explicit constructor that takes a const reference
+        // - select constructors with the template Tag (SFINAE)
+        // - apply SFINAE to update_routes too? (disable for embedded graphs)
         template <class G, class FR, class SR>
         class flow_graph_wrapper : public flow_graph_wrapper_base
         {
