@@ -103,50 +103,50 @@ namespace fastscapelib
             virtual ~flow_graph_impl_wrapper(){};
 
             flow_graph_impl_wrapper(FG& graph_impl)
-                : p_graph_impl(graph_impl){};
+                : m_graph_impl(graph_impl){};
 
             const receivers_type& receivers() const
             {
-                return p_graph_impl.receivers();
+                return m_graph_impl.receivers();
             };
 
             const receivers_count_type& receivers_count() const
             {
-                return p_graph_impl.receivers_count();
+                return m_graph_impl.receivers_count();
             };
 
             const receivers_distance_type& receivers_distance() const
             {
-                return p_graph_impl.receivers_distance();
+                return m_graph_impl.receivers_distance();
             };
 
             const receivers_weight_type& receivers_weight() const
             {
-                return p_graph_impl.receivers_weight();
+                return m_graph_impl.receivers_weight();
             };
 
             const donors_type& donors() const
             {
-                return p_graph_impl.donors();
+                return m_graph_impl.donors();
             };
 
             const donors_count_type& donors_count() const
             {
-                return p_graph_impl.donors_count();
+                return m_graph_impl.donors_count();
             };
 
             const dfs_indices_type& dfs_indices() const
             {
-                return p_graph_impl.dfs_indices();
+                return m_graph_impl.dfs_indices();
             };
 
             const basins_type& basins() const
             {
-                return p_graph_impl.basins();
+                return m_graph_impl.basins();
             };
 
         private:
-            flow_graph_impl_type& p_graph_impl;
+            flow_graph_impl_type& m_graph_impl;
         };
     }
 
