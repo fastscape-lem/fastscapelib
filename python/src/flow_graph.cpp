@@ -13,10 +13,9 @@ namespace py = pybind11;
 namespace fs = fastscapelib;
 
 
-using impl_embedded_type = std::map<std::string, fs::py_flow_graph_impl&>;
+using embedded_type = std::map<std::string, const fs::py_flow_graph_impl&>;
 
-PYBIND11_MAKE_OPAQUE(impl_embedded_type);
-PYBIND11_MAKE_OPAQUE(std::map<std::string, int>);
+PYBIND11_MAKE_OPAQUE(embedded_type);
 
 
 void
@@ -32,7 +31,7 @@ add_flow_graph_bindings(py::module& m)
         .def_property_readonly("dfs_indices", &fs::py_flow_graph_impl::dfs_indices)
         .def_property_readonly("basins", &fs::py_flow_graph_impl::basins);
 
-    py::bind_map<impl_embedded_type>(m, "ImplEmbedded");
+    py::bind_map<embedded_type>(m, "EmbeddedGraphMapping");
 
     py::class_<fs::py_flow_graph> pyfgraph(m, "FlowGraph");
 
@@ -40,7 +39,7 @@ add_flow_graph_bindings(py::module& m)
     fs::register_init_methods<fs::py_raster_grid>(pyfgraph);
 
     pyfgraph.def("impl", &fs::py_flow_graph::impl, py::return_value_policy::reference);
-    pyfgraph.def_property_readonly("impl_embedded", &fs::py_flow_graph::impl_embedded);
+    pyfgraph.def_property_readonly("embedded", &fs::py_flow_graph::embedded);
 
     pyfgraph.def("update_routes", &fs::py_flow_graph::update_routes);
 

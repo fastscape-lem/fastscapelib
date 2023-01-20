@@ -32,8 +32,9 @@ namespace fastscapelib
      * @tparam FR The flow router type.
      * @tparam SR The sink resolver type.
      * @tparam S The xtensor selector type.
+     * @tparam W True if the graph is writeable, false otherwise
      */
-    template <class G, class FR, class SR, class S = typename G::xt_selector>
+    template <class G, class FR, class SR, class S = typename G::xt_selector, bool W = true>
     class flow_graph
     {
     public:
@@ -42,6 +43,7 @@ namespace fastscapelib
         using router_type = FR;
         using resolver_type = SR;
         using xt_selector = S;
+        static constexpr bool is_writeable = W;
 
         static_assert(std::is_same<typename router_type::flow_graph_impl_tag,
                                    typename resolver_type::flow_graph_impl_tag>::value,
@@ -49,6 +51,10 @@ namespace fastscapelib
         using flow_graph_impl_tag = typename router_type::flow_graph_impl_tag;
         using flow_graph_impl_type
             = detail::flow_graph_impl<grid_type, xt_selector, flow_graph_impl_tag>;
+
+        using embedded_router_type = typename router_type::embedded_router_type;
+        using embedded_graph_type = flow_graph<G, embedded_router_type, no_sink_resolver, S, false>;
+        using embedded_graphs_map = std::map<std::string, embedded_graph_type>;
 
         using size_type = typename grid_type::size_type;
 
@@ -61,10 +67,25 @@ namespace fastscapelib
             : m_grid(grid)
             , m_graph_impl(grid, router)
             , m_router_impl(m_graph_impl, router)
-            , m_resolver_impl(m_graph_impl, resolver){};
+            , m_resolver_impl(m_graph_impl, resolver)
+        {
+            for (auto const& item : m_router_impl.embedded_graph_spec())
+            {
+                m_embedded_graphs.insert({ item.first, make_embedded_graph(grid, item.second) });
+
+                auto& embedded_impl = m_embedded_graphs.at(item.first).impl();
+                m_router_impl.insert_embedded(item.first,
+                                              const_cast<flow_graph_impl_type&>(embedded_impl));
+            }
+        };
 
         const data_array_type& update_routes(const data_array_type& elevation)
         {
+            if (!is_writeable)
+            {
+                throw std::runtime_error("flow graph is not writeable");
+            }
+
             const auto& modified_elevation = m_resolver_impl.resolve1(elevation);
             m_router_impl.route1(modified_elevation);
             const auto& final_elevation = m_resolver_impl.resolve2(modified_elevation);
@@ -96,9 +117,9 @@ namespace fastscapelib
             return m_graph_impl;
         }
 
-        const std::map<std::string, flow_graph_impl_type>& impl_embedded() const
+        const embedded_graphs_map& embedded() const
         {
-            return m_router_impl.impl_embedded();
+            return m_embedded_graphs;
         }
 
         void accumulate(data_array_type& acc, const data_array_type& src) const
@@ -129,10 +150,18 @@ namespace fastscapelib
             return basins;
         }
 
+    protected:
+        static embedded_graph_type make_embedded_graph(G& grid, const embedded_router_type& router)
+        {
+            const no_sink_resolver resolver;
+            return embedded_graph_type(grid, router, resolver);
+        }
+
     private:
         grid_type& m_grid;
 
         flow_graph_impl_type m_graph_impl;
+        embedded_graphs_map m_embedded_graphs;
 
         using router_impl_type =
             typename detail::flow_router_impl<flow_graph_impl_type, router_type>;

@@ -17,6 +17,7 @@ namespace fastscapelib
     struct test_flow_router
     {
         using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        using embedded_router_type = single_flow_router;
         static constexpr bool is_single = true;
     };
 

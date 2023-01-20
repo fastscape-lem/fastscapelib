@@ -10,6 +10,7 @@
 #define FASTSCAPELIB_FLOW_FLOW_ROUTER_H
 
 #include <cmath>
+#include <cstddef>
 #include <map>
 #include <stack>
 #include <string>
@@ -41,11 +42,23 @@ namespace fastscapelib
             using graph_impl_type = FG;
             using router_type = FR;
 
-            using impl_embedded_type = std::map<std::string, graph_impl_type>;
+            using embedded_graph_spec_map
+                = std::map<std::string, const typename FR::embedded_router_type>;
+            using embedded_graph_impl_map = std::map<std::string, graph_impl_type&>;
 
-            const impl_embedded_type& impl_embedded() const
+            graph_impl_type& embedded(std::string key) const
             {
-                return m_impl_embedded;
+                return m_embedded_graphs_impl.at(key);
+            }
+
+            void insert_embedded(const std::string key, graph_impl_type& graph_impl)
+            {
+                m_embedded_graphs_impl.insert({ key, graph_impl });
+            }
+
+            const embedded_graph_spec_map embedded_graph_spec() const
+            {
+                return m_embedded_graphs_spec;
             }
 
         protected:
@@ -57,7 +70,8 @@ namespace fastscapelib
 
             graph_impl_type& m_graph_impl;
             const router_type& m_router;
-            impl_embedded_type m_impl_embedded;
+            embedded_graph_impl_map m_embedded_graphs_impl;
+            embedded_graph_spec_map m_embedded_graphs_spec;
         };
 
 
@@ -96,6 +110,7 @@ namespace fastscapelib
     struct single_flow_router
     {
         using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        using embedded_router_type = single_flow_router;
         static constexpr bool is_single = true;
     };
 
@@ -176,6 +191,7 @@ namespace fastscapelib
     struct multi_flow_router
     {
         using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        using embedded_router_type = single_flow_router;
         static constexpr bool is_single = false;
         double slope_exp = 1.0;
     };
@@ -275,10 +291,11 @@ namespace fastscapelib
     {
     public:
         using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        using embedded_router_type = single_flow_router;
         static constexpr bool is_single = false;
         double slope_exp = 1.0;
         bool store_single_unresolved = false;
-        bool store_single_resolved = false;
+        bool store_single_resolved = true;
     };
 
 
@@ -302,17 +319,15 @@ namespace fastscapelib
                 , m_store_single_resolved(router.store_single_resolved)
             {
                 auto& grid = graph_impl.grid();
-                single_flow_router srouter;
+                const single_flow_router srouter;
 
                 if (m_store_single_unresolved)
                 {
-                    this->m_impl_embedded.insert(
-                        { "single_unresolved", graph_impl_type(grid, srouter) });
+                    this->m_embedded_graphs_spec.insert({ "single_unresolved", srouter });
                 }
                 if (m_store_single_resolved)
                 {
-                    this->m_impl_embedded.insert(
-                        { "single_resolved", graph_impl_type(grid, srouter) });
+                    this->m_embedded_graphs_spec.insert({ "single_resolved", srouter });
                 }
             };
 
@@ -356,7 +371,7 @@ namespace fastscapelib
             void copy_graph_impl(std::string key)
             {
                 const auto& mgraph = this->m_graph_impl;
-                auto& sgraph = this->m_impl_embedded.at(key);
+                auto& sgraph = this->embedded(key);
 
                 sgraph.m_receivers_count = mgraph.m_receivers_count;
 

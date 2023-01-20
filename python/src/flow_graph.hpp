@@ -241,7 +241,7 @@ namespace fastscapelib
             using data_array_type = xt_array_t<py_selector, data_type>;
             using shape_type = data_array_type::shape_type;
             using data_array_size_type = xt_array_t<py_selector, size_type>;
-            using impl_embedded_type = std::map<std::string, std::unique_ptr<py_flow_graph_impl>>;
+            using embedded_type = std::map<std::string, std::unique_ptr<py_flow_graph_impl>>;
 
             virtual ~flow_graph_wrapper_base(){};
 
@@ -249,7 +249,7 @@ namespace fastscapelib
             virtual shape_type grid_shape() const = 0;
 
             virtual const py_flow_graph_impl& impl() const = 0;
-            virtual const impl_embedded_type& impl_embedded() const = 0;
+            virtual const embedded_type& embedded() const = 0;
 
             virtual const data_array_type& update_routes(const data_array_type& elevation) = 0;
 
@@ -272,10 +272,10 @@ namespace fastscapelib
                 p_graph = std::make_unique<flow_graph_type>(grid, router, resolver);
                 p_graph_impl = std::make_unique<py_flow_graph_impl>(p_graph->impl());
 
-                for (auto const& item : p_graph->impl_embedded())
+                for (auto const& item : p_graph->embedded())
                 {
-                    m_impl_embedded.insert(
-                        { item.first, std::make_unique<py_flow_graph_impl>(item.second) });
+                    m_embedded.insert(
+                        { item.first, std::make_unique<py_flow_graph_impl>(item.second.impl()) });
                 }
             }
 
@@ -296,9 +296,9 @@ namespace fastscapelib
                 return *p_graph_impl;
             };
 
-            const impl_embedded_type& impl_embedded() const
+            const embedded_type& embedded() const
             {
-                return m_impl_embedded;
+                return m_embedded;
             }
 
             const data_array_type& update_routes(const data_array_type& elevation)
@@ -331,7 +331,7 @@ namespace fastscapelib
         private:
             std::unique_ptr<flow_graph_type> p_graph;
             std::unique_ptr<py_flow_graph_impl> p_graph_impl;
-            impl_embedded_type m_impl_embedded;
+            embedded_type m_embedded;
         };
     }
 
@@ -344,12 +344,13 @@ namespace fastscapelib
         using data_array_type = xt_array_t<py_selector, data_type>;
         using shape_type = data_array_type::shape_type;
         using data_array_size_type = xt_array_t<py_selector, size_type>;
-        using impl_embedded_type = std::map<std::string, std::unique_ptr<py_flow_graph_impl>>;
 
         template <class G, class FR, class SR>
         py_flow_graph(G& grid, const FR& router, const SR& resolver)
             : p_wrapped_graph(
-                std::make_unique<detail::flow_graph_wrapper<G, FR, SR>>(grid, router, resolver)){};
+                std::make_unique<detail::flow_graph_wrapper<G, FR, SR>>(grid, router, resolver))
+        {
+        }
 
         size_type size() const
         {
@@ -366,13 +367,13 @@ namespace fastscapelib
             return p_wrapped_graph->impl();
         };
 
-        const std::map<std::string, py_flow_graph_impl&> impl_embedded() const
+        const std::map<std::string, const py_flow_graph_impl&> embedded() const
         {
             // TODO: create map object in constructor
 
-            std::map<std::string, py_flow_graph_impl&> map;
+            std::map<std::string, const py_flow_graph_impl&> map;
 
-            for (auto const& item : p_wrapped_graph->impl_embedded())
+            for (auto const& item : p_wrapped_graph->embedded())
             {
                 map.insert({ item.first, *item.second });
             }
