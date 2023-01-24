@@ -94,7 +94,7 @@ struct flow_operator_impl<FG, op2, fs::detail::flow_graph_fixed_array_tag>
 
 
 /*
- * Flow operator implementation facade, used internally in flow_graph.
+ * Flow operator implementation facade.
  *
  * This facade class implements type erasure so that multiple flow operators
  * of different types can be applied in chain in a flow graph.
@@ -151,6 +151,55 @@ public:
 };
 
 
+template <class FG>
+class flow_operator_sequence
+{
+public:
+    using impl_type = FG;
+    using operator_impl_type = flow_operator_impl_facade<impl_type>;
+    using const_iterator_type = typename std::vector<operator_impl_type>::const_iterator;
+
+    template <class... OPs>
+    flow_operator_sequence(OPs&&... ops)
+    {
+        int i = 0;
+        (
+            [&]
+            {
+                ++i;
+                add_operator(std::forward<OPs>(ops));
+            }(),
+            ...);
+    }
+
+    const_iterator_type begin()
+    {
+        return m_op_impl_vec.cbegin();
+    }
+
+    const_iterator_type end()
+    {
+        return m_op_impl_vec.cend();
+    }
+
+private:
+    template <class OP>
+    void add_operator(OP&& op)
+    {
+        auto op_ptr = std::make_shared<OP>(std::forward<OP>(op));
+        add_operator(std::move(op_ptr));
+    }
+
+    template <class OP>
+    void add_operator(std::shared_ptr<OP> op_ptr)
+    {
+        m_op_impl_vec.push_back(operator_impl_type(std::move(op_ptr)));
+    }
+
+    std::vector<operator_impl_type> m_op_impl_vec;
+};
+
+
 class flow_graph_test
 {
 public:
@@ -203,6 +252,10 @@ public:
 std::vector<int>
 test()
 {
+    using operator_seq_type
+        = flow_operator_sequence<flow_graph_impl_test<fs::detail::flow_graph_fixed_array_tag>>;
+    operator_seq_type op_seq{ op1(), op2() };
+
     auto fg = flow_graph_test(op1(), op2());
     return fg.execute();
 }
