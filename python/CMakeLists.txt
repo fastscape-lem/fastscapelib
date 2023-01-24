@@ -56,7 +56,7 @@ target_include_directories(${PY_FASTSCAPELIB} PUBLIC ${NUMPY_INCLUDE_DIRS})
 target_link_libraries(${PY_FASTSCAPELIB}
                       PUBLIC fastscapelib xtensor-python)
 
-target_compile_features(${PY_FASTSCAPELIB} PUBLIC cxx_std_14)
+target_compile_features(${PY_FASTSCAPELIB} PUBLIC cxx_std_17)
 
 # Installation
 # ============

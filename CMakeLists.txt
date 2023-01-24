@@ -119,7 +119,7 @@ target_include_directories(${FASTSCAPELIB_TARGET}
 
 target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor)
 
-target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_14)
+target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_17)
 
 # -- optional subdirectories
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
