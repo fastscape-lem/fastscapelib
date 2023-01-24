@@ -25,7 +25,7 @@ template <class FG, class OP>
 class flow_operator_impl_base
 {
 protected:
-    flow_operator_impl_base(std::shared_ptr<OP>&& ptr)
+    flow_operator_impl_base(std::shared_ptr<OP> ptr)
         : p_op(std::move(ptr))
     {
     }
@@ -42,7 +42,7 @@ class flow_operator_impl : public flow_operator_impl_base<FG, OP>
 public:
     using base_type = flow_operator_impl_base<FG, OP>;
 
-    flow_operator_impl(std::shared_ptr<OP>&& ptr) = delete;
+    flow_operator_impl(std::shared_ptr<OP> ptr) = delete;
 
     int execute(FG& graph_impl) const;
 };
@@ -63,7 +63,7 @@ class flow_operator_impl<FG, op1, fs::detail::flow_graph_fixed_array_tag>
 public:
     using base_type = flow_operator_impl_base<FG, op1>;
 
-    flow_operator_impl(std::shared_ptr<op1>&& ptr)
+    flow_operator_impl(std::shared_ptr<op1> ptr)
         : base_type(std::move(ptr)){};
 
     int execute(FG& graph_impl) const
@@ -83,7 +83,7 @@ struct flow_operator_impl<FG, op2, fs::detail::flow_graph_fixed_array_tag>
 {
     using base_type = flow_operator_impl_base<FG, op2>;
 
-    flow_operator_impl(std::shared_ptr<op2>&& ptr)
+    flow_operator_impl(std::shared_ptr<op2> ptr)
         : base_type(std::move(ptr)){};
 
     int execute(FG& graph_impl) const
@@ -111,8 +111,14 @@ class flow_operator_impl_facade
 {
 public:
     template <class OP>
-    flow_operator_impl_facade(std::shared_ptr<OP>&& op)
+    flow_operator_impl_facade(std::shared_ptr<OP> op)
         : p_op_impl_wrapper(std::make_unique<flow_operator_impl_wrapper<OP>>(std::move(op)))
+    {
+    }
+
+    flow_operator_impl_facade(flow_operator_impl_facade<FG>& op_impl_facade) = delete;
+    explicit flow_operator_impl_facade(flow_operator_impl_facade<FG>&& op_impl_facade)
+        : p_op_impl_wrapper(std::move(op_impl_facade.p_op_impl_wrapper))
     {
     }
 
@@ -133,7 +139,7 @@ public:
     class flow_operator_impl_wrapper : public flow_operator_impl_wrapper_base
     {
     public:
-        flow_operator_impl_wrapper(std::shared_ptr<OP>&& op)
+        flow_operator_impl_wrapper(std::shared_ptr<OP> op)
             : m_op_impl(std::move(op))
         {
         }
@@ -151,6 +157,11 @@ public:
 };
 
 
+/*
+ * Immutable sequence of flow operators (e.g., flow routers, sink resolvers)
+ * that are applied in chain when updating a flow graph.
+ *
+ */
 template <class FG>
 class flow_operator_sequence
 {
@@ -172,6 +183,13 @@ public:
             ...);
     }
 
+    // implement move semantics only (entity of flow_graph)
+    flow_operator_sequence(flow_operator_sequence<FG>& op_sequence) = delete;
+    flow_operator_sequence(flow_operator_sequence<FG>&& op_sequence)
+        : m_op_impl_vec(std::move(op_sequence.m_op_impl_vec))
+    {
+    }
+
     const_iterator_type begin()
     {
         return m_op_impl_vec.cbegin();
@@ -182,7 +200,7 @@ public:
         return m_op_impl_vec.cend();
     }
 
-private:
+protected:
     template <class OP>
     void add_operator(OP&& op)
     {
@@ -197,39 +215,33 @@ private:
     }
 
     std::vector<operator_impl_type> m_op_impl_vec;
+
+    template <class _FG, class OP>
+    friend void add_flow_operator(flow_operator_sequence<_FG>& op_sequence,
+                                  std::shared_ptr<OP> op_ptr);
 };
+
+
+/*
+ * Only for Python bindings (need to add operators one at time from a py::list object).
+ */
+template <class FG, class OP>
+void
+add_flow_operator(flow_operator_sequence<FG>& op_sequence, std::shared_ptr<OP> op_ptr)
+{
+    op_sequence.add_operator(std::move(op_ptr));
+}
 
 
 class flow_graph_test
 {
 public:
     using impl_type = flow_graph_impl_test<fs::detail::flow_graph_fixed_array_tag>;
-    using operator_impl_type = flow_operator_impl_facade<impl_type>;
 
-    template <class... OPs>
-    flow_graph_test(OPs&&... ops)
+    flow_graph_test() = default;
+    flow_graph_test(flow_operator_sequence<impl_type> op_sequence)
+        : m_op_sequence(std::move(op_sequence))
     {
-        int i = 0;
-        (
-            [&]
-            {
-                ++i;
-                add_operator(std::forward<OPs>(ops));
-            }(),
-            ...);
-    }
-
-    template <class OP>
-    void add_operator(OP&& op)
-    {
-        auto op_ptr = std::make_shared<OP>(std::forward<OP>(op));
-        add_operator(std::move(op_ptr));
-    }
-
-    template <class OP>
-    void add_operator(std::shared_ptr<OP> op_ptr)
-    {
-        m_op_impl_vec.push_back(operator_impl_type(std::move(op_ptr)));
     }
 
     std::vector<int> execute()
@@ -237,7 +249,7 @@ public:
         std::vector<int> results;
         impl_type arg;
 
-        for (const auto& op_impl : m_op_impl_vec)
+        for (const auto& op_impl : m_op_sequence)
         {
             results.push_back(op_impl.execute(arg));
         }
@@ -245,18 +257,14 @@ public:
         return results;
     }
 
-    std::vector<operator_impl_type> m_op_impl_vec;
+    flow_operator_sequence<impl_type> m_op_sequence;
 };
 
 
 std::vector<int>
 test()
 {
-    using operator_seq_type
-        = flow_operator_sequence<flow_graph_impl_test<fs::detail::flow_graph_fixed_array_tag>>;
-    operator_seq_type op_seq{ op1(), op2() };
-
-    auto fg = flow_graph_test(op1(), op2());
+    auto fg = flow_graph_test({ op1(), op2() });
     return fg.execute();
 }
 
@@ -275,13 +283,16 @@ add_flow_graph_bindings(py::module& m)
         .def(py::init(
             [](const py::list& ops)
             {
-                auto fgt_ptr = std::make_unique<flow_graph_test>();
+                using fg_impl_type = flow_graph_test::impl_type;
+                flow_operator_sequence<fg_impl_type> op_sequence;
+
                 for (auto op : ops)
                 {
                     // TODO: smarter way to do this? fold expressions?
                     try
                     {
-                        fgt_ptr->add_operator(op.cast<std::shared_ptr<op1>>());
+                        add_flow_operator<fg_impl_type>(op_sequence,
+                                                        op.cast<std::shared_ptr<op1>>());
                         continue;
                     }
                     catch (py::cast_error e)
@@ -289,7 +300,8 @@ add_flow_graph_bindings(py::module& m)
                     }
                     try
                     {
-                        fgt_ptr->add_operator(op.cast<std::shared_ptr<op2>>());
+                        add_flow_operator<fg_impl_type>(op_sequence,
+                                                        op.cast<std::shared_ptr<op2>>());
                         continue;
                     }
                     catch (py::cast_error e)
@@ -298,18 +310,10 @@ add_flow_graph_bindings(py::module& m)
                     }
                 }
 
-                return fgt_ptr;
+                return std::make_unique<flow_graph_test>(std::move(op_sequence));
             }))
-        //.def("add_operator", [](flow_graph_test& f, std::shared_ptr<op1> op_ptr){
-        // f.add_operator(op_ptr); }) .def("add_operator", [](flow_graph_test& f,
-        // std::shared_ptr<op2> op_ptr){ f.add_operator(op_ptr); })
         .def("execute", &flow_graph_test::execute);
 
-    // m.def("get_param", &get_param);
-    // py::class_<flow_ops_sequential>(m, "FlowOpsSequential")
-    //     .def(py::init([](std::vector<flow_op>& ops){ return
-    //     std::make_unique<flow_ops_sequential>(ops); })) .def_readonly("ops",
-    //     &flow_ops_sequential::p_op_wrappers);
     m.def("test", &test);
 
 
