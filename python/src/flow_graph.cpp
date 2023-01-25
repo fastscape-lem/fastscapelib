@@ -18,12 +18,28 @@ template <class Tag>
 struct flow_graph_impl_test
 {
     using impl_tag = Tag;
+    using data_array_type = xt::pyarray<double>;
 };
 
 
 template <class FG, class OP>
 class flow_operator_impl_base
 {
+public:
+    using graph_impl_type = FG;
+    using data_array_type = typename graph_impl_type::data_array_type;
+
+    int execute(FG& graph_impl) const
+    {
+    }
+
+    void save(const FG& graph_impl,
+              std::map<std::string, FG>& graph_impl_snapshots,
+              const data_array_type& elevation,
+              std::map<std::string, data_array_type>& elevation_snapshots) const
+    {
+    }
+
 protected:
     flow_operator_impl_base(std::shared_ptr<OP> ptr)
         : p_op(std::move(ptr))
@@ -43,8 +59,6 @@ public:
     using base_type = flow_operator_impl_base<FG, OP>;
 
     flow_operator_impl(std::shared_ptr<OP> ptr) = delete;
-
-    int execute(FG& graph_impl) const;
 };
 
 enum class flow_direction
@@ -54,8 +68,9 @@ enum class flow_direction
     multiple
 };
 
-struct flow_operator
+class flow_operator
 {
+public:
     inline static const std::string name = "";
     static constexpr bool elevation_updated = false;
     static constexpr bool graph_updated = false;
@@ -63,8 +78,9 @@ struct flow_operator
     static const flow_direction out_flowdir = flow_direction::undefined;
 };
 
-struct op1 : flow_operator
+class op1 : public flow_operator
 {
+public:
     inline static const std::string name = "op1";
     static constexpr bool elevation_updated = true;
     static constexpr bool graph_updated = false;
@@ -89,8 +105,9 @@ public:
     }
 };
 
-struct op2 : flow_operator
+class op2 : public flow_operator
 {
+public:
     inline static const std::string name = "op2";
     static constexpr bool elevation_updated = false;
     static constexpr bool graph_updated = true;
@@ -100,9 +117,10 @@ struct op2 : flow_operator
 };
 
 template <class FG>
-struct flow_operator_impl<FG, op2, fs::detail::flow_graph_fixed_array_tag>
+class flow_operator_impl<FG, op2, fs::detail::flow_graph_fixed_array_tag>
     : public flow_operator_impl_base<FG, op2>
 {
+public:
     using base_type = flow_operator_impl_base<FG, op2>;
 
     flow_operator_impl(std::shared_ptr<op2> ptr)
@@ -111,6 +129,99 @@ struct flow_operator_impl<FG, op2, fs::detail::flow_graph_fixed_array_tag>
     int execute(FG& graph_impl) const
     {
         return this->p_op->param;
+    }
+};
+
+class flow_snapshot : public flow_operator
+{
+public:
+    inline static const std::string name = "flow_snapshot";
+
+    // TODO: remove
+    int param = 3;
+
+    flow_snapshot(std::string snapshot_name, bool save_graph = true, bool save_elevation = false)
+        : m_snapshot_name(snapshot_name)
+        , m_save_graph(save_graph)
+        , m_save_elevation(save_elevation)
+    {
+    }
+
+    const std::string& snapshot_name() const noexcept
+    {
+        return m_snapshot_name;
+    }
+
+    bool save_graph() const noexcept
+    {
+        return m_save_graph;
+    }
+
+    bool save_elevation() const noexcept
+    {
+        return m_save_elevation;
+    }
+
+private:
+    std::string m_snapshot_name;
+    bool m_save_graph;
+    bool m_save_elevation;
+};
+
+
+template <class FG>
+class flow_operator_impl<FG, flow_snapshot, fs::detail::flow_graph_fixed_array_tag>
+    : public flow_operator_impl_base<FG, flow_snapshot>
+{
+public:
+    using base_type = flow_operator_impl_base<FG, flow_snapshot>;
+    using data_array_type = typename base_type::data_array_type;
+
+    using graph_impl_map = std::map<std::string, FG>;
+    using elevation_map = std::map<std::string, data_array_type>;
+
+    flow_operator_impl(std::shared_ptr<flow_snapshot> ptr)
+        : base_type(std::move(ptr)){};
+
+    int execute(FG& graph_impl) const
+    {
+        return this->p_op->param;
+    }
+
+    void save(const FG& graph_impl,
+              graph_impl_map& graph_impl_snapshots,
+              const data_array_type& elevation,
+              elevation_map& elevation_snapshots) const
+    {
+        if (this->p_op->save_graph())
+        {
+            _save(graph_impl, get_snapshot(graph_impl_snapshots));
+        }
+        if (this->p_op->save_elevation())
+        {
+            _save(elevation, get_snapshot(elevation_snapshots));
+        }
+    }
+
+private:
+    FG& get_snapshot(graph_impl_map& graph_impl_snapshots) const
+    {
+        return graph_impl_snapshots.at(this->p_op->snapshot_name());
+    }
+
+    data_array_type& get_snapshot(elevation_map& elevation_snapshots) const
+    {
+        return elevation_snapshots.at(this->p_op->snapshot_name());
+    }
+
+    void _save(const FG& graph_impl, FG& graph_impl_snapshot) const
+    {
+        py::print("saving graph");
+    }
+
+    void _save(const data_array_type& elevation, data_array_type& elevation_snapshot) const
+    {
+        py::print("saving elevation");
     }
 };
 
@@ -132,6 +243,10 @@ template <class FG>
 class flow_operator_impl_facade
 {
 public:
+    using data_array_type = typename FG::data_array_type;
+    using graph_impl_map = std::map<std::string, FG>;
+    using elevation_map = std::map<std::string, data_array_type>;
+
     template <class OP>
     flow_operator_impl_facade(std::shared_ptr<OP> op)
         : p_op_impl_wrapper(std::make_unique<flow_operator_impl_wrapper<OP>>(std::move(op)))
@@ -149,12 +264,25 @@ public:
         return p_op_impl_wrapper->execute(arg);
     }
 
+    void save(const FG& graph_impl,
+              graph_impl_map& graph_impl_snapshots,
+              const data_array_type& elevation,
+              elevation_map& elevation_snapshots) const
+    {
+        p_op_impl_wrapper->save(graph_impl, graph_impl_snapshots, elevation, elevation_snapshots);
+    }
+
     struct flow_operator_impl_wrapper_base
     {
         virtual ~flow_operator_impl_wrapper_base()
         {
         }
         virtual int execute(FG& arg) const = 0;
+        virtual void save(const FG& graph_impl,
+                          graph_impl_map& graph_impl_snapshots,
+                          const data_array_type& elevation,
+                          elevation_map& elevation_snapshots) const
+            = 0;
     };
 
     template <class OP>
@@ -169,6 +297,14 @@ public:
         int execute(FG& arg) const override
         {
             return m_op_impl.execute(arg);
+        }
+
+        void save(const FG& graph_impl,
+                  graph_impl_map& graph_impl_snapshots,
+                  const data_array_type& elevation,
+                  elevation_map& elevation_snapshots) const override
+        {
+            m_op_impl.save(graph_impl, graph_impl_snapshots, elevation, elevation_snapshots);
         }
 
     private:
@@ -217,6 +353,8 @@ public:
     flow_operator_sequence(flow_operator_sequence<FG>& op_sequence) = delete;
     flow_operator_sequence(flow_operator_sequence<FG>&& op_sequence)
         : m_op_impl_vec(std::move(op_sequence.m_op_impl_vec))
+        , m_graph_snapshot_keys(op_sequence.graph_snapshot_keys())
+        , m_elevation_snapshot_keys(op_sequence.elevation_snapshot_keys())
         , m_elevation_updated(op_sequence.elevation_updated())
         , m_graph_updated(op_sequence.graph_updated())
         , m_out_flowdir(op_sequence.out_flowdir())
@@ -273,8 +411,21 @@ public:
         return m_all_single_flow;
     }
 
+    const std::vector<std::string>& graph_snapshot_keys() const
+    {
+        return m_graph_snapshot_keys;
+    }
+
+    const std::vector<std::string>& elevation_snapshot_keys() const
+    {
+        return m_elevation_snapshot_keys;
+    }
+
 private:
     std::vector<operator_impl_type> m_op_impl_vec;
+
+    std::vector<std::string> m_graph_snapshot_keys;
+    std::vector<std::string> m_elevation_snapshot_keys;
 
     bool m_elevation_updated = false;
     bool m_graph_updated = false;
@@ -301,6 +452,10 @@ private:
     template <class OP>
     void add_operator(std::shared_ptr<OP> op_ptr)
     {
+        if constexpr (std::is_same_v<OP, flow_snapshot>)
+        {
+            update_snapshots(*op_ptr);
+        }
         if (op_ptr->in_flowdir != flow_direction::undefined && op_ptr->in_flowdir != m_out_flowdir)
         {
             throw std::invalid_argument("flow operator " + op_ptr->name
@@ -326,6 +481,20 @@ private:
         }
 
         m_op_impl_vec.push_back(operator_impl_type(std::move(op_ptr)));
+    }
+
+    void update_snapshots(const flow_snapshot& snapshot)
+    {
+        const auto& snapshot_name = snapshot.snapshot_name();
+
+        if (snapshot.save_graph())
+        {
+            m_graph_snapshot_keys.push_back(snapshot_name);
+        }
+        if (snapshot.save_elevation())
+        {
+            m_elevation_snapshot_keys.push_back(snapshot_name);
+        }
     }
 
     // Only for bindings (in case the variadic templates constructor cannot be used).
@@ -361,6 +530,14 @@ make_flow_operator_sequence(OPs&& ops)
         }
         catch (py::cast_error e)
         {
+        }
+        try
+        {
+            op_sequence.add_operator(op.template cast<std::shared_ptr<flow_snapshot>>());
+            continue;
+        }
+        catch (py::cast_error e)
+        {
             throw py::type_error("invalid flow operator");
         }
     }
@@ -373,6 +550,10 @@ class flow_graph_test
 {
 public:
     using impl_type = flow_graph_impl_test<fs::detail::flow_graph_fixed_array_tag>;
+    using data_array_type = impl_type::data_array_type;
+
+    using graph_impl_map = std::map<std::string, impl_type>;
+    using elevation_map = std::map<std::string, data_array_type>;
 
     flow_graph_test() = default;
     flow_graph_test(flow_operator_sequence<impl_type> op_sequence)
@@ -388,21 +569,35 @@ public:
             throw std::invalid_argument(
                 "must have at least one operator that defines the flow direction type");
         }
+
+        // pre-allocate graph and elevation snapshots
+        for (const auto& key : op_sequence.graph_snapshot_keys())
+        {
+            m_graph_impl_snapshots.insert({ key, impl_type() });
+        }
+        for (const auto& key : op_sequence.elevation_snapshot_keys())
+        {
+            m_graph_impl_snapshots.insert({ key, {} });
+        }
     }
 
-    std::vector<int> execute()
+    std::vector<int> update_routes()
     {
         std::vector<int> results;
         impl_type arg;
+        impl_type::data_array_type elevation;
 
         for (const auto& op_impl : m_op_sequence)
         {
             results.push_back(op_impl.execute(arg));
+            op_impl.save(arg, m_graph_impl_snapshots, elevation, m_elevation_snapshots);
         }
 
         return results;
     }
 
+    graph_impl_map m_graph_impl_snapshots;
+    elevation_map m_elevation_snapshots;
     flow_operator_sequence<impl_type> m_op_sequence;
 };
 
@@ -410,8 +605,8 @@ public:
 std::vector<int>
 test()
 {
-    auto fg = flow_graph_test({ op1(), op2() });
-    return fg.execute();
+    auto fg = flow_graph_test({ op1(), flow_snapshot("s1"), op2() });
+    return fg.update_routes();
 }
 
 
@@ -425,6 +620,11 @@ add_flow_graph_bindings(py::module& m)
     py::class_<op2, flow_operator, std::shared_ptr<op2>>(m, "Op2")
         .def(py::init<>())
         .def_readwrite("param", &op2::param);
+    py::class_<flow_snapshot, flow_operator, std::shared_ptr<flow_snapshot>>(m, "FlowSnapshot")
+        .def(py::init<std::string, bool, bool>(),
+             py::arg("snapshot_name"),
+             py::arg("save_graph") = true,
+             py::arg("save_elevation") = false);
     py::class_<flow_graph_test>(m, "FlowGraphTest")
         .def(py::init(
             [](const py::list& ops)
@@ -433,7 +633,7 @@ add_flow_graph_bindings(py::module& m)
                 auto op_sequence = make_flow_operator_sequence<fg_impl_type>(ops);
                 return std::make_unique<flow_graph_test>(std::move(op_sequence));
             }))
-        .def("execute", &flow_graph_test::execute);
+        .def("update_routes", &flow_graph_test::update_routes);
 
     m.def("test", &test);
 
