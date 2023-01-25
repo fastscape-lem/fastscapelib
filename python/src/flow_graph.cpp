@@ -183,6 +183,14 @@ public:
  * Immutable sequence of flow operators (e.g., flow routers, sink resolvers)
  * that are applied in chain when updating a flow graph.
  *
+ * More precisely, it is a container of flow operator implementation (facade)
+ * instances.
+ *
+ * This class is not intended to be used as a stand-alone container. It is used
+ * as an entity of flow_graph and can be created implicitly in the flow_graph
+ * constructor.
+ *
+ * @tparam FG The flow graph implementation type
  */
 template <class FG>
 class flow_operator_sequence
@@ -265,7 +273,7 @@ public:
         return m_all_single_flow;
     }
 
-protected:
+private:
     std::vector<operator_impl_type> m_op_impl_vec;
 
     bool m_elevation_updated = false;
@@ -280,6 +288,16 @@ protected:
         add_operator(std::move(op_ptr));
     }
 
+    // Add an operator of an abitrary type to the sequence and update
+    // the sequence properties accordingly.
+    //
+    // The current (final state) flow direction is updated only if the operator
+    // updates the flow graph and explicitly defines an output flow direction
+    // type (i.e., single or multiple).
+    //
+    // Also checks consistency between the current flow direction of the
+    // sequence and the expected input flow direction of the operator to add.
+    //
     template <class OP>
     void add_operator(std::shared_ptr<OP> op_ptr)
     {
