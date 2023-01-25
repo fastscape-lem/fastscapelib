@@ -47,12 +47,29 @@ public:
     int execute(FG& graph_impl) const;
 };
 
+enum class flow_direction
+{
+    undefined,
+    single,
+    multiple
+};
+
 struct flow_operator
 {
+    inline static const std::string name = "";
+    static constexpr bool elevation_updated = false;
+    static constexpr bool graph_updated = false;
+    static const flow_direction in_flowdir = flow_direction::undefined;
+    static const flow_direction out_flowdir = flow_direction::undefined;
 };
 
 struct op1 : flow_operator
 {
+    inline static const std::string name = "op1";
+    static constexpr bool elevation_updated = true;
+    static constexpr bool graph_updated = false;
+    static const flow_direction in_flowdir = flow_direction::undefined;
+    static const flow_direction out_flowdir = flow_direction::undefined;
     int param = 1;
 };
 
@@ -74,6 +91,11 @@ public:
 
 struct op2 : flow_operator
 {
+    inline static const std::string name = "op2";
+    static constexpr bool elevation_updated = false;
+    static constexpr bool graph_updated = true;
+    static const flow_direction in_flowdir = flow_direction::undefined;
+    static const flow_direction out_flowdir = flow_direction::single;
     int param = 2;
 };
 
@@ -187,9 +209,16 @@ public:
     flow_operator_sequence(flow_operator_sequence<FG>& op_sequence) = delete;
     flow_operator_sequence(flow_operator_sequence<FG>&& op_sequence)
         : m_op_impl_vec(std::move(op_sequence.m_op_impl_vec))
+        , m_elevation_updated(op_sequence.elevation_updated())
+        , m_graph_updated(op_sequence.graph_updated())
+        , m_out_flowdir(op_sequence.out_flowdir())
+        , m_all_single_flow(op_sequence.all_single_flow())
     {
     }
 
+    /*
+     * STL-compatible iterators for looping over the operators.
+     */
     const_iterator_type begin()
     {
         return m_op_impl_vec.cbegin();
@@ -200,7 +229,50 @@ public:
         return m_op_impl_vec.cend();
     }
 
+    /*
+     * Returns true if at least one operator in the sequence
+     * updates topographic elevation.
+     */
+    bool elevation_updated() const
+    {
+        return m_elevation_updated;
+    }
+
+    /*
+     * Returns true if at least one operator in the sequence
+     * updates the flow graph.
+     */
+    bool graph_updated() const
+    {
+        return m_graph_updated;
+    }
+
+    /*
+     * Returns the flow direction type (single, multiple or undefined)
+     * of the final state of the flow graph, after having applied all operators.
+     */
+    flow_direction out_flowdir() const
+    {
+        return m_out_flowdir;
+    }
+
+    /*
+     * Returns true if all intermediate states of the flow graph
+     * have single flow directions.
+     */
+    bool all_single_flow() const
+    {
+        return m_all_single_flow;
+    }
+
 protected:
+    std::vector<operator_impl_type> m_op_impl_vec;
+
+    bool m_elevation_updated = false;
+    bool m_graph_updated = false;
+    flow_direction m_out_flowdir = flow_direction::undefined;
+    bool m_all_single_flow = true;
+
     template <class OP>
     void add_operator(OP&& op)
     {
@@ -211,25 +283,71 @@ protected:
     template <class OP>
     void add_operator(std::shared_ptr<OP> op_ptr)
     {
+        if (op_ptr->in_flowdir != flow_direction::undefined && op_ptr->in_flowdir != m_out_flowdir)
+        {
+            throw std::invalid_argument("flow operator " + op_ptr->name
+                                        + " has incompatible input flow directions");
+        }
+        if (op_ptr->elevation_updated)
+        {
+            m_elevation_updated = true;
+        }
+        if (op_ptr->graph_updated)
+        {
+            m_graph_updated = true;
+
+            if (op_ptr->out_flowdir != flow_direction::undefined)
+            {
+                m_out_flowdir = op_ptr->out_flowdir;
+
+                if (op_ptr->out_flowdir != flow_direction::single)
+                {
+                    m_all_single_flow = false;
+                }
+            }
+        }
+
         m_op_impl_vec.push_back(operator_impl_type(std::move(op_ptr)));
     }
 
-    std::vector<operator_impl_type> m_op_impl_vec;
-
-    template <class _FG, class OP>
-    friend void add_flow_operator(flow_operator_sequence<_FG>& op_sequence,
-                                  std::shared_ptr<OP> op_ptr);
+    // Only for bindings (in case the variadic templates constructor cannot be used).
+    template <class _FG, class OPs>
+    friend flow_operator_sequence<_FG> make_flow_operator_sequence(OPs&& ops);
 };
 
 
 /*
  * Only for Python bindings (need to add operators one at time from a py::list object).
  */
-template <class FG, class OP>
-void
-add_flow_operator(flow_operator_sequence<FG>& op_sequence, std::shared_ptr<OP> op_ptr)
+template <class FG, class OPs>
+flow_operator_sequence<FG>
+make_flow_operator_sequence(OPs&& ops)
 {
-    op_sequence.add_operator(std::move(op_ptr));
+    flow_operator_sequence<FG> op_sequence;
+
+    for (auto op : ops)
+    {
+        // TODO: smarter way to do this? fold expressions?
+        try
+        {
+            op_sequence.add_operator(op.template cast<std::shared_ptr<op1>>());
+            continue;
+        }
+        catch (py::cast_error e)
+        {
+        }
+        try
+        {
+            op_sequence.add_operator(op.template cast<std::shared_ptr<op2>>());
+            continue;
+        }
+        catch (py::cast_error e)
+        {
+            throw py::type_error("invalid flow operator");
+        }
+    }
+
+    return std::move(op_sequence);
 }
 
 
@@ -242,6 +360,16 @@ public:
     flow_graph_test(flow_operator_sequence<impl_type> op_sequence)
         : m_op_sequence(std::move(op_sequence))
     {
+        if (!m_op_sequence.graph_updated())
+        {
+            throw std::invalid_argument(
+                "must have at least one operator that updates the flow graph");
+        }
+        if (m_op_sequence.out_flowdir() == flow_direction::undefined)
+        {
+            throw std::invalid_argument(
+                "must have at least one operator that defines the flow direction type");
+        }
     }
 
     std::vector<int> execute()
@@ -284,32 +412,7 @@ add_flow_graph_bindings(py::module& m)
             [](const py::list& ops)
             {
                 using fg_impl_type = flow_graph_test::impl_type;
-                flow_operator_sequence<fg_impl_type> op_sequence;
-
-                for (auto op : ops)
-                {
-                    // TODO: smarter way to do this? fold expressions?
-                    try
-                    {
-                        add_flow_operator<fg_impl_type>(op_sequence,
-                                                        op.cast<std::shared_ptr<op1>>());
-                        continue;
-                    }
-                    catch (py::cast_error e)
-                    {
-                    }
-                    try
-                    {
-                        add_flow_operator<fg_impl_type>(op_sequence,
-                                                        op.cast<std::shared_ptr<op2>>());
-                        continue;
-                    }
-                    catch (py::cast_error e)
-                    {
-                        throw py::type_error("invalid flow operator");
-                    }
-                }
-
+                auto op_sequence = make_flow_operator_sequence<fg_impl_type>(ops);
                 return std::make_unique<flow_graph_test>(std::move(op_sequence));
             }))
         .def("execute", &flow_graph_test::execute);
