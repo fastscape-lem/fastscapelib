@@ -31,6 +31,7 @@ public:
 
     int execute(FG& graph_impl) const
     {
+        return 0;
     }
 
     void save(const FG& graph_impl,
@@ -137,9 +138,6 @@ class flow_snapshot : public flow_operator
 public:
     inline static const std::string name = "flow_snapshot";
 
-    // TODO: remove
-    int param = 3;
-
     flow_snapshot(std::string snapshot_name, bool save_graph = true, bool save_elevation = false)
         : m_snapshot_name(snapshot_name)
         , m_save_graph(save_graph)
@@ -182,11 +180,6 @@ public:
 
     flow_operator_impl(std::shared_ptr<flow_snapshot> ptr)
         : base_type(std::move(ptr)){};
-
-    int execute(FG& graph_impl) const
-    {
-        return this->p_op->param;
-    }
 
     void save(const FG& graph_impl,
               graph_impl_map& graph_impl_snapshots,
