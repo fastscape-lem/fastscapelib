@@ -84,9 +84,7 @@ class op1 : public flow_operator
 public:
     inline static const std::string name = "op1";
     static constexpr bool elevation_updated = true;
-    static constexpr bool graph_updated = false;
-    static const flow_direction in_flowdir = flow_direction::undefined;
-    static const flow_direction out_flowdir = flow_direction::undefined;
+
     int param = 1;
 };
 
@@ -110,10 +108,9 @@ class op2 : public flow_operator
 {
 public:
     inline static const std::string name = "op2";
-    static constexpr bool elevation_updated = false;
     static constexpr bool graph_updated = true;
-    static const flow_direction in_flowdir = flow_direction::undefined;
     static const flow_direction out_flowdir = flow_direction::single;
+
     int param = 2;
 };
 
