@@ -37,9 +37,13 @@ struct flow_graph_impl_test
  * specialization + type erasure is used instead.
  *
  * A flow operator implementation is decoupled from its flow operator
- * corresponding instance (shared pointer). Flow operators may be instantiated
- * outside of the flow_graph class but flow operator implementation are
- * instantiated within the flow_graph class.
+ * corresponding instance (shared pointer). While flow operators may be
+ * instantiated outside of the flow_graph class, flow operator implementations
+ * are instantiated inside the flow_graph class as they need the
+ * (grid-dependent) flow graph implementation and topographic elevation types.
+ *
+ * @tparam FG The flow graph implementation type
+ * @tparam OP The flow operator type
  *
  */
 template <class FG, class OP>
@@ -363,15 +367,15 @@ public:
 
 
 /*
- * Immutable sequence of flow operators (e.g., flow routers, sink resolvers)
- * that are applied in chain when updating a flow graph.
+ * Immutable sequence of flow operators (e.g., flow routers, sink resolvers,
+ * flow snapshots) that are applied in chain when updating a flow graph.
  *
  * More precisely, it is a container of flow operator implementation (facade)
  * instances.
  *
  * This class is not intended to be used as a stand-alone container. It is used
- * as an entity of flow_graph and can be created implicitly in the flow_graph
- * constructor.
+ * as an entity of flow_graph and can (should) be created implicitly in the
+ * flow_graph constructor.
  *
  * @tparam FG The flow graph implementation type
  */
@@ -603,26 +607,26 @@ public:
     using elevation_map = std::map<std::string, data_array_type>;
 
     flow_graph_test() = default;
-    flow_graph_test(flow_operator_sequence<impl_type> op_sequence)
-        : m_op_sequence(std::move(op_sequence))
+    flow_graph_test(flow_operator_sequence<impl_type> operators)
+        : m_operators(std::move(operators))
     {
-        if (!m_op_sequence.graph_updated())
+        if (!m_operators.graph_updated())
         {
             throw std::invalid_argument(
                 "must have at least one operator that updates the flow graph");
         }
-        if (m_op_sequence.out_flowdir() == flow_direction::undefined)
+        if (m_operators.out_flowdir() == flow_direction::undefined)
         {
             throw std::invalid_argument(
                 "must have at least one operator that defines the flow direction type");
         }
 
         // pre-allocate graph and elevation snapshots
-        for (const auto& key : op_sequence.graph_snapshot_keys())
+        for (const auto& key : operators.graph_snapshot_keys())
         {
             m_graph_impl_snapshots.insert({ key, impl_type() });
         }
-        for (const auto& key : op_sequence.elevation_snapshot_keys())
+        for (const auto& key : operators.elevation_snapshot_keys())
         {
             m_graph_impl_snapshots.insert({ key, {} });
         }
@@ -634,10 +638,10 @@ public:
         impl_type arg;
         impl_type::data_array_type elevation;
 
-        for (const auto& op_impl : m_op_sequence)
+        for (const auto& op : m_operators)
         {
-            results.push_back(op_impl.apply(arg));
-            op_impl.save(arg, m_graph_impl_snapshots, elevation, m_elevation_snapshots);
+            results.push_back(op.apply(arg));
+            op.save(arg, m_graph_impl_snapshots, elevation, m_elevation_snapshots);
         }
 
         return results;
@@ -645,7 +649,7 @@ public:
 
     graph_impl_map m_graph_impl_snapshots;
     elevation_map m_elevation_snapshots;
-    flow_operator_sequence<impl_type> m_op_sequence;
+    flow_operator_sequence<impl_type> m_operators;
 };
 
 
