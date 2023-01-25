@@ -21,7 +21,27 @@ struct flow_graph_impl_test
     using data_array_type = xt::pyarray<double>;
 };
 
-
+/*
+ * Flow operator implementation base class.
+ *
+ * It exposes two methods:
+ *
+ * - `apply`: may update in-place a flow graph implementation and/or
+ *   topographic elevation
+ * - `save` : only used by the flow_snapshot operator.
+ *
+ * By default, these two methods do nothing. A flow operator implementation
+ * should re-implement only the `apply` method.
+ *
+ * The methods are not declared virtual (no polymorphism). Template
+ * specialization + type erasure is used instead.
+ *
+ * A flow operator implementation is decoupled from its flow operator
+ * corresponding instance (shared pointer). Flow operators may be instantiated
+ * outside of the flow_graph class but flow operator implementation are
+ * instantiated within the flow_graph class.
+ *
+ */
 template <class FG, class OP>
 class flow_operator_impl_base
 {
@@ -29,7 +49,7 @@ public:
     using graph_impl_type = FG;
     using data_array_type = typename graph_impl_type::data_array_type;
 
-    int execute(FG& graph_impl) const
+    int apply(FG& graph_impl) const
     {
         return 0;
     }
@@ -52,13 +72,22 @@ protected:
     std::shared_ptr<const OP> p_op;
 };
 
-
+/*
+ * Flow operator implementation.
+ *
+ * This template class is not directly constructible. Template specialized
+ * implementation classes must be provided for each operator (OP) for at least
+ * one of the available flow graph implementations (Tag).
+ *
+ * @tparam FG The flow graph implementation type (grid-dependent)
+ * @tparam OP The flow operator type
+ * @tparam Tag The flow graph implementation tag
+ *
+ */
 template <class FG, class OP, class Tag>
 class flow_operator_impl : public flow_operator_impl_base<FG, OP>
 {
 public:
-    using base_type = flow_operator_impl_base<FG, OP>;
-
     flow_operator_impl(std::shared_ptr<OP> ptr) = delete;
 };
 
@@ -69,6 +98,22 @@ enum class flow_direction
     multiple
 };
 
+/*
+ * Flow operator.
+ *
+ * It represents a logical unit that can read and/or modify in-place the flow
+ * graph and topographic elevation. It is a common type for flow routers, sink
+ * resolvers and snapshots (save intermediate graph and/or elevation states).
+ *
+ * A flow operator may have one or more implementations, each relative to a
+ * specific flow graph implementation. Note: this class and its derived classes
+ * only contain the operators' (static) properties and parameters
+ * (implementations are in separate classes).
+ *
+ * Do not use this class directly (it has no implementation). Use instead its
+ * derived classes.
+ *
+ */
 class flow_operator
 {
 public:
@@ -98,7 +143,7 @@ public:
     flow_operator_impl(std::shared_ptr<op1> ptr)
         : base_type(std::move(ptr)){};
 
-    int execute(FG& graph_impl) const
+    int apply(FG& graph_impl) const
     {
         return this->p_op->param;
     }
@@ -124,12 +169,22 @@ public:
     flow_operator_impl(std::shared_ptr<op2> ptr)
         : base_type(std::move(ptr)){};
 
-    int execute(FG& graph_impl) const
+    int apply(FG& graph_impl) const
     {
         return this->p_op->param;
     }
 };
 
+/*
+ * Flow snapshot operator.
+ *
+ * A special flow operator used to save intermediate states
+ * of the flow graph and/or topographic elevation values while
+ * applying the other operators in chain.
+ *
+ * Those saved states are accessible from the flow_graph object.
+ *
+ */
 class flow_snapshot : public flow_operator
 {
 public:
@@ -163,7 +218,9 @@ private:
     bool m_save_elevation;
 };
 
-
+/*
+ * Flow snapshot operator implementation.
+ */
 template <class FG>
 class flow_operator_impl<FG, flow_snapshot, fs::detail::flow_graph_fixed_array_tag>
     : public flow_operator_impl_base<FG, flow_snapshot>
@@ -249,9 +306,9 @@ public:
     {
     }
 
-    int execute(FG& arg) const
+    int apply(FG& arg) const
     {
-        return p_op_impl_wrapper->execute(arg);
+        return p_op_impl_wrapper->apply(arg);
     }
 
     void save(const FG& graph_impl,
@@ -267,7 +324,7 @@ public:
         virtual ~flow_operator_impl_wrapper_base()
         {
         }
-        virtual int execute(FG& arg) const = 0;
+        virtual int apply(FG& arg) const = 0;
         virtual void save(const FG& graph_impl,
                           graph_impl_map& graph_impl_snapshots,
                           const data_array_type& elevation,
@@ -284,9 +341,9 @@ public:
         {
         }
 
-        int execute(FG& arg) const override
+        int apply(FG& arg) const override
         {
-            return m_op_impl.execute(arg);
+            return m_op_impl.apply(arg);
         }
 
         void save(const FG& graph_impl,
@@ -579,7 +636,7 @@ public:
 
         for (const auto& op_impl : m_op_sequence)
         {
-            results.push_back(op_impl.execute(arg));
+            results.push_back(op_impl.apply(arg));
             op_impl.save(arg, m_graph_impl_snapshots, elevation, m_elevation_snapshots);
         }
 
