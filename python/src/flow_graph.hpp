@@ -8,6 +8,7 @@
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/flow/flow_operator.hpp"
+#include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/flow/flow_snapshot.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
 
@@ -240,6 +241,7 @@ namespace fastscapelib
 
         for (auto op : ops)
         {
+            TRY_CAST_OPERATOR(single_flow_router)
             try
             {
                 op_sequence.add_operator(op.template cast<std::shared_ptr<flow_snapshot>>());

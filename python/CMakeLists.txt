@@ -46,7 +46,6 @@ pybind11_add_module(${PY_FASTSCAPELIB}
     src/algo.cpp
     src/eroders.cpp
     src/flow_graph.cpp
-    src/flow_router.cpp
     src/grid.cpp
     src/main.cpp
     src/sink_resolver.cpp)

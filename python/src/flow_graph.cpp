@@ -10,6 +10,7 @@
 #include "flow_graph.hpp"
 
 #include "fastscapelib/flow/flow_operator.hpp"
+#include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/flow/flow_snapshot.hpp"
 
 namespace py = pybind11;
@@ -39,6 +40,9 @@ add_flow_graph_bindings(py::module& m)
 
     py::class_<fs::flow_operator, std::shared_ptr<fs::flow_operator>>(m, "FlowOperator");
 
+    py::class_<fs::single_flow_router, fs::flow_operator, std::shared_ptr<fs::single_flow_router>>(
+        m, "SingleFlowRouter")
+        .def(py::init<>());
 
     py::class_<fs::flow_snapshot, fs::flow_operator, std::shared_ptr<fs::flow_snapshot>>(
         m, "FlowSnapshot")
