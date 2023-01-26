@@ -19,8 +19,6 @@ add_grid_bindings(py::module_&);
 void
 add_flow_graph_bindings(py::module_&);
 void
-add_sink_resolvers_bindings(py::module_&);
-void
 add_algo_bindings(py::module_&);
 void
 add_eroders_bindings(py::module_&);
@@ -39,7 +37,6 @@ PYBIND11_MODULE(_fastscapelib_py, m)
     add_grid_bindings(grid_m);
 
     py::module flow_m = m.def_submodule("flow", "Fastscapelib's flow routing module");
-    add_sink_resolvers_bindings(flow_m);
     add_flow_graph_bindings(flow_m);
 
     py::module algo_m = m.def_submodule("algo", "Fastscapelib's misc. algorithms module");

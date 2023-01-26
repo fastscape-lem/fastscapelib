@@ -47,8 +47,7 @@ pybind11_add_module(${PY_FASTSCAPELIB}
     src/eroders.cpp
     src/flow_graph.cpp
     src/grid.cpp
-    src/main.cpp
-    src/sink_resolver.cpp)
+    src/main.cpp)
 
 target_include_directories(${PY_FASTSCAPELIB} PUBLIC ${NUMPY_INCLUDE_DIRS})
 

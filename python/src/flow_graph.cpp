@@ -12,6 +12,7 @@
 #include "fastscapelib/flow/flow_operator.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/flow/flow_snapshot.hpp"
+#include "fastscapelib/flow/sink_resolver.hpp"
 
 namespace py = pybind11;
 namespace fs = fastscapelib;
@@ -43,6 +44,24 @@ add_flow_graph_bindings(py::module& m)
     py::class_<fs::single_flow_router, fs::flow_operator, std::shared_ptr<fs::single_flow_router>>(
         m, "SingleFlowRouter")
         .def(py::init<>());
+
+    py::class_<fs::pflood_sink_resolver,
+               fs::flow_operator,
+               std::shared_ptr<fs::pflood_sink_resolver>>(m, "PFloodSinkResolver")
+        .def(py::init<>());
+
+    py::enum_<fs::mst_method> mst_method(m, "MSTMethod", py::arithmetic());
+    mst_method.value("KRUSKAL", fs::mst_method::kruskal).value("BORUVKA", fs::mst_method::boruvka);
+
+    py::enum_<fs::mst_route_method> mst_route_method(m, "MSTRouteMethod", py::arithmetic());
+    mst_route_method.value("BASIC", fs::mst_route_method::basic)
+        .value("CARVE", fs::mst_route_method::carve);
+
+    py::class_<fs::mst_sink_resolver, fs::flow_operator, std::shared_ptr<fs::mst_sink_resolver>>(
+        m, "MSTSinkResolver")
+        .def(py::init<fs::mst_method, fs::mst_route_method>())
+        .def_readwrite("basin_method", &fs::mst_sink_resolver::m_basin_method)
+        .def_readwrite("route_method", &fs::mst_sink_resolver::m_route_method);
 
     py::class_<fs::flow_snapshot, fs::flow_operator, std::shared_ptr<fs::flow_snapshot>>(
         m, "FlowSnapshot")
