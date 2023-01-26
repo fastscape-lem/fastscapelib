@@ -219,6 +219,16 @@ namespace fastscapelib
     };
 
 
+#define TRY_CAST_OPERATOR(TYPE)                                                                    \
+    try                                                                                            \
+    {                                                                                              \
+        op_sequence.add_operator(op.template cast<std::shared_ptr<TYPE>>());                       \
+        continue;                                                                                  \
+    }                                                                                              \
+    catch (py::cast_error e)                                                                       \
+    {                                                                                              \
+    }
+
     /*
      * special flow operator sequence constructor for Python bindings
      * (need to add operators one at time from a py::list object).
@@ -230,23 +240,6 @@ namespace fastscapelib
 
         for (auto op : ops)
         {
-            // TODO: smarter way to do this? fold expressions?
-            // try
-            // {
-            //     op_sequence.add_operator(op.template
-            //     cast<std::shared_ptr<single_flow_router>>()); continue;
-            // }
-            // catch (py::cast_error e)
-            // {
-            // }
-            // try
-            // {
-            //     op_sequence.add_operator(op.template
-            //     cast<std::shared_ptr<pflood_sink_resolver>>()); continue;
-            // }
-            // catch (py::cast_error e)
-            // {
-            // }
             try
             {
                 op_sequence.add_operator(op.template cast<std::shared_ptr<flow_snapshot>>());
