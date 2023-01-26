@@ -16,13 +16,6 @@ namespace py = pybind11;
 namespace fs = fastscapelib;
 
 
-template <class Tag>
-struct flow_graph_impl_test
-{
-    using tag = Tag;
-    using data_array_type = xt::pyarray<double>;
-};
-
 namespace fastscapelib
 {
     class op1 : public flow_operator
@@ -79,71 +72,6 @@ namespace fastscapelib
 }
 
 
-class flow_graph_test
-{
-public:
-    using impl_type = flow_graph_impl_test<fs::flow_graph_fixed_array_tag>;
-    using data_array_type = impl_type::data_array_type;
-
-    using graph_impl_map = std::map<std::string, impl_type>;
-    using elevation_map = std::map<std::string, data_array_type>;
-
-    // flow_graph_test() = default;
-    flow_graph_test(fs::flow_operator_sequence<impl_type> operators)
-        : m_operators(std::move(operators))
-    {
-        if (!m_operators.graph_updated())
-        {
-            throw std::invalid_argument(
-                "must have at least one operator that updates the flow graph");
-        }
-        if (m_operators.out_flowdir() == fs::flow_direction::undefined)
-        {
-            throw std::invalid_argument(
-                "must have at least one operator that defines the flow direction type");
-        }
-
-        // pre-allocate graph and elevation snapshots
-        for (const auto& key : operators.graph_snapshot_keys())
-        {
-            m_graph_impl_snapshots.insert({ key, impl_type() });
-        }
-        for (const auto& key : operators.elevation_snapshot_keys())
-        {
-            m_graph_impl_snapshots.insert({ key, {} });
-        }
-    }
-
-    // TODO: probably better to access hydrologically corrected topographic elevation
-    // via an explicit flow_graph API method?
-
-    void update_routes()
-    {
-        impl_type graph_impl;
-        impl_type::data_array_type elevation;
-
-        for (const auto& op : m_operators)
-        {
-            op.apply(graph_impl, elevation);
-            op.save(graph_impl, m_graph_impl_snapshots, elevation, m_elevation_snapshots);
-        }
-    }
-
-    data_array_type m_hydro_elevation;
-    graph_impl_map m_graph_impl_snapshots;
-    elevation_map m_elevation_snapshots;
-    fs::flow_operator_sequence<impl_type> m_operators;
-};
-
-
-void
-test()
-{
-    auto fg = flow_graph_test({ fs::op1(), fs::flow_snapshot("s1"), fs::op2() });
-    fg.update_routes();
-}
-
-
 void
 add_flow_graph_bindings(py::module& m)
 {
@@ -185,26 +113,12 @@ add_flow_graph_bindings(py::module& m)
      * Flow graph
      */
 
-    py::class_<flow_graph_test>(m, "FlowGraphTest")
-        .def(py::init(
-            [](const py::list& ops)
-            {
-                using fg_impl_type = flow_graph_test::impl_type;
-                auto op_sequence = fs::make_flow_operator_sequence<fg_impl_type>(ops);
-                return std::make_unique<flow_graph_test>(std::move(op_sequence));
-            }))
-        .def("update_routes", &flow_graph_test::update_routes);
-
-    m.def("test", &test);
-
-
     py::class_<fs::py_flow_graph> pyfgraph(m, "FlowGraph");
 
     fs::register_py_flow_graph_init<fs::py_profile_grid>(pyfgraph);
     fs::register_py_flow_graph_init<fs::py_raster_grid>(pyfgraph);
 
     pyfgraph.def("impl", &fs::py_flow_graph::impl, py::return_value_policy::reference);
-
     pyfgraph.def("update_routes", &fs::py_flow_graph::update_routes);
 
     using data_array_type = fs::py_flow_graph::data_array_type;

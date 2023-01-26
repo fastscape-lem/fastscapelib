@@ -71,8 +71,8 @@ namespace fastscapelib
             using base_type = flow_operator_impl_base<FG, flow_snapshot>;
             using data_array_type = typename base_type::data_array_type;
 
-            using graph_impl_map = std::map<std::string, FG>;
-            using elevation_map = std::map<std::string, data_array_type>;
+            using graph_impl_map = std::map<std::string, FG&>;
+            using elevation_map = std::map<std::string, std::unique_ptr<data_array_type>>;
 
             flow_operator_impl(std::shared_ptr<flow_snapshot> ptr)
                 : base_type(std::move(ptr)){};
@@ -100,7 +100,7 @@ namespace fastscapelib
 
             data_array_type& get_snapshot(elevation_map& elevation_snapshots) const
             {
-                return elevation_snapshots.at(this->m_op_ptr->snapshot_name());
+                return *(elevation_snapshots.at(this->m_op_ptr->snapshot_name()));
             }
 
             void _save(const FG& graph_impl, FG& graph_impl_snapshot) const

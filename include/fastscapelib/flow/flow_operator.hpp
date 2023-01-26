@@ -100,15 +100,17 @@ namespace fastscapelib
         public:
             using graph_impl_type = FG;
             using data_array_type = typename graph_impl_type::data_array_type;
+            using graph_impl_map = std::map<std::string, FG&>;
+            using elevation_map = std::map<std::string, std::unique_ptr<data_array_type>>;
 
             void apply(FG& /*graph_impl*/, data_array_type& /*elevation*/) const
             {
             }
 
             void save(const FG& /*graph_impl*/,
-                      std::map<std::string, FG>& /*graph_impl_snapshots*/,
+                      graph_impl_map& /*graph_impl_snapshots*/,
                       const data_array_type& /*elevation*/,
-                      std::map<std::string, data_array_type>& /*elevation_snapshots*/) const
+                      elevation_map& /*elevation_snapshots*/) const
             {
             }
 
@@ -160,8 +162,8 @@ namespace fastscapelib
         {
         public:
             using data_array_type = typename FG::data_array_type;
-            using graph_impl_map = std::map<std::string, FG>;
-            using elevation_map = std::map<std::string, data_array_type>;
+            using graph_impl_map = std::map<std::string, FG&>;
+            using elevation_map = std::map<std::string, std::unique_ptr<data_array_type>>;
 
             template <class OP>
             flow_operator_impl_facade(std::shared_ptr<OP> ptr)

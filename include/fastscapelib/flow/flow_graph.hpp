@@ -10,6 +10,7 @@
 #define FASTSCAPELIB_FLOW_FLOW_GRAPH_H
 
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <type_traits>
 #include <string>
@@ -49,9 +50,9 @@ namespace fastscapelib
         using shape_type = typename data_array_type::shape_type;
         using data_array_size_type = xt_array_t<xt_selector, size_type>;
 
-        using graph_map = std::map<std::string, self_type>;
+        using graph_map = std::map<std::string, std::unique_ptr<self_type>>;
         using graph_impl_map = std::map<std::string, impl_type&>;
-        using elevation_map = std::map<std::string, data_array_type>;
+        using elevation_map = std::map<std::string, std::unique_ptr<data_array_type>>;
 
         flow_graph(G& grid, operators_type operators)
             : m_grid(grid)
@@ -73,38 +74,56 @@ namespace fastscapelib
             // pre-allocate graph and elevation snapshots
             for (const auto& key : operators.graph_snapshot_keys())
             {
-                // m_graph_snapshots.insert({ key, self_type(grid) });
-                // m_graph_impl_snapshots.insert({ key, m_graph_snapshots.at(key).m_impl });
+                // TODO: optimize for the single flow case
+                m_graph_snapshots.insert({ key, std::unique_ptr<self_type>(new self_type(grid)) });
+                m_graph_impl_snapshots.insert({ key, (*m_graph_snapshots.at(key)).m_impl });
             }
             for (const auto& key : operators.elevation_snapshot_keys())
             {
-                // m_elevation_snapshots.insert({ key, {} });
+                auto snapshot = data_array_type::from_shape(grid.shape());
+                m_elevation_snapshots.insert(
+                    { key, std::make_unique<data_array_type>(std::move(snapshot)) });
             }
 
             // pre-allocate hydrologically corrected elevation
             if (m_operators.elevation_updated())
             {
-                // TODO:
+                m_hydro_elevation = xt::empty<data_type>(grid.shape());
             }
         }
 
+        /*
+         * Update flow routes from the input topographic surface.
+         *
+         * This applies in chain the flow operators and takes snapshots (if any).
+         *
+         * @param elevation The input topographic surface elevation
+         *
+         * @return Either the input elevation unchanged or the hydrologically
+         * corrected surface elevation.
+         *
+         */
         const data_array_type& update_routes(const data_array_type& elevation)
         {
-            data_array_type& elevation_copy = elevation;
+            // it is safe to remove the const qualifier
+            // if elevation is updated, another value is used as reference (see below)
+            data_array_type& elevation_ref = const_cast<data_array_type&>(elevation);
 
-            // reset hydrologically corrected elevation
+            // reset and use hydrologically corrected elevation
             if (m_operators.elevation_updated())
             {
-                // TODO: copy elevation values
+                m_hydro_elevation = elevation;
+                elevation_ref = m_hydro_elevation;
             }
 
+            // loop over flow operators
             for (const auto& op : m_operators)
             {
-                op.apply(m_impl, elevation_copy);
-                op.save(m_impl, m_graph_impl_snapshots, elevation_copy, m_elevation_snapshots);
+                op.apply(m_impl, elevation_ref);
+                op.save(m_impl, m_graph_impl_snapshots, elevation_ref, m_elevation_snapshots);
             }
 
-            return elevation;
+            return elevation_ref;
         }
 
         grid_type& grid() const
@@ -158,14 +177,6 @@ namespace fastscapelib
             return basins;
         }
 
-        // used internally for creating graph snapshots
-        // TODO: make it private
-        flow_graph(grid_type& grid)
-            : m_grid(grid)
-            , m_impl(grid)
-        {
-        }
-
     private:
         grid_type& m_grid;
         impl_type m_impl;
@@ -176,6 +187,13 @@ namespace fastscapelib
         elevation_map m_elevation_snapshots;
 
         operators_type m_operators;
+
+        // used internally for creating graph snapshots
+        flow_graph(grid_type& grid)
+            : m_grid(grid)
+            , m_impl(grid)
+        {
+        }
     };
 
 
