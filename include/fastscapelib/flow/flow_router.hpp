@@ -13,8 +13,8 @@ namespace fastscapelib
     /*
      * Single flow router operator.
      *
-     * Route all the flow passing through a grid node towards
-     * its neighbors node of steepest slope.
+     * This flow operator routes all the flow passing through a grid node
+     * towards its neighbors node of steepest slope.
      *
      */
     class single_flow_router : public flow_operator
@@ -22,7 +22,7 @@ namespace fastscapelib
     public:
         inline std::string name() const noexcept override
         {
-            return "op2";
+            return "single_flow_router";
         }
 
         static constexpr bool graph_updated = true;
