@@ -41,9 +41,9 @@ namespace fastscapelib
     public:
         using flow_graph_impl_type = FG;
 
-        static_assert(std::is_same<typename flow_graph_impl_type::tag,
-                                   detail::flow_graph_fixed_array_tag>::value,
-                      "basin graph requires the fixed array flow graph implementation");
+        static_assert(
+            std::is_same<typename flow_graph_impl_type::tag, flow_graph_fixed_array_tag>::value,
+            "basin graph requires the fixed array flow graph implementation");
 
         using size_type = typename flow_graph_impl_type::size_type;
 

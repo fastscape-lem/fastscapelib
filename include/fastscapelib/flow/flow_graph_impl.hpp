@@ -15,29 +15,47 @@
 namespace fastscapelib
 {
 
-    template <class FG>
-    class basin_graph;
+    namespace detail
+    {
+
+        /*
+         * Flow operator implementation forward declaration.
+         */
+        template <class FG, class OP, class Tag>
+        class flow_operator_impl;
+
+        /*
+         * Flow graph implementation.
+         *
+         * Implements the graph underlying data structures and API
+         * (excepted for graph update that is implemented in flow operators).
+         *
+         * This template class has no definition, it must be specialized
+         * using the Tag parameter.
+         *
+         * @tparam G The grid type
+         * @tparam S The xtensor selector type
+         * @tparam Tag The flow graph implementation Tag
+         *
+         */
+        template <class G, class S, class Tag>
+        class flow_graph_impl;
+    }
+
+    /*
+     * Fixed array flow graph implementation.
+     *
+     * This implementation uses fixed shape arrays to store the graph
+     * topology (node receivers, donors, etc.).
+     *
+     */
+    struct flow_graph_fixed_array_tag
+    {
+    };
 
 
     namespace detail
     {
-
-        template <class FG, class FR>
-        class flow_router_impl;
-
-
-        template <class FG, class SR>
-        class sink_resolver_impl;
-
-
-        template <class G, class S, class Tag>
-        class flow_graph_impl;
-
-
-        struct flow_graph_fixed_array_tag
-        {
-        };
-
 
         template <class G, class S>
         class flow_graph_impl<G, S, flow_graph_fixed_array_tag>
@@ -67,16 +85,16 @@ namespace fastscapelib
 
             using basins_type = xt_tensor_t<xt_selector, size_type, 1>;
 
-            template <class FR>
-            flow_graph_impl(grid_type& grid, const FR& router)
+            flow_graph_impl(grid_type& grid)
                 : m_grid(grid)
             {
                 size_type n_receivers_max = grid_type::n_neighbors_max();
 
-                if (router.is_single)
-                {
-                    n_receivers_max = 1;
-                }
+                // TODO: optimize for the single flow type
+                // if (router.is_single)
+                // {
+                //     n_receivers_max = 1;
+                // }
 
                 using shape_type = std::array<size_type, 2>;
                 const shape_type receivers_shape = { grid.size(), n_receivers_max };
@@ -207,6 +225,9 @@ namespace fastscapelib
 
             template <class FG, class SR>
             friend class sink_resolver_impl;
+
+            template <class FG, class OP, class Tag>
+            friend class flow_operator_impl;
         };
 
 

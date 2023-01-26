@@ -227,7 +227,7 @@ namespace fastscapelib
                 }
 
             private:
-                flow_operator_impl<FG, OP, typename FG::impl_tag> m_op_impl;
+                flow_operator_impl<FG, OP, typename FG::tag> m_op_impl;
             };
 
             std::unique_ptr<flow_operator_impl_wrapper_base> m_wrapper_ptr;

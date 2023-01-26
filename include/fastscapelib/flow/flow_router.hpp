@@ -82,7 +82,7 @@ namespace fastscapelib
 
     struct single_flow_router
     {
-        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        using flow_graph_impl_tag = flow_graph_fixed_array_tag;
         static constexpr bool is_single = true;
     };
 
@@ -162,7 +162,7 @@ namespace fastscapelib
 
     struct multiple_flow_router
     {
-        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        using flow_graph_impl_tag = flow_graph_fixed_array_tag;
         static constexpr bool is_single = false;
         double p1;
         double p2;

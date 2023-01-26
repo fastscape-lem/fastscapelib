@@ -84,14 +84,14 @@ namespace fastscapelib
     struct no_sink_resolver
     {
         // TODO: flow graph implementation agnostic
-        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        using flow_graph_impl_tag = flow_graph_fixed_array_tag;
     };
 
 
     struct pflood_sink_resolver
     {
         // TODO: flow graph implementation agnostic
-        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        using flow_graph_impl_tag = flow_graph_fixed_array_tag;
     };
 
 
@@ -140,7 +140,7 @@ namespace fastscapelib
 
     struct mst_sink_resolver
     {
-        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
+        using flow_graph_impl_tag = flow_graph_fixed_array_tag;
         mst_method basin_method = mst_method::kruskal;
         mst_route_method route_method = mst_route_method::carve;
     };
