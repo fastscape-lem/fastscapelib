@@ -16,62 +16,6 @@ namespace py = pybind11;
 namespace fs = fastscapelib;
 
 
-namespace fastscapelib
-{
-    class op1 : public flow_operator
-    {
-    public:
-        inline std::string name() const noexcept override
-        {
-            return "op1";
-        }
-
-        static constexpr bool elevation_updated = true;
-
-        int param = 1;
-    };
-
-    class op2 : public flow_operator
-    {
-    public:
-        inline std::string name() const noexcept override
-        {
-            return "op2";
-        }
-
-        static constexpr bool graph_updated = true;
-        static const flow_direction out_flowdir = flow_direction::single;
-
-        int param = 2;
-    };
-
-    namespace detail
-    {
-        template <class FG>
-        class flow_operator_impl<FG, op1, fs::flow_graph_fixed_array_tag>
-            : public flow_operator_impl_base<FG, op1>
-        {
-        public:
-            using base_type = flow_operator_impl_base<FG, op1>;
-
-            flow_operator_impl(std::shared_ptr<op1> ptr)
-                : base_type(std::move(ptr)){};
-        };
-
-        template <class FG>
-        class flow_operator_impl<FG, op2, fs::flow_graph_fixed_array_tag>
-            : public flow_operator_impl_base<FG, op2>
-        {
-        public:
-            using base_type = flow_operator_impl_base<FG, op2>;
-
-            flow_operator_impl(std::shared_ptr<op2> ptr)
-                : base_type(std::move(ptr)){};
-        };
-    }
-}
-
-
 void
 add_flow_graph_bindings(py::module& m)
 {
@@ -95,12 +39,6 @@ add_flow_graph_bindings(py::module& m)
 
     py::class_<fs::flow_operator, std::shared_ptr<fs::flow_operator>>(m, "FlowOperator");
 
-    py::class_<fs::op1, fs::flow_operator, std::shared_ptr<fs::op1>>(m, "Op1")
-        .def(py::init<>())
-        .def_readwrite("param", &fs::op1::param);
-    py::class_<fs::op2, fs::flow_operator, std::shared_ptr<fs::op2>>(m, "Op2")
-        .def(py::init<>())
-        .def_readwrite("param", &fs::op2::param);
 
     py::class_<fs::flow_snapshot, fs::flow_operator, std::shared_ptr<fs::flow_snapshot>>(
         m, "FlowSnapshot")
