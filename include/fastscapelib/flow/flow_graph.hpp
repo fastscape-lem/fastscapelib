@@ -56,7 +56,7 @@ namespace fastscapelib
 
         flow_graph(G& grid, operators_type operators)
             : m_grid(grid)
-            , m_impl(grid)
+            , m_impl(grid, operators.all_single_flow())
             , m_operators(std::move(operators))
         {
             // sanity checks

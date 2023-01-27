@@ -85,16 +85,15 @@ namespace fastscapelib
 
             using basins_type = xt_tensor_t<xt_selector, size_type, 1>;
 
-            flow_graph_impl(grid_type& grid)
+            flow_graph_impl(grid_type& grid, bool single_flow = false)
                 : m_grid(grid)
             {
                 size_type n_receivers_max = grid_type::n_neighbors_max();
 
-                // TODO: optimize for the single flow type
-                // if (router.is_single)
-                // {
-                //     n_receivers_max = 1;
-                // }
+                if (single_flow)
+                {
+                    n_receivers_max = 1;
+                }
 
                 using shape_type = std::array<size_type, 2>;
                 const shape_type receivers_shape = { grid.size(), n_receivers_max };
