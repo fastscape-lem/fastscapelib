@@ -23,14 +23,12 @@ namespace fastscapelib
         template <surf_type S, fs::mst_method M>
         void basin_graph__update_routes(benchmark::State& state)
         {
-            using flow_graph_type
-                = fs::flow_graph<fs::raster_grid, fs::single_flow_router, fs::no_sink_resolver>;
-            using basin_graph_type = fs::basin_graph<flow_graph_type::flow_graph_impl_type>;
+            using flow_graph_type = fs::flow_graph<fs::raster_grid>;
+            using basin_graph_type = fs::basin_graph<flow_graph_type::impl_type>;
 
             auto topo = bms::synthetic_topography_2d<S, double>(state.range(0));
             auto grid = topo.grid();
-            auto fgraph
-                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+            auto fgraph = flow_graph_type(grid, { fs::single_flow_router() });
 
             basin_graph_type bgraph(fgraph.impl(), M);
 
