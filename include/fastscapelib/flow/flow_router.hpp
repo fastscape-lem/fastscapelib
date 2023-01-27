@@ -48,7 +48,7 @@ namespace fastscapelib
             flow_operator_impl(std::shared_ptr<single_flow_router> ptr)
                 : base_type(std::move(ptr)){};
 
-            void apply(graph_impl_type& graph_impl, data_array_type& elevation) const
+            void apply(graph_impl_type& graph_impl, data_array_type& elevation)
             {
                 // single flow optimization
                 graph_impl.m_receivers_count.fill(1);

@@ -117,7 +117,7 @@ namespace fastscapelib
             }
 
             // loop over flow operators
-            for (const auto& op : m_operators)
+            for (auto& op : m_operators)
             {
                 op.apply(m_impl, elevation_ref);
                 op.save(m_impl, m_graph_impl_snapshots, elevation_ref, m_elevation_snapshots);

@@ -244,7 +244,7 @@ namespace fastscapelib
         {
             TRY_CAST_OPERATOR(single_flow_router)
             TRY_CAST_OPERATOR(pflood_sink_resolver)
-            // TRY_CAST_OPERATOR(mst_sink_resolver)
+            TRY_CAST_OPERATOR(mst_sink_resolver)
             try
             {
                 op_sequence.add_operator(op.template cast<std::shared_ptr<flow_snapshot>>());

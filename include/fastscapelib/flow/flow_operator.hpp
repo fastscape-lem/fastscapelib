@@ -103,7 +103,7 @@ namespace fastscapelib
             using graph_impl_map = std::map<std::string, FG&>;
             using elevation_map = std::map<std::string, std::unique_ptr<data_array_type>>;
 
-            void apply(FG& /*graph_impl*/, data_array_type& /*elevation*/) const
+            void apply(FG& /*graph_impl*/, data_array_type& /*elevation*/)
             {
             }
 
@@ -178,7 +178,7 @@ namespace fastscapelib
             {
             }
 
-            void apply(FG& graph_impl, data_array_type& elevation) const
+            void apply(FG& graph_impl, data_array_type& elevation)
             {
                 return m_wrapper_ptr->apply(graph_impl, elevation);
             }
@@ -197,7 +197,7 @@ namespace fastscapelib
                 virtual ~flow_operator_impl_wrapper_base()
                 {
                 }
-                virtual void apply(FG& graph_impl, data_array_type& elevation) const = 0;
+                virtual void apply(FG& graph_impl, data_array_type& elevation) = 0;
                 virtual void save(const FG& graph_impl,
                                   graph_impl_map& graph_impl_snapshots,
                                   const data_array_type& elevation,
@@ -214,7 +214,7 @@ namespace fastscapelib
                 {
                 }
 
-                void apply(FG& graph_impl, data_array_type& elevation) const override
+                void apply(FG& graph_impl, data_array_type& elevation) override
                 {
                     return m_op_impl.apply(graph_impl, elevation);
                 }
@@ -259,7 +259,7 @@ namespace fastscapelib
     public:
         using impl_type = FG;
         using operator_impl_type = detail::flow_operator_impl_facade<impl_type>;
-        using const_iterator_type = typename std::vector<operator_impl_type>::const_iterator;
+        using iterator_type = typename std::vector<operator_impl_type>::iterator;
 
         template <class... OPs>
         flow_operator_sequence(OPs&&... operators)
@@ -290,14 +290,14 @@ namespace fastscapelib
         /*
          * STL-compatible iterators for looping over the operators.
          */
-        const_iterator_type begin()
+        iterator_type begin()
         {
-            return m_op_impl_vec.cbegin();
+            return m_op_impl_vec.begin();
         }
 
-        const_iterator_type end()
+        iterator_type end()
         {
-            return m_op_impl_vec.cend();
+            return m_op_impl_vec.end();
         }
 
         /*

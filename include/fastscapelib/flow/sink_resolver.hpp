@@ -10,6 +10,7 @@
 #define FASTSCAPELIB_FLOW_SINK_RESOLVER_H
 
 #include <limits>
+#include <memory>
 
 #include "fastscapelib/algo/pflood.hpp"
 #include "fastscapelib/flow/flow_graph_impl.hpp"
@@ -59,7 +60,7 @@ namespace fastscapelib
             flow_operator_impl(std::shared_ptr<pflood_sink_resolver> ptr)
                 : base_type(std::move(ptr)){};
 
-            void apply(graph_impl_type& graph_impl, data_array_type& elevation) const
+            void apply(graph_impl_type& graph_impl, data_array_type& elevation)
             {
                 fill_sinks_sloped(graph_impl.grid(), elevation);
             }
@@ -131,14 +132,13 @@ namespace fastscapelib
             using data_type = typename graph_impl_type::data_type;
             using data_array_type = typename graph_impl_type::data_array_type;
 
+            using basin_graph_type = basin_graph<graph_impl_type>;
+
             flow_operator_impl(std::shared_ptr<mst_sink_resolver> ptr)
                 : base_type(std::move(ptr)){};
 
-            void apply(graph_impl_type& graph_impl, data_array_type& elevation) const
+            void apply(graph_impl_type& graph_impl, data_array_type& elevation)
             {
-                // TODO: not very nice to re-create the basin graph each time
-                m_basin_graph(graph_impl, this->m_op_ptr->m_basin_method);
-
                 // make sure the basins are up-to-date
                 graph_impl.compute_basins();
 
@@ -148,7 +148,7 @@ namespace fastscapelib
                     return;
                 }
 
-                m_basin_graph.update_routes(elevation);
+                get_basin_graph(graph_impl).update_routes(elevation);
 
                 if (this->m_op_ptr->m_route_method == mst_route_method::basic)
                 {
@@ -165,15 +165,29 @@ namespace fastscapelib
                 graph_impl.compute_dfs_indices();
 
                 // fill sinks with tiny tilted surface
-                fill_sinks_sloped(elevation);
+                fill_sinks_sloped(graph_impl, elevation);
             };
 
         private:
-            basin_graph<FG> m_basin_graph;
+            std::unique_ptr<basin_graph_type> m_basin_graph_ptr;
 
             // basin graph edges are oriented in the counter flow direction
             static constexpr std::uint8_t outflow = 0;
             static constexpr std::uint8_t inflow = 1;
+
+            /*
+             * Get the basin graph instance, create it if it doesn't exists.
+             */
+            basin_graph_type& get_basin_graph(const graph_impl_type& graph_impl)
+            {
+                if (!m_basin_graph_ptr)
+                {
+                    m_basin_graph_ptr = std::make_unique<basin_graph_type>(
+                        graph_impl, this->m_op_ptr->m_basin_method);
+                }
+
+                return *m_basin_graph_ptr;
+            }
 
             void update_routes_sinks_basic(graph_impl_type& graph_impl,
                                            const data_array_type& elevation);
@@ -186,15 +200,16 @@ namespace fastscapelib
         void flow_operator_impl<FG, mst_sink_resolver, flow_graph_fixed_array_tag>::
             update_routes_sinks_basic(graph_impl_type& graph_impl, const data_array_type& elevation)
         {
+            const auto& basin_graph = get_basin_graph(graph_impl);
             auto& receivers = graph_impl.m_receivers;
             auto& dist2receivers = graph_impl.m_receivers_distance;
 
             // pits corresponds to outlets in inner basins
-            const auto& pits = m_basin_graph.outlets();
+            const auto& pits = basin_graph.outlets();
 
-            for (size_type edge_idx : m_basin_graph.tree())
+            for (size_type edge_idx : basin_graph.tree())
             {
-                auto& edge = m_basin_graph.edges()[edge_idx];
+                auto& edge = basin_graph.edges()[edge_idx];
 
                 // skip outer basins
                 if (edge.pass[outflow] == static_cast<size_type>(-1))
@@ -228,15 +243,16 @@ namespace fastscapelib
         void flow_operator_impl<FG, mst_sink_resolver, flow_graph_fixed_array_tag>::
             update_routes_sinks_carve(graph_impl_type& graph_impl)
         {
+            const auto& basin_graph = get_basin_graph(graph_impl);
             auto& receivers = graph_impl.m_receivers;
             auto& dist2receivers = graph_impl.m_receivers_distance;
 
             // pits corresponds to outlets in inner basins
-            const auto& pits = m_basin_graph.outlets();
+            const auto& pits = basin_graph.outlets();
 
-            for (size_type edge_idx : m_basin_graph.tree())
+            for (size_type edge_idx : basin_graph.tree())
             {
-                auto& edge = m_basin_graph.edges()[edge_idx];
+                auto& edge = basin_graph.edges()[edge_idx];
 
                 // skip outer basins
                 if (edge.pass[outflow] == static_cast<size_type>(-1))
