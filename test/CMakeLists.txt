@@ -93,7 +93,7 @@ set(FASTSCAPELIB_TEST_SRC
     test_basin_graph.cpp
     test_diffusion_adi.cpp
     test_flow_graph.cpp
-    test_flow_router.cpp
+    test_flow_operator.cpp
     test_single_flow_router.cpp
     test_flow_routing.cpp
     test_pflood.cpp

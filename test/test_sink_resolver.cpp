@@ -1,5 +1,6 @@
 #include <cmath>
 #include <limits>
+#include <memory>
 
 #include "xtensor/xarray.hpp"
 #include "xtensor/xmath.hpp"
@@ -20,44 +21,6 @@ namespace fs = fastscapelib;
 namespace fastscapelib
 {
 
-    struct test_sink_resolver
-    {
-        using flow_graph_impl_tag = detail::flow_graph_fixed_array_tag;
-    };
-
-    namespace detail
-    {
-
-        template <class FG>
-        class sink_resolver_impl<FG, test_sink_resolver>
-            : public sink_resolver_impl_base<FG, test_sink_resolver>
-        {
-        public:
-            using graph_impl_type = FG;
-            using base_type = sink_resolver_impl_base<graph_impl_type, test_sink_resolver>;
-
-            using data_array_type = typename graph_impl_type::data_array_type;
-
-            sink_resolver_impl(graph_impl_type& graph, const test_sink_resolver& resolver)
-                : base_type(graph, resolver)
-                , m_elevation(data_array_type({ 0 })){};
-
-            const data_array_type& resolve1(const data_array_type& elevation)
-            {
-                m_elevation = elevation + 10.;
-                return m_elevation;
-            };
-            const data_array_type& resolve2(const data_array_type& elevation)
-            {
-                m_elevation = elevation + 5.;
-                return m_elevation;
-            };
-
-        private:
-            data_array_type m_elevation;
-        };
-    }
-
     namespace testing
     {
 
@@ -65,7 +28,7 @@ namespace fastscapelib
         {
         protected:
             using grid_type = fs::raster_grid;
-
+            using flow_graph_type = fs::flow_graph<grid_type>;
             using size_type = typename grid_type::size_type;
 
             // bottom border base-level
@@ -89,21 +52,9 @@ namespace fastscapelib
         };
 
 
-        TEST_F(sink_resolver, test_sink_resolver)
-        {
-            auto graph
-                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::test_sink_resolver());
-
-            const auto& new_elevation = graph.update_routes(elevation);
-            EXPECT_TRUE(xt::all(xt::equal(new_elevation, elevation + 15.)));
-        }
-
-
         TEST_F(sink_resolver, no_sink_resolver)
         {
-            auto graph
-                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
-
+            auto graph = flow_graph_type(grid, { fs::single_flow_router() });
             const auto& new_elevation = graph.update_routes(elevation);
 
             {
@@ -121,8 +72,7 @@ namespace fastscapelib
         TEST_F(sink_resolver, pflood_sink_resolver)
         {
             auto graph
-                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::pflood_sink_resolver());
-
+                = flow_graph_type(grid, { fs::pflood_sink_resolver(), fs::single_flow_router() });
             const auto& new_elevation = graph.update_routes(elevation);
 
             {
@@ -164,8 +114,17 @@ namespace fastscapelib
                 SCOPED_TRACE("test default constructor");
 
                 auto resolver = fs::mst_sink_resolver();
-                EXPECT_EQ(resolver.basin_method, fs::mst_method::kruskal);
-                EXPECT_EQ(resolver.route_method, fs::mst_route_method::carve);
+                EXPECT_EQ(resolver.m_basin_method, fs::mst_method::kruskal);
+                EXPECT_EQ(resolver.m_route_method, fs::mst_route_method::carve);
+            }
+
+            {
+                SCOPED_TRACE("test parameters constructor");
+
+                auto resolver
+                    = fs::mst_sink_resolver(fs::mst_method::boruvka, fs::mst_route_method::carve);
+                EXPECT_EQ(resolver.m_basin_method, fs::mst_method::boruvka);
+                EXPECT_EQ(resolver.m_route_method, fs::mst_route_method::carve);
             }
 
             {
@@ -173,16 +132,17 @@ namespace fastscapelib
 
                 auto resolver
                     = fs::mst_sink_resolver{ fs::mst_method::boruvka, fs::mst_route_method::basic };
-                EXPECT_EQ(resolver.basin_method, fs::mst_method::boruvka);
-                EXPECT_EQ(resolver.route_method, fs::mst_route_method::basic);
+                EXPECT_EQ(resolver.m_basin_method, fs::mst_method::boruvka);
+                EXPECT_EQ(resolver.m_route_method, fs::mst_route_method::basic);
             }
         }
 
         TEST_P(mst_sink_resolver, resolve_basic)
         {
-            auto resolver = fs::mst_sink_resolver{ GetParam(), fs::mst_route_method::basic };
+            auto resolver_ptr
+                = std::make_shared<fs::mst_sink_resolver>(GetParam(), fs::mst_route_method::basic);
 
-            auto graph = fs::make_flow_graph(grid, fs::single_flow_router(), resolver);
+            auto graph = flow_graph_type(grid, { fs::single_flow_router(), resolver_ptr });
 
             const auto& new_elevation = graph.update_routes(elevation);
 
@@ -217,9 +177,10 @@ namespace fastscapelib
 
         TEST_P(mst_sink_resolver, resolve_carve)
         {
-            auto resolver = fs::mst_sink_resolver{ GetParam(), fs::mst_route_method::carve };
+            auto resolver_ptr
+                = std::make_shared<fs::mst_sink_resolver>(GetParam(), fs::mst_route_method::carve);
 
-            auto graph = fs::make_flow_graph(grid, fs::single_flow_router(), resolver);
+            auto graph = flow_graph_type(grid, { fs::single_flow_router(), resolver_ptr });
 
             const auto& new_elevation = graph.update_routes(elevation);
 
@@ -261,7 +222,7 @@ namespace fastscapelib
         {
         public:
             using grid_type = fs::raster_grid;
-
+            using flow_graph_type = fs::flow_graph<grid_type>;
             using size_type = typename grid_type::size_type;
 
             grid_type grid
@@ -274,9 +235,21 @@ namespace fastscapelib
              * domain fixed boundaries = total domain area).
              */
             template <class SR>
-            void test_conservation_drainage_area(SR& resolver)
+            void test_conservation_drainage_area(const std::shared_ptr<SR>& resolver_ptr)
             {
-                auto graph = fs::make_flow_graph(grid, fs::single_flow_router(), resolver);
+                using operators_type = fs::flow_operator_sequence<flow_graph_type::impl_type>;
+                operators_type ops;
+
+                if constexpr (std::is_same_v<SR, fs::pflood_sink_resolver>)
+                {
+                    ops = std::move(operators_type(resolver_ptr, fs::single_flow_router()));
+                }
+                else
+                {
+                    ops = std::move(operators_type(fs::single_flow_router(), resolver_ptr));
+                }
+
+                auto graph = flow_graph_type(grid, std::move(ops));
                 graph.update_routes(elevation);
                 auto drainage_area = graph.accumulate(1.0);
 
@@ -293,9 +266,21 @@ namespace fastscapelib
              * value) boundary nodes at grid borders (i.e., only outer basins).
              */
             template <class SR>
-            void test_nb_of_basins(SR& resolver)
+            void test_nb_of_basins(const std::shared_ptr<SR>& resolver_ptr)
             {
-                auto graph = fs::make_flow_graph(grid, fs::single_flow_router(), resolver);
+                using operators_type = fs::flow_operator_sequence<flow_graph_type::impl_type>;
+                operators_type ops;
+
+                if constexpr (std::is_same_v<SR, fs::pflood_sink_resolver>)
+                {
+                    ops = std::move(operators_type(resolver_ptr, fs::single_flow_router()));
+                }
+                else
+                {
+                    ops = std::move(operators_type(fs::single_flow_router(), resolver_ptr));
+                }
+
+                auto graph = flow_graph_type(grid, std::move(ops));
                 graph.update_routes(elevation);
                 auto basins = graph.basins();
 
@@ -309,10 +294,10 @@ namespace fastscapelib
 
         TEST_F(sink_resolver_extra, pflood_sink_resolver)
         {
-            auto resolver = pflood_sink_resolver();
+            auto resolver_ptr = std::make_shared<pflood_sink_resolver>();
 
-            test_conservation_drainage_area(resolver);
-            test_nb_of_basins(resolver);
+            test_conservation_drainage_area(resolver_ptr);
+            test_nb_of_basins(resolver_ptr);
         }
 
 
@@ -325,10 +310,10 @@ namespace fastscapelib
 
         TEST_P(mst_sink_resolver_extra, test)
         {
-            auto resolver = GetParam();
+            auto resolver_ptr = std::make_shared<fs::mst_sink_resolver>(GetParam());
 
-            test_conservation_drainage_area(resolver);
-            test_nb_of_basins(resolver);
+            test_conservation_drainage_area(resolver_ptr);
+            test_nb_of_basins(resolver_ptr);
         }
 
 

@@ -61,8 +61,8 @@ namespace fastscapelib
 
         static constexpr bool elevation_updated = false;
         static constexpr bool graph_updated = false;
-        static const flow_direction in_flowdir = flow_direction::undefined;
-        static const flow_direction out_flowdir = flow_direction::undefined;
+        static constexpr flow_direction in_flowdir = flow_direction::undefined;
+        static constexpr flow_direction out_flowdir = flow_direction::undefined;
     };
 
 
@@ -285,6 +285,19 @@ namespace fastscapelib
             , m_out_flowdir(operators.out_flowdir())
             , m_all_single_flow(operators.all_single_flow())
         {
+        }
+
+        flow_operator_sequence<FG>& operator=(flow_operator_sequence<FG>& operators) = delete;
+        flow_operator_sequence<FG>& operator=(flow_operator_sequence<FG>&& operators)
+        {
+            m_op_impl_vec = std::move(operators.m_op_impl_vec);
+            m_graph_snapshot_keys = std::move(operators.graph_snapshot_keys());
+            m_elevation_snapshot_keys = std::move(operators.elevation_snapshot_keys());
+            m_elevation_updated = operators.elevation_updated();
+            m_graph_updated = operators.graph_updated();
+            m_out_flowdir = operators.out_flowdir();
+            m_all_single_flow = operators.all_single_flow();
+            return *this;
         }
 
         /*

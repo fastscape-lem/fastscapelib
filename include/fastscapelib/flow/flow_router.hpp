@@ -26,7 +26,7 @@ namespace fastscapelib
         }
 
         static constexpr bool graph_updated = true;
-        static const flow_direction out_flowdir = flow_direction::single;
+        static constexpr flow_direction out_flowdir = flow_direction::single;
     };
 
 

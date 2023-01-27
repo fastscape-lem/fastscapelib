@@ -105,25 +105,28 @@ namespace fastscapelib
          */
         const data_array_type& update_routes(const data_array_type& elevation)
         {
-            // it is safe to remove the const qualifier
-            // if elevation is updated, another value is used as reference (see below)
-            data_array_type& elevation_ref = const_cast<data_array_type&>(elevation);
+            data_array_type* elevation_ptr;
 
-            // reset and use hydrologically corrected elevation
             if (m_operators.elevation_updated())
             {
+                // reset and use hydrologically corrected elevation
                 m_hydro_elevation = elevation;
-                elevation_ref = m_hydro_elevation;
+                elevation_ptr = &m_hydro_elevation;
+            }
+            else
+            {
+                // pretty safe to remove the const qualifier (shouldn't be updated)
+                elevation_ptr = const_cast<data_array_type*>(&elevation);
             }
 
             // loop over flow operators
             for (auto& op : m_operators)
             {
-                op.apply(m_impl, elevation_ref);
-                op.save(m_impl, m_graph_impl_snapshots, elevation_ref, m_elevation_snapshots);
+                op.apply(m_impl, *elevation_ptr);
+                op.save(m_impl, m_graph_impl_snapshots, *elevation_ptr, m_elevation_snapshots);
             }
 
-            return elevation_ref;
+            return *elevation_ptr;
         }
 
         grid_type& grid() const
@@ -195,16 +198,6 @@ namespace fastscapelib
         {
         }
     };
-
-
-    template <class G,
-              class O,
-              class S = typename G::xt_selector,
-              class Tag = flow_graph_fixed_array_tag>
-    flow_graph<G, S, Tag> make_flow_graph(G& grid, O operators)
-    {
-        return flow_graph<G, S, Tag>(grid, operators);
-    }
 }
 
 #endif

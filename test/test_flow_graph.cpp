@@ -1,12 +1,11 @@
-#include "fastscapelib/flow/flow_graph.hpp"
-#include "fastscapelib/flow/flow_router.hpp"
-#include "fastscapelib/flow/sink_resolver.hpp"
-#include "fastscapelib/grid/raster_grid.hpp"
-
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xstrided_view.hpp"
 
 #include "gtest/gtest.h"
+
+#include "fastscapelib/flow/flow_graph.hpp"
+#include "fastscapelib/flow/flow_router.hpp"
+#include "fastscapelib/grid/raster_grid.hpp"
 
 
 namespace fs = fastscapelib;
@@ -19,8 +18,7 @@ namespace fastscapelib
         class flow_graph : public ::testing::Test
         {
         protected:
-            using flow_graph_type
-                = fs::flow_graph<fs::raster_grid, fs::single_flow_router, fs::no_sink_resolver>;
+            using flow_graph_type = fs::flow_graph<fs::raster_grid>;
             using grid_type = fs::raster_grid;
             using size_type = typename grid_type::size_type;
 
@@ -40,17 +38,17 @@ namespace fastscapelib
 
         TEST_F(flow_graph, ctor)
         {
-            auto graph
-                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+            auto graph = flow_graph_type(grid, { fs::single_flow_router() });
 
             EXPECT_EQ(graph.size(), 16u);
             EXPECT_TRUE(xt::same_shape(graph.grid_shape(), grid.shape()));
+
+            EXPECT_THROW(flow_graph_type(grid, {}), std::invalid_argument);
         }
 
         TEST_F(flow_graph, update_routes)
         {
-            auto graph
-                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+            auto graph = flow_graph_type(grid, { fs::single_flow_router() });
 
             auto new_elevation = graph.update_routes(elevation);
 
@@ -69,8 +67,7 @@ namespace fastscapelib
 
         TEST_F(flow_graph, accumulate)
         {
-            auto graph
-                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+            auto graph = flow_graph_type(grid, { fs::single_flow_router() });
 
             graph.update_routes(elevation);
 
@@ -92,8 +89,7 @@ namespace fastscapelib
 
         TEST_F(flow_graph, basins)
         {
-            auto graph
-                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+            auto graph = flow_graph_type(grid, { fs::single_flow_router() });
 
             graph.update_routes(elevation);
 

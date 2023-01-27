@@ -26,8 +26,7 @@ namespace fastscapelib
         protected:
             using grid_type = fs::profile_grid;
             using size_type = typename grid_type::size_type;
-            using flow_graph_type
-                = fs::flow_graph<grid_type, fs::single_flow_router, fs::no_sink_resolver>;
+            using flow_graph_type = fs::flow_graph<grid_type>;
 
             size_type n = static_cast<size_type>(8);
 
@@ -36,8 +35,7 @@ namespace fastscapelib
             // 3rd node is a pit, 1st and last nodes are base levels
             xt::xtensor<double, 1> elevation{ 0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0 };
 
-            flow_graph_type graph
-                = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+            flow_graph_type graph = flow_graph_type(grid, { fs::single_flow_router() });
 
             std::array<size_type, 2> receivers_shape{ grid.size(), 1 };
 
@@ -141,8 +139,7 @@ namespace fastscapelib
             double dia = std::sqrt(1.1 * 1.1 + 1.2 * 1.2);
 
             using grid_type = fs::raster_grid_xt<fs::xt_selector, RC>;
-            using flow_graph_type
-                = fs::flow_graph<grid_type, fs::single_flow_router, fs::no_sink_resolver>;
+            using flow_graph_type = fs::flow_graph<grid_type>;
 
             // bottom border base-level
             fs::node_status fixed = fs::node_status::fixed_value_boundary;
@@ -155,11 +152,9 @@ namespace fastscapelib
 
             grid_type looped_grid = grid_type(shape, { 1.1, 1.2 }, bottom_base_level_looped);
 
-            flow_graph_type fixed_graph
-                = fs::make_flow_graph(fixed_grid, fs::single_flow_router(), fs::no_sink_resolver());
-
-            flow_graph_type looped_graph = fs::make_flow_graph(
-                looped_grid, fs::single_flow_router(), fs::no_sink_resolver());
+            flow_graph_type fixed_graph = flow_graph_type(fixed_grid, { fs::single_flow_router() });
+            flow_graph_type looped_graph
+                = flow_graph_type(looped_grid, { fs::single_flow_router() });
 
             // planar surface tilted along the y-axis + small carved channel
             // going towards the left border to test looped boundaries
