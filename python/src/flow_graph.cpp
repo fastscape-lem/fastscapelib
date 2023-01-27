@@ -59,7 +59,9 @@ add_flow_graph_bindings(py::module& m)
 
     py::class_<fs::mst_sink_resolver, fs::flow_operator, std::shared_ptr<fs::mst_sink_resolver>>(
         m, "MSTSinkResolver")
-        .def(py::init<fs::mst_method, fs::mst_route_method>())
+        .def(py::init<fs::mst_method, fs::mst_route_method>(),
+             py::arg("basin_method") = fs::mst_method::kruskal,
+             py::arg("route_method") = fs::mst_route_method::carve)
         .def_readwrite("basin_method", &fs::mst_sink_resolver::m_basin_method)
         .def_readwrite("route_method", &fs::mst_sink_resolver::m_route_method);
 

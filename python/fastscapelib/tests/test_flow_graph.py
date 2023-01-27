@@ -1,12 +1,8 @@
 import numpy as np
 import numpy.testing as npt
+import pytest
 
-from fastscapelib.flow import (
-    FlowGraph,
-    MultipleFlowRouter,
-    NoSinkResolver,
-    SingleFlowRouter,
-)
+from fastscapelib.flow import FlowGraph, PFloodSinkResolver, SingleFlowRouter
 from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
 
 
@@ -20,12 +16,20 @@ class TestFlowGraph:
             [],
         )
 
-        FlowGraph(profile_grid, SingleFlowRouter(), NoSinkResolver())
-        FlowGraph(raster_grid, MultipleFlowRouter(1.0, 1.1), NoSinkResolver())
+        FlowGraph(profile_grid, [SingleFlowRouter()])
+        FlowGraph(raster_grid, [PFloodSinkResolver(), SingleFlowRouter()])
+
+        with pytest.raises(
+            ValueError, match="must have at least one operator that updates"
+        ):
+            FlowGraph(raster_grid, [])
+
+        with pytest.raises(TypeError, match="invalid flow operator"):
+            FlowGraph(raster_grid, ["not a flow operator"])
 
     def test_update_routes(self):
         grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
-        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
+        flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         # pit at 3rd node
         elevation = np.array([0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0])
@@ -65,7 +69,7 @@ class TestFlowGraph:
     def test_accumulate_basins(self):
         # --- test profile grid
         grid = ProfileGrid(8, 2.0, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
-        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
+        flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         # pit at 3rd node
         elevation = np.array([0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0])
@@ -102,7 +106,7 @@ class TestFlowGraph:
             RasterBoundaryStatus(bottom_base_level),
             [],
         )
-        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
+        flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         # planar surface tilted along the y-axis + small carved channel
         elevation = np.array(

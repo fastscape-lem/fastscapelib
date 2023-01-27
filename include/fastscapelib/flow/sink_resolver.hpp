@@ -103,7 +103,8 @@ namespace fastscapelib
         static const flow_direction in_flowdir = flow_direction::single;
         static const flow_direction out_flowdir = flow_direction::single;
 
-        mst_sink_resolver(mst_method basin_method, mst_route_method route_method)
+        mst_sink_resolver(mst_method basin_method = mst_method::kruskal,
+                          mst_route_method route_method = mst_route_method::carve)
             : m_basin_method(basin_method)
             , m_route_method(route_method)
         {

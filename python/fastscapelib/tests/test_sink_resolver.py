@@ -6,7 +6,6 @@ from fastscapelib.flow import (
     MSTMethod,
     MSTRouteMethod,
     MSTSinkResolver,
-    NoSinkResolver,
     PFloodSinkResolver,
     SingleFlowRouter,
 )
@@ -47,7 +46,7 @@ def elevation():
 
 
 def test_no_sink_resolver(grid, elevation):
-    graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
+    graph = FlowGraph(grid, [SingleFlowRouter()])
 
     new_elevation = graph.update_routes(elevation)
 
@@ -60,7 +59,7 @@ def test_no_sink_resolver(grid, elevation):
 
 
 def test_pflood_sink_resolver(grid, elevation):
-    graph = FlowGraph(grid, SingleFlowRouter(), PFloodSinkResolver())
+    graph = FlowGraph(grid, [PFloodSinkResolver(), SingleFlowRouter()])
 
     new_elevation = graph.update_routes(elevation)
 
@@ -100,7 +99,7 @@ class TestMSTSinkResolver:
     def test_resolve_basic(self, grid, elevation, mst_method):
 
         resolver = MSTSinkResolver(mst_method, MSTRouteMethod.BASIC)
-        graph = FlowGraph(grid, SingleFlowRouter(), resolver)
+        graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
 
         new_elevation = graph.update_routes(elevation)
 
@@ -125,7 +124,7 @@ class TestMSTSinkResolver:
     def test_resolve_carve(self, grid, elevation, mst_method):
 
         resolver = MSTSinkResolver(mst_method, MSTRouteMethod.CARVE)
-        graph = FlowGraph(grid, SingleFlowRouter(), resolver)
+        graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
 
         new_elevation = graph.update_routes(elevation)
 
@@ -166,7 +165,11 @@ def test_conservation_drainage_area(resolver):
 
     elevation = np.random.uniform(size=shape)
 
-    graph = FlowGraph(grid, SingleFlowRouter(), resolver)
+    if isinstance(resolver, PFloodSinkResolver):
+        graph = FlowGraph(grid, [resolver, SingleFlowRouter()])
+    else:
+        graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
+
     graph.update_routes(elevation)
     drainage_area = graph.accumulate(1.0)
 
@@ -197,7 +200,11 @@ def test_nb_of_basins(resolver):
 
     elevation = np.random.uniform(size=shape)
 
-    graph = FlowGraph(grid, SingleFlowRouter(), resolver)
+    if isinstance(resolver, PFloodSinkResolver):
+        graph = FlowGraph(grid, [resolver, SingleFlowRouter()])
+    else:
+        graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
+
     graph.update_routes(elevation)
     basins = graph.basins()
     nb_basins = basins.max() + 1
