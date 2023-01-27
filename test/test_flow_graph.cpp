@@ -5,6 +5,7 @@
 
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
+#include "fastscapelib/flow/flow_snapshot.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 
 
@@ -43,7 +44,8 @@ namespace fastscapelib
             EXPECT_EQ(graph.size(), 16u);
             EXPECT_TRUE(xt::same_shape(graph.grid_shape(), grid.shape()));
 
-            EXPECT_THROW(flow_graph_type(grid, {}), std::invalid_argument);
+            // no operator updating the graph (flow router)
+            EXPECT_THROW(flow_graph_type(grid, { fs::flow_snapshot("s") }), std::invalid_argument);
         }
 
         TEST_F(flow_graph, update_routes)

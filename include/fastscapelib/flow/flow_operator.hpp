@@ -279,6 +279,7 @@ namespace fastscapelib
         flow_operator_sequence(flow_operator_sequence<FG>&& operators)
             : m_op_impl_vec(std::move(operators.m_op_impl_vec))
             , m_graph_snapshot_keys(operators.graph_snapshot_keys())
+            , m_graph_snapshot_single_flow(operators.m_graph_snapshot_single_flow)
             , m_elevation_snapshot_keys(operators.elevation_snapshot_keys())
             , m_elevation_updated(operators.elevation_updated())
             , m_graph_updated(operators.graph_updated())
@@ -292,6 +293,7 @@ namespace fastscapelib
         {
             m_op_impl_vec = std::move(operators.m_op_impl_vec);
             m_graph_snapshot_keys = std::move(operators.graph_snapshot_keys());
+            m_graph_snapshot_single_flow = std::move(operators.m_graph_snapshot_single_flow);
             m_elevation_snapshot_keys = std::move(operators.elevation_snapshot_keys());
             m_elevation_updated = operators.elevation_updated();
             m_graph_updated = operators.graph_updated();
@@ -350,6 +352,14 @@ namespace fastscapelib
         }
 
         /*
+         * Returns true if the graph snapshot given by ``name`` is single flow.
+         */
+        bool snapshot_single_flow(std::string name)
+        {
+            return m_graph_snapshot_single_flow.at(name);
+        }
+
+        /*
          * Returns the names of all flow graph snapshots to create.
          */
         const std::vector<std::string>& graph_snapshot_keys() const
@@ -369,6 +379,7 @@ namespace fastscapelib
         std::vector<operator_impl_type> m_op_impl_vec;
 
         std::vector<std::string> m_graph_snapshot_keys;
+        std::map<std::string, bool> m_graph_snapshot_single_flow;
         std::vector<std::string> m_elevation_snapshot_keys;
 
         bool m_elevation_updated = false;
