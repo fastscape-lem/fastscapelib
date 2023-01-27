@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from fastscapelib.eroders import DiffusionADIEroder, SPLEroder
 from fastscapelib.flow import FlowGraph, SingleFlowRouter
 from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
