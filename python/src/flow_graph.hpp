@@ -2,8 +2,10 @@
 #define PYFASTSCAPELIB_FLOW_GRAPH_H
 
 #include <memory>
+#include <variant>
 
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_graph_impl.hpp"
@@ -62,6 +64,8 @@ namespace fastscapelib
 
             virtual ~flow_graph_impl_wrapper_base(){};
 
+            virtual bool single_flow() const = 0;
+
             virtual const receivers_type& receivers() const = 0;
 
             virtual const receivers_count_type& receivers_count() const = 0;
@@ -106,6 +110,11 @@ namespace fastscapelib
 
             flow_graph_impl_wrapper(FG& graph_impl)
                 : m_graph_impl(graph_impl){};
+
+            bool single_flow() const
+            {
+                return m_graph_impl.single_flow();
+            }
 
             const receivers_type& receivers() const
             {
@@ -175,6 +184,11 @@ namespace fastscapelib
         template <class FG>
         py_flow_graph_impl(FG& graph_impl)
             : m_wrapper_ptr(std::make_unique<detail::flow_graph_impl_wrapper<FG>>(graph_impl)){};
+
+        bool single_flow() const
+        {
+            return m_wrapper_ptr->single_flow();
+        }
 
         const receivers_type& receivers() const
         {
@@ -289,6 +303,12 @@ namespace fastscapelib
 
             virtual const py_flow_graph_impl& impl() const = 0;
 
+            virtual const std::vector<std::string>& graph_snapshot_keys() const = 0;
+            virtual std::unique_ptr<flow_graph_wrapper_base> graph_snapshot(std::string name) const
+                = 0;
+            virtual const std::vector<std::string>& elevation_snapshot_keys() const = 0;
+            virtual const data_array_type& elevation_snapshot(std::string name) const = 0;
+
             virtual const data_array_type& update_routes(const data_array_type& elevation) = 0;
 
             virtual void accumulate(data_array_type& acc, const data_array_type& src) const = 0;
@@ -312,53 +332,99 @@ namespace fastscapelib
                 m_graph_impl_ptr = std::make_unique<py_flow_graph_impl>(m_graph_ptr->impl());
             }
 
+            // used for returning graph snapshots
+            flow_graph_wrapper(flow_graph_type* snapshot_graph_ptr)
+            {
+                m_snapshot_graph_ptr = snapshot_graph_ptr;
+                m_graph_impl_ptr = std::make_unique<py_flow_graph_impl>(snapshot_graph_ptr->impl());
+            }
+
             virtual ~flow_graph_wrapper(){};
 
             size_type size() const
             {
-                return m_graph_ptr->size();
-            };
+                return graph().size();
+            }
 
             shape_type grid_shape() const
             {
-                return m_graph_ptr->grid_shape();
-            };
+                return graph().grid_shape();
+            }
 
             const py_flow_graph_impl& impl() const
             {
                 return *m_graph_impl_ptr;
-            };
+            }
+
+            const std::vector<std::string>& graph_snapshot_keys() const
+            {
+                return graph().graph_snapshot_keys();
+            }
+
+            std::unique_ptr<flow_graph_wrapper_base> graph_snapshot(std::string name) const
+            {
+                return std::make_unique<flow_graph_wrapper>(&(graph().graph_snapshot(name)));
+            }
+
+            const std::vector<std::string>& elevation_snapshot_keys() const
+            {
+                return graph().elevation_snapshot_keys();
+            }
+
+            const data_array_type& elevation_snapshot(std::string name) const
+            {
+                return graph().elevation_snapshot(name);
+            }
 
             const data_array_type& update_routes(const data_array_type& elevation)
             {
-                return m_graph_ptr->update_routes(elevation);
-            };
+                return graph().update_routes(elevation);
+            }
 
             void accumulate(data_array_type& acc, const data_array_type& src) const
             {
-                return m_graph_ptr->accumulate(acc, src);
-            };
+                return graph().accumulate(acc, src);
+            }
             void accumulate(data_array_type& acc, data_type src) const
             {
-                return m_graph_ptr->accumulate(acc, src);
-            };
+                return graph().accumulate(acc, src);
+            }
             data_array_type accumulate(const data_array_type& src) const
             {
-                return m_graph_ptr->accumulate(src);
-            };
+                return graph().accumulate(src);
+            }
             data_array_type accumulate(data_type src) const
             {
-                return m_graph_ptr->accumulate(src);
-            };
+                return graph().accumulate(src);
+            }
 
             data_array_size_type basins()
             {
-                return m_graph_ptr->basins();
-            };
+                return graph().basins();
+            }
 
         private:
             std::unique_ptr<flow_graph_type> m_graph_ptr;
             std::unique_ptr<py_flow_graph_impl> m_graph_impl_ptr;
+            flow_graph_type* m_snapshot_graph_ptr;
+
+            // Allow reusing this wrapper class for both a flow_graph and its snapshot graphs.
+            inline flow_graph_type& graph() const
+            {
+                if (!m_graph_ptr && !m_snapshot_graph_ptr)
+                {
+                    std::runtime_error("something went wrong (no graph pointer)");
+                }
+
+                if (m_graph_ptr)
+                {
+                    return *m_graph_ptr;
+                }
+                else
+                {
+                    return *m_snapshot_graph_ptr;
+                }
+            }
         };
     }
 
@@ -377,47 +443,73 @@ namespace fastscapelib
             : m_wrapper_ptr(
                 std::make_unique<detail::flow_graph_wrapper<G>>(grid, std::move(operators))){};
 
+        // used for returning graph snapshots
+        py_flow_graph(std::unique_ptr<detail::flow_graph_wrapper_base> graph_ptr)
+            : m_wrapper_ptr(std::move(graph_ptr))
+        {
+        }
+
         size_type size() const
         {
             return m_wrapper_ptr->size();
-        };
+        }
 
         shape_type grid_shape() const
         {
             return m_wrapper_ptr->grid_shape();
-        };
+        }
 
         const py_flow_graph_impl& impl() const
         {
             return m_wrapper_ptr->impl();
-        };
+        }
+
+        const std::vector<std::string>& graph_snapshot_keys() const
+        {
+            return m_wrapper_ptr->graph_snapshot_keys();
+        }
+
+        std::unique_ptr<py_flow_graph> graph_snapshot(std::string name) const
+        {
+            return std::make_unique<py_flow_graph>(m_wrapper_ptr->graph_snapshot(name));
+        }
+
+        const std::vector<std::string>& elevation_snapshot_keys() const
+        {
+            return m_wrapper_ptr->elevation_snapshot_keys();
+        }
+
+        const data_array_type& elevation_snapshot(std::string name) const
+        {
+            return m_wrapper_ptr->elevation_snapshot(name);
+        }
 
         const data_array_type& update_routes(const data_array_type& elevation)
         {
             return m_wrapper_ptr->update_routes(elevation);
-        };
+        }
 
         void accumulate(data_array_type& acc, const data_array_type& src) const
         {
             return m_wrapper_ptr->accumulate(acc, src);
-        };
+        }
         void accumulate(data_array_type& acc, data_type src) const
         {
             return m_wrapper_ptr->accumulate(acc, src);
-        };
+        }
         data_array_type accumulate(const data_array_type& src) const
         {
             return m_wrapper_ptr->accumulate(src);
-        };
+        }
         data_array_type accumulate(data_type src) const
         {
             return m_wrapper_ptr->accumulate(src);
-        };
+        }
 
         data_array_size_type basins()
         {
             return m_wrapper_ptr->basins();
-        };
+        }
 
     private:
         std::unique_ptr<detail::flow_graph_wrapper_base> m_wrapper_ptr;
@@ -436,6 +528,16 @@ namespace fastscapelib
                 auto op_sequence = fs::make_flow_operator_sequence<impl_type>(ops);
                 return std::make_unique<py_flow_graph>(grid, std::move(op_sequence));
             }));
+    }
+
+    template <class OP>
+    void register_operator_static_attrs(
+        py::class_<OP, fs::flow_operator, std::shared_ptr<OP>>& pyop)
+    {
+        pyop.def_readonly_static("graph_updated", &OP::graph_updated)
+            .def_readonly_static("elevation_updated", &OP::elevation_updated)
+            .def_readonly_static("in_flowdir", &OP::in_flowdir)
+            .def_readonly_static("out_flowdir", &OP::out_flowdir);
     }
 }
 

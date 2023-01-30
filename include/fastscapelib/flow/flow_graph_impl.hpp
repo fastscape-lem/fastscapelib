@@ -86,7 +86,8 @@ namespace fastscapelib
             using basins_type = xt_tensor_t<xt_selector, size_type, 1>;
 
             flow_graph_impl(grid_type& grid, bool single_flow = false)
-                : m_grid(grid)
+                : m_single_flow(single_flow)
+                , m_grid(grid)
             {
                 size_type n_receivers_max = grid_type::n_neighbors_max();
 
@@ -112,6 +113,11 @@ namespace fastscapelib
                 // TODO: basins are not always needed (only init on-demand)
                 m_basins = xt::empty<size_type>({ grid.size() });
             };
+
+            bool single_flow() const
+            {
+                return m_single_flow;
+            }
 
             G& grid() const
             {
@@ -203,6 +209,7 @@ namespace fastscapelib
             data_array_type accumulate(T&& src) const;
 
         private:
+            bool m_single_flow;
             grid_type& m_grid;
 
             donors_type m_donors;

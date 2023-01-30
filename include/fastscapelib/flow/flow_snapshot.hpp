@@ -105,16 +105,34 @@ namespace fastscapelib
 
             void _save(const FG& graph_impl, FG& graph_impl_snapshot) const
             {
-                // TODO
-                (void) (graph_impl);
-                (void) (graph_impl_snapshot);
+                graph_impl_snapshot.m_receivers_count = graph_impl.m_receivers_count;
+                graph_impl_snapshot.m_donors_count = graph_impl.m_donors_count;
+                graph_impl_snapshot.m_dfs_indices = graph_impl.m_dfs_indices;
+
+                if (graph_impl_snapshot.single_flow())
+                {
+                    auto receivers_col = xt::col(graph_impl_snapshot.m_receivers, 0);
+                    receivers_col = xt::col(graph_impl.m_receivers, 0);
+                    auto receivers_distance_col
+                        = xt::col(graph_impl_snapshot.m_receivers_distance, 0);
+                    receivers_distance_col = xt::col(graph_impl.m_receivers_distance, 0);
+                    auto receivers_weight_col = xt::col(graph_impl_snapshot.m_receivers_weight, 0);
+                    receivers_weight_col = xt::col(graph_impl.m_receivers_weight, 0);
+                    auto donors_col = xt::col(graph_impl_snapshot.m_donors, 0);
+                    donors_col = xt::col(graph_impl.m_donors, 0);
+                }
+                else
+                {
+                    graph_impl_snapshot.m_receivers = graph_impl.m_receivers;
+                    graph_impl_snapshot.m_receivers_distance = graph_impl.m_receivers_distance;
+                    graph_impl_snapshot.m_receivers_weight = graph_impl.m_receivers_weight;
+                    graph_impl_snapshot.m_donors = graph_impl.m_donors;
+                }
             }
 
             void _save(const data_array_type& elevation, data_array_type& elevation_snapshot) const
             {
-                // TODO
-                (void) (elevation);
-                (void) (elevation_snapshot);
+                elevation_snapshot = elevation;
             }
         };
     }
@@ -129,6 +147,15 @@ namespace fastscapelib
         if (snapshot.save_graph())
         {
             m_graph_snapshot_keys.push_back(snapshot_name);
+
+            if (m_out_flowdir == flow_direction::undefined)
+            {
+                throw std::invalid_argument(
+                    "no flow routing operator defined before graph snapshot.");
+            }
+
+            bool single_flow = m_out_flowdir == flow_direction::single ? true : false;
+            m_graph_snapshot_single_flow.insert({ snapshot_name, single_flow });
         }
         if (snapshot.save_elevation())
         {

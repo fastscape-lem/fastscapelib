@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <string>
+#include <vector>
 
 #include "xtensor/xstrided_view.hpp"
 
@@ -34,15 +35,11 @@ namespace fastscapelib
      * @tparam S The xtensor selector type
      * @tparam Writeable True if the graph is writeable
      */
-    template <class G,
-              class S = typename G::xt_selector,
-              class Tag = flow_graph_fixed_array_tag,
-              bool Writeable = true>
+    template <class G, class S = typename G::xt_selector, class Tag = flow_graph_fixed_array_tag>
     class flow_graph
     {
     public:
         using self_type = flow_graph<G, S, Tag>;
-        using snapshot_type = flow_graph<G, S, Tag, false>;
         using grid_type = G;
         using xt_selector = S;
         using impl_type = detail::flow_graph_impl<G, S, Tag>;
@@ -55,7 +52,7 @@ namespace fastscapelib
         using shape_type = typename data_array_type::shape_type;
         using data_array_size_type = xt_array_t<xt_selector, size_type>;
 
-        using graph_map = std::map<std::string, std::unique_ptr<snapshot_type>>;
+        using graph_map = std::map<std::string, std::unique_ptr<self_type>>;
         using graph_impl_map = std::map<std::string, impl_type&>;
         using elevation_map = std::map<std::string, std::unique_ptr<data_array_type>>;
 
@@ -77,15 +74,15 @@ namespace fastscapelib
             }
 
             // pre-allocate graph and elevation snapshots
-            for (const auto& key : operators.graph_snapshot_keys())
+            for (const auto& key : m_operators.graph_snapshot_keys())
             {
-                bool single_flow = operators.snapshot_single_flow(key);
-                auto graph = new snapshot_type(grid, single_flow);
+                bool single_flow = m_operators.snapshot_single_flow(key);
+                auto graph = new self_type(grid, single_flow);
 
-                m_graph_snapshots.insert({ key, std::unique_ptr<snapshot_type>(std::move(graph)) });
+                m_graph_snapshots.insert({ key, std::unique_ptr<self_type>(std::move(graph)) });
                 m_graph_impl_snapshots.insert({ key, (*m_graph_snapshots.at(key)).m_impl });
             }
-            for (const auto& key : operators.elevation_snapshot_keys())
+            for (const auto& key : m_operators.elevation_snapshot_keys())
             {
                 auto snapshot = data_array_type::from_shape(grid.shape());
                 m_elevation_snapshots.insert(
@@ -99,19 +96,24 @@ namespace fastscapelib
             }
         }
 
-        const operators_type& operators() const
+        const std::vector<std::string>& graph_snapshot_keys() const
         {
-            return m_operators;
+            return m_operators.graph_snapshot_keys();
         }
 
-        const snapshot_type& graph_snapshot(std::string name) const
+        self_type& graph_snapshot(std::string name) const
         {
-            return m_graph_snapshots.at(name);
+            return *(m_graph_snapshots.at(name));
+        }
+
+        const std::vector<std::string>& elevation_snapshot_keys() const
+        {
+            return m_operators.elevation_snapshot_keys();
         }
 
         const data_array_type& elevation_snapshot(std::string name) const
         {
-            return m_elevation_snapshots.at(name);
+            return *(m_elevation_snapshots.at(name));
         }
 
         /*
@@ -127,7 +129,10 @@ namespace fastscapelib
          */
         const data_array_type& update_routes(const data_array_type& elevation)
         {
-            static_assert(Writeable == true, "cannot update routes (graph is read-only)");
+            if (!m_writeable)
+            {
+                throw std::runtime_error("cannot update routes (graph is read-only)");
+            }
 
             data_array_type* elevation_ptr;
 
@@ -205,6 +210,7 @@ namespace fastscapelib
         }
 
     private:
+        bool m_writeable = true;
         grid_type& m_grid;
         impl_type m_impl;
         data_array_type m_hydro_elevation;
@@ -217,13 +223,11 @@ namespace fastscapelib
 
         // used internally for creating graph snapshots
         explicit flow_graph(grid_type& grid, bool single_flow)
-            : m_grid(grid)
+            : m_writeable(false)
+            , m_grid(grid)
             , m_impl(grid, single_flow)
         {
         }
-
-        template <class _G, class _S, class _Tag, bool _Writeable>
-        friend class flow_graph;
     };
 }
 
