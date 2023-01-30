@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
+
 from fastscapelib.flow import (
     FlowDirection,
     FlowGraph,
@@ -89,6 +90,10 @@ def test_snapshot_graph(grid):
     actual = graph.accumulate(1.0)
     expected = snapshot_b.accumulate(1.0)
     npt.assert_allclose(actual, expected)
+
+    # test snapshot graphs are read-only
+    with pytest.raises(RuntimeError, match=".*(read-only)"):
+        snapshot_a.update_routes(elevation)
 
 
 def test_snapshot_elevation(grid):
