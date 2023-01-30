@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
-import pytest
-from fastscapelib.flow import FlowGraph, SingleFlowRouter
+
+from fastscapelib.flow import FlowDirection, FlowGraph, FlowOperator, SingleFlowRouter
 from fastscapelib.grid import (
     Node,
     NodeStatus,
@@ -51,12 +51,15 @@ class TestSingleFlowRouter:
             cls.raster_elevation
         )
 
-    def test___init__(self):
-        SingleFlowRouter()
+    def test_constructor(self):
+        router = SingleFlowRouter()
+        assert isinstance(router, FlowOperator)
 
-        # no parameter
-        with pytest.raises(TypeError):
-            SingleFlowRouter(1.0)
+    def test_class_attrs(self):
+        assert SingleFlowRouter.graph_updated is True
+        assert SingleFlowRouter.elevation_updated is False
+        assert SingleFlowRouter.in_flowdir == FlowDirection.UNDEFINED
+        assert SingleFlowRouter.out_flowdir == FlowDirection.SINGLE
 
     def test_receivers(self):
         npt.assert_equal(
