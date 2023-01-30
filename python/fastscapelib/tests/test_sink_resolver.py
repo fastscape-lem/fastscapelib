@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from fastscapelib.flow import (
     FlowDirection,
     FlowGraph,

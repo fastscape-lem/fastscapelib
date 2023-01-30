@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.testing as npt
-
 from fastscapelib.flow import FlowDirection, FlowGraph, FlowOperator, SingleFlowRouter
 from fastscapelib.grid import (
     Node,
