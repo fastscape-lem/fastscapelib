@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.testing as npt
+
 from fastscapelib.flow import FlowDirection, FlowGraph, FlowOperator, SingleFlowRouter
 from fastscapelib.grid import (
     Node,
@@ -53,6 +54,8 @@ class TestSingleFlowRouter:
     def test_constructor(self):
         router = SingleFlowRouter()
         assert isinstance(router, FlowOperator)
+        assert router.name == "single_flow_router"
+        assert repr(router) == "SingleFlowRouter"
 
     def test_class_attrs(self):
         assert SingleFlowRouter.graph_updated is True

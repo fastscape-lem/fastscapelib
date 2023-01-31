@@ -95,7 +95,7 @@ namespace fastscapelib
     public:
         inline std::string name() const noexcept override
         {
-            return "single_flow_router";
+            return "mst_sink_resolver";
         }
 
         static constexpr bool graph_updated = true;

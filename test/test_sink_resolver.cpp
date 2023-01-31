@@ -71,6 +71,8 @@ namespace fastscapelib
 
         TEST_F(sink_resolver, pflood_sink_resolver)
         {
+            EXPECT_EQ(fs::pflood_sink_resolver().name(), "pflood_sink_resolver");
+
             auto graph
                 = flow_graph_type(grid, { fs::pflood_sink_resolver(), fs::single_flow_router() });
             const auto& new_elevation = graph.update_routes(elevation);
@@ -114,6 +116,7 @@ namespace fastscapelib
                 SCOPED_TRACE("test default constructor");
 
                 auto resolver = fs::mst_sink_resolver();
+                EXPECT_EQ(resolver.name(), "mst_sink_resolver");
                 EXPECT_EQ(resolver.m_basin_method, fs::mst_method::kruskal);
                 EXPECT_EQ(resolver.m_route_method, fs::mst_route_method::carve);
             }

@@ -438,15 +438,27 @@ namespace fastscapelib
         using shape_type = data_array_type::shape_type;
         using data_array_size_type = xt_array_t<py_selector, size_type>;
 
-        template <class G, class O>
-        py_flow_graph(G& grid, O operators)
-            : m_wrapper_ptr(
-                std::make_unique<detail::flow_graph_wrapper<G>>(grid, std::move(operators))){};
+        template <class G>
+        py_flow_graph(G& grid, const py::list& operators)
+            : m_operators(operators)
+        {
+            using impl_type =
+                typename fs::flow_graph<G, py_selector, flow_graph_fixed_array_tag>::impl_type;
+
+            auto op_sequence = fs::make_flow_operator_sequence<impl_type>(operators);
+            m_wrapper_ptr
+                = std::make_unique<detail::flow_graph_wrapper<G>>(grid, std::move(op_sequence));
+        }
 
         // used for returning graph snapshots
         py_flow_graph(std::unique_ptr<detail::flow_graph_wrapper_base> graph_ptr)
             : m_wrapper_ptr(std::move(graph_ptr))
         {
+        }
+
+        py::list operators() const
+        {
+            return m_operators;
         }
 
         size_type size() const
@@ -513,21 +525,15 @@ namespace fastscapelib
 
     private:
         std::unique_ptr<detail::flow_graph_wrapper_base> m_wrapper_ptr;
+        py::list m_operators;
     };
 
 
     template <class G>
     void register_py_flow_graph_init(py::class_<py_flow_graph>& pyfg)
     {
-        using impl_type =
-            typename fs::flow_graph<G, py_selector, flow_graph_fixed_array_tag>::impl_type;
-
-        pyfg.def(py::init(
-            [](G& grid, const py::list& ops)
-            {
-                auto op_sequence = fs::make_flow_operator_sequence<impl_type>(ops);
-                return std::make_unique<py_flow_graph>(grid, std::move(op_sequence));
-            }));
+        pyfg.def(py::init([](G& grid, const py::list& operators)
+                          { return std::make_unique<py_flow_graph>(grid, operators); }));
     }
 
     template <class OP>

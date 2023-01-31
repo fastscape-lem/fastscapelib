@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from fastscapelib.flow import (
     FlowDirection,
     FlowGraph,
@@ -69,6 +70,8 @@ def test_pflood_sink_resolver_attrs():
 def test_pflood_sink_resolver(grid, elevation):
     resolver = PFloodSinkResolver()
     assert isinstance(resolver, FlowOperator)
+    assert resolver.name == "pflood_sink_resolver"
+    assert repr(resolver) == "PFloodSinkResolver"
 
     graph = FlowGraph(grid, [resolver, SingleFlowRouter()])
 
@@ -100,6 +103,8 @@ class TestMSTSinkResolver:
         assert isinstance(resolver, FlowOperator)
         assert resolver.basin_method == MSTMethod.KRUSKAL
         assert resolver.route_method == MSTRouteMethod.CARVE
+        assert resolver.name == "mst_sink_resolver"
+        assert repr(resolver) == "MSTSinkResolver (basin=kruskal, route=carve)"
 
         # read-write attributes
         resolver.basin_method = MSTMethod.BORUVKA

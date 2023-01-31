@@ -96,21 +96,49 @@ namespace fastscapelib
             }
         }
 
+        /*
+         * Returns pointers to the flow operators used in this graph.
+         *
+         * Note: the ``flow_operator`` base class has very limited polymorphism
+         * (i.e., only its ``name`` method is virtual). It is still possible to
+         * downcast the returned pointers (e.g., using the visitor pattern).
+         */
+        const std::vector<const flow_operator*>& operators() const
+        {
+            return m_operators.m_op_vec;
+        }
+
+        /*
+         * Returns the names of the graph snapshot.
+         */
         const std::vector<std::string>& graph_snapshot_keys() const
         {
             return m_operators.graph_snapshot_keys();
         }
 
+        /*
+         * Graph snapshot getter.
+         *
+         * @param name Name of the snapshot.
+         */
         self_type& graph_snapshot(std::string name) const
         {
             return *(m_graph_snapshots.at(name));
         }
 
+        /*
+         * Returns the names of the elevation snapshots.
+         */
         const std::vector<std::string>& elevation_snapshot_keys() const
         {
             return m_operators.elevation_snapshot_keys();
         }
 
+        /*
+         * Elevation snapshot getter.
+         *
+         * @param name Name of the snapshot.
+         */
         const data_array_type& elevation_snapshot(std::string name) const
         {
             return *(m_elevation_snapshots.at(name));
@@ -148,11 +176,11 @@ namespace fastscapelib
                 elevation_ptr = const_cast<data_array_type*>(&elevation);
             }
 
-            // loop over flow operators
-            for (auto& op : m_operators)
+            // loop over flow operator implementations
+            for (auto op = m_operators.impl_begin(); op != m_operators.impl_end(); ++op)
             {
-                op.apply(m_impl, *elevation_ptr);
-                op.save(m_impl, m_graph_impl_snapshots, *elevation_ptr, m_elevation_snapshots);
+                op->apply(m_impl, *elevation_ptr);
+                op->save(m_impl, m_graph_impl_snapshots, *elevation_ptr, m_elevation_snapshots);
             }
 
             return *elevation_ptr;

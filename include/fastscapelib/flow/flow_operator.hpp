@@ -237,8 +237,11 @@ namespace fastscapelib
     }
 
 
-    // flow_snapshot forward delcaration
+    // forward delcarations
     class flow_snapshot;
+
+    template <class G, class S, class Tag>
+    class flow_graph;
 
     /*
      * Immutable sequence of flow operators (e.g., flow routers, sink resolvers,
@@ -277,7 +280,8 @@ namespace fastscapelib
         // implement move semantics only (entity of flow_graph)
         flow_operator_sequence(flow_operator_sequence<FG>& operators) = delete;
         flow_operator_sequence(flow_operator_sequence<FG>&& operators)
-            : m_op_impl_vec(std::move(operators.m_op_impl_vec))
+            : m_op_vec(std::move(operators.m_op_vec))
+            , m_op_impl_vec(std::move(operators.m_op_impl_vec))
             , m_graph_snapshot_keys(operators.graph_snapshot_keys())
             , m_graph_snapshot_single_flow(operators.m_graph_snapshot_single_flow)
             , m_elevation_snapshot_keys(operators.elevation_snapshot_keys())
@@ -291,6 +295,7 @@ namespace fastscapelib
         flow_operator_sequence<FG>& operator=(flow_operator_sequence<FG>& operators) = delete;
         flow_operator_sequence<FG>& operator=(flow_operator_sequence<FG>&& operators)
         {
+            m_op_vec = std::move(operators.m_op_vec);
             m_op_impl_vec = std::move(operators.m_op_impl_vec);
             m_graph_snapshot_keys = std::move(operators.graph_snapshot_keys());
             m_graph_snapshot_single_flow = std::move(operators.m_graph_snapshot_single_flow);
@@ -307,12 +312,12 @@ namespace fastscapelib
          */
         iterator_type begin()
         {
-            return m_op_impl_vec.begin();
+            return m_op_vec.begin();
         }
 
         iterator_type end()
         {
-            return m_op_impl_vec.end();
+            return m_op_vec.end();
         }
 
         /*
@@ -376,6 +381,7 @@ namespace fastscapelib
         }
 
     private:
+        std::vector<const flow_operator*> m_op_vec;
         std::vector<operator_impl_type> m_op_impl_vec;
 
         std::vector<std::string> m_graph_snapshot_keys;
@@ -402,6 +408,20 @@ namespace fastscapelib
         // Only for bindings (in case the variadic templates constructor cannot be used).
         template <class _FG, class OPs>
         friend flow_operator_sequence<_FG> make_flow_operator_sequence(OPs&& operators);
+
+        // iterate through operator implementations (in flow_graph)
+        iterator_type impl_begin()
+        {
+            return m_op_impl_vec.begin();
+        }
+
+        iterator_type impl_end()
+        {
+            return m_op_impl_vec.end();
+        }
+
+        template <class G, class S, class Tag>
+        friend class flow_graph;
     };
 
 
@@ -449,6 +469,7 @@ namespace fastscapelib
             }
         }
 
+        m_op_vec.push_back(ptr.get());
         m_op_impl_vec.push_back(operator_impl_type(std::move(ptr)));
     }
 }

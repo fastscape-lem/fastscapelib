@@ -1,7 +1,15 @@
+from textwrap import dedent
+
 import numpy as np
 import numpy.testing as npt
 import pytest
-from fastscapelib.flow import FlowGraph, PFloodSinkResolver, SingleFlowRouter
+
+from fastscapelib.flow import (
+    FlowGraph,
+    FlowSnapshot,
+    PFloodSinkResolver,
+    SingleFlowRouter,
+)
 from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
 
 
@@ -25,6 +33,37 @@ class TestFlowGraph:
 
         with pytest.raises(TypeError, match="invalid flow operator"):
             FlowGraph(raster_grid, ["not a flow operator"])
+
+    def test_operators(self):
+        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+
+        resolver = PFloodSinkResolver()
+        router = SingleFlowRouter()
+
+        flow_graph = FlowGraph(grid, [resolver, router])
+
+        assert flow_graph.operators == [resolver, router]
+
+    def test_repr(self):
+        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+        flow_graph = FlowGraph(grid, [SingleFlowRouter(), FlowSnapshot("test")])
+
+        actual = repr(flow_graph)
+        expected = """
+        <FlowGraph (8 nodes)>
+        Operators:
+            SingleFlowRouter
+            FlowSnapshot 'test' (graph=True, elevation=False)
+        """
+        assert actual == dedent(expected[1:])
+
+        actual = repr(flow_graph.graph_snapshot("test"))
+        expected = """
+        <FlowGraph (8 nodes)>
+        Operators:
+            *empty*
+        """
+        assert actual == dedent(expected[1:])
 
     def test_update_routes(self):
         grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])

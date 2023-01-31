@@ -45,6 +45,11 @@ namespace fastscapelib
             }
         };
 
+        TEST(single_flow_router, ctor)
+        {
+            EXPECT_EQ(fs::single_flow_router().name(), "single_flow_router");
+        }
+
         TEST_F(single_flow_router__profile, receivers)
         {
             update();

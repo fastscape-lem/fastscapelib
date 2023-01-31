@@ -47,13 +47,21 @@ add_flow_graph_bindings(py::module& m)
         .value("MULTIPLE", fs::flow_direction::multiple);
 
     py::class_<fs::flow_operator, std::shared_ptr<fs::flow_operator>>(m, "FlowOperator")
-        .def_property_readonly("name", &fs::flow_operator::name);
+        .def_property_readonly("name", &fs::flow_operator::name)
+        .def("_repr_inline_", [](const fs::flow_operator&) { return ""; })
+        .def("__repr__",
+             [](const fs::flow_operator& op)
+             {
+                 auto class_name = py::cast(op).get_type().attr("__name__").cast<std::string>();
+                 return "class_name (" + op.name() + ")";
+             });
 
     py::class_<fs::single_flow_router, fs::flow_operator, std::shared_ptr<fs::single_flow_router>>
         srouter_op(m, "SingleFlowRouter");
 
     srouter_op.def(py::init<>());
     fs::register_operator_static_attrs(srouter_op);
+    srouter_op.def("__repr__", [](const fs::single_flow_router& op) { return "SingleFlowRouter"; });
 
     py::class_<fs::pflood_sink_resolver,
                fs::flow_operator,
@@ -62,6 +70,8 @@ add_flow_graph_bindings(py::module& m)
 
     pflood_op.def(py::init<>());
     fs::register_operator_static_attrs(pflood_op);
+    pflood_op.def("__repr__",
+                  [](const fs::pflood_sink_resolver& op) { return "PFloodSinkResolver"; });
 
     py::enum_<fs::mst_method> mst_method(m, "MSTMethod", py::arithmetic());
     mst_method.value("KRUSKAL", fs::mst_method::kruskal).value("BORUVKA", fs::mst_method::boruvka);
@@ -79,6 +89,15 @@ add_flow_graph_bindings(py::module& m)
     fs::register_operator_static_attrs(mst_op);
     mst_op.def_readwrite("basin_method", &fs::mst_sink_resolver::m_basin_method);
     mst_op.def_readwrite("route_method", &fs::mst_sink_resolver::m_route_method);
+    mst_op.def("__repr__",
+               [](const fs::mst_sink_resolver& op)
+               {
+                   std::string bmeth
+                       = op.m_basin_method == fs::mst_method::kruskal ? "kruskal" : "boruvka";
+                   std::string rmeth
+                       = op.m_route_method == fs::mst_route_method::basic ? "basic" : "carve";
+                   return "MSTSinkResolver (basin=" + bmeth + ", route=" + rmeth + ")";
+               });
 
     py::class_<fs::flow_snapshot, fs::flow_operator, std::shared_ptr<fs::flow_snapshot>>
         snapshot_op(m, "FlowSnapshot");
@@ -87,6 +106,19 @@ add_flow_graph_bindings(py::module& m)
                     py::arg("snapshot_name"),
                     py::arg("save_graph") = true,
                     py::arg("save_elevation") = false);
+    snapshot_op.def_property_readonly("snapshot_name", &fs::flow_snapshot::snapshot_name);
+    snapshot_op.def_property_readonly("save_graph", &fs::flow_snapshot::save_graph);
+    snapshot_op.def_property_readonly("save_elevation", &fs::flow_snapshot::save_elevation);
+    snapshot_op.def("__repr__",
+                    [](const fs::flow_snapshot& op)
+                    {
+                        std::string save_graph = op.save_graph() == true ? "True" : "False";
+                        std::string save_elevation = op.save_elevation() == true ? "True" : "False";
+                        auto repr = "FlowSnapshot '" + op.snapshot_name() + "' ";
+                        repr += "(graph=" + save_graph + ", ";
+                        repr += "elevation=" + save_elevation + ")";
+                        return repr;
+                    });
 
     /*
      * Flow graph
@@ -96,7 +128,9 @@ add_flow_graph_bindings(py::module& m)
 
     fs::register_py_flow_graph_init<fs::py_profile_grid>(pyfgraph);
     fs::register_py_flow_graph_init<fs::py_raster_grid>(pyfgraph);
+    fs::register_py_flow_graph_init<fs::py_unstructured_mesh>(pyfgraph);
 
+    pyfgraph.def_property_readonly("operators", &fs::py_flow_graph::operators);
     pyfgraph.def("impl", &fs::py_flow_graph::impl, py::return_value_policy::reference);
     pyfgraph.def_property_readonly("graph_snapshot_keys", &fs::py_flow_graph::graph_snapshot_keys);
     pyfgraph.def("graph_snapshot", &fs::py_flow_graph::graph_snapshot);
@@ -121,4 +155,23 @@ add_flow_graph_bindings(py::module& m)
              py::overload_cast<data_type>(&fs::py_flow_graph::accumulate, py::const_));
 
     pyfgraph.def("basins", &fs::py_flow_graph::basins);
+
+    pyfgraph.def("__repr__",
+                 [](const fs::py_flow_graph& pyfg)
+                 {
+                     auto nnodes = std::to_string(pyfg.size());
+                     std::string repr = "<FlowGraph (" + nnodes + " nodes)>";
+                     repr += "\nOperators:";
+                     for (auto& op : pyfg.operators())
+                     {
+                         repr += "\n    " + py::repr(op).cast<std::string>();
+                     }
+                     if (pyfg.operators().empty())
+                     {
+                         repr += "\n    *empty*";
+                     }
+                     repr += "\n";
+
+                     return repr;
+                 });
 }

@@ -1,9 +1,11 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
+
 from fastscapelib.flow import (
     FlowDirection,
     FlowGraph,
+    FlowOperator,
     FlowSnapshot,
     MSTSinkResolver,
     PFloodSinkResolver,
@@ -27,6 +29,17 @@ def test_flow_snapshot_class_attr():
     assert FlowSnapshot.elevation_updated is False
     assert FlowSnapshot.in_flowdir == FlowDirection.UNDEFINED
     assert FlowSnapshot.out_flowdir == FlowDirection.UNDEFINED
+
+
+def test_flow_snapshot_constructor():
+    snapshot = FlowSnapshot("test")
+    assert isinstance(snapshot, FlowOperator)
+    assert snapshot.name == "flow_snapshot"
+    assert snapshot.snapshot_name == "test"
+    assert snapshot.save_graph is True
+    assert snapshot.save_elevation is False
+
+    assert repr(snapshot) == "FlowSnapshot 'test' (graph=True, elevation=False)"
 
 
 def test_flow_snapshot_error(grid):

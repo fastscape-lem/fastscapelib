@@ -38,6 +38,15 @@ namespace fastscapelib
                                               { 0.1, 0.0, 0.1, 0.1 } };
         };
 
+        TEST_F(flow_snapshot, ctor)
+        {
+            auto snapshot = fs::flow_snapshot("test");
+            EXPECT_EQ(snapshot.name(), "flow_snapshot");
+            EXPECT_EQ(snapshot.snapshot_name(), "test");
+            EXPECT_EQ(snapshot.save_graph(), true);
+            EXPECT_EQ(snapshot.save_elevation(), false);
+        }
+
         TEST_F(flow_snapshot, error)
         {
             // no flow routing operator defined before snapshot
@@ -76,6 +85,10 @@ namespace fastscapelib
             graph.update_routes(elevation);
             auto& snapshot_a = graph.graph_snapshot("a");
             auto& snapshot_b = graph.graph_snapshot("b");
+
+            // no operator in snapshot graphs
+            ASSERT_EQ(snapshot_a.operators().size(), 0);
+            ASSERT_EQ(snapshot_b.operators().size(), 0);
 
             ASSERT_NE(&graph, &snapshot_a);
             ASSERT_NE(&graph, &snapshot_b);

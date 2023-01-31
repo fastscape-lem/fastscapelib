@@ -48,6 +48,22 @@ namespace fastscapelib
             EXPECT_THROW(flow_graph_type(grid, { fs::flow_snapshot("s") }), std::invalid_argument);
         }
 
+        TEST_F(flow_graph, operators)
+        {
+            auto graph
+                = flow_graph_type(grid, { fs::single_flow_router(), fs::flow_snapshot("s") });
+
+            std::vector<std::string> expected{ "single_flow_router", "flow_snapshot" };
+            std::vector<std::string> actual;
+
+            for (const auto* op : graph.operators())
+            {
+                actual.push_back(op->name());
+            }
+
+            ASSERT_EQ(actual, expected);
+        }
+
         TEST_F(flow_graph, update_routes)
         {
             auto graph = flow_graph_type(grid, { fs::single_flow_router() });
