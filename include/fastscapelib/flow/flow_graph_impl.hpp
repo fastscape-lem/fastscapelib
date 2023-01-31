@@ -15,29 +15,47 @@
 namespace fastscapelib
 {
 
-    template <class FG>
-    class basin_graph;
+    namespace detail
+    {
+
+        /*
+         * Flow operator implementation forward declaration.
+         */
+        template <class FG, class OP, class Tag>
+        class flow_operator_impl;
+
+        /*
+         * Flow graph implementation.
+         *
+         * Implements the graph underlying data structures and API
+         * (excepted for graph update that is implemented in flow operators).
+         *
+         * This template class has no definition, it must be specialized
+         * using the Tag parameter.
+         *
+         * @tparam G The grid type
+         * @tparam S The xtensor selector type
+         * @tparam Tag The flow graph implementation Tag
+         *
+         */
+        template <class G, class S, class Tag>
+        class flow_graph_impl;
+    }
+
+    /*
+     * Fixed array flow graph implementation.
+     *
+     * This implementation uses fixed shape arrays to store the graph
+     * topology (node receivers, donors, etc.).
+     *
+     */
+    struct flow_graph_fixed_array_tag
+    {
+    };
 
 
     namespace detail
     {
-
-        template <class FG, class FR>
-        class flow_router_impl;
-
-
-        template <class FG, class SR>
-        class sink_resolver_impl;
-
-
-        template <class G, class S, class Tag>
-        class flow_graph_impl;
-
-
-        struct flow_graph_fixed_array_tag
-        {
-        };
-
 
         template <class G, class S>
         class flow_graph_impl<G, S, flow_graph_fixed_array_tag>
@@ -67,13 +85,13 @@ namespace fastscapelib
 
             using basins_type = xt_tensor_t<xt_selector, size_type, 1>;
 
-            template <class FR>
-            flow_graph_impl(grid_type& grid, const FR& router)
-                : m_grid(grid)
+            flow_graph_impl(grid_type& grid, bool single_flow = false)
+                : m_single_flow(single_flow)
+                , m_grid(grid)
             {
                 size_type n_receivers_max = grid_type::n_neighbors_max();
 
-                if (router.is_single)
+                if (single_flow)
                 {
                     n_receivers_max = 1;
                 }
@@ -95,6 +113,11 @@ namespace fastscapelib
                 // TODO: basins are not always needed (only init on-demand)
                 m_basins = xt::empty<size_type>({ grid.size() });
             };
+
+            bool single_flow() const
+            {
+                return m_single_flow;
+            }
 
             G& grid() const
             {
@@ -186,6 +209,7 @@ namespace fastscapelib
             data_array_type accumulate(T&& src) const;
 
         private:
+            bool m_single_flow;
             grid_type& m_grid;
 
             donors_type m_donors;
@@ -207,6 +231,9 @@ namespace fastscapelib
 
             template <class FG, class SR>
             friend class sink_resolver_impl;
+
+            template <class FG, class OP, class Tag>
+            friend class flow_operator_impl;
         };
 
 

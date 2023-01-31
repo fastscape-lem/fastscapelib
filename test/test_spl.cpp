@@ -33,7 +33,7 @@ TEST(spl_eroder, ctor)
 
     auto grid = fs::raster_grid(shape, { spacing, spacing }, fs::node_status::fixed_value_boundary);
 
-    auto flow_graph = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+    auto flow_graph = fs::flow_graph<fs::raster_grid>(grid, { fs::single_flow_router() });
 
     double k_coef = 1e-3;
     double area_exp = 0.5;
@@ -78,8 +78,7 @@ public:
     }
 
 protected:
-    using flow_graph_type
-        = fs::flow_graph<fs::profile_grid, fs::single_flow_router, fs::no_sink_resolver>;
+    using flow_graph_type = fs::flow_graph<fs::profile_grid>;
     using size_type = typename flow_graph_type::size_type;
 
     size_type n_corr = 0;
@@ -190,7 +189,7 @@ spl_eroder__profile_grid::get_steady_slope_analytical(double slope_exp)
 TEST_F(spl_eroder__profile_grid, update_routes)
 {
     // not really testing SPL eroder but might useful to diagnose other tests
-    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
+    auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 
     flow_graph.update_routes(elevation);
 
@@ -209,7 +208,7 @@ TEST_F(spl_eroder__profile_grid, update_routes)
 
 TEST_F(spl_eroder__profile_grid, erode__k_coef_scalar)
 {
-    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
+    auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 
     std::array<double, 3> slope_exp_vals{ 1., 2., 4. };
 
@@ -232,7 +231,7 @@ TEST_F(spl_eroder__profile_grid, erode__k_coef_scalar)
 
 TEST_F(spl_eroder__profile_grid, erode__k_coef_array)
 {
-    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
+    auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 
     std::array<double, 3> slope_exp_vals{ 1., 2., 4. };
 
@@ -256,7 +255,7 @@ TEST_F(spl_eroder__profile_grid, erode__k_coef_array)
 
 TEST_F(spl_eroder__profile_grid, stability_threshold)
 {
-    auto flow_graph = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
+    auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 
     {
         SCOPED_TRACE("test arbitrary limitation of erosion");
@@ -275,6 +274,7 @@ TEST(spl_eroder__raster_grid, erode)
     namespace fs = fastscapelib;
 
     using grid_type = fs::raster_grid;
+    using flow_graph_type = fs::flow_graph<fs::raster_grid>;
     using size_type = grid_type::size_type;
     using shape_type = grid_type::shape_type;
 
@@ -292,9 +292,7 @@ TEST(spl_eroder__raster_grid, erode)
         fs::raster_boundary_status top_base_level{ { core, core, fixed, core } };
 
         auto grid = fs::raster_grid(shape, { spacing, spacing }, top_base_level);
-
-        auto flow_graph
-            = fs::make_flow_graph(grid, fs::single_flow_router(), fs::no_sink_resolver());
+        auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 
         double k_coef = 1e-3;
         xt::xtensor<double, 2> k_coef_arr = xt::ones<double>({ 2, 2 }) * k_coef;

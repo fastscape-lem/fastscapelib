@@ -25,9 +25,8 @@ namespace fastscapelib
         {
         protected:
             using grid_type = fs::raster_grid;
-            using flow_graph_type
-                = fs::flow_graph<grid_type, fs::single_flow_router, fs::no_sink_resolver>;
-            using flow_graph_impl_type = flow_graph_type::flow_graph_impl_type;
+            using flow_graph_type = fs::flow_graph<grid_type>;
+            using flow_graph_impl_type = flow_graph_type::impl_type;
             using basin_graph_type = fs::basin_graph<flow_graph_impl_type>;
 
             using size_type = typename basin_graph_type::size_type;
@@ -52,8 +51,7 @@ namespace fastscapelib
                                               { 0.20, 0.19, 0.20, 0.20, 0.20 },
                                               { 0.00, 0.00, 0.00, 0.00, 0.00 } };
 
-            flow_graph_type fgraph
-                = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
+            flow_graph_type fgraph = flow_graph_type(grid, { fs::single_flow_router() });
 
             void setup()
             {

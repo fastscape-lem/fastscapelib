@@ -89,7 +89,9 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/basin_graph.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_graph_impl.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_graph.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_operator.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_router.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_snapshot.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/sink_resolver.hpp
   # Grid
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/base.hpp
@@ -119,7 +121,7 @@ target_include_directories(${FASTSCAPELIB_TARGET}
 
 target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor)
 
-target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_14)
+target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_17)
 
 # -- optional subdirectories
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)

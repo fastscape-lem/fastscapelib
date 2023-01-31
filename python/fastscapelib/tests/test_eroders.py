@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
-
 from fastscapelib.eroders import DiffusionADIEroder, SPLEroder
-from fastscapelib.flow import FlowGraph, NoSinkResolver, SingleFlowRouter
+from fastscapelib.flow import FlowGraph, SingleFlowRouter
 from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
 
 
@@ -10,7 +9,7 @@ class TestSPLEroder:
     def test_constructor_properties(self):
         bstatus = RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY)
         grid = RasterGrid([2, 2], [1.0, 1.0], bstatus, [])
-        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
+        flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         eroder = SPLEroder(flow_graph, 1e-3, 0.4, 1, 1e-5)
 
@@ -41,7 +40,7 @@ class TestSPLEroder:
         spacing = 300.0
         grid = ProfileGrid(4, 300, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
 
-        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
+        flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         area_exp = 0.5
         slope_exp = 1.0
@@ -87,7 +86,7 @@ class TestSPLEroder:
             [],
         )
 
-        flow_graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
+        flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         area_exp = 0.5
         slope_exp = 1.0

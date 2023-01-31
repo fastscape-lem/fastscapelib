@@ -70,16 +70,16 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ffast-math")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-parameter -Wextra -Wreorder")
 
-    CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)
+    CHECK_CXX_COMPILER_FLAG("-std=c++17" HAS_CPP17_FLAG)
 
-    if (HAS_CPP14_FLAG)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+    if (HAS_CPP17_FLAG)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
         # cleaner?
         # https://pabloariasal.github.io/2018/02/19/its-time-to-do-cmake-right/
         # cmake min version: 3.8
-        #target_compile_features(fastscapelib INTERFACE cxx_std_14)
+        #target_compile_features(fastscapelib INTERFACE cxx_std_17)
     else()
-        message(FATAL_ERROR "Unsupported compiler -- fastscapelib requires C++14 support!")
+        message(FATAL_ERROR "Unsupported compiler -- fastscapelib requires C++17 support!")
     endif()
 
     # Enable link time optimization and set the default symbol

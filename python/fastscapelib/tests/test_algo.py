@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from fastscapelib.algo import (
     compute_basins,
     compute_donors,

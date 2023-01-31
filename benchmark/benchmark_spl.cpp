@@ -11,7 +11,7 @@
 
 #include "fastscapelib/grid/raster_grid.hpp"
 #include "fastscapelib/flow/flow_graph.hpp"
-#include "fastscapelib/algo/flow_routing.hpp"
+#include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/eroders/spl.hpp"
 
 #include "benchmark_setup.hpp"
@@ -56,8 +56,7 @@ namespace fastscapelib
 
             if (Nd == 1)
             {
-                using flow_graph_type = fs::
-                    flow_graph<fs::profile_grid, fs::single_flow_router, fs::no_sink_resolver>;
+                using flow_graph_type = fs::flow_graph<fs::profile_grid>;
 
                 double spacing = 300.;
                 double x0 = 300.;
@@ -67,8 +66,7 @@ namespace fastscapelib
 
                 auto grid = fs::profile_grid(ns, spacing, fs::node_status::fixed_value_boundary);
 
-                auto flow_graph
-                    = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
+                auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 
                 K k_coef = get_k_coef<K>(elevation.shape());
                 double area_exp = 0.5;
@@ -88,8 +86,7 @@ namespace fastscapelib
 
             else if (Nd == 2)
             {
-                using flow_graph_type
-                    = fs::flow_graph<fs::raster_grid, fs::single_flow_router, fs::no_sink_resolver>;
+                using flow_graph_type = fs::flow_graph<fs::raster_grid>;
 
                 auto s = bms::FastscapeSetupBase<bms::surface_type::cone, T>(state.range(0));
                 elevation = s.elevation;
@@ -97,8 +94,7 @@ namespace fastscapelib
                 auto grid = fs::raster_grid(
                     { { ns, ns } }, { s.dy, s.dy }, fs::node_status::fixed_value_boundary);
 
-                auto flow_graph
-                    = flow_graph_type(grid, fs::single_flow_router(), fs::no_sink_resolver());
+                auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 
                 K k_coef = get_k_coef<K>(elevation.shape());
                 double area_exp = 0.5;

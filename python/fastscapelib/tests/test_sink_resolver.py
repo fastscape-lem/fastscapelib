@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
-
 from fastscapelib.flow import (
+    FlowDirection,
     FlowGraph,
+    FlowOperator,
     MSTMethod,
     MSTRouteMethod,
     MSTSinkResolver,
-    NoSinkResolver,
     PFloodSinkResolver,
     SingleFlowRouter,
 )
@@ -47,7 +47,7 @@ def elevation():
 
 
 def test_no_sink_resolver(grid, elevation):
-    graph = FlowGraph(grid, SingleFlowRouter(), NoSinkResolver())
+    graph = FlowGraph(grid, [SingleFlowRouter()])
 
     new_elevation = graph.update_routes(elevation)
 
@@ -59,8 +59,20 @@ def test_no_sink_resolver(grid, elevation):
     assert graph.impl().receivers[pit_idx_flat, 0] == pit_idx_flat
 
 
+def test_pflood_sink_resolver_attrs():
+    assert PFloodSinkResolver.graph_updated is False
+    assert PFloodSinkResolver.elevation_updated is True
+    assert PFloodSinkResolver.in_flowdir == FlowDirection.UNDEFINED
+    assert PFloodSinkResolver.out_flowdir == FlowDirection.UNDEFINED
+
+
 def test_pflood_sink_resolver(grid, elevation):
-    graph = FlowGraph(grid, SingleFlowRouter(), PFloodSinkResolver())
+    resolver = PFloodSinkResolver()
+    assert isinstance(resolver, FlowOperator)
+    assert resolver.name == "pflood_sink_resolver"
+    assert repr(resolver) == "PFloodSinkResolver"
+
+    graph = FlowGraph(grid, [resolver, SingleFlowRouter()])
 
     new_elevation = graph.update_routes(elevation)
 
@@ -79,10 +91,19 @@ def test_pflood_sink_resolver(grid, elevation):
 
 
 class TestMSTSinkResolver:
+    def test_class_attrs(self):
+        assert MSTSinkResolver.graph_updated is True
+        assert MSTSinkResolver.elevation_updated is True
+        assert MSTSinkResolver.in_flowdir == FlowDirection.SINGLE
+        assert MSTSinkResolver.out_flowdir == FlowDirection.SINGLE
+
     def test_constructor(self):
         resolver = MSTSinkResolver()
+        assert isinstance(resolver, FlowOperator)
         assert resolver.basin_method == MSTMethod.KRUSKAL
         assert resolver.route_method == MSTRouteMethod.CARVE
+        assert resolver.name == "mst_sink_resolver"
+        assert repr(resolver) == "MSTSinkResolver (basin=kruskal, route=carve)"
 
         # read-write attributes
         resolver.basin_method = MSTMethod.BORUVKA
@@ -100,7 +121,7 @@ class TestMSTSinkResolver:
     def test_resolve_basic(self, grid, elevation, mst_method):
 
         resolver = MSTSinkResolver(mst_method, MSTRouteMethod.BASIC)
-        graph = FlowGraph(grid, SingleFlowRouter(), resolver)
+        graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
 
         new_elevation = graph.update_routes(elevation)
 
@@ -125,7 +146,7 @@ class TestMSTSinkResolver:
     def test_resolve_carve(self, grid, elevation, mst_method):
 
         resolver = MSTSinkResolver(mst_method, MSTRouteMethod.CARVE)
-        graph = FlowGraph(grid, SingleFlowRouter(), resolver)
+        graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
 
         new_elevation = graph.update_routes(elevation)
 
@@ -166,7 +187,11 @@ def test_conservation_drainage_area(resolver):
 
     elevation = np.random.uniform(size=shape)
 
-    graph = FlowGraph(grid, SingleFlowRouter(), resolver)
+    if isinstance(resolver, PFloodSinkResolver):
+        graph = FlowGraph(grid, [resolver, SingleFlowRouter()])
+    else:
+        graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
+
     graph.update_routes(elevation)
     drainage_area = graph.accumulate(1.0)
 
@@ -197,7 +222,11 @@ def test_nb_of_basins(resolver):
 
     elevation = np.random.uniform(size=shape)
 
-    graph = FlowGraph(grid, SingleFlowRouter(), resolver)
+    if isinstance(resolver, PFloodSinkResolver):
+        graph = FlowGraph(grid, [resolver, SingleFlowRouter()])
+    else:
+        graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
+
     graph.update_routes(elevation)
     basins = graph.basins()
     nb_basins = basins.max() + 1

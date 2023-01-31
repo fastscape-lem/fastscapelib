@@ -46,17 +46,15 @@ pybind11_add_module(${PY_FASTSCAPELIB}
     src/algo.cpp
     src/eroders.cpp
     src/flow_graph.cpp
-    src/flow_router.cpp
     src/grid.cpp
-    src/main.cpp
-    src/sink_resolver.cpp)
+    src/main.cpp)
 
 target_include_directories(${PY_FASTSCAPELIB} PUBLIC ${NUMPY_INCLUDE_DIRS})
 
 target_link_libraries(${PY_FASTSCAPELIB}
                       PUBLIC fastscapelib xtensor-python)
 
-target_compile_features(${PY_FASTSCAPELIB} PUBLIC cxx_std_14)
+target_compile_features(${PY_FASTSCAPELIB} PUBLIC cxx_std_17)
 
 # Installation
 # ============

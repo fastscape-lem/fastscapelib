@@ -1,13 +1,6 @@
 import numpy as np
 import numpy.testing as npt
-import pytest
-
-from fastscapelib.flow import (
-    FlowGraph,
-    MultipleFlowRouter,
-    NoSinkResolver,
-    SingleFlowRouter,
-)
+from fastscapelib.flow import FlowDirection, FlowGraph, FlowOperator, SingleFlowRouter
 from fastscapelib.grid import (
     Node,
     NodeStatus,
@@ -22,9 +15,7 @@ class TestSingleFlowRouter:
     @classmethod
     def setup_class(cls):
         profile_grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
-        cls.profile_flow_graph = FlowGraph(
-            profile_grid, SingleFlowRouter(), NoSinkResolver()
-        )
+        cls.profile_flow_graph = FlowGraph(profile_grid, [SingleFlowRouter()])
         cls.profile_elevation = np.array([0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0])
         cls.result_profile_elevation = cls.profile_flow_graph.update_routes(
             cls.profile_elevation
@@ -44,9 +35,7 @@ class TestSingleFlowRouter:
             RasterBoundaryStatus(bottom_base_level),
             [],
         )
-        cls.raster_flow_graph = FlowGraph(
-            raster_grid, SingleFlowRouter(), NoSinkResolver()
-        )
+        cls.raster_flow_graph = FlowGraph(raster_grid, [SingleFlowRouter()])
 
         # planar surface tilted along the y-axis + small carved channel
         cls.raster_elevation = np.array(
@@ -61,12 +50,17 @@ class TestSingleFlowRouter:
             cls.raster_elevation
         )
 
-    def test___init__(self):
-        SingleFlowRouter()
+    def test_constructor(self):
+        router = SingleFlowRouter()
+        assert isinstance(router, FlowOperator)
+        assert router.name == "single_flow_router"
+        assert repr(router) == "SingleFlowRouter"
 
-        # no parameter
-        with pytest.raises(TypeError):
-            SingleFlowRouter(1.0)
+    def test_class_attrs(self):
+        assert SingleFlowRouter.graph_updated is True
+        assert SingleFlowRouter.elevation_updated is False
+        assert SingleFlowRouter.in_flowdir == FlowDirection.UNDEFINED
+        assert SingleFlowRouter.out_flowdir == FlowDirection.SINGLE
 
     def test_receivers(self):
         npt.assert_equal(
@@ -190,14 +184,3 @@ class TestSingleFlowRouter:
             self.raster_flow_graph.impl().dfs_indices,
             np.array([12, 13, 8, 9, 10, 6, 2, 5, 1, 4, 0, 14, 15, 11, 7, 3]),
         )
-
-
-class TestMultipleFlowRouter:
-    def test___init__(self):
-        MultipleFlowRouter(1.0, 1.5)
-
-        with pytest.raises(TypeError):
-            MultipleFlowRouter(1.0)
-
-        with pytest.raises(TypeError):
-            MultipleFlowRouter(1.0, "a")
