@@ -244,11 +244,8 @@ namespace fastscapelib
     class flow_graph;
 
     /*
-     * Immutable sequence of flow operators (e.g., flow routers, sink resolvers,
+     * Immutable container of flow operators (e.g., flow routers, sink resolvers,
      * flow snapshots) that are applied in chain when updating a flow graph.
-     *
-     * More precisely, it is a container of flow operator implementation (facade)
-     * instances that are created on the fly.
      *
      * This class is not intended to be used as a stand-alone container. It is
      * used internally as an entity of flow_graph and can (should) be created
@@ -425,8 +422,9 @@ namespace fastscapelib
     };
 
 
-    // Add an operator of an abitrary type to the sequence and update
-    // the sequence properties accordingly.
+    // Add an operator of an abitrary type to the container, create an instance
+    // of the corresponding implementation and update the sequence properties
+    // accordingly.
     //
     // The current (final state) flow direction is updated only if the operator
     // updates the flow graph and explicitly defines an output flow direction

@@ -92,7 +92,7 @@ namespace fastscapelib
             // pre-allocate hydrologically corrected elevation
             if (m_operators.elevation_updated())
             {
-                m_hydro_elevation = xt::empty<data_type>(grid.shape());
+                m_elevation_copy = xt::empty<data_type>(grid.shape());
             }
         }
 
@@ -167,8 +167,8 @@ namespace fastscapelib
             if (m_operators.elevation_updated())
             {
                 // reset and use hydrologically corrected elevation
-                m_hydro_elevation = elevation;
-                elevation_ptr = &m_hydro_elevation;
+                m_elevation_copy = elevation;
+                elevation_ptr = &m_elevation_copy;
             }
             else
             {
@@ -241,7 +241,7 @@ namespace fastscapelib
         bool m_writeable = true;
         grid_type& m_grid;
         impl_type m_impl;
-        data_array_type m_hydro_elevation;
+        data_array_type m_elevation_copy;
 
         graph_map m_graph_snapshots;
         graph_impl_map m_graph_impl_snapshots;
