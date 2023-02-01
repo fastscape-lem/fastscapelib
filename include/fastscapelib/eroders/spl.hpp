@@ -157,6 +157,9 @@ namespace fastscapelib
 
         for (const auto& inode : flow_graph_impl.node_indices_bottomup())
         {
+            // reset erosion
+            m_erosion.flat(inode) = 0.;
+
             auto r_count = receivers_count[inode];
 
             for (size_type r = 0; r < r_count; ++r)
@@ -166,7 +169,6 @@ namespace fastscapelib
                 if (irec == inode)
                 {
                     // at basin outlet or pit
-                    m_erosion.flat(inode) = 0.;
                     continue;
                 }
 
@@ -177,12 +179,14 @@ namespace fastscapelib
                 if (irec_elevation >= inode_elevation)
                 {
                     // may happen if flow is routed outside of a depression / flat area
-                    m_erosion.flat(inode) = 0.;
                     continue;
                 }
 
-                auto factor
-                    = (m_k_coef(inode) * dt * std::pow(drainage_area.flat(inode), m_area_exp));
+                data_type irec_weight = receivers_weight(inode, r);
+                data_type irec_distance = receivers_distance(inode, r);
+
+                auto factor = (m_k_coef(inode) * dt
+                               * std::pow(drainage_area.flat(inode) * irec_weight, m_area_exp));
 
                 data_type delta_0 = inode_elevation - irec_elevation;
                 data_type delta_k;
@@ -190,14 +194,14 @@ namespace fastscapelib
                 if (m_slope_exp == 1)
                 {
                     // fast path for slope_exp = 1 (common use case)
-                    factor /= receivers_distance(inode, r);
+                    factor /= irec_distance;
                     delta_k = delta_0 / (1. + factor);
                 }
 
                 else
                 {
                     // 1st order Newton-Raphson iterations (k)
-                    factor /= std::pow(receivers_distance(inode, r), m_slope_exp);
+                    factor /= std::pow(irec_distance, m_slope_exp);
                     delta_k = delta_0;
 
                     // TODO: add convergence control parameters (max_iterations, atol, mtol)
@@ -235,7 +239,7 @@ namespace fastscapelib
                 }
                 else
                 {
-                    m_erosion.flat(inode) += (delta_0 - delta_k) * receivers_weight(inode, r);
+                    m_erosion.flat(inode) += (delta_0 - delta_k) * irec_weight;
                 }
             }
         }
