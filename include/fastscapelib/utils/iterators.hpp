@@ -160,7 +160,45 @@ namespace fastscapelib
         private:
             G& m_grid;
         };
-
     }
+
+    /*
+     *
+     */
+    template <class XT>
+    class xt_container_iterator_wrapper
+    {
+    public:
+        using const_iterator_type = typename XT::const_iterator;
+        using reverse_const_iterator_type = std::reverse_iterator<const_iterator_type>;
+
+        xt_container_iterator_wrapper(const XT& container)
+            : m_container(container)
+        {
+        }
+
+        inline const_iterator_type begin() const
+        {
+            return m_container.begin();
+        }
+
+        inline const_iterator_type end() const
+        {
+            return m_container.end();
+        }
+
+        inline reverse_const_iterator_type rbegin() const
+        {
+            return m_container.rbegin();
+        }
+
+        inline reverse_const_iterator_type rend() const
+        {
+            return m_container.rend();
+        }
+
+    private:
+        const XT& m_container;
+    };
 }
 #endif

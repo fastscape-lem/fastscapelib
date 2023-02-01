@@ -2,6 +2,7 @@
 #define FASTSCAPELIB_FLOW_GRAPH_IMPL_H_
 
 #include <array>
+#include <iterator>
 #include <stack>
 
 #include "xtensor/xbroadcast.hpp"
@@ -9,6 +10,7 @@
 #include "xtensor/xview.hpp"
 
 #include "fastscapelib/grid/base.hpp"
+#include "fastscapelib/utils/iterators.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
 
 
@@ -79,9 +81,6 @@ namespace fastscapelib
             using receivers_distance_type = xt_tensor_t<xt_selector, data_type, 2>;
             using receivers_weight_type = xt_tensor_t<xt_selector, data_type, 2>;
             using dfs_indices_type = xt_tensor_t<xt_selector, size_type, 1>;
-
-            // using const_dfs_iterator = const size_type*;
-            // using const_reverse_dfs_iterator = std::reverse_iterator<const size_type*>;
 
             using basins_type = xt_tensor_t<xt_selector, size_type, 1>;
 
@@ -166,27 +165,16 @@ namespace fastscapelib
                 return m_dfs_indices;
             };
 
-            void compute_dfs_indices();
+            void compute_dfs_indices_bottomup();
+            void compute_dfs_indices_topdown();
 
-            // const_dfs_iterator dfs_cbegin()
-            // {
-            //     return m_dfs_indices.cbegin();
-            // };
-
-            // const_dfs_iterator dfs_cend()
-            // {
-            //     return m_dfs_indices.cend();
-            // };
-
-            // const_reverse_dfs_iterator dfs_crbegin()
-            // {
-            //     return m_dfs_indices.crbegin();
-            // };
-
-            // const_reverse_dfs_iterator dfs_crend()
-            // {
-            //     return m_dfs_indices.crend();
-            // };
+            /*
+             * Should be used for graph traversal in an explicit direction.
+             */
+            inline xt_container_iterator_wrapper<dfs_indices_type> node_indices_bottomup() const
+            {
+                return m_dfs_indices;
+            }
 
             const std::vector<size_type>& outlets() const
             {
@@ -236,7 +224,6 @@ namespace fastscapelib
             friend class flow_operator_impl;
         };
 
-
         template <class G, class S>
         void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_donors()
         {
@@ -253,13 +240,12 @@ namespace fastscapelib
             }
         }
 
-
         /*
-         * Perform depth-first search and store the node indices for faster
-         * graph traversal.
+         * Perform depth-first search in the downstream->upstream direction
+         * and store the node indices for faster graph traversal.
          */
         template <class G, class S>
-        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices()
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices_bottomup()
         {
             size_type nstack = 0;
 
@@ -293,6 +279,52 @@ namespace fastscapelib
             assert(nstack == size());
         }
 
+        /*
+         * Perform depth-first search in the upstream->dowstream direction
+         * and store the node indices for faster graph traversal.
+         *
+         * Note: indices are stored in the downstream->upstream direction!
+         */
+        template <class G, class S>
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_dfs_indices_topdown()
+        {
+            size_type nstack = 0;
+            std::stack<size_type> tmp;
+
+            std::vector<size_type> visited_count(size(), 0);
+
+            for (size_type i = 0; i < size(); ++i)
+            {
+                if (m_donors_count(i) == 0)
+                {
+                    tmp.push(i);
+                }
+
+                while (!tmp.empty())
+                {
+                    size_type istack = tmp.top();
+                    tmp.pop();
+
+                    m_dfs_indices(nstack++) = istack;
+
+                    for (size_type k = 0; k < m_receivers_count(istack); ++k)
+                    {
+                        const auto irec = m_receivers(istack, k);
+                        visited_count[irec]++;
+
+                        if (visited_count[irec] == m_donors_count(irec))
+                        {
+                            tmp.push(irec);
+                        }
+                    }
+                }
+            }
+
+            assert(nstack == size());
+
+            // downstream->upstream order
+            std::reverse(m_dfs_indices.begin(), m_dfs_indices.end());
+        }
 
         template <class G, class S>
         void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_basins()
@@ -301,21 +333,20 @@ namespace fastscapelib
 
             m_outlets.clear();
 
-            for (const auto& idfs : m_dfs_indices)
+            for (const auto& inode : node_indices_bottomup())
             {
                 // outlet node has only one receiver: itself
-                if (idfs == m_receivers(idfs, 0))
+                if (inode == m_receivers(inode, 0))
                 {
-                    m_outlets.push_back(idfs);
+                    m_outlets.push_back(inode);
                     current_basin++;
                 }
 
-                m_basins(idfs) = current_basin - 1;
+                m_basins(inode) = current_basin - 1;
             }
 
             assert(m_outlets.size() == current_basin);
         }
-
 
         template <class G, class S>
         auto flow_graph_impl<G, S, flow_graph_fixed_array_tag>::pits()
@@ -343,26 +374,24 @@ namespace fastscapelib
             // TODO: assert(acc.shape() == m_grid.shape()) with compatible shape types
             auto src_arr = xt::broadcast(std::forward<T>(src), m_grid.shape());
 
-            // TODO: safer to flatten acc and src? (case of raster_grid -> 2d arrays)
-            // flatten seems to greatly slow down the execution
-            // alternative? (check if it would work with different layout, e.g., column major)
-            // maybe xt::ravel? -> specify row::major explicitly (maybe faster?)
-            // or acc.flat(idx) ? -> check perfs (not available for xbroadcast expression)
-            // currently: just use operator() works even for 2d arrays. not sure why?
-
             // re-init accumulated values
             acc.fill(0);
 
-            for (auto inode = m_dfs_indices.crbegin(); inode != m_dfs_indices.crend(); ++inode)
-            {
-                acc.flat(*inode) += m_grid.node_area(*inode) * src_arr(*inode);
+            auto node_indices = node_indices_bottomup();
 
-                for (size_type r = 0; r < m_receivers_count[*inode]; ++r)
+            for (auto inode_ptr = node_indices.rbegin(); inode_ptr != node_indices.rend();
+                 ++inode_ptr)
+            {
+                const auto inode = *inode_ptr;
+
+                acc.flat(inode) += m_grid.node_area(inode) * src_arr(inode);
+
+                for (size_type r = 0; r < m_receivers_count[inode]; ++r)
                 {
-                    size_type ireceiver = m_receivers(*inode, r);
-                    if (ireceiver != *inode)
+                    size_type ireceiver = m_receivers(inode, r);
+                    if (ireceiver != inode)
                     {
-                        acc.flat(ireceiver) += acc.flat(*inode) * m_receivers_weight(*inode, r);
+                        acc.flat(ireceiver) += acc.flat(inode) * m_receivers_weight(inode, r);
                     }
                 }
             }

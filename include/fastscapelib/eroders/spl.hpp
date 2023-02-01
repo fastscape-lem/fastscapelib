@@ -152,53 +152,52 @@ namespace fastscapelib
         const auto& receivers_count = flow_graph_impl.receivers_count();
         const auto& receivers_distance = flow_graph_impl.receivers_distance();
         const auto& receivers_weight = flow_graph_impl.receivers_weight();
-        const auto& dfs_indices = flow_graph_impl.dfs_indices();
 
         m_n_corr = 0;
 
-        for (const auto& idfs : dfs_indices)
+        for (const auto& inode : flow_graph_impl.node_indices_bottomup())
         {
-            auto r_count = receivers_count[idfs];
+            auto r_count = receivers_count[inode];
 
             for (size_type r = 0; r < r_count; ++r)
             {
-                size_type irec = receivers(idfs, r);
+                size_type irec = receivers(inode, r);
 
-                if (irec == idfs)
+                if (irec == inode)
                 {
                     // at basin outlet or pit
-                    m_erosion.flat(idfs) = 0.;
+                    m_erosion.flat(inode) = 0.;
                     continue;
                 }
 
-                data_type idfs_elevation = elevation.flat(idfs);  // at time t
+                data_type inode_elevation = elevation.flat(inode);  // at time t
                 data_type irec_elevation
                     = elevation.flat(irec) - m_erosion.flat(irec);  // at time t+dt
 
-                if (irec_elevation >= idfs_elevation)
+                if (irec_elevation >= inode_elevation)
                 {
                     // may happen if flow is routed outside of a depression / flat area
-                    m_erosion.flat(idfs) = 0.;
+                    m_erosion.flat(inode) = 0.;
                     continue;
                 }
 
                 auto factor
-                    = (m_k_coef(idfs) * dt * std::pow(drainage_area.flat(idfs), m_area_exp));
+                    = (m_k_coef(inode) * dt * std::pow(drainage_area.flat(inode), m_area_exp));
 
-                data_type delta_0 = idfs_elevation - irec_elevation;
+                data_type delta_0 = inode_elevation - irec_elevation;
                 data_type delta_k;
 
                 if (m_slope_exp == 1)
                 {
                     // fast path for slope_exp = 1 (common use case)
-                    factor /= receivers_distance(idfs, r);
+                    factor /= receivers_distance(inode, r);
                     delta_k = delta_0 / (1. + factor);
                 }
 
                 else
                 {
                     // 1st order Newton-Raphson iterations (k)
-                    factor /= std::pow(receivers_distance(idfs, r), m_slope_exp);
+                    factor /= std::pow(receivers_distance(inode, r), m_slope_exp);
                     delta_k = delta_0;
 
                     // TODO: add convergence control parameters (max_iterations, atol, mtol)
@@ -232,11 +231,11 @@ namespace fastscapelib
 
                 if (r_count == 1)
                 {
-                    m_erosion.flat(idfs) = (delta_0 - delta_k);
+                    m_erosion.flat(inode) = (delta_0 - delta_k);
                 }
                 else
                 {
-                    m_erosion.flat(idfs) += (delta_0 - delta_k) * receivers_weight(idfs, r);
+                    m_erosion.flat(inode) += (delta_0 - delta_k) * receivers_weight(inode, r);
                 }
             }
         }

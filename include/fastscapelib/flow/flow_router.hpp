@@ -96,7 +96,7 @@ namespace fastscapelib
                     donors(irec, donors_count(irec)++) = i;
                 }
 
-                graph_impl.compute_dfs_indices();
+                graph_impl.compute_dfs_indices_bottomup();
             }
         };
     }

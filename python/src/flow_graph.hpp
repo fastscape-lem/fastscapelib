@@ -13,6 +13,7 @@
 #include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/flow/flow_snapshot.hpp"
 #include "fastscapelib/flow/sink_resolver.hpp"
+#include "fastscapelib/utils/iterators.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
 
 #include "pytensor_utils.hpp"
@@ -59,6 +60,7 @@ namespace fastscapelib
             using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
             using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
+            using node_indices_iterator_type = xt_container_iterator_wrapper<dfs_indices_type>;
 
             using basins_type = xt_tensor_t<py_selector, size_type, 1>;
 
@@ -80,6 +82,8 @@ namespace fastscapelib
 
             virtual const dfs_indices_type& dfs_indices() const = 0;
 
+            virtual node_indices_iterator_type node_indices_bottomup() const = 0;
+
             virtual const basins_type& basins() const = 0;
         };
 
@@ -88,24 +92,6 @@ namespace fastscapelib
         class flow_graph_impl_wrapper : public flow_graph_impl_wrapper_base
         {
         public:
-            using flow_graph_impl_type = FG;
-
-            using size_type = typename flow_graph_impl_wrapper_base::size_type;
-            using neighbors_count_type =
-                typename flow_graph_impl_wrapper_base::neighbors_count_type;
-            using grid_data_type = typename flow_graph_impl_wrapper_base::grid_data_type;
-            using donors_type = typename flow_graph_impl_wrapper_base::donors_type;
-            using donors_count_type = typename flow_graph_impl_wrapper_base::donors_count_type;
-            using receivers_type = typename flow_graph_impl_wrapper_base::receivers_type;
-            using receivers_count_type =
-                typename flow_graph_impl_wrapper_base::receivers_count_type;
-            using receivers_weight_type =
-                typename flow_graph_impl_wrapper_base::receivers_weight_type;
-            using receivers_distance_type =
-                typename flow_graph_impl_wrapper_base::receivers_distance_type;
-            using dfs_indices_type = typename flow_graph_impl_wrapper_base::dfs_indices_type;
-            using basins_type = typename flow_graph_impl_wrapper_base::basins_type;
-
             virtual ~flow_graph_impl_wrapper(){};
 
             flow_graph_impl_wrapper(FG& graph_impl)
@@ -151,13 +137,18 @@ namespace fastscapelib
                 return m_graph_impl.dfs_indices();
             };
 
+            node_indices_iterator_type node_indices_bottomup() const
+            {
+                return m_graph_impl.node_indices_bottomup();
+            }
+
             const basins_type& basins() const
             {
                 return m_graph_impl.basins();
             };
 
         private:
-            flow_graph_impl_type& m_graph_impl;
+            FG& m_graph_impl;
         };
     }
 
@@ -178,6 +169,7 @@ namespace fastscapelib
         using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
         using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
+        using node_indices_iterator_type = xt_container_iterator_wrapper<dfs_indices_type>;
 
         using basins_type = xt_tensor_t<py_selector, size_type, 1>;
 
@@ -224,6 +216,11 @@ namespace fastscapelib
         {
             return m_wrapper_ptr->dfs_indices();
         };
+
+        node_indices_iterator_type node_indices_bottomup() const
+        {
+            return m_wrapper_ptr->node_indices_bottomup();
+        }
 
         const basins_type& basins() const
         {
