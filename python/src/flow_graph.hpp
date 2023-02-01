@@ -254,6 +254,7 @@ namespace fastscapelib
         for (auto op : ops)
         {
             TRY_CAST_OPERATOR(single_flow_router)
+            TRY_CAST_OPERATOR(multi_flow_router)
             TRY_CAST_OPERATOR(pflood_sink_resolver)
             TRY_CAST_OPERATOR(mst_sink_resolver)
             try
