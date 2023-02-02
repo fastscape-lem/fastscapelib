@@ -171,7 +171,7 @@ namespace fastscapelib
             /*
              * Should be used for graph traversal in an explicit direction.
              */
-            inline xt_container_iterator_wrapper<dfs_indices_type> node_indices_bottomup() const
+            inline stl_container_iterator_wrapper<dfs_indices_type> node_indices_bottomup() const
             {
                 return m_dfs_indices;
             }

@@ -60,7 +60,7 @@ namespace fastscapelib
             using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
             using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
-            using node_indices_iterator_type = xt_container_iterator_wrapper<dfs_indices_type>;
+            using node_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
 
             using basins_type = xt_tensor_t<py_selector, size_type, 1>;
 
@@ -169,7 +169,7 @@ namespace fastscapelib
         using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
         using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
-        using node_indices_iterator_type = xt_container_iterator_wrapper<dfs_indices_type>;
+        using node_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
 
         using basins_type = xt_tensor_t<py_selector, size_type, 1>;
 

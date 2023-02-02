@@ -163,16 +163,21 @@ namespace fastscapelib
     }
 
     /*
+     * Thin wrapper around iterators of any STL-compatible container.
+     *
+     * Only const forward and reverse iterators are exposed.
+     *
+     * @tparam C The container type.
      *
      */
-    template <class XT>
-    class xt_container_iterator_wrapper
+    template <class C>
+    class stl_container_iterator_wrapper
     {
     public:
-        using const_iterator_type = typename XT::const_iterator;
+        using const_iterator_type = typename C::const_iterator;
         using reverse_const_iterator_type = std::reverse_iterator<const_iterator_type>;
 
-        xt_container_iterator_wrapper(const XT& container)
+        stl_container_iterator_wrapper(const C& container)
             : m_container(container)
         {
         }
@@ -198,7 +203,7 @@ namespace fastscapelib
         }
 
     private:
-        const XT& m_container;
+        const C& m_container;
     };
 }
 #endif
