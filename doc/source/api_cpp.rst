@@ -76,29 +76,3 @@ Drainage area, basins, outlets & pits
 
 .. doxygenfunction:: fastscapelib::compute_drainage_area(xtensor_t<D>&, const xtensor_t<S>&, const xtensor_t<R>&, double, double)
    :project: fastscapelib
-
-Bedrock channel
----------------
-
-Functions used to drive the evolution of bedrock channels.
-
-Defined in ``fastscapelib/bedrock_channel.hpp``.
-
-.. doxygenfunction:: fastscapelib::erode_stream_power(xtensor_t<Er>&, const xtensor_t<El>&, const xtensor_t<S>&, const xtensor_t<R>&, const xtensor_t<Di>&, const xtensor_t<Dr>&, double, double, double, double, double)
-   :project: fastscapelib
-
-.. doxygenfunction:: fastscapelib::erode_stream_power(xtensor_t<Er>&, const xtensor_t<El>&, const xtensor_t<S>&, const xtensor_t<R>&, const xtensor_t<Di>&, const xtensor_t<Dr>&, const xtensor_t<K>&, double, double, double, double)
-   :project: fastscapelib
-
-Hillslope
----------
-
-Functions used to drive the evolution of hillslopes.
-
-Defined in ``fastscapelib/hillslope.hpp``.
-
-.. doxygenfunction:: fastscapelib::erode_linear_diffusion(xtensor_t<Er>&, const xtensor_t<El>&, double, double, double, double)
-   :project: fastscapelib
-
-.. doxygenfunction:: fastscapelib::erode_linear_diffusion(xtensor_t<Er>&, const xtensor_t<El>&, const xtensor_t<K>&, double, double, double)
-   :project: fastscapelib

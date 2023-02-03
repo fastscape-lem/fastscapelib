@@ -33,13 +33,23 @@
 namespace fastscapelib
 {
 
-    //***************************
-    //* Structured grid interface
-    //***************************
+    /**
+     * Base class for setting the status at the border nodes of structured grids.
+     */
+    class boundary_status
+    {
+    protected:
+        bool is_looped(node_status status) const;
+    };
+
+    inline bool boundary_status::is_looped(const node_status status) const
+    {
+        return status == node_status::looped_boundary;
+    }
+
 
     /**
-     * @class structured_grid
-     * @brief Extends the common grid interface for all structured grid types.
+     * Extends the common grid interface for all structured grid types.
      *
      * This class only defines a basic interface for all structured grid types.
      * It does not embed any data member, this responsibility

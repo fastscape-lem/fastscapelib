@@ -391,8 +391,7 @@ namespace fastscapelib
     };
 
     /**
-     * @class raster_grid_xt
-     * @brief 2-dimensional uniform (raster) grid.
+     * 2-dimensional uniform (raster) grid.
      *
      * @tparam S xtensor container selector for data array members.
      * @tparam RC Raster node connectivity.

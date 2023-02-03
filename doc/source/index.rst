@@ -18,11 +18,11 @@ Documentation index
    citation
 
 .. toctree::
-   :caption: API Reference
-   :maxdepth: 3
+   :caption: C++ API Reference
+   :maxdepth: 2
 
-   api_cpp
-   api_python
+   api_cpp/grid
+   api_cpp/utilities
 
 .. toctree::
    :caption: Developer Zone

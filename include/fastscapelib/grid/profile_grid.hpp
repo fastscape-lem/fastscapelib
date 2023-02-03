@@ -120,10 +120,9 @@ namespace fastscapelib
     };
 
     /**
-     * @class profile_grid_xt
      * @brief 1-dimensional uniform grid.
      *
-     * Used for modeling single channel or hillslope profiles.
+     * Useful for modeling single channel or hillslope profiles.
      *
      * @tparam S xtensor container selector for data array members.
      * @tparam C Grid neighbors cache type.

@@ -25,14 +25,24 @@ namespace fastscapelib
     //*****************
 
     /**
-     * Status at a grid/mesh node.
+     * Node status values.
+     *
+     * Node status is a label assigned to each grid/mesh node. It is used to
+     * define the structure and boundaries of the modeled domain.
+     *
+     * The description of each value is given for indicative pruposes only.
+     * Exact semantics may differ depending on the grid type or the objects that
+     * are consuming grids.
+     *
+     * For example, ``looped_boundary`` is used only for structured grids.
+     *
      */
     enum class node_status : std::uint8_t
     {
-        core = 0,
-        fixed_value_boundary = 1,
-        fixed_gradient_boundary = 2,
-        looped_boundary = 3
+        core = 0,                    /**< Inner grid node */
+        fixed_value_boundary = 1,    /**< Dirichlet boundary condition */
+        fixed_gradient_boundary = 2, /**< Neumann boundary condition */
+        looped_boundary = 3          /**< Reflective boundaries */
     };
 
     namespace detail
@@ -76,27 +86,12 @@ namespace fastscapelib
     }  // namespace detail
 
 
-    /**
-     * Status at grid boundary nodes.
-     */
-    class boundary_status
-    {
-    protected:
-        bool is_looped(node_status status) const;
-    };
-
-    inline bool boundary_status::is_looped(const node_status status) const
-    {
-        return status == node_status::looped_boundary;
-    }
-
-
     //***************
     //* Grid elements
     //***************
 
     /**
-     * Grid/mesh node.
+     * Represents a grid/mesh node.
      */
     struct node
     {
@@ -105,7 +100,7 @@ namespace fastscapelib
     };
 
     /**
-     * Neighbor node.
+     * Represents a grid/mesh node neighbor.
      */
     struct neighbor
     {
@@ -138,7 +133,10 @@ namespace fastscapelib
      **********************************/
 
     /**
-     * Provides a cache for neighbors indices queries of a particular node of the grid.
+     * Provides a cache for grid neighbor indices look-up.
+     *
+     * @tparam N The size of each array entry in the cache (should correspond to
+     * the fixed maximum number of neighbors).
      */
     template <std::uint8_t N>
     class neighbors_cache
@@ -218,7 +216,10 @@ namespace fastscapelib
 
 
     /**
-     * A pass-through/no cache for neighbors indices queries of a particular node of the grid.
+     * A simple pass-through for grid neighbor indices look-up.
+     *
+     * @tparam N The size of temporary storage of indices (should correspond to
+     * the fixed maximum number of neighbors).
      */
     template <unsigned int N>
     class neighbors_no_cache
@@ -281,14 +282,12 @@ namespace fastscapelib
     struct grid_inner_types;
 
     /**
-     * @class grid
-     * @brief Add a common interface to all grid/mesh types.
+     * Base class for all grid or mesh types.
      *
-     * This class only defines a basic interface for all grid/mesh types.
-     * It does not embed any data member, this responsibility
-     * is delegated to the inheriting classes.
+     * This class defines grid properties as well as a common API for iterating
+     * through grid nodes and their neighbors.
      *
-     * @tparam G Derived grid type.
+     * @tparam G The derived grid type.
      */
     template <class G>
     class grid
@@ -297,25 +296,13 @@ namespace fastscapelib
         using derived_grid_type = G;
         using inner_types = grid_inner_types<derived_grid_type>;
 
-        static constexpr bool is_structured()
-        {
-            return inner_types::is_structured;
-        }
-
-        static constexpr bool is_uniform()
-        {
-            return inner_types::is_uniform;
-        }
+        static constexpr bool is_structured();
+        static constexpr bool is_uniform();
+        static constexpr std::size_t xt_ndims();
+        static constexpr std::uint8_t n_neighbors_max();
 
         using grid_data_type = typename inner_types::grid_data_type;
-
         using xt_selector = typename inner_types::xt_selector;
-
-        static constexpr std::size_t xt_ndims()
-        {
-            return inner_types::xt_ndims;
-        }
-
         using xt_type = xt_tensor_t<xt_selector, grid_data_type, xt_ndims()>;
 
         using size_type = typename xt_type::size_type;
@@ -323,17 +310,13 @@ namespace fastscapelib
 
         using neighbors_cache_type = typename inner_types::neighbors_cache_type;
 
-        static constexpr std::uint8_t n_neighbors_max()
-        {
-            return inner_types::n_neighbors_max;
-        }
-
         static_assert(neighbors_cache_type::cache_width == 0
                           || neighbors_cache_type::cache_width >= n_neighbors_max(),
                       "Cache width is too small!");
 
         using neighbors_type = std::vector<neighbor>;
         using neighbors_count_type = typename inner_types::neighbors_count_type;
+
         // using xt:xtensor for indices as not all containers support resizing
         // (e.g., using pyarray may cause segmentation faults with Python)
         using neighbors_indices_type = xt::xtensor<size_type, 1>;
@@ -342,25 +325,20 @@ namespace fastscapelib
         using node_status_type = xt_tensor_t<xt_selector, node_status, inner_types::xt_ndims>;
 
         size_type size() const noexcept;
-
         shape_type shape() const noexcept;
 
         const node_status_type& status_at_nodes() const;
-
         grid_data_type node_area(const size_type& idx) const noexcept;
 
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
-
         neighbors_distances_type neighbors_distances(const size_type& idx) const;
 
         // no const since it may update the cache internally
         neighbors_indices_type neighbors_indices(const size_type& idx);
-
         neighbors_indices_type& neighbors_indices(const size_type& idx,
                                                   neighbors_indices_type& neighbors_indices);
 
         neighbors_type neighbors(const size_type& idx);
-
         neighbors_type& neighbors(const size_type& idx, neighbors_type& neighbors);
 
         inline filtered_index_iterator<grid, detail::node_status_filter<node_status>>
@@ -430,6 +408,50 @@ namespace fastscapelib
         neighbors_cache_type m_neighbors_indices_cache;
     };
 
+    /**
+     * @name Grid static properties
+     */
+    //@{
+    /**
+     * True if the grid is strutured or False if the grid is an unstructured mesh.
+     */
+    template <class G>
+    constexpr bool grid<G>::is_structured()
+    {
+        return inner_types::is_structured;
+    }
+
+    /**
+     * True if the grid is uniform (i.e., constant spacing along each
+     * dimension).
+     */
+    template <class G>
+    constexpr bool grid<G>::is_uniform()
+    {
+        return inner_types::is_uniform;
+    }
+
+    /**
+     * Number of dimensions of the grid field arrays.
+     */
+    template <class G>
+    constexpr std::size_t grid<G>::xt_ndims()
+    {
+        return inner_types::xt_ndims;
+    }
+
+    /**
+     * Maximum number of grid node neighbors.
+     *
+     * For strutured grids this corresponds to the actual (fixed) number of
+     * neighbors.
+     */
+    template <class G>
+    constexpr std::uint8_t grid<G>::n_neighbors_max()
+    {
+        return inner_types::n_neighbors_max;
+    }
+    //@}
 
     template <class G>
     inline auto grid<G>::derived_grid() const noexcept -> const derived_grid_type&
@@ -511,6 +533,7 @@ namespace fastscapelib
 
         return view;
     }
+    //@}
 
     /**
      * @name Iterators
