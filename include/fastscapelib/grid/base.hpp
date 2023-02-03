@@ -355,29 +355,9 @@ namespace fastscapelib
                 *this, detail::make_node_status_filter(status), size());
         }
 
-        inline index_iterator<grid> nodes_indices_begin()
+        inline grid_node_indices<grid> nodes_indices()
         {
-            return index_iterator<grid>(*this, 0);
-        }
-
-        inline index_iterator<grid> nodes_indices_end()
-        {
-            return index_iterator<grid>(*this, size());
-        }
-
-        inline std::reverse_iterator<index_iterator<grid>> nodes_indices_rbegin()
-        {
-            return std::reverse_iterator<index_iterator<grid>>(nodes_indices_end());
-        }
-
-        inline std::reverse_iterator<index_iterator<grid>> nodes_indices_rend()
-        {
-            return std::reverse_iterator<index_iterator<grid>>(nodes_indices_begin());
-        }
-
-        inline detail::node_indices_iterator<grid> nodes_indices()
-        {
-            return *this;
+            return grid_node_indices(*this);
         };
 
         const neighbors_cache_type& neighbors_indices_cache()

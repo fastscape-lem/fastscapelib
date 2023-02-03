@@ -1,6 +1,8 @@
 #ifndef FASTSCAPELIB_UTILS_ITERATORS_H
 #define FASTSCAPELIB_UTILS_ITERATORS_H
 
+#include <functional>
+
 #include "xtl/xiterator_base.hpp"
 
 
@@ -120,8 +122,11 @@ namespace fastscapelib
         mutable value_type m_idx;
 
         G& m_grid;
-
         F m_filter_func;
+
+        template <class _G, class _F>
+        friend bool operator==(const filtered_index_iterator<_G, _F>&,
+                               const filtered_index_iterator<_G, _F>&);
     };
 
 
@@ -131,6 +136,59 @@ namespace fastscapelib
     {
         return lhs.m_idx == rhs.m_idx;
     }
+
+
+    /**
+     * STL-compatible immutable container proxy for iterating through grid node
+     * indices.
+     *
+     *
+     *
+     */
+    template <class G>
+    class grid_node_indices
+    {
+    public:
+        using filter_func_type = std::function<bool(G&, typename G::size_type)>;
+        using iterator = filtered_index_iterator<G, filter_func_type>;
+
+        grid_node_indices(G& grid, filter_func_type func = nullptr)
+            : m_grid(grid)
+        {
+            if (!func)
+            {
+                m_filter_func = [](G&, typename G::size_type) { return true; };
+            }
+            else
+            {
+                m_filter_func = func;
+            }
+        }
+
+        inline iterator begin() const
+        {
+            return iterator(m_grid, m_filter_func, 0);
+        }
+
+        inline iterator end() const
+        {
+            return iterator(m_grid, m_filter_func, m_grid.size());
+        }
+
+        inline std::reverse_iterator<iterator> rbegin() const
+        {
+            return std::reverse_iterator<iterator>(end());
+        }
+
+        inline std::reverse_iterator<iterator> rend() const
+        {
+            return std::reverse_iterator<iterator>(begin());
+        }
+
+    private:
+        G& m_grid;
+        filter_func_type m_filter_func;
+    };
 
 
     namespace detail

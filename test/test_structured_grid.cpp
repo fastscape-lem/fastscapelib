@@ -92,26 +92,13 @@ namespace fastscapelib
             EXPECT_EQ(*(--core_filter_end), 3u);
         }
 
-        TEST_F(structured_grid, nodes_indices_rbegin)
-        {
-            auto node_it = fixed_grid.nodes_indices_rbegin();
-            EXPECT_EQ(*node_it, 4u);
-            EXPECT_EQ(*(++node_it), 3u);
-        }
-
-        TEST_F(structured_grid, nodes_indices_rend)
-        {
-            auto node_it = fixed_grid.nodes_indices_rend();
-            EXPECT_EQ(*node_it, std::numeric_limits<grid_type::size_type>::max());
-            EXPECT_EQ(*(--node_it), 0u);
-        }
-
         TEST_F(structured_grid, nodes_indices)
         {
+            auto node_indices = fixed_grid.nodes_indices();
+
             std::size_t sum = 0;
             std::size_t size = 0;
-            for (auto it = fixed_grid.nodes_indices_begin(); it != fixed_grid.nodes_indices_end();
-                 ++it)
+            for (auto it = node_indices.begin(); it != node_indices.end(); ++it)
             {
                 sum += *it;
                 ++size;
@@ -121,8 +108,7 @@ namespace fastscapelib
 
             sum = 0;
             size = 0;
-            for (auto it = fixed_grid.nodes_indices_rbegin(); it != fixed_grid.nodes_indices_rend();
-                 ++it)
+            for (auto it = node_indices.rbegin(); it != node_indices.rend(); ++it)
             {
                 sum += *it;
                 ++size;
