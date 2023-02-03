@@ -52,46 +52,6 @@ namespace fastscapelib
             grid_type looped_grid = grid_type(shape, 1.4, fs::node_status::looped_boundary);
         };
 
-        TEST_F(structured_grid, index_iterator)
-        {
-            index_iterator<grid_type> it(fixed_grid);
-
-            EXPECT_EQ(*(it++), 0u);
-            EXPECT_EQ(*(it++), 1u);
-        }
-
-        TEST_F(structured_grid, nodes_indices_begin)
-        {
-            auto boundaries_filter
-                = fixed_grid.nodes_indices_begin(fs::node_status::fixed_value_boundary);
-            EXPECT_EQ(*boundaries_filter, 0u);
-            EXPECT_EQ(*(boundaries_filter++), 0u);
-            EXPECT_EQ(*(boundaries_filter++), 4u);
-            EXPECT_EQ(*boundaries_filter, 5u);
-            EXPECT_EQ(*(--boundaries_filter), 4u);
-            EXPECT_EQ(*(++boundaries_filter), 5u);
-            EXPECT_EQ(*(++boundaries_filter), 6u);
-
-            auto core_filter = fixed_grid.nodes_indices_begin(fs::node_status::core);
-            EXPECT_EQ(*(core_filter++), 1u);
-            EXPECT_EQ(*(core_filter++), 2u);
-            EXPECT_EQ(*core_filter, 3u);
-            EXPECT_EQ(*(--core_filter), 2u);
-        }
-
-        TEST_F(structured_grid, nodes_indices_end)
-        {
-            auto boundaries_filter
-                = fixed_grid.nodes_indices_end(fs::node_status::fixed_value_boundary);
-            EXPECT_EQ(*boundaries_filter, 5u);
-            EXPECT_EQ(*(--boundaries_filter), 4u);
-            EXPECT_EQ(*(--boundaries_filter), 0u);
-
-            auto core_filter_end = fixed_grid.nodes_indices_end(fs::node_status::core);
-            EXPECT_EQ(*core_filter_end, 5u);
-            EXPECT_EQ(*(--core_filter_end), 3u);
-        }
-
         TEST_F(structured_grid, nodes_indices)
         {
             auto node_indices = fixed_grid.nodes_indices();
@@ -126,5 +86,58 @@ namespace fastscapelib
             EXPECT_EQ(sum, 10u);
             EXPECT_EQ(size, fixed_grid.size());
         }
+
+        TEST_F(structured_grid, nodes_indices_status)
+        {
+            auto node_indices_fvalue
+                = fixed_grid.nodes_indices(fs::node_status::fixed_value_boundary);
+
+            {
+                SCOPED_TRACE("test fixed_value_boundary begin");
+
+                auto it = node_indices_fvalue.begin();
+
+                EXPECT_EQ(*it, 0u);
+                EXPECT_EQ(*(it++), 0u);
+                EXPECT_EQ(*(it++), 4u);
+                EXPECT_EQ(*it, 5u);
+                EXPECT_EQ(*(--it), 4u);
+                EXPECT_EQ(*(++it), 5u);
+                EXPECT_EQ(*(++it), 6u);
+            }
+
+            {
+                SCOPED_TRACE("test fixed_value_boundary end");
+
+                auto it = node_indices_fvalue.end();
+
+                EXPECT_EQ(*it, 5u);
+                EXPECT_EQ(*(--it), 4u);
+                EXPECT_EQ(*(--it), 0u);
+            }
+
+            auto node_indices_core = fixed_grid.nodes_indices(fs::node_status::core);
+
+            {
+                SCOPED_TRACE("test core begin");
+
+                auto it = node_indices_core.begin();
+
+                EXPECT_EQ(*(it++), 1u);
+                EXPECT_EQ(*(it++), 2u);
+                EXPECT_EQ(*it, 3u);
+                EXPECT_EQ(*(--it), 2u);
+            }
+
+            {
+                SCOPED_TRACE("test core end");
+
+                auto it = node_indices_core.end();
+
+                EXPECT_EQ(*it, 5u);
+                EXPECT_EQ(*(--it), 3u);
+            }
+        }
+
     }
 }

@@ -48,31 +48,6 @@ namespace fastscapelib
     namespace detail
     {
 
-        template <class V>
-        class node_status_filter
-        {
-        public:
-            node_status_filter(V ref)
-                : m_ref(ref)
-            {
-            }
-
-            template <class G>
-            inline bool operator()(const G& grid, typename G::size_type idx) const
-            {
-                return grid.status_at_nodes()[idx] == m_ref;
-            }
-
-        private:
-            V m_ref;
-        };
-
-        template <class V>
-        auto make_node_status_filter(V value)
-        {
-            return node_status_filter<V>(value);
-        }
-
         inline bool node_status_cmp(node_status a, node_status b)
         {
             static std::map<node_status, int> priority{ { node_status::core, 0 },
@@ -82,7 +57,6 @@ namespace fastscapelib
 
             return priority[a] < priority[b];
         }
-
     }  // namespace detail
 
 
@@ -341,23 +315,16 @@ namespace fastscapelib
         neighbors_type neighbors(const size_type& idx);
         neighbors_type& neighbors(const size_type& idx, neighbors_type& neighbors);
 
-        inline filtered_index_iterator<grid, detail::node_status_filter<node_status>>
-        nodes_indices_begin(node_status status)
-        {
-            return filtered_index_iterator<grid, detail::node_status_filter<node_status>>(
-                *this, detail::make_node_status_filter(status), 0);
-        }
-
-        inline filtered_index_iterator<grid, detail::node_status_filter<node_status>>
-        nodes_indices_end(node_status status)
-        {
-            return filtered_index_iterator<grid, detail::node_status_filter<node_status>>(
-                *this, detail::make_node_status_filter(status), size());
-        }
-
         inline grid_node_indices<grid> nodes_indices()
         {
-            return grid_node_indices(*this);
+            return grid_node_indices<grid>(*this);
+        };
+
+        inline grid_node_indices<grid> nodes_indices(node_status status)
+        {
+            return grid_node_indices<grid>(*this,
+                                           [=](grid& grid, size_type idx)
+                                           { return grid.status_at_nodes().flat(idx) == status; });
         };
 
         const neighbors_cache_type& neighbors_indices_cache()

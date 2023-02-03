@@ -10,71 +10,12 @@ namespace fastscapelib
 {
 
     template <class G>
-    struct index_iterator
-        : public xtl::xbidirectional_iterator_base<index_iterator<G>,
-                                                   typename G::size_type,
-                                                   std::ptrdiff_t,
-                                                   typename G::size_type*,
+    struct grid_node_index_iterator
+        : public xtl::xbidirectional_iterator_base<grid_node_index_iterator<G>,
                                                    typename G::size_type>
     {
     public:
-        using self_type = index_iterator<G>;
-        using base_type = xtl::xbidirectional_iterator_base<self_type,
-                                                            typename G::size_type,
-                                                            std::ptrdiff_t,
-                                                            typename G::size_type*,
-                                                            typename G::size_type>;
-
-        using value_type = typename base_type::value_type;
-        using reference = typename base_type::reference;
-        using pointer = typename base_type::pointer;
-        using difference_type = typename base_type::difference_type;
-
-        index_iterator() = default;
-
-        index_iterator(G& grid, value_type position = 0)
-            : m_idx(position)
-            , m_grid(&grid)
-        {
-        }
-
-        inline self_type& operator++()
-        {
-            ++m_idx;
-            return *this;
-        }
-
-        inline self_type& operator--()
-        {
-            --m_idx;
-            return *this;
-        }
-
-        inline reference operator*() const
-        {
-            return m_idx;
-        }
-
-        mutable value_type m_idx = 0;
-
-    private:
-        G* m_grid;
-    };
-
-    template <class G>
-    inline bool operator==(const index_iterator<G>& lhs, const index_iterator<G>& rhs)
-    {
-        return lhs.m_idx == rhs.m_idx;
-    }
-
-
-    template <class G, class F>
-    struct filtered_index_iterator
-        : public xtl::xbidirectional_iterator_base<filtered_index_iterator<G, F>,
-                                                   typename G::size_type>
-    {
-    public:
-        using self_type = filtered_index_iterator<G, F>;
+        using self_type = grid_node_index_iterator<G>;
         using base_type = xtl::xbidirectional_iterator_base<self_type, typename G::size_type>;
 
         using value_type = typename base_type::value_type;
@@ -82,10 +23,12 @@ namespace fastscapelib
         using pointer = typename base_type::pointer;
         using difference_type = typename base_type::difference_type;
 
-        filtered_index_iterator(G& grid, F filter_functor, value_type position = 0)
+        using filter_func_type = std::function<bool(G&, typename G::size_type)>;
+
+        grid_node_index_iterator(G& grid, filter_func_type func, value_type position = 0)
             : m_idx(position)
             , m_grid(grid)
-            , m_filter_func(filter_functor)
+            , m_filter_func(func)
         {
             if ((position == 0) && !m_filter_func(grid, position))
             {
@@ -122,17 +65,17 @@ namespace fastscapelib
         mutable value_type m_idx;
 
         G& m_grid;
-        F m_filter_func;
+        filter_func_type m_filter_func;
 
-        template <class _G, class _F>
-        friend bool operator==(const filtered_index_iterator<_G, _F>&,
-                               const filtered_index_iterator<_G, _F>&);
+        template <class _G>
+        friend bool operator==(const grid_node_index_iterator<_G>&,
+                               const grid_node_index_iterator<_G>&);
     };
 
 
-    template <class G, class F>
-    inline bool operator==(const filtered_index_iterator<G, F>& lhs,
-                           const filtered_index_iterator<G, F>& rhs)
+    template <class G>
+    inline bool operator==(const grid_node_index_iterator<G>& lhs,
+                           const grid_node_index_iterator<G>& rhs)
     {
         return lhs.m_idx == rhs.m_idx;
     }
@@ -142,15 +85,14 @@ namespace fastscapelib
      * STL-compatible immutable container proxy for iterating through grid node
      * indices.
      *
-     *
-     *
+     * @tparam G The grid type.
      */
     template <class G>
     class grid_node_indices
     {
     public:
         using filter_func_type = std::function<bool(G&, typename G::size_type)>;
-        using iterator = filtered_index_iterator<G, filter_func_type>;
+        using iterator = grid_node_index_iterator<G>;
 
         grid_node_indices(G& grid, filter_func_type func = nullptr)
             : m_grid(grid)
@@ -163,6 +105,11 @@ namespace fastscapelib
             {
                 m_filter_func = func;
             }
+        }
+
+        typename G::size_type size() const
+        {
+            return m_grid.size();
         }
 
         inline iterator begin() const
@@ -189,36 +136,5 @@ namespace fastscapelib
         G& m_grid;
         filter_func_type m_filter_func;
     };
-
-
-    namespace detail
-    {
-
-        template <class G>
-        class node_indices_iterator
-        {
-        public:
-            using iterator_type = index_iterator<G>;
-
-            node_indices_iterator(G& grid)
-                : m_grid(grid)
-            {
-            }
-
-            inline iterator_type begin()
-            {
-                return m_grid.nodes_indices_begin();
-            };
-
-            inline iterator_type end()
-            {
-                return m_grid.nodes_indices_end();
-            };
-
-        private:
-            G& m_grid;
-        };
-
-    }
 }
 #endif
