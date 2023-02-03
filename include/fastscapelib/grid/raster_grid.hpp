@@ -458,7 +458,6 @@ namespace fastscapelib
         code_type node_code(const size_type& idx) const noexcept;
 
         inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
-        inline const neighbors_count_type& neighbors_count(const code_type& code) const noexcept;
 
         using base_type::neighbors;
         inline neighbors_raster_type& neighbors(const size_type& row,
@@ -712,17 +711,10 @@ namespace fastscapelib
     }
 
     template <class S, raster_connect RC, class C>
-    auto raster_grid_xt<S, RC, C>::neighbors_count(const size_type& idx) const noexcept
+    inline auto raster_grid_xt<S, RC, C>::neighbors_count(const size_type& idx) const noexcept
         -> const neighbors_count_type&
     {
         return m_neighbors_count[m_nodes_codes(idx)];
-    }
-
-    template <class S, raster_connect RC, class C>
-    auto raster_grid_xt<S, RC, C>::neighbors_count(const code_type& code) const noexcept
-        -> const neighbors_count_type&
-    {
-        return m_neighbors_count[code];
     }
 
     /**

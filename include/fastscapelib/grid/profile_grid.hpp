@@ -163,7 +163,6 @@ namespace fastscapelib
                                            const std::vector<node>& status_at_nodes = {});
 
         inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
-        inline const neighbors_count_type& neighbors_count(const code_type& code) const noexcept;
 
     protected:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
@@ -299,17 +298,10 @@ namespace fastscapelib
     }
 
     template <class S, class C>
-    auto profile_grid_xt<S, C>::neighbors_count(const size_type& idx) const noexcept
+    inline auto profile_grid_xt<S, C>::neighbors_count(const size_type& idx) const noexcept
         -> const neighbors_count_type&
     {
         return m_neighbors_count[gcode(idx)];
-    }
-
-    template <class S, class C>
-    auto profile_grid_xt<S, C>::neighbors_count(const code_type& code) const noexcept
-        -> const neighbors_count_type&
-    {
-        return m_neighbors_count[code];
     }
 
     template <class S, class C>
