@@ -49,11 +49,13 @@ namespace fastscapelib
     };
 
     /**
-     * Boundary status (on raster grids).
+     * Status at grid boundary nodes.
      */
-    class raster_boundary_status : public profile_boundary_status
+    class raster_boundary_status : public boundary_status
     {
     public:
+        node_status left = node_status::core;   /**< Status at left edge/border node(s) */
+        node_status right = node_status::core;  /**< Status at right edge/border node(s) */
         node_status top = node_status::core;    /**< Status at top border nodes */
         node_status bottom = node_status::core; /**< Status at bottom border nodes */
 
@@ -61,6 +63,7 @@ namespace fastscapelib
         raster_boundary_status(const std::array<node_status, 4>& status);
 
         bool is_vertical_looped() const;
+        bool is_horizontal_looped() const;
 
     protected:
         void check_looped_symmetrical() const;
@@ -74,7 +77,8 @@ namespace fastscapelib
      * Set the same status for all boundary nodes.
      */
     inline raster_boundary_status::raster_boundary_status(node_status status)
-        : profile_boundary_status(status)
+        : left(status)
+        , right(status)
         , top(status)
         , bottom(status)
     {
@@ -85,13 +89,22 @@ namespace fastscapelib
      * Set status at the left, right, top and bottom border nodes of a raster grid.
      */
     inline raster_boundary_status::raster_boundary_status(const std::array<node_status, 4>& status)
-        : profile_boundary_status(status[0], status[1])
+        : left(status[0])
+        , right(status[1])
         , top(status[2])
         , bottom(status[3])
     {
         check_looped_symmetrical();
     }
     //@}
+
+    /**
+     * Return true if periodic (looped) conditions are set for ``left`` and ``right``.
+     */
+    inline bool raster_boundary_status::is_horizontal_looped() const
+    {
+        return is_looped(left) && is_looped(right);
+    }
 
     /**
      * Return true if periodic (looped) conditions are set for ``top`` and ``bottom``.
