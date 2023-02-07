@@ -17,6 +17,11 @@ Grid boundaries
 - :cpp:class:`~fastscapelib::profile_boundary_status`
 - :cpp:class:`~fastscapelib::raster_boundary_status`
 
+Grid inner types
+----------------
+
+.. doxygenstruct:: fastscapelib::grid_inner_types
+
 Base classes and structures
 ---------------------------
 
@@ -82,12 +87,18 @@ Profile grid
 Defined in ``fastscapelib/grid/profile_grid.hpp``.
 
 - :cpp:class:`~fastscapelib::profile_boundary_status`
+- :cpp:class:`~template\<class S, class C> fastscapelib::grid_inner_types\<profile_grid_xt\<S, C>>`,
+- :cpp:class:`~template\<class S, class C = neighbors_cache\<2>> fastscapelib::profile_grid_xt`
 - :cpp:type:`~fastscapelib::profile_grid`
 
 ----
 
 .. doxygenclass:: fastscapelib::profile_boundary_status
    :members:
+
+.. doxygenstruct:: fastscapelib::grid_inner_types< profile_grid_xt< S, C > >
+   :members:
+   :undoc-members:
 
 .. doxygenclass:: fastscapelib::profile_grid_xt
    :members:
@@ -104,6 +115,8 @@ Defined in ``fastscapelib/grid/raster_grid.hpp``.
 - :cpp:struct:`~fastscapelib::raster_neighbor`
 - :cpp:class:`~fastscapelib::raster_boundary_status`
 - :cpp:enum:`~fastscapelib::raster_connect`
+- :cpp:class:`~template\<class S, raster_connect RC, class C> fastscapelib::grid_inner_types\<raster_grid_xt\<S, RC, C>>`
+- :cpp:class:`~template\<class S, raster_connect RC, class C = neighbors_cache\<raster_neighbors\<RC>::_n_neighbors_max>> fastscapelib::raster_grid_xt`
 - :cpp:type:`~fastscapelib::raster_grid`
 
 ----
@@ -119,6 +132,10 @@ Defined in ``fastscapelib/grid/raster_grid.hpp``.
 
 .. doxygenenum:: fastscapelib::raster_connect
 
+.. doxygenstruct:: fastscapelib::grid_inner_types< raster_grid_xt< S, RC, C > >
+   :members:
+   :undoc-members:
+
 .. doxygenclass:: fastscapelib::raster_grid_xt
    :members:
    :undoc-members:
@@ -130,9 +147,15 @@ Unstructured mesh
 
 Defined in ``fastscapelib/grid/unstructured_mesh.hpp``.
 
+- :cpp:class:`~template\<class S, unsigned int N> fastscapelib::grid_inner_types\<unstructured_mesh_xt\<S, N>>`
+- :cpp:class:`~template\<class S, unsigned int N = 30> fastscapelib::unstructured_mesh_xt`
 - :cpp:type:`~fastscapelib::unstructured_mesh`
 
 ----
+
+.. doxygenstruct:: fastscapelib::grid_inner_types< unstructured_mesh_xt< S, N > >
+   :members:
+   :undoc-members:
 
 .. doxygenclass:: fastscapelib::unstructured_mesh_xt
    :members:

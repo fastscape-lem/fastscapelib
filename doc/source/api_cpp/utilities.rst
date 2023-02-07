@@ -26,3 +26,16 @@ contexts, e.g.,
 .. doxygentypedef:: fastscapelib::xt_tensor_t
 
 .. doxygentypedef:: fastscapelib::xt_array_t
+
+
+Iterators and virtual containers
+--------------------------------
+
+Defined in ``fastscapelib/utils/iterators.hpp``
+
+For convenience, Fastscapelib provides STL-compatible iterators and virtual
+containers for looping over grid or flow graph nodes.
+
+----
+
+.. doxygenclass:: fastscapelib::grid_node_indices

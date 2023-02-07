@@ -15,6 +15,9 @@ namespace fastscapelib
     template <class S, unsigned int N>
     class unstructured_mesh_xt;
 
+    /**
+     * Unstructured mesh specialized types.
+     */
     template <class S, unsigned int N>
     struct grid_inner_types<unstructured_mesh_xt<S, N>>
     {
@@ -32,7 +35,6 @@ namespace fastscapelib
     };
 
     /**
-     * @class unstructured_mesh_xt
      * @brief 2-dimensional unstructured mesh.
      *
      * @tparam S xtensor container selector for data array members.

@@ -47,15 +47,10 @@ namespace fastscapelib
         return status == node_status::looped_boundary;
     }
 
-
     /**
      * Extends the common grid interface for all structured grid types.
      *
-     * This class only defines a basic interface for all structured grid types.
-     * It does not embed any data member, this responsibility
-     * is delegated to the inheriting classes.
-     *
-     * @tparam G Derived grid type.
+     * @tparam G The derived grid type.
      */
     template <class G>
     class structured_grid : public grid<G>
@@ -73,9 +68,7 @@ namespace fastscapelib
                                              const spacing_type&>;
 
         spacing_t spacing() const noexcept;
-
         length_type length() const noexcept;
-
         shape_type shape() const noexcept;
 
     protected:
@@ -90,7 +83,8 @@ namespace fastscapelib
     /**
      * Returns the (uniform) spacing between two adjacent grid nodes.
      *
-     * Returns a copy of the value for 1-d grids or a constant reference otherwise.
+     * Depending on the dimensions of the grid, returns either a single value
+     * or an array (constant reference).
      */
     template <class G>
     inline auto structured_grid<G>::spacing() const noexcept -> spacing_t
@@ -108,14 +102,14 @@ namespace fastscapelib
     }
 
     /**
-     * Returns the shape of the grid.
+     * Returns the shape of the grid node arrays.
      */
     template <class G>
     inline auto structured_grid<G>::shape() const noexcept -> shape_type
     {
         return this->derived_grid().m_shape;
     }
-
+    //@}
 }
 
 #endif

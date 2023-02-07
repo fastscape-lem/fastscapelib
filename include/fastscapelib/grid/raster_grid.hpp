@@ -383,6 +383,9 @@ namespace fastscapelib
     template <class S, raster_connect RC, class C>
     class raster_grid_xt;
 
+    /**
+     * Raster grid specialized types.
+     */
     template <class S, raster_connect RC, class C>
     struct grid_inner_types<raster_grid_xt<S, RC, C>>
     {
@@ -852,7 +855,7 @@ namespace fastscapelib
     {
         const size_type flat_idx = ravel_idx(row, col);
         const auto& n_count = neighbors_count(flat_idx);
-        const auto& n_indices = this->neighbors_indices_cache(flat_idx);
+        const auto& n_indices = this->get_nb_indices_from_cache(flat_idx);
 
         if (neighbors_indices.size() != n_count)
         {
@@ -889,7 +892,7 @@ namespace fastscapelib
 
         const size_type flat_idx = ravel_idx(row, col);
         const auto& n_count = neighbors_count(flat_idx);
-        const auto& n_indices = this->neighbors_indices_cache(flat_idx);
+        const auto& n_indices = this->get_nb_indices_from_cache(flat_idx);
         const auto& n_distances = neighbors_distances_impl(flat_idx);
 
         if (neighbors.size() != n_count)

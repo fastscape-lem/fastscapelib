@@ -252,8 +252,25 @@ namespace fastscapelib
     //* Grid interface
     //****************
 
+    // clang-format off
+    /**
+     * Small template class that holds a few types (static members) specialized
+     * for each grid type.
+     *
+     * It is used for accessing those types from within the grid base classes.
+     *
+     * \rst
+     * .. seealso::
+     *   :cpp:class:`~template\<class S, class C> fastscapelib::grid_inner_types\<profile_grid_xt\<S, C>>`,
+     *   :cpp:class:`~template\<class S, raster_connect RC, class C> fastscapelib::grid_inner_types\<raster_grid_xt\<S, RC, C>>`,
+     *   :cpp:class:`~template\<class S, unsigned int N> fastscapelib::grid_inner_types\<unstructured_mesh_xt\<S, N>>`
+     * \endrst
+     */
+    // clang-format on
     template <class G>
-    struct grid_inner_types;
+    struct grid_inner_types
+    {
+    };
 
     /**
      * Base class for all grid or mesh types.
@@ -315,22 +332,10 @@ namespace fastscapelib
         neighbors_type neighbors(const size_type& idx);
         neighbors_type& neighbors(const size_type& idx, neighbors_type& neighbors);
 
-        inline grid_node_indices<grid> node_indices()
-        {
-            return grid_node_indices<grid>(*this);
-        };
+        inline grid_node_indices<G> node_indices();
+        inline grid_node_indices<G> node_indices(node_status status);
 
-        inline grid_node_indices<grid> node_indices(node_status status)
-        {
-            return grid_node_indices<grid>(*this,
-                                           [=](grid& grid, size_type idx)
-                                           { return grid.status_at_nodes().flat(idx) == status; });
-        };
-
-        const neighbors_cache_type& neighbors_indices_cache()
-        {
-            return m_neighbors_indices_cache;
-        };
+        const neighbors_cache_type& neighbors_indices_cache();
 
     protected:
         using neighbors_indices_impl_type = typename neighbors_cache_type::neighbors_indices_type;
@@ -347,7 +352,7 @@ namespace fastscapelib
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                     const size_type& idx) const;
 
-        inline const neighbors_indices_impl_type& neighbors_indices_cache(const size_type& idx);
+        inline const neighbors_indices_impl_type& get_nb_indices_from_cache(const size_type& idx);
 
         inline const neighbors_distances_impl_type& neighbors_distances_impl(
             const size_type& idx) const;
@@ -426,7 +431,7 @@ namespace fastscapelib
     }
 
     /**
-     * Returns the total number of grid nodes.
+     * Returns the shape of the grid node arrays.
      */
     template <class G>
     inline auto grid<G>::shape() const noexcept -> shape_type
@@ -444,18 +449,62 @@ namespace fastscapelib
     }
 
     /**
-     * Returns the drainage at grid node.
+     * Returns the cell area at grid node.
+     *
+     * @param idx The grid node flat index.
      */
     template <class G>
     inline auto grid<G>::node_area(const size_type& /*idx*/) const noexcept -> grid_data_type
     {
+        // TODO: add node_area_impl?
         return derived_grid().m_node_area;
     }
 
     /**
-     * Returns a constant reference to the neighbors count of a given grid node.
+     * Returns the cache used to store node neighbor indices.
+     */
+    template <class G>
+    auto grid<G>::neighbors_indices_cache() -> const neighbors_cache_type&
+    {
+        return m_neighbors_indices_cache;
+    };
+    //@}
+
+    /**
+     * @name Iterators
+     */
+    /**
+     * Returns a virtual container that may be used to iterate over all grid
+     * nodes.
+     */
+    template <class G>
+    inline grid_node_indices<G> grid<G>::node_indices()
+    {
+        return grid_node_indices<G>(derived_grid());
+    };
+
+    /**
+     * Returns a virtual container that may be used to iterate over all grid
+     * nodes of a given status.
      *
-     * @param idx Index of the grid node.
+     * @param status The node status.
+     */
+    template <class G>
+    inline grid_node_indices<G> grid<G>::node_indices(node_status status)
+    {
+        return grid_node_indices<G>(derived_grid(),
+                                    [=](grid& grid, size_type idx)
+                                    { return grid.status_at_nodes().flat(idx) == status; });
+    };
+    //@}
+
+    /**
+     * @name Grid topology
+     */
+    /**
+     * Returns the number of neighbors of a given grid node.
+     *
+     * @param idx The grid node flat index.
      */
     template <class G>
     inline auto grid<G>::neighbors_count(const size_type& idx) const -> const neighbors_count_type&
@@ -463,53 +512,31 @@ namespace fastscapelib
         return derived_grid().neighbors_count(idx);
     }
 
+    /**
+     * Returns an array of the indices of the neighbors of a given grid node.
+     *
+     * Follows looped boundary conditions, if any.
+     *
+     * @param idx The grid node flat index.
+     */
     template <class G>
     inline auto grid<G>::neighbors_indices(const size_type& idx) -> neighbors_indices_type
     {
-        neighbors_indices_type indices = xt::adapt(neighbors_indices_cache(idx));
+        neighbors_indices_type indices = xt::adapt(get_nb_indices_from_cache(idx));
         auto view = xt::view(indices, xt::range(0, neighbors_count(idx)));
 
         return view;
     }
 
-    template <class G>
-    inline auto grid<G>::neighbors_distances(const size_type& idx) const -> neighbors_distances_type
-    {
-        neighbors_distances_type distances = xt::adapt(neighbors_distances_impl(idx));
-        auto view = xt::view(distances, xt::range(0, neighbors_count(idx)));
-
-        return view;
-    }
-    //@}
-
     /**
-     * @name Iterators
-     */
-    /**
-     * Iterate over the neighbors of a given grid node.
+     * Resize and fills an array with the neighbors indices of a given grid node.
      *
      * Follows looped boundary conditions, if any.
      *
-     * @param idx Index of the grid node.
-     * @return The vector of the neighbors of that grid node.
-     */
-    template <class G>
-    inline auto grid<G>::neighbors(const size_type& idx) -> neighbors_type
-    {
-        neighbors_type nb;
-        neighbors(idx, nb);
-
-        return nb;
-    }
-
-    /**
-     * Iterate over the neighbors indices of a given grid node.
-     *
-     * Follows looped boundary conditions, if any.
+     * This method prevents allocating a new container for better performance.
      *
      * @param idx Index of the grid node.
-     * @param neighbors_indices Reference to the vector to be filled with the neighbors
-     *                          indices of that grid node.
+     * @param neighbors_indices Reference to the container to be updated with the neighbors indices.
      */
     template <class G>
     inline auto grid<G>::neighbors_indices(const size_type& idx,
@@ -517,7 +544,7 @@ namespace fastscapelib
         -> neighbors_indices_type&
     {
         const auto& n_count = neighbors_count(idx);
-        const auto& n_indices = neighbors_indices_cache(idx);
+        const auto& n_indices = get_nb_indices_from_cache(idx);
 
         if (neighbors_indices.size() != n_count)
         {
@@ -533,12 +560,47 @@ namespace fastscapelib
     }
 
     /**
-     * Iterate over the neighbors of a given grid node.
+     * Returns an array of the distances to the neighbors of a given grid node.
      *
      * Follows looped boundary conditions, if any.
      *
-     * @param idx Index of the grid node.
-     * @param neighbors Reference to the vector to be filled with the neighbors of that grid node.
+     * @param idx The grid node flat index.
+     */
+    template <class G>
+    inline auto grid<G>::neighbors_distances(const size_type& idx) const -> neighbors_distances_type
+    {
+        neighbors_distances_type distances = xt::adapt(neighbors_distances_impl(idx));
+        auto view = xt::view(distances, xt::range(0, neighbors_count(idx)));
+
+        return view;
+    }
+
+    /**
+     * Returns a vector of the neighbors of a given grid node.
+     *
+     * Follows looped boundary conditions, if any.
+     *
+     * @param idx The grid node flat index.
+     * @return A vector of neighbor node objects.
+     */
+    template <class G>
+    inline auto grid<G>::neighbors(const size_type& idx) -> neighbors_type
+    {
+        neighbors_type nb;
+        neighbors(idx, nb);
+
+        return nb;
+    }
+
+    /**
+     * Resize and fills a vactor with the neighbors of a given grid node.
+     *
+     * Follows looped boundary conditions, if any.
+     *
+     * This method prevents allocating a new container for better performance.
+     *
+     * @param idx The grid node flat index.
+     * @param neighbors Reference to the vector to be updated with the neighbor objects.
      */
     template <class G>
     inline auto grid<G>::neighbors(const size_type& idx, neighbors_type& neighbors)
@@ -546,7 +608,7 @@ namespace fastscapelib
     {
         size_type n_idx;
         const auto& n_count = neighbors_count(idx);
-        const auto& n_indices = neighbors_indices_cache(idx);
+        const auto& n_indices = get_nb_indices_from_cache(idx);
         const auto& n_distances = neighbors_distances_impl(idx);
 
         if (neighbors.size() != n_count)
@@ -564,14 +626,8 @@ namespace fastscapelib
     }
     //@}
 
-    /**
-     *
-     *
-     * @param idx Index of the grid node.
-     * @return Reference to the array of the neighbors indices of that grid node.
-     */
     template <class G>
-    inline auto grid<G>::neighbors_indices_cache(const size_type& idx)
+    inline auto grid<G>::get_nb_indices_from_cache(const size_type& idx)
         -> const neighbors_indices_impl_type&
     {
         if (m_neighbors_indices_cache.has(idx))
