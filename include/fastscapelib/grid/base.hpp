@@ -315,12 +315,12 @@ namespace fastscapelib
         neighbors_type neighbors(const size_type& idx);
         neighbors_type& neighbors(const size_type& idx, neighbors_type& neighbors);
 
-        inline grid_node_indices<grid> nodes_indices()
+        inline grid_node_indices<grid> node_indices()
         {
             return grid_node_indices<grid>(*this);
         };
 
-        inline grid_node_indices<grid> nodes_indices(node_status status)
+        inline grid_node_indices<grid> node_indices(node_status status)
         {
             return grid_node_indices<grid>(*this,
                                            [=](grid& grid, size_type idx)

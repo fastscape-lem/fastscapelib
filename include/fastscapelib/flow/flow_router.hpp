@@ -68,7 +68,7 @@ namespace fastscapelib
 
                 donors_count.fill(0);
 
-                for (auto i : grid.nodes_indices())
+                for (auto i : grid.node_indices())
                 {
                     receivers(i, 0) = i;
                     dist2receivers(i, 0) = 0;

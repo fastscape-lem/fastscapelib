@@ -82,7 +82,7 @@ namespace fastscapelib
 
 
     /**
-     * STL-compatible immutable container proxy for iterating through grid node
+     * STL-compatible, immutable, virtual container for iterating through grid node
      * indices.
      *
      * @tparam G The grid type.
