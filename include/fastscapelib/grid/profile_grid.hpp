@@ -218,7 +218,7 @@ namespace fastscapelib
      *
      * @param size Total number of grid nodes.
      * @param spacing Distance between two adjacent grid nodes.
-     * @param status_at_bounds Status at boundary nodes (left & right grid edges).
+     * @param status_at_bounds Status at boundary nodes (left/right grid edges).
      * @param status_at_nodes Manually define the status at any node on the grid.
      */
     template <class S, class C>
@@ -393,8 +393,8 @@ namespace fastscapelib
      * @typedef profile_grid
      *
      * \rst
-     * Alias template on :cpp:class:`~fastscapelib::profile_grid_xt` with
-     * :cpp:type:`xt::xtensor` used as array container type for data members.
+     * Alias template on ``profile_grid_xt`` with :cpp:type:`xt::xtensor`
+     * used as array container type for data members.
      *
      * This is mainly for convenience when using in C++ applications.
      * \endrst

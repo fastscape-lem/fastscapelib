@@ -535,7 +535,7 @@ namespace fastscapelib
      *
      * This method prevents allocating a new container for better performance.
      *
-     * @param idx Index of the grid node.
+     * @param idx The grid node flat index.
      * @param neighbors_indices Reference to the container to be updated with the neighbors indices.
      */
     template <class G>
