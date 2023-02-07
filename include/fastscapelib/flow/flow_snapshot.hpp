@@ -8,7 +8,7 @@
 namespace fastscapelib
 {
 
-    /*
+    /**
      * Flow snapshot operator.
      *
      * A special flow operator used to save intermediate states

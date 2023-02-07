@@ -10,7 +10,7 @@
 namespace fastscapelib
 {
 
-    /*
+    /**
      * Single flow router operator.
      *
      * This flow operator routes all the flow passing through a grid node
@@ -33,7 +33,7 @@ namespace fastscapelib
     namespace detail
     {
 
-        /*
+        /**
          * Single flow router operator implementation.
          */
         template <class FG>

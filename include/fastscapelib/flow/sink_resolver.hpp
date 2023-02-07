@@ -21,7 +21,7 @@
 namespace fastscapelib
 {
 
-    /*
+    /**
      * Priority-flood sink resolver operator.
      *
      * This flow operator fills the closed depressions in the topographic
@@ -44,7 +44,7 @@ namespace fastscapelib
     namespace detail
     {
 
-        /*
+        /**
          * Priority-flood sink resolver operator implementation.
          */
         template <class FG, class Tag>
@@ -68,20 +68,30 @@ namespace fastscapelib
     }
 
 
+    /**
+     * Method used by ``mst_sink_resolver`` to route flow within each closed
+     * depressions.
+     *
+     * The ``basic`` method is the most efficient one but does not result in a
+     * "realistic", planar flow graph.
+     *
+     * The ``carve`` method mimics carving a narrow canyon within the
+     * depression.
+     */
     enum class mst_route_method
     {
-        basic,
-        carve
+        basic, /**< Connect the pit node directly to the depression spill node. */
+        carve  /**< Revert the (unique) flow path between the spill and pit nodes */
     };
 
 
-    /*
+    /**
      * Minimum Spanning Tree (MST) sink resolver operator.
      *
      * This flow operator re-routes the flow trapped in closed depressions
      * towards their spill, using an efficient algorithm that explicitly
      * computes a graph of (inner and outer) basins and reduces it as a tree
-     * (Cordonnier et al,, 2019).
+     * (Cordonnier et al., 2019).
      *
      * It requires a single flow graph as input.
      *
@@ -118,7 +128,7 @@ namespace fastscapelib
     namespace detail
     {
 
-        /*
+        /**
          * Minimum Spanning Tree (MST) sink resolver operator implementation.
          */
         template <class FG>
