@@ -119,7 +119,6 @@ class TestMSTSinkResolver:
 
     @pytest.mark.parametrize("mst_method", [MSTMethod.KRUSKAL, MSTMethod.BORUVKA])
     def test_resolve_basic(self, grid, elevation, mst_method):
-
         resolver = MSTSinkResolver(mst_method, MSTRouteMethod.BASIC)
         graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
 
@@ -144,7 +143,6 @@ class TestMSTSinkResolver:
 
     @pytest.mark.parametrize("mst_method", [MSTMethod.KRUSKAL, MSTMethod.BORUVKA])
     def test_resolve_carve(self, grid, elevation, mst_method):
-
         resolver = MSTSinkResolver(mst_method, MSTRouteMethod.CARVE)
         graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
 
