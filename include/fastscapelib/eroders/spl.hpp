@@ -62,6 +62,7 @@ namespace fastscapelib
             set_slope_exp(slope_exp);
 
             m_erosion = xt::zeros<data_type>(m_shape);
+            m_elevation_temp.resize(m_shape);
         };
 
         const data_array_type& k_coef()
@@ -104,7 +105,9 @@ namespace fastscapelib
         void set_slope_exp(double value)
         {
             // TODO: validate value
+            // TODO: do not allow n != 1 with multiple flow
             m_slope_exp = value;
+            m_slope_linear = (std::fabs(value) - 1) <= std::numeric_limits<double>::epsilon();
         };
 
         double tolerance()
@@ -126,9 +129,11 @@ namespace fastscapelib
         shape_type m_shape;
         data_array_type m_k_coef;
         data_array_type m_erosion;
+        data_array_type m_elevation_temp;
         double m_area_exp;
         double m_slope_exp;
         double m_tolerance;
+        bool m_slope_linear;
         size_type m_n_corr;
     };
 
@@ -139,7 +144,7 @@ namespace fastscapelib
      * Braun & Willet (2013). The problem is reformulated so that the
      * Newton-Raphson method is applied on the difference of elevation
      * between a node and its receiver, rather than on the node's
-     * elevation itself. This allows saving some operations.
+     * elevation itself.
      */
     template <class FG, class S>
     auto spl_eroder<FG, S>::erode(const data_array_type& elevation,
@@ -153,12 +158,23 @@ namespace fastscapelib
         const auto& receivers_distance = flow_graph_impl.receivers_distance();
         const auto& receivers_weight = flow_graph_impl.receivers_weight();
 
+        m_elevation_temp = elevation;
+
         m_n_corr = 0;
 
         for (const auto& inode : flow_graph_impl.node_indices_bottomup())
         {
             // reset erosion
             m_erosion.flat(inode) = 0.;
+
+            // init discrete equation numerator and denominator values
+            double eq_num = elevation.flat(inode);
+            double eq_den = 1.0;
+
+            // init variable used for numerical stability
+            double lowest_irec_elevation = std::numeric_limits<double>::max();
+
+            data_type inode_elevation = elevation.flat(inode);
 
             auto r_count = receivers_count[inode];
 
@@ -169,12 +185,19 @@ namespace fastscapelib
                 if (irec == inode)
                 {
                     // at basin outlet or pit
+                    // should be unique receiver
+                    assert(r_count == 1);
+                    lowest_irec_elevation = inode_elevation;
                     continue;
                 }
 
-                data_type inode_elevation = elevation.flat(inode);  // at time t
-                data_type irec_elevation
-                    = elevation.flat(irec) - m_erosion.flat(irec);  // at time t+dt
+                data_type irec_elevation = elevation.flat(irec);
+                data_type irec_elevation_temp = m_elevation_temp.flat(irec);
+
+                if (irec_elevation_temp <= lowest_irec_elevation)
+                {
+                    lowest_irec_elevation = irec_elevation;
+                }
 
                 if (irec_elevation >= inode_elevation)
                 {
@@ -188,14 +211,17 @@ namespace fastscapelib
                 auto factor = (m_k_coef(inode) * dt
                                * std::pow(drainage_area.flat(inode) * irec_weight, m_area_exp));
 
-                data_type delta_0 = inode_elevation - irec_elevation;
+                data_type delta_0 = inode_elevation - irec_elevation_temp;
                 data_type delta_k;
 
-                if (m_slope_exp == 1)
+                if (m_slope_linear)
                 {
-                    // fast path for slope_exp = 1 (common use case)
+                    // fast path for slope_exp ~ 1 (common use case)
                     factor /= irec_distance;
                     delta_k = delta_0 / (1. + factor);
+
+                    eq_num += factor * irec_elevation_temp;
+                    eq_den += factor;
                 }
 
                 else
@@ -225,6 +251,22 @@ namespace fastscapelib
                     }
                 }
 
+                data_type inode_elevation_updated = eq_num / eq_den;
+
+                if (inode_elevation_updated < lowest_irec_elevation)
+                {
+                    // std::cout << lowest_irec_elevation << " - " << inode_elevation_updated <<
+                    // std::endl;
+                    //  prevent the creation of new depressions / flat channels
+                    //  by arbitrarily limiting erosion
+                    m_n_corr++;
+                    // inode_elevation_updated = lowest_irec_elevation; // +
+                    // std::numeric_limits<data_type>::min();
+                }
+
+                m_elevation_temp.flat(inode) = inode_elevation_updated;
+                m_erosion.flat(inode) = inode_elevation - inode_elevation_updated;
+
                 if (delta_k <= 0)
                 {
                     // prevent the creation of new depressions / flat channels
@@ -233,14 +275,14 @@ namespace fastscapelib
                     delta_k = std::numeric_limits<data_type>::min();
                 }
 
-                if (r_count == 1)
-                {
-                    m_erosion.flat(inode) = (delta_0 - delta_k);
-                }
-                else
-                {
-                    m_erosion.flat(inode) += (delta_0 - delta_k) * irec_weight;
-                }
+                // if (r_count == 1)
+                // {
+                //     m_erosion.flat(inode) = (delta_0 - delta_k);
+                // }
+                // else
+                // {
+                //     m_erosion.flat(inode) += (delta_0 - delta_k) * irec_weight;
+                // }
             }
         }
 
