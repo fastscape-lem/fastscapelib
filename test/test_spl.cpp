@@ -253,18 +253,37 @@ TEST_F(spl_eroder__profile_grid, erode__k_coef_array)
     }
 }
 
-TEST_F(spl_eroder__profile_grid, stability_threshold)
+TEST_F(spl_eroder__profile_grid, numerical_stability)
 {
     auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 
+    // crazy large values
+    double k_coef = 1e8;
+    double area_exp = 0.5;
+    double slope_exp = 1;
+    double dt = 1e8;
+
+    auto eroder = spl_eroder_type(flow_graph, k_coef, area_exp, slope_exp);
+
+    // crazy elevation with big hole
+    elevation = (length + x0 - x) * 1e-4 + 1e3;
+    elevation(0) = 0.0;
+    elevation(10) = -1000;
+
+    flow_graph.update_routes(elevation);
+
     {
-        SCOPED_TRACE("test arbitrary limitation of erosion");
+        SCOPED_TRACE("linear case (n = 1)");
 
-        elevation = (length + x0 - x) * 1e-4;
+        eroder.erode(elevation, drainage_area, dt);
+        EXPECT_GT(eroder.n_corr(), 0);
+    }
+    {
+        SCOPED_TRACE("non-linear case");
 
-        // slope_exp value super large -> massive (unstable) erosion
-        auto slope_n = get_steady_slope_numerical(flow_graph, k_coef_scalar, 0.8, 1e4, 1e-3);
-        EXPECT_TRUE(n_corr > 0);
+        eroder.set_slope_exp(0.8);
+        eroder.erode(elevation, drainage_area, dt);
+        EXPECT_GT(eroder.n_corr(), 0);
     }
 }
 
