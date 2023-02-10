@@ -1,6 +1,15 @@
 import numpy as np
 import numpy.testing as npt
-from fastscapelib.flow import FlowDirection, FlowGraph, FlowOperator, SingleFlowRouter
+import pytest
+
+from fastscapelib.flow import (
+    FlowDirection,
+    FlowGraph,
+    FlowOperator,
+    MultiFlowRouter,
+    PFloodSinkResolver,
+    SingleFlowRouter,
+)
 from fastscapelib.grid import (
     Node,
     NodeStatus,
@@ -184,3 +193,73 @@ class TestSingleFlowRouter:
             self.raster_flow_graph.impl().dfs_indices,
             np.array([12, 13, 8, 9, 10, 6, 2, 5, 1, 4, 0, 14, 15, 11, 7, 3]),
         )
+
+
+@pytest.mark.parametrize(
+    "router", [SingleFlowRouter(), MultiFlowRouter(0.0), MultiFlowRouter(2.0)]
+)
+def test_conservation_area(router):
+    # High level test: conservative flow routing
+    nrows = 10
+    ncols = 8
+
+    # bottom border base level
+    bottom_base_level = [
+        NodeStatus.CORE,
+        NodeStatus.CORE,
+        NodeStatus.CORE,
+        NodeStatus.FIXED_VALUE_BOUNDARY,
+    ]
+    grid = RasterGrid(
+        [nrows, ncols],
+        [1.0, 1.0],
+        RasterBoundaryStatus(bottom_base_level),
+        [],
+    )
+
+    # avoid closed depressions (all flow must reach bottom border nodes)
+    flow_graph = FlowGraph(grid, [PFloodSinkResolver(), router])
+
+    # planar surface tilted along the y-axis + random perturbations
+    elevation = np.random.uniform(size=grid.shape) + np.arange(nrows)[:, None] * 2
+
+    flow_graph.update_routes(elevation)
+    drainage_area = flow_graph.accumulate(1.0)
+
+    # assumes grid cell uniform area is 1
+    assert abs(np.sum(drainage_area[-1]) - grid.size) < 1e-5
+
+
+@pytest.mark.parametrize(
+    "router", [SingleFlowRouter(), MultiFlowRouter(0.0), MultiFlowRouter(2.0)]
+)
+def test_monotonic_dfs(router):
+    # High level test: monotonic elevation for dfs indices
+    nrows = 10
+    ncols = 8
+
+    grid = RasterGrid(
+        [nrows, ncols],
+        [1.0, 1.0],
+        RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+        [],
+    )
+
+    # this test requires no closed depressions (fill them with tiny slope)
+    flow_graph = FlowGraph(grid, [PFloodSinkResolver(), router])
+
+    elevation = np.random.uniform(size=grid.shape)
+    filled_elevation = flow_graph.update_routes(elevation)
+    filled_elevation_flat = filled_elevation.ravel()
+
+    receivers_count = flow_graph.impl().receivers_count
+    receivers = flow_graph.impl().receivers
+    dfs_indices = flow_graph.impl().dfs_indices
+
+    # traverse the graph, check that elevation increases if
+    # previous node is a direct receiver of current visited node
+    # (dfs_indices always in bottom->up direction)
+    for i, inode in enumerate(dfs_indices[1:]):
+        iprev = dfs_indices[i - 1]
+        if iprev in receivers[inode][: receivers_count[inode]]:
+            assert filled_elevation_flat[inode] >= filled_elevation_flat[iprev]
