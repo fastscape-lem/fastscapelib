@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
+
 from fastscapelib.eroders import DiffusionADIEroder, SPLEroder
-from fastscapelib.flow import FlowGraph, SingleFlowRouter
+from fastscapelib.flow import FlowGraph, MultiFlowRouter, SingleFlowRouter
 from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
 
 
@@ -34,6 +35,11 @@ class TestSPLEroder:
 
         with pytest.raises(RuntimeError, match=".*shape mismatch"):
             eroder.k_coef = np.ones((4, 5))
+
+        # multiple flow direction and n != 1 is not supoprted
+        flow_graph2 = FlowGraph(grid, [MultiFlowRouter(1.0)])
+        with pytest.raises(ValueError, match=".*slope exponent != 1 is not supported"):
+            SPLEroder(flow_graph2, 1e-3, 0.4, 1.5, 1e-3)
 
     @pytest.mark.parametrize("k_coef", [1e-3, np.full((4), 1e-3)])
     def test_profile_grid(self, k_coef):

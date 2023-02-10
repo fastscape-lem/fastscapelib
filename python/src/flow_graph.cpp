@@ -135,6 +135,7 @@ add_flow_graph_bindings(py::module& m)
     fs::register_py_flow_graph_init<fs::py_unstructured_mesh>(pyfgraph);
 
     pyfgraph.def_property_readonly("operators", &fs::py_flow_graph::operators);
+    pyfgraph.def_property_readonly("single_flow", &fs::py_flow_graph::single_flow);
     pyfgraph.def("impl", &fs::py_flow_graph::impl, py::return_value_policy::reference);
     pyfgraph.def_property_readonly("graph_snapshot_keys", &fs::py_flow_graph::graph_snapshot_keys);
     pyfgraph.def("graph_snapshot", &fs::py_flow_graph::graph_snapshot);

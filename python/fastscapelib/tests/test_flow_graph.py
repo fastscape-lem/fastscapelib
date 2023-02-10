@@ -3,9 +3,11 @@ from textwrap import dedent
 import numpy as np
 import numpy.testing as npt
 import pytest
+
 from fastscapelib.flow import (
     FlowGraph,
     FlowSnapshot,
+    MultiFlowRouter,
     PFloodSinkResolver,
     SingleFlowRouter,
 )
@@ -42,6 +44,15 @@ class TestFlowGraph:
         flow_graph = FlowGraph(grid, [resolver, router])
 
         assert flow_graph.operators == [resolver, router]
+
+    def test_single_flow(self):
+        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+
+        flow_graph = FlowGraph(grid, [SingleFlowRouter()])
+        assert flow_graph.single_flow is True
+
+        flow_graph = FlowGraph(grid, [MultiFlowRouter(1.0)])
+        assert flow_graph.single_flow is False
 
     def test_repr(self):
         grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])

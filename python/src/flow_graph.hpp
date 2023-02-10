@@ -296,6 +296,7 @@ namespace fastscapelib
 
             virtual ~flow_graph_wrapper_base(){};
 
+            virtual bool single_flow() const = 0;
             virtual size_type size() const = 0;
             virtual shape_type grid_shape() const = 0;
 
@@ -338,6 +339,11 @@ namespace fastscapelib
             }
 
             virtual ~flow_graph_wrapper(){};
+
+            bool single_flow() const
+            {
+                return graph().single_flow();
+            }
 
             size_type size() const
             {
@@ -457,6 +463,11 @@ namespace fastscapelib
         py::list operators() const
         {
             return m_operators;
+        }
+
+        bool single_flow() const
+        {
+            return m_wrapper_ptr->single_flow();
         }
 
         size_type size() const

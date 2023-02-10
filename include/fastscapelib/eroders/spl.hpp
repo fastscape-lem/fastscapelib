@@ -121,9 +121,14 @@ namespace fastscapelib
         void set_slope_exp(double value)
         {
             // TODO: validate value
-            // TODO: do not allow n != 1 with multiple flow
             m_slope_exp = value;
             m_linear = (std::fabs(value) - 1) <= std::numeric_limits<double>::epsilon();
+
+            if (!m_linear && !m_flow_graph.single_flow())
+            {
+                throw std::invalid_argument(
+                    "SPL slope exponent != 1 is not supported for multiple flow directions");
+            }
         };
 
         double tolerance()

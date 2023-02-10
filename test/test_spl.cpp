@@ -60,6 +60,15 @@ TEST(spl_eroder, ctor)
 
     eroder.set_slope_exp(1.2);
     EXPECT_EQ(eroder.slope_exp(), 1.2);
+
+    {
+        SCOPED_TRACE("error for n != 1 and multiple flow directions");
+
+        auto flow_graph = fs::flow_graph<fs::raster_grid>(grid, { fs::multi_flow_router(1.0) });
+        auto eroder = fs::make_spl_eroder(flow_graph, k_coef, area_exp, 1, tolerance);
+
+        EXPECT_THROW(eroder.set_slope_exp(1.5), std::invalid_argument);
+    }
 }
 
 /**
