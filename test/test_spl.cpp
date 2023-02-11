@@ -297,7 +297,7 @@ TEST_F(spl_eroder__profile_grid, numerical_stability)
 }
 
 
-TEST(spl_eroder__raster_grid, erode)
+TEST(spl_eroder__raster_grid, tiny_grid)
 {
     namespace fs = fastscapelib;
 
@@ -306,62 +306,137 @@ TEST(spl_eroder__raster_grid, erode)
     using size_type = grid_type::size_type;
     using shape_type = grid_type::shape_type;
 
+    double spacing = 300;
+    shape_type shape{ 2, 2 };
+
+    // top border base-level
+    fs::node_status fixed = fs::node_status::fixed_value_boundary;
+    fs::node_status core = fs::node_status::core;
+    fs::raster_boundary_status top_base_level{ { core, core, fixed, core } };
+
+    auto grid = fs::raster_grid(shape, { spacing, spacing }, top_base_level);
+    auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
+
+    double k_coef = 1e-3;
+    xt::xtensor<double, 2> k_coef_arr = xt::ones<double>({ 2, 2 }) * k_coef;
+    double area_exp = 0.5;
+    double slope_exp = 1.;
+    double tolerance = 1e-3;
+    double dy = 300.;
+
+    auto eroder = fs::make_spl_eroder(flow_graph, k_coef, area_exp, slope_exp, tolerance);
+
+    double h = 1.;
+    double a = spacing * spacing;
+
+    xt::xtensor<double, 2> elevation{ { 0., 0. }, { h, h } };
+
+    // flow routing (tests useful to diagnose spl tests)
+    flow_graph.update_routes(elevation);
+    auto drainage_area = flow_graph.accumulate(1.);
+
+    EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<size_type, 1>({ 0, 1, 0, 1 }),
+                                  xt::col(flow_graph.impl().receivers(), 0))));
+
+    EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 1>({ 0., 0., spacing, spacing }),
+                                  xt::col(flow_graph.impl().receivers_distance(), 0))));
+
+    EXPECT_TRUE(xt::all(
+        xt::equal(xt::xtensor<size_type, 1>({ 0, 2, 1, 3 }), flow_graph.impl().dfs_indices())));
+
+    EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 2>({ { 2 * a, 2 * a }, { a, a } }),
+                                  flow_graph.accumulate(1.))));
+
+    // spl erosion
+    double dt = 1.;  // use small time step (compare with explicit scheme)
+
+    auto erosion = eroder.erode(elevation, drainage_area, dt);
+
+    double slope = h / dy;
+    double err = dt * k_coef * std::pow(a, area_exp) * std::pow(slope, slope_exp);
+    xt::xtensor<double, 2> expected_erosion = { { 0., 0. }, { err, err } };
+
+    EXPECT_TRUE(xt::allclose(erosion, expected_erosion, 1e-5, 1e-5));
+    EXPECT_TRUE(eroder.n_corr() == 0);
+}
+
+
+/*
+ * High-level test: SPL is convervative and doesn't create new closed
+ * depressions in the topography.
+ */
+TEST(spl_eroder, convervation_of_mass)
+{
+    using grid_type = fs::raster_grid;
+    using flow_graph_type = fs::flow_graph<grid_type>;
+    using size_type = typename grid_type::size_type;
+
+    auto core = fs::node_status::core;
+    auto fixed = fs::node_status::fixed_value_boundary;
+    fs::raster_boundary_status bottom_fixed({ core, core, core, fixed });
+    double spacing = 300.0;
+    double cell_area = spacing * spacing;
+    grid_type grid({ 50, 40 }, { spacing, spacing }, bottom_fixed);
+
+    flow_graph_type graph_single(grid, { fs::pflood_sink_resolver(), fs::single_flow_router() });
+    flow_graph_type graph_multi(grid, { fs::pflood_sink_resolver(), fs::multi_flow_router(0.0) });
+
+    auto test_func = [&](flow_graph_type& graph, double slope_exp, double dt)
     {
-        SCOPED_TRACE("test on a tiny (2x2) 2-d square grid "
-                     "with a planar surface tilted in y (rows) "
-                     "and set k_coef with a 2-d array");
+        auto eroder = fs::make_spl_eroder(graph, 1e-3, 0.5, slope_exp, 1e-3);
 
-        double spacing = 300;
-        shape_type shape{ 2, 2 };
+        // planar surface tilted along the y-axis with random perturbations
+        xt::xarray<double> elevation
+            = (xt::random::rand<double>(grid.shape())
+               * xt::view(xt::arange(grid.shape()[0]) * 2, xt::all(), xt::newaxis()));
 
-        // top border base-level
-        fs::node_status fixed = fs::node_status::fixed_value_boundary;
-        fs::node_status core = fs::node_status::core;
-        fs::raster_boundary_status top_base_level{ { core, core, fixed, core } };
+        xt::xarray<double> uplift_rate = elevation / 1e3;
 
-        auto grid = fs::raster_grid(shape, { spacing, spacing }, top_base_level);
-        auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
+        xt::xarray<double> filled_elevation(elevation.shape());
+        xt::xarray<double> drainage_area(elevation.shape());
+        xt::xarray<double> erosion(elevation.shape());
+        xt::xarray<double> sediment_acc(elevation.shape());
 
-        double k_coef = 1e-3;
-        xt::xtensor<double, 2> k_coef_arr = xt::ones<double>({ 2, 2 }) * k_coef;
-        double area_exp = 0.5;
-        double slope_exp = 1.;
-        double tolerance = 1e-3;
-        double dy = 300.;
+        size_t n_steps = 20;
+        std::array<size_t, 1> shape{ n_steps };
+        xt::xtensor<double, 1> actual(shape);
+        xt::xtensor<double, 1> expected(shape);
 
-        auto eroder = fs::make_spl_eroder(flow_graph, k_coef, area_exp, slope_exp, tolerance);
+        for (size_t i = 0; i < n_steps; i++)
+        {
+            elevation += uplift_rate * dt;
+            filled_elevation = graph.update_routes(elevation);
+            graph.accumulate(drainage_area, 1.0);
+            erosion = eroder.erode(filled_elevation, drainage_area, dt);
+            graph.accumulate(sediment_acc, erosion);
 
-        double h = 1.;
-        double a = spacing * spacing;
+            // The sum of eroded material accumulated at base level
+            // should be equal to the sum of total eroded material
+            actual(i) = xt::sum(xt::row(sediment_acc, -1))();
+            expected(i) = xt::sum(erosion * cell_area)();
+        }
 
-        xt::xtensor<double, 2> elevation{ { 0., 0. }, { h, h } };
+        EXPECT_TRUE(xt::allclose(actual, expected));
+    };
 
-        // flow routing (tests useful to diagnose spl tests)
-        flow_graph.update_routes(elevation);
-        auto drainage_area = flow_graph.accumulate(1.);
-
-        EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<size_type, 1>({ 0, 1, 0, 1 }),
-                                      xt::col(flow_graph.impl().receivers(), 0))));
-
-        EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 1>({ 0., 0., spacing, spacing }),
-                                      xt::col(flow_graph.impl().receivers_distance(), 0))));
-
-        EXPECT_TRUE(xt::all(
-            xt::equal(xt::xtensor<size_type, 1>({ 0, 2, 1, 3 }), flow_graph.impl().dfs_indices())));
-
-        EXPECT_TRUE(xt::all(xt::equal(xt::xtensor<double, 2>({ { 2 * a, 2 * a }, { a, a } }),
-                                      flow_graph.accumulate(1.))));
-
-        // spl erosion
-        double dt = 1.;  // use small time step (compare with explicit scheme)
-
-        auto erosion = eroder.erode(elevation, drainage_area, dt);
-
-        double slope = h / dy;
-        double err = dt * k_coef * std::pow(a, area_exp) * std::pow(slope, slope_exp);
-        xt::xtensor<double, 2> expected_erosion = { { 0., 0. }, { err, err } };
-
-        EXPECT_TRUE(xt::allclose(erosion, expected_erosion, 1e-5, 1e-5));
-        EXPECT_TRUE(eroder.n_corr() == 0);
+    {
+        SCOPED_TRACE("single flow router, n=1, dt=1e3");
+        test_func(graph_single, 1.0, 1e3);
+    }
+    {
+        SCOPED_TRACE("single flow router, n=2, dt=1e3");
+        test_func(graph_single, 2.0, 1e3);
+    }
+    {
+        SCOPED_TRACE("single flow router, n=1, dt=5e4");
+        test_func(graph_single, 1.0, 5e4);
+    }
+    {
+        SCOPED_TRACE("multi flow router, n=1, dt=1e3");
+        test_func(graph_multi, 1.0, 1e3);
+    }
+    {
+        SCOPED_TRACE("multi flow router, n=1, dt=5e4");
+        test_func(graph_multi, 1.0, 5e4);
     }
 }
