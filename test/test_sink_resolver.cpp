@@ -259,6 +259,7 @@ namespace fastscapelib
                 double actual = xt::sum(xt::view(drainage_area, xt::keep(0, -1), xt::all()))();
                 actual += xt::sum(xt::view(drainage_area, xt::range(1, -1), xt::keep(0, -1)))();
 
+                // assumes grid cell (uniform) area is 1
                 double expected = double(elevation.size());
 
                 EXPECT_EQ(actual, expected);

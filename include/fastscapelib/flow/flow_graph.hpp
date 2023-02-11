@@ -108,6 +108,14 @@ namespace fastscapelib
             return m_operators.m_op_vec;
         }
 
+        /**
+         * Returns ``true`` if the graph has single flow directions.
+         */
+        bool single_flow() const
+        {
+            return m_operators.out_flowdir() == flow_direction::single;
+        }
+
         /*
          * Returns the names of the graph snapshot.
          */

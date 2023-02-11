@@ -44,17 +44,10 @@ add_flow_graph_bindings(py::module& m)
         m, "FlowDirection", py::arithmetic(), "Flow direction strategy.");
     flow_direction.value("UNDEFINED", fs::flow_direction::undefined)
         .value("SINGLE", fs::flow_direction::single)
-        .value("MULTIPLE", fs::flow_direction::multiple);
+        .value("MULTI", fs::flow_direction::multi);
 
     py::class_<fs::flow_operator, std::shared_ptr<fs::flow_operator>>(m, "FlowOperator")
-        .def_property_readonly("name", &fs::flow_operator::name)
-        .def("_repr_inline_", [](const fs::flow_operator&) { return ""; })
-        .def("__repr__",
-             [](const fs::flow_operator& op)
-             {
-                 auto class_name = py::cast(op).get_type().attr("__name__").cast<std::string>();
-                 return "class_name (" + op.name() + ")";
-             });
+        .def_property_readonly("name", &fs::flow_operator::name);
 
     py::class_<fs::single_flow_router, fs::flow_operator, std::shared_ptr<fs::single_flow_router>>
         srouter_op(m, "SingleFlowRouter");
@@ -62,6 +55,17 @@ add_flow_graph_bindings(py::module& m)
     srouter_op.def(py::init<>());
     fs::register_operator_static_attrs(srouter_op);
     srouter_op.def("__repr__", [](const fs::single_flow_router& op) { return "SingleFlowRouter"; });
+
+    py::class_<fs::multi_flow_router, fs::flow_operator, std::shared_ptr<fs::multi_flow_router>>
+        mrouter_op(m, "MultiFlowRouter");
+
+    mrouter_op.def(py::init<double>(), py::arg("slope_exp") = 1.0);
+    fs::register_operator_static_attrs(mrouter_op);
+    mrouter_op.def_readwrite("slope_exp", &fs::multi_flow_router::m_slope_exp);
+    mrouter_op.def("__repr__",
+                   [](const fs::multi_flow_router& op) {
+                       return "MultiFlowRouter (slope_exp=" + std::to_string(op.m_slope_exp) + ")";
+                   });
 
     py::class_<fs::pflood_sink_resolver,
                fs::flow_operator,
@@ -131,6 +135,7 @@ add_flow_graph_bindings(py::module& m)
     fs::register_py_flow_graph_init<fs::py_unstructured_mesh>(pyfgraph);
 
     pyfgraph.def_property_readonly("operators", &fs::py_flow_graph::operators);
+    pyfgraph.def_property_readonly("single_flow", &fs::py_flow_graph::single_flow);
     pyfgraph.def("impl", &fs::py_flow_graph::impl, py::return_value_policy::reference);
     pyfgraph.def_property_readonly("graph_snapshot_keys", &fs::py_flow_graph::graph_snapshot_keys);
     pyfgraph.def("graph_snapshot", &fs::py_flow_graph::graph_snapshot);

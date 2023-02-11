@@ -160,7 +160,50 @@ namespace fastscapelib
         private:
             G& m_grid;
         };
-
     }
+
+    /*
+     * Thin wrapper around iterators of any STL-compatible container.
+     *
+     * Only const forward and reverse iterators are exposed.
+     *
+     * @tparam C The container type.
+     *
+     */
+    template <class C>
+    class stl_container_iterator_wrapper
+    {
+    public:
+        using const_iterator_type = typename C::const_iterator;
+        using reverse_const_iterator_type = std::reverse_iterator<const_iterator_type>;
+
+        stl_container_iterator_wrapper(const C& container)
+            : m_container(container)
+        {
+        }
+
+        inline const_iterator_type begin() const
+        {
+            return m_container.begin();
+        }
+
+        inline const_iterator_type end() const
+        {
+            return m_container.end();
+        }
+
+        inline reverse_const_iterator_type rbegin() const
+        {
+            return m_container.rbegin();
+        }
+
+        inline reverse_const_iterator_type rend() const
+        {
+            return m_container.rend();
+        }
+
+    private:
+        const C& m_container;
+    };
 }
 #endif
