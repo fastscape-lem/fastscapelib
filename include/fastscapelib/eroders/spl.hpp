@@ -141,8 +141,8 @@ namespace fastscapelib
          * limited during the last computation.
          *
          * To ensure numerical stability, channel erosion may not lower the
-         * elevation of a node below so that it reverts the slope with its
-         * direct neighbors. This prevents the formation of new closed
+         * elevation of a node below a level that reverts the slope with any of
+         * its direct neighbors. This prevents the formation of new closed
          * depressions.
          */
         size_type n_corr()
@@ -168,16 +168,6 @@ namespace fastscapelib
 
     /**
      * SPL erosion implementation.
-     *
-     * The implementation here slightly differs from the one described in Braun
-     * & Willet (2013). For the non-linear case, the problem is reformulated so
-     * that the Newton-Raphson method is applied on the difference of elevation
-     * between a node and its receiver, rather than on the node's elevation
-     * itself.
-     *
-     * This implementation also works when the input elevation is not fully
-     * consistent with flow paths: if the topographic surface still contains
-     * closed depressions that have been resolved in the current flow graph state,
      */
     template <class FG, class S>
     auto spl_eroder<FG, S>::erode(const data_array_type& elevation,
