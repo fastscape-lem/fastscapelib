@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
+
 from fastscapelib.flow import (
     FlowDirection,
     FlowGraph,
@@ -191,6 +192,90 @@ class TestSingleFlowRouter:
         npt.assert_equal(
             self.raster_flow_graph.impl().dfs_indices,
             np.array([12, 13, 8, 9, 10, 6, 2, 5, 1, 4, 0, 14, 15, 11, 7, 3]),
+        )
+
+
+class TestMultiFlowRouter:
+    def test_constructor(self):
+        router = MultiFlowRouter()
+        assert isinstance(router, FlowOperator)
+        assert router.name == "multi_flow_router"
+        assert repr(router).startswith("MultiFlowRouter (slope_exp=1.0")
+        assert router.slope_exp == 1.0
+
+        router = MultiFlowRouter(0.0)
+        assert router.slope_exp == 0.0
+
+        router.slope_exp = 0.5
+        assert router.slope_exp == 0.5
+
+    def test_class_attrs(self):
+        assert MultiFlowRouter.graph_updated is True
+        assert MultiFlowRouter.elevation_updated is False
+        assert MultiFlowRouter.in_flowdir == FlowDirection.UNDEFINED
+        assert MultiFlowRouter.out_flowdir == FlowDirection.MULTI
+
+    def test_graph_topology(self):
+        # test on a 3x3 tiny grid with base levels at all border nodes
+        grid = RasterGrid(
+            [3, 3],
+            [1.0, 1.0],
+            RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+            [],
+        )
+        diag = np.sqrt(2)
+        elevation = np.array([[0.0, 1.0, 0.0], [1.0, 2.0, 1.0], [0.0, 1.0, 0.0]])
+        router = MultiFlowRouter(0.0)
+        flow_graph = FlowGraph(grid, [router])
+        flow_graph.update_routes(elevation)
+
+        npt.assert_array_equal(
+            flow_graph.impl().receivers_count,
+            [1, 1, 1, 1, 8, 1, 1, 1, 1],
+        )
+        npt.assert_array_equal(
+            flow_graph.impl().receivers[4],
+            [0, 1, 2, 3, 5, 6, 7, 8],
+        )
+        npt.assert_array_almost_equal(
+            flow_graph.impl().receivers_distance[4],
+            [diag, 1.0, diag, 1.0, 1.0, diag, 1.0, diag],
+        )
+        npt.assert_array_equal(
+            flow_graph.impl().donors_count,
+            [1, 1, 1, 1, 0, 1, 1, 1, 1],
+        )
+        npt.assert_array_equal(
+            flow_graph.impl().donors[[0, 1, 2, 3, 5, 6, 7, 8], 0].ravel(),
+            [4, 4, 4, 4, 4, 4, 4, 4],
+        )
+
+    @pytest.mark.parametrize(
+        "slope_exp, weights",
+        [
+            (0.0, [1 / 8, 1 / 8, 1 / 8, 1 / 8, 1 / 8, 1 / 8, 1 / 8, 1 / 8]),
+            (2.0, [2 / 12, 1 / 12, 2 / 12, 1 / 12, 1 / 12, 2 / 12, 1 / 12, 2 / 12]),
+        ],
+    )
+    def test_flow_partitions(self, slope_exp, weights):
+        # test on a 3x3 tiny grid with base levels at all border nodes
+        grid = RasterGrid(
+            [3, 3],
+            [1.0, 1.0],
+            RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+            [],
+        )
+        sqrt2 = np.sqrt(2)
+        elevation = np.array(
+            [[0.0, sqrt2, 0.0], [sqrt2, sqrt2 * 2, sqrt2], [0.0, sqrt2, 0.0]]
+        )
+        router = MultiFlowRouter(slope_exp)
+        flow_graph = FlowGraph(grid, [router])
+        flow_graph.update_routes(elevation)
+
+        npt.assert_allclose(
+            flow_graph.impl().receivers_weight[4],
+            weights,
         )
 
 
