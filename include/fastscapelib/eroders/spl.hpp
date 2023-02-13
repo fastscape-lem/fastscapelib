@@ -4,6 +4,7 @@
 #ifndef FASTSCAPELIB_ERODERS_SPL_H
 #define FASTSCAPELIB_ERODERS_SPL_H
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <stdexcept>
@@ -27,17 +28,32 @@ namespace fastscapelib
      * It numerically solves the Stream Power Law [dh/dt = K A^m (dh/dx)^n]
      * using an implicit finite difference scheme 1st order in space and time.
      * The method is detailed in Braun and Willet's (2013) and has been
-     * slightly reformulated/optimized.
+     * slightly adapted.
      *
-     * The implicit scheme ensure numerical stability but doesn't totally
-     * prevent erosion from lowering the elevation of a node below that of its
-     * receiver. If this occurs, erosion will be limited so that the node will
-     * be lowered (nearly) down to the level of its receiver. In general it is
-     * better to adjust input values (e.g., time step or input parameters) so
-     * that such arbitrary limitation doesn't occur.
+     * For the linear case (n = 1), solving the equation is trivial. For the
+     * non-linear case (n != 1), the Newton-Raphson method is used to find the
+     * optimal solution.
      *
-     * `n_corr` is the total number of nodes for which erosion has been
-     * arbitrarily limited to ensure consistency.
+     * This implementation supports multiple direction flow, although only for
+     * the linear case.
+     *
+     * It also prevents the formation of new closed depressions (lakes). The
+     * erosion within existing closed depressions of the input topographic
+     * surface will depend on the given flow graph:
+     *
+     * - If the flow graph handles routing accross those depressions, no erosion
+     *   will take place within them (lakes).
+     * - If the flow graph does not resolve those depressions (no sink resolver
+     *   applied), they will be eroded like the rest of the topographic surface
+     *   (no lake).
+     *
+     * Caveat: the numerical scheme used here is stable but not implicit with
+     * respect to upslope contributing area (A). Using large time steps may
+     * still have a great impact on the solution, especially on transient
+     * states.
+     *
+     * @tparam FG The flow graph type.
+     * @tparam S The xtensor container selector for data array members.
      */
     template <class FG, class S = typename FG::xt_selector>
     class spl_eroder
@@ -52,7 +68,8 @@ namespace fastscapelib
         using data_array_type = xt_array_t<xt_selector, data_type>;
 
         template <class K>
-        spl_eroder(FG& flow_graph, K&& k_coef, double area_exp, double slope_exp, double tolerance)
+        spl_eroder(
+            FG& flow_graph, K&& k_coef, double area_exp, double slope_exp, double tolerance = 1e-3)
             : m_flow_graph(flow_graph)
             , m_shape(flow_graph.grid_shape())
             , m_tolerance(tolerance)
@@ -61,7 +78,7 @@ namespace fastscapelib
             set_area_exp(area_exp);
             set_slope_exp(slope_exp);
 
-            m_erosion = xt::zeros<data_type>(m_shape);
+            m_erosion.resize(m_shape);
         };
 
         const data_array_type& k_coef()
@@ -105,6 +122,13 @@ namespace fastscapelib
         {
             // TODO: validate value
             m_slope_exp = value;
+            m_linear = (std::fabs(value) - 1) <= std::numeric_limits<double>::epsilon();
+
+            if (!m_linear && !m_flow_graph.single_flow())
+            {
+                throw std::invalid_argument(
+                    "SPL slope exponent != 1 is not supported for multiple flow directions");
+            }
         };
 
         double tolerance()
@@ -112,6 +136,15 @@ namespace fastscapelib
             return m_tolerance;
         }
 
+        /**
+         * Returns the number of nodes for which erosion has been arbitrarily
+         * limited during the last computation.
+         *
+         * To ensure numerical stability, channel erosion may not lower the
+         * elevation of a node below a level that reverts the slope with any of
+         * its direct neighbors. This prevents the formation of new closed
+         * depressions.
+         */
         size_type n_corr()
         {
             return m_n_corr;
@@ -129,17 +162,12 @@ namespace fastscapelib
         double m_area_exp;
         double m_slope_exp;
         double m_tolerance;
+        bool m_linear;
         size_type m_n_corr;
     };
 
     /**
      * SPL erosion implementation.
-     *
-     * The implementation here slightly differs from the one described in
-     * Braun & Willet (2013). The problem is reformulated so that the
-     * Newton-Raphson method is applied on the difference of elevation
-     * between a node and its receiver, rather than on the node's
-     * elevation itself. This allows saving some operations.
      */
     template <class FG, class S>
     auto spl_eroder<FG, S>::erode(const data_array_type& elevation,
@@ -152,56 +180,91 @@ namespace fastscapelib
         const auto& receivers_count = flow_graph_impl.receivers_count();
         const auto& receivers_distance = flow_graph_impl.receivers_distance();
         const auto& receivers_weight = flow_graph_impl.receivers_weight();
-        const auto& dfs_indices = flow_graph_impl.dfs_indices();
 
+        // reset
+        m_erosion.fill(0);
         m_n_corr = 0;
 
-        for (const auto& idfs : dfs_indices)
+        // iterate over graph nodes in the bottom->up direction
+        for (const auto& inode : flow_graph_impl.node_indices_bottomup())
         {
-            auto r_count = receivers_count[idfs];
+            data_type inode_elevation = elevation.flat(inode);
+            auto r_count = receivers_count[inode];
+
+            if (r_count == 1 && receivers(inode, 0) == inode)
+            {
+                // current node is a basin outlet or pit (no erosion)
+                continue;
+            }
+
+            // ``elevation_flooded`` represents the level below which no erosion
+            // should happen (the node is already within a lake or in order
+            // prevent the formation of new lakes). It corresponds to the lowest
+            // elevation at step + 1 found among the node receivers
+            double elevation_flooded = std::numeric_limits<double>::max();
 
             for (size_type r = 0; r < r_count; ++r)
             {
-                size_type irec = receivers(idfs, r);
+                size_type irec = receivers(inode, r);
+                data_type irec_elevation_next = elevation.flat(irec) - m_erosion.flat(irec);
 
-                if (irec == idfs)
+                if (irec_elevation_next < elevation_flooded)
                 {
-                    // at basin outlet or pit
-                    m_erosion.flat(idfs) = 0.;
+                    elevation_flooded = irec_elevation_next;
+                }
+            }
+
+            if (inode_elevation <= elevation_flooded)
+            {
+                // current node is inside a lake (no erosion)
+                continue;
+            }
+
+            // init discrete equation numerator and denominator values
+            double eq_num = inode_elevation;
+            double eq_den = 1.0;
+
+            // iterate over receivers
+            for (size_type r = 0; r < r_count; ++r)
+            {
+                size_type irec = receivers(inode, r);
+
+                data_type irec_elevation = elevation.flat(irec);
+                // elevation of receiver node at step + 1
+                data_type irec_elevation_next = irec_elevation - m_erosion.flat(irec);
+
+                if (irec_elevation > inode_elevation)
+                {
+                    // current node is next to a lake spill ;
+                    // the current receiver is not the lake spill, it doesn't contribute to
+                    // eroding the current node
                     continue;
                 }
 
-                data_type idfs_elevation = elevation.flat(idfs);  // at time t
-                data_type irec_elevation
-                    = elevation.flat(irec) - m_erosion.flat(irec);  // at time t+dt
+                data_type irec_weight = receivers_weight(inode, r);
+                data_type irec_distance = receivers_distance(inode, r);
 
-                if (irec_elevation >= idfs_elevation)
+                auto factor = (m_k_coef(inode) * dt
+                               * std::pow(drainage_area.flat(inode) * irec_weight, m_area_exp));
+
+                if (m_linear)
                 {
-                    // may happen if flow is routed outside of a depression / flat area
-                    m_erosion.flat(idfs) = 0.;
-                    continue;
+                    // fast path for the linear case
+                    factor /= irec_distance;
+                    eq_num += factor * irec_elevation_next;
+                    eq_den += factor;
                 }
-
-                auto factor
-                    = (m_k_coef(idfs) * dt * std::pow(drainage_area.flat(idfs), m_area_exp));
-
-                data_type delta_0 = idfs_elevation - irec_elevation;
-                data_type delta_k;
-
-                if (m_slope_exp == 1)
-                {
-                    // fast path for slope_exp = 1 (common use case)
-                    factor /= receivers_distance(idfs, r);
-                    delta_k = delta_0 / (1. + factor);
-                }
-
                 else
                 {
-                    // 1st order Newton-Raphson iterations (k)
-                    factor /= std::pow(receivers_distance(idfs, r), m_slope_exp);
-                    delta_k = delta_0;
+                    // 1st order Newton-Raphson iterations for the non-linear case
+                    factor /= std::pow(irec_distance, m_slope_exp);
 
-                    // TODO: add convergence control parameters (max_iterations, atol, mtol)
+                    // solve directly for the difference of elevation
+                    // faster?
+                    // (only valid for single flow direction)
+                    double delta_0 = inode_elevation - irec_elevation_next;
+                    double delta_k = delta_0;
+
                     while (true)
                     {
                         auto factor_delta_exp = factor * std::pow(delta_k, m_slope_exp);
@@ -220,25 +283,23 @@ namespace fastscapelib
                             break;
                         }
                     }
-                }
 
-                if (delta_k <= 0)
-                {
-                    // prevent the creation of new depressions / flat channels
-                    // by arbitrarily limiting erosion
-                    m_n_corr++;
-                    delta_k = std::numeric_limits<data_type>::min();
-                }
-
-                if (r_count == 1)
-                {
-                    m_erosion.flat(idfs) = (delta_0 - delta_k);
-                }
-                else
-                {
-                    m_erosion.flat(idfs) += (delta_0 - delta_k) * receivers_weight(idfs, r);
+                    eq_num = inode_elevation - (delta_0 - delta_k);
                 }
             }
+
+            data_type inode_elevation_updated = eq_num / eq_den;
+
+            if (inode_elevation_updated < elevation_flooded)
+            {
+                // numerical stability: prevent the creation of new
+                // depressions / flat channels by arbitrarily limiting
+                // erosion
+                m_n_corr++;
+                inode_elevation_updated = elevation_flooded + std::numeric_limits<data_type>::min();
+            }
+
+            m_erosion.flat(inode) = inode_elevation - inode_elevation_updated;
         }
 
         return m_erosion;

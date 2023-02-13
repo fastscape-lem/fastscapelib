@@ -31,7 +31,7 @@ namespace fastscapelib
     {
         undefined,
         single,
-        multiple
+        multi
     };
 
     /**

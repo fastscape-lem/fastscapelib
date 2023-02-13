@@ -61,7 +61,23 @@ namespace fastscapelib
                 actual.push_back(op->name());
             }
 
-            ASSERT_EQ(actual, expected);
+            EXPECT_EQ(actual, expected);
+        }
+
+        TEST_F(flow_graph, single_flow)
+        {
+            {
+                SCOPED_TRACE("single flow is true");
+
+                auto graph = flow_graph_type(grid, { fs::single_flow_router() });
+                EXPECT_EQ(graph.single_flow(), true);
+            }
+            {
+                SCOPED_TRACE("single flow is false");
+
+                auto graph = flow_graph_type(grid, { fs::multi_flow_router(1.0) });
+                EXPECT_EQ(graph.single_flow(), false);
+            }
         }
 
         TEST_F(flow_graph, update_routes)
