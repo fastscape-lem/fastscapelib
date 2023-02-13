@@ -25,32 +25,50 @@ namespace fastscapelib
     /**
      * Bedrock channel erosion modelled using the Stream Power Law.
      *
-     * It numerically solves the Stream Power Law [dh/dt = K A^m (dh/dx)^n]
-     * using an implicit finite difference scheme 1st order in space and time.
-     * The method is detailed in Braun and Willet's (2013) and has been
-     * slightly adapted.
+     * It numerically solves the Stream Power Law (SPL) using an implicit finite
+     * difference scheme 1st order in space and time. The method is detailed in
+     * Braun and Willet's (2013) and has been slightly adapted.
      *
-     * For the linear case (n = 1), solving the equation is trivial. For the
-     * non-linear case (n != 1), the Newton-Raphson method is used to find the
-     * optimal solution.
+     * SPL is defined as:
      *
-     * This implementation supports multiple direction flow, although only for
-     * the linear case.
+     * @f[
+     * \frac{\partial h}{\partial t} = K A^m (\nabla h)^n
+     * @f]
      *
-     * It also prevents the formation of new closed depressions (lakes). The
-     * erosion within existing closed depressions of the input topographic
-     * surface will depend on the given flow graph:
+     * where \f$K\f$ is an erosion coefficient, \f$A\f$ is the upslope
+     * contributing (or drainage) area and \f$\nabla h\f$ is the local gradient
+     * of the topographic surface.
      *
-     * - If the flow graph handles routing accross those depressions, no erosion
-     *   will take place within them (lakes).
-     * - If the flow graph does not resolve those depressions (no sink resolver
-     *   applied), they will be eroded like the rest of the topographic surface
-     *   (no lake).
+     * For the linear case \f$n = 1\f$, solving the equation is trivial. For the
+     * non-linear case \f$n \neq 1\f$, the Newton-Raphson method is used to find
+     * the optimal solution.
      *
-     * Caveat: the numerical scheme used here is stable but not implicit with
-     * respect to upslope contributing area (A). Using large time steps may
-     * still have a great impact on the solution, especially on transient
-     * states.
+     * Solving the SPL equation requires setting boundary conditions. In this
+     * implementation, the erosion at the base level nodes of the flow graph is
+     * set to zero.
+     *
+     * \rst
+     * .. note::
+     *    This implementation supports multiple direction flow, although only for
+     *    the linear case.
+     *
+     * .. note::
+     *    This implementation also prevents the formation of new closed depressions
+     *    (lakes). The erosion within existing closed depressions of the input
+     *    topographic surface will depend on the given flow graph:
+     *
+     *    - If the flow graph handles routing accross those depressions, no erosion
+     *      will take place within them (lakes).
+     *    - If the flow graph does not resolve those depressions (no sink resolver
+     *      applied), they will be eroded like the rest of the topographic surface
+     *      (no lake).
+     *
+     * .. warning::
+     *    The numerical scheme used here is stable but not implicit with
+     *    respect to upslope contributing area (A). Using large time steps may
+     *    still have a great impact on the solution, especially on transient
+     *    states.
+     * \endrst
      *
      * @tparam FG The flow graph type.
      * @tparam S The xtensor container selector for data array members.
@@ -67,6 +85,17 @@ namespace fastscapelib
         using data_type = typename flow_graph_type::data_type;
         using data_array_type = xt_array_t<xt_selector, data_type>;
 
+        /**
+         * Create a new SPL eroder.
+         *
+         * @param flow_graph The flow graph instance
+         * @param k_coef The \f$K\f$ value (spatially uniform or variable)
+         * @param area_exp The \f$A\f$ exponent value
+         * @param slope_exp The \f$\nabla h\f$ exponent value
+         * @param tolerance The tolerance of Newton-Raphson convergence for the non-linear case.
+         *
+         * @tparam K Either a scalar float type or an array (xtensor expression) type.
+         */
         template <class K>
         spl_eroder(
             FG& flow_graph, K&& k_coef, double area_exp, double slope_exp, double tolerance = 1e-3)
@@ -81,17 +110,29 @@ namespace fastscapelib
             m_erosion.resize(m_shape);
         };
 
+        /**
+         * Return the \f$K\f$ value.
+         */
         const data_array_type& k_coef()
         {
             return m_k_coef;
         };
 
+        /**
+         * Set a spatially uniform, scalar \f$K\f$ value.
+         */
         template <class T>
         void set_k_coef(T value, typename std::enable_if_t<std::is_floating_point<T>::value>* = 0)
         {
             m_k_coef = xt::broadcast(std::forward<T>(value), { m_flow_graph.size() });
         };
 
+        /**
+         * Set a spatially variable, array \f$K\f$ value.
+         *
+         * The array expression or container must have the same shape than the
+         * grid arrays.
+         */
         template <class K>
         void set_k_coef(K&& value, typename std::enable_if_t<xt::is_xexpression<K>::value>* = 0)
         {
@@ -102,22 +143,34 @@ namespace fastscapelib
             m_k_coef = xt::flatten(value);
         };
 
+        /**
+         * Return the \f$A\f$ exponent value.
+         */
         double area_exp()
         {
             return m_area_exp;
         };
 
+        /**
+         * Set the \f$A\f$ exponent value.
+         */
         void set_area_exp(double value)
         {
             // TODO: validate value
             m_area_exp = value;
         };
 
+        /**
+         * Return the \f$\nabla h\f$ exponent value.
+         */
         double slope_exp()
         {
             return m_slope_exp;
         };
 
+        /**
+         * Set the \f$\nabla h\f$ exponent value.
+         */
         void set_slope_exp(double value)
         {
             // TODO: validate value
@@ -131,6 +184,10 @@ namespace fastscapelib
             }
         };
 
+        /**
+         * Return the tolerance controlling the convergence of the
+         * Newton-Raphson iterations for the non-linear case.
+         */
         double tolerance()
         {
             return m_tolerance;
@@ -141,8 +198,8 @@ namespace fastscapelib
          * limited during the last computation.
          *
          * To ensure numerical stability, channel erosion may not lower the
-         * elevation of a node below a level that reverts the slope with any of
-         * its direct neighbors. This prevents the formation of new closed
+         * elevation of a node such that it reverts the slope with any of its
+         * direct neighbors. This prevents the formation of new closed
          * depressions.
          */
         size_type n_corr()
@@ -150,6 +207,13 @@ namespace fastscapelib
             return m_n_corr;
         };
 
+        /**
+         * Solve SPL for one time step.
+         *
+         * @param elevation The elevation of surface topography at each grid node.
+         * @param drainage_area The upslope drainage area at each grid node.
+         * @param dt The duration of the time step.
+         */
         const data_array_type& erode(const data_array_type& elevation,
                                      const data_array_type& drainage_area,
                                      double dt);
@@ -166,9 +230,6 @@ namespace fastscapelib
         size_type m_n_corr;
     };
 
-    /**
-     * SPL erosion implementation.
-     */
     template <class FG, class S>
     auto spl_eroder<FG, S>::erode(const data_array_type& elevation,
                                   const data_array_type& drainage_area,
@@ -306,11 +367,23 @@ namespace fastscapelib
     };
 
 
+    /**
+     * Helper to create a new SPL eroder.
+     *
+     * @param flow_graph The flow graph instance
+     * @param k_coef The \f$K\f$ value (spatially uniform or variable)
+     * @param area_exp The \f$A\f$ exponent value
+     * @param slope_exp The \f$\nabla h\f$ exponent value
+     * @param tolerance The tolerance of Newton-Raphson convergence for the non-linear case.
+     *
+     * @tparam FG The flow graph type.
+     * @tparam K Either a scalar float type or an array (xtensor expression) type.
+     */
     template <class FG, class K>
     spl_eroder<FG> make_spl_eroder(
-        FG& graph, K&& k_coef, double area_exp, double slope_exp, double tolerance)
+        FG& flow_graph, K&& k_coef, double area_exp, double slope_exp, double tolerance)
     {
-        return spl_eroder<FG>(graph, k_coef, area_exp, slope_exp, tolerance);
+        return spl_eroder<FG>(flow_graph, k_coef, area_exp, slope_exp, tolerance);
     }
 }  // namespace fastscapelib
 

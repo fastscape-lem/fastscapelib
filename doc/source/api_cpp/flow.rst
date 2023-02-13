@@ -36,10 +36,15 @@ Flow routers
 Defined in ``fastscapelib/flow/flow_router.hpp``
 
 - :cpp:class:`~fastscapelib::single_flow_router`
+- :cpp:class:`~fastscapelib::multi_flow_router`
 
 ----
 
 .. doxygenclass:: fastscapelib::single_flow_router
+   :members:
+   :undoc-members:
+
+.. doxygenclass:: fastscapelib::multi_flow_router
    :members:
    :undoc-members:
 
@@ -73,5 +78,16 @@ Defined in ``fastscapelib/flow/flow_snapshot.hpp``
 ----
 
 .. doxygenclass:: fastscapelib::flow_snapshot
+   :members:
+   :undoc-members:
+
+Basin graph
+-----------
+
+Defined in ``fastscapelib/flow/basin_graph.hpp``
+
+.. doxygenenum:: fastscapelib::mst_method
+
+.. doxygenclass:: fastscapelib::basin_graph
    :members:
    :undoc-members:

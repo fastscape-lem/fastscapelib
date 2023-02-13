@@ -1,11 +1,3 @@
-/**
- * @brief Class used to compute or follow flow routes on
- * the topographic surface.
- *
- * It provides a single API to chain flow_router and
- * sink_resolver methods and access their results.
- *
- */
 #ifndef FASTSCAPELIB_FLOW_FLOW_GRAPH_H
 #define FASTSCAPELIB_FLOW_FLOW_GRAPH_H
 

@@ -39,3 +39,5 @@ containers for looping over grid or flow graph nodes.
 ----
 
 .. doxygenclass:: fastscapelib::grid_node_indices
+
+.. doxygenclass:: fastscapelib::stl_container_iterator_wrapper

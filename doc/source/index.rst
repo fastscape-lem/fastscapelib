@@ -23,6 +23,7 @@ Documentation index
 
    api_cpp/grid
    api_cpp/flow
+   api_cpp/eroder
    api_cpp/utilities
 
 .. toctree::

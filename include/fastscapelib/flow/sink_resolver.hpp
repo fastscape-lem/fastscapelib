@@ -99,6 +99,8 @@ namespace fastscapelib
      * fill these with nearly flat surfaces (a tiny slope ensure natural
      * flow routing for the operators applied after this one).
      *
+     * @see fastscapelib::basin_graph
+     *
      */
     class mst_sink_resolver : public flow_operator
     {
