@@ -32,7 +32,7 @@ namespace fastscapelib
      * SPL is defined as:
      *
      * @f[
-     * \frac{\partial h}{\partial t} = K A^m (\nabla h)^n
+     * \frac{\partial h}{\partial t} = - K A^m (\nabla h)^n
      * @f]
      *
      * where \f$K\f$ is an erosion coefficient, \f$A\f$ is the upslope

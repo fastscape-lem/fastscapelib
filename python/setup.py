@@ -117,6 +117,7 @@ setup(
     ),
     long_description="",  # TODO: import README here
     packages=find_packages(),
+    package_data={"fastscapelib": ["../_fastscapelib_py.pyi"]},
     ext_modules=ext_modules,
     install_requires=["numpy"],
     cmdclass={"build_ext": CMakeBuild},

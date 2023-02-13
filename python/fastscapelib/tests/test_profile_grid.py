@@ -1,13 +1,8 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
-from fastscapelib.grid import (
-    Neighbor,
-    Node,
-    NodeStatus,
-    ProfileBoundaryStatus,
-    ProfileGrid,
-)
+
+from fastscapelib import Neighbor, Node, NodeStatus, ProfileBoundaryStatus, ProfileGrid
 
 
 class TestProfileBoundaryStatus:
