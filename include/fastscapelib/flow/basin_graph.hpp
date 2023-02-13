@@ -111,21 +111,21 @@ namespace fastscapelib
         /**
          * Create a new graph of basins from a flow graph.
          *
-         * Only single direction flow graphs are supported.
-         *
          * @param flow_graph_impl A flow graph implementation instance (fixed array).
          * @param basin_method The algorithm used to compute the reduced tree of basins.
+         *
+         * \rst
+         * .. warning::
+         *    A basin graph requires a flow graph with single direction flow paths as
+         *    its current state. However, no validation is done here since the state of
+         *    the same flow graph may later change from single to multiple direction
+         *    after the basin graph has been (re)computed.
+         * \endrst
          */
         basin_graph(const flow_graph_impl_type& flow_graph_impl, mst_method basin_method)
             : m_flow_graph_impl(flow_graph_impl)
             , m_mst_method(basin_method)
         {
-            if (!flow_graph_impl.single_flow())
-            {
-                throw std::invalid_argument(
-                    "basin_graph only supports single direction flow graphs");
-            }
-
             m_perf_boruvka = 0;
         }
 

@@ -80,9 +80,6 @@ namespace fastscapelib
 
             EXPECT_EQ(bgraph.perf_boruvka(), 0);
 
-            flow_graph_type fgraph_multi(grid, { fs::multi_flow_router(1.0) });
-            EXPECT_THROW(basin_graph_type(fgraph_multi.impl(), GetParam()), std::invalid_argument);
-
             {
                 SCOPED_TRACE("test outlets");
 
