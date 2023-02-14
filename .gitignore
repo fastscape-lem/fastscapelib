@@ -53,6 +53,7 @@ doc/CMakeCache.txt
 doc/_xml/
 doc/_build/
 doc/*.tmp
+doc/source/api_python/_api_generated
 
 # Jupyter artefacts
 .ipynb_checkpoints/

@@ -19,7 +19,7 @@ Documentation index
 
 .. toctree::
    :caption: C++ API Reference
-   :maxdepth: 2
+   :maxdepth: 1
 
    api_cpp/grid
    api_cpp/flow
@@ -28,9 +28,11 @@ Documentation index
 
 .. toctree::
    :caption: Python API Reference
-   :maxdepth: 2
+   :maxdepth: 1
 
-   api_python
+   api_python/grid
+   api_python/flow
+   api_python/eroder
 
 .. toctree::
    :caption: Developer Zone

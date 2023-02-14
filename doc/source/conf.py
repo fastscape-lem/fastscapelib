@@ -83,6 +83,8 @@ release = _version_str
 # -- General configuration ---------------------------------------------------
 
 extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
