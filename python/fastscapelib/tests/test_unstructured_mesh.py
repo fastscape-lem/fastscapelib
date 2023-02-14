@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
+
 from fastscapelib.grid import Neighbor, Node, NodeStatus, UnstructuredMesh
 
 
@@ -40,20 +41,20 @@ def mesh_args():
 
 
 class TestUnstructuredMesh:
-    def test_static_properties(self):
+    def test_static_properties(self) -> None:
         assert UnstructuredMesh.is_structured is False
         assert UnstructuredMesh.is_uniform is False
         assert UnstructuredMesh.n_neighbors_max == 30
 
-    def test_constructor(self, mesh_args):
-        mesh = UnstructuredMesh(*mesh_args.values(), [])
+    def test_constructor(self, mesh_args) -> None:
+        mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
 
         assert mesh.size == 5
         assert mesh.shape == [5]
 
-    def test_status_at_nodes_default(self, mesh_args):
+    def test_status_at_nodes_default(self, mesh_args) -> None:
         # all boundary nodes (convex hull) have fixed value status
-        mesh = UnstructuredMesh(*mesh_args.values(), [])
+        mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
 
         actual = mesh.status_at_nodes
         expected = np.zeros(mesh.size, dtype=np.uint8)
@@ -61,9 +62,9 @@ class TestUnstructuredMesh:
 
         npt.assert_array_equal(actual, expected)
 
-    def test_status_at_nodes_custom(self, mesh_args):
+    def test_status_at_nodes_custom(self, mesh_args) -> None:
         bc = [Node(2, NodeStatus.FIXED_VALUE_BOUNDARY)]
-        mesh = UnstructuredMesh(*mesh_args.values(), bc)
+        mesh = UnstructuredMesh(*mesh_args.values(), bc)  # type: ignore[call-arg]
 
         actual = mesh.status_at_nodes
         expected = np.zeros(mesh.size, dtype=np.uint8)
@@ -72,30 +73,30 @@ class TestUnstructuredMesh:
         npt.assert_array_equal(actual, expected)
 
         with pytest.raises(ValueError, match=".*not allowed.*"):
-            UnstructuredMesh(*mesh_args.values(), [Node(2, NodeStatus.LOOPED_BOUNDARY)])
+            UnstructuredMesh(*mesh_args.values(), [Node(2, NodeStatus.LOOPED_BOUNDARY)])  # type: ignore[call-arg]
 
-    def test_neighbors_count(self, mesh_args):
-        mesh = UnstructuredMesh(*mesh_args.values(), [])
+    def test_neighbors_count(self, mesh_args) -> None:
+        mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
 
         assert mesh.neighbors_count(4) == 4
         assert mesh.neighbors_count(0) == 3
 
-    def test_neighbors_indices(self, mesh_args):
-        mesh = UnstructuredMesh(*mesh_args.values(), [])
+    def test_neighbors_indices(self, mesh_args) -> None:
+        mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
 
         npt.assert_equal(mesh.neighbors_indices(3), [2, 4, 0])
         npt.assert_equal(mesh.neighbors_indices(4), [2, 3, 1, 0])
 
-    def test_neighbors_distances(self, mesh_args):
-        mesh = UnstructuredMesh(*mesh_args.values(), [])
+    def test_neighbors_distances(self, mesh_args) -> None:
+        mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
 
         dist_diag = np.sqrt(0.5**2 + 0.5**2)
 
         npt.assert_equal(mesh.neighbors_distances(3), [dist_diag, 0.5, dist_diag])
         npt.assert_equal(mesh.neighbors_distances(4), [0.5] * 4)
 
-    def test_neighbors(self, mesh_args):
-        mesh = UnstructuredMesh(*mesh_args.values(), [])
+    def test_neighbors(self, mesh_args) -> None:
+        mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
 
         dist_diag = np.sqrt(0.5**2 + 0.5**2)
 

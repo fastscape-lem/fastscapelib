@@ -1,12 +1,13 @@
 import numpy as np
 import pytest
+
 from fastscapelib.eroders import DiffusionADIEroder, SPLEroder
 from fastscapelib.flow import FlowGraph, MultiFlowRouter, SingleFlowRouter
 from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
 
 
 class TestSPLEroder:
-    def test_constructor_properties(self):
+    def test_constructor_properties(self) -> None:
         bstatus = RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY)
         grid = RasterGrid([2, 2], [1.0, 1.0], bstatus, [])
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
@@ -41,7 +42,7 @@ class TestSPLEroder:
             SPLEroder(flow_graph2, 1e-3, 0.4, 1.5, 1e-3)
 
     @pytest.mark.parametrize("k_coef", [1e-3, np.full((4), 1e-3)])
-    def test_profile_grid(self, k_coef):
+    def test_profile_grid(self, k_coef) -> None:
         spacing = 300.0
         grid = ProfileGrid(4, 300, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
 
@@ -71,7 +72,7 @@ class TestSPLEroder:
         assert eroder.n_corr == 0
 
     @pytest.mark.parametrize("k_coef", [1e-3, np.full((2, 2), 1e-3)])
-    def test_raster_grid(self, k_coef):
+    def test_raster_grid(self, k_coef) -> None:
         # Test on a tiny (2x2) 2-d square grid with a planar surface
         # tilted in y (rows) and with all outlets on the 1st row.
         spacing = 300.0
@@ -127,7 +128,7 @@ def _compute_l2_norm(a1, a2):
 
 
 class TestDiffusionADIEroder:
-    def test_constructor_properties(self):
+    def test_constructor_properties(self) -> None:
         bstatus = RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY)
         grid = RasterGrid([2, 2], [1.0, 1.0], bstatus, [])
 
@@ -147,7 +148,7 @@ class TestDiffusionADIEroder:
             eroder.k_coef = np.ones((4, 5))
 
     @pytest.mark.parametrize("k_coef_type", ["scalar", "array"])
-    def test_erode_linear_diffusion(self, k_coef_type):
+    def test_erode_linear_diffusion(self, k_coef_type) -> None:
         x, y = np.meshgrid(np.linspace(-20, 20, 51), np.linspace(-20, 20, 101))
         dy = 0.4
         dx = 0.8

@@ -3,10 +3,6 @@ from typing import ClassVar, List, Tuple, Type, overload
 import numpy as np
 import numpy.typing as npt
 
-#
-# Grid types
-#
-
 class NodeStatus:
     __members__: ClassVar[dict] = ...  # read-only
     CORE: ClassVar[NodeStatus] = ...
@@ -34,7 +30,7 @@ class Node:
 
 class Neighbor:
     def __init__(self, idx: int, distance: float, status: NodeStatus) -> None: ...
-    def __eq__(self, other: Neighbor) -> bool: ...
+    def __eq__(self, other: object) -> bool: ...
     idx: int
     distance: float
     status: NodeStatus
@@ -46,6 +42,10 @@ class ProfileBoundaryStatus:
     def __init__(self, left_status: NodeStatus, right_status: NodeStatus) -> None: ...
     @overload
     def __init__(self, status: List[NodeStatus]) -> None: ...
+    left: NodeStatus
+    right: NodeStatus
+    @property
+    def is_horizontal_looped(self) -> bool: ...
 
 class ProfileGrid:
     @overload
@@ -72,19 +72,94 @@ class ProfileGrid:
         status_at_bounds: ProfileBoundaryStatus,
         status_at_nodes: List[Node],
     ) -> ProfileGrid: ...
-    is_structured: bool
-    is_uniform: bool
-    n_neighbors_max: int
+    is_structured: ClassVar[bool]
+    is_uniform: ClassVar[bool]
+    n_neighbors_max: ClassVar[int]
     @property
     def size(self) -> int: ...
     @property
     def shape(self) -> List[int]: ...
+    @property
+    def spacing(self) -> float: ...
+    @property
+    def length(self) -> float: ...
     @property
     def status_at_nodes(self) -> npt.NDArray[np.uint8]: ...
     def neighbors_count(self, idx: int) -> int: ...
     def neighbors_indices(self, idx: int) -> npt.NDArray[np.uint64]: ...
     def neighbors_distances(self, idx: int) -> npt.NDArray[np.float64]: ...
     def neighbors(self, idx: int) -> List[Neighbor]: ...
+
+class RasterNode:
+    def __init__(self, row: int, col: int, status: NodeStatus) -> None: ...
+    row: int
+    col: int
+    status: NodeStatus
+
+class RasterNeighbor:
+    def __init__(
+        self, flatten_idx: int, row: int, col: int, distance: float, status: NodeStatus
+    ) -> None: ...
+    def __eq__(self, other: object) -> bool: ...
+    flatten_idx: int
+    row: int
+    col: int
+    distance: float
+    status: NodeStatus
+
+class RasterBoundaryStatus:
+    @overload
+    def __init__(self, status: NodeStatus) -> None: ...
+    @overload
+    def __init__(self, status: List[NodeStatus]) -> None: ...
+    left: NodeStatus
+    right: NodeStatus
+    bottom: NodeStatus
+    top: NodeStatus
+    @property
+    def is_horizontal_looped(self) -> bool: ...
+    @property
+    def is_vertical_looped(self) -> bool: ...
+
+class RasterGrid:
+    def __init__(
+        self,
+        shape: List[int],
+        spacing: npt.ArrayLike,
+        status_at_bounds: RasterBoundaryStatus,
+        status_at_nodes: List[RasterNode],
+    ) -> None: ...
+    @classmethod
+    def from_length(
+        cls: Type[RasterGrid],
+        shape: List[int],
+        length: npt.ArrayLike,
+        status_at_bounds: RasterBoundaryStatus,
+        status_at_nodes: List[RasterNode],
+    ) -> RasterGrid: ...
+    is_structured: ClassVar[bool]
+    is_uniform: ClassVar[bool]
+    n_neighbors_max: ClassVar[int]
+    @property
+    def size(self) -> int: ...
+    @property
+    def shape(self) -> List[int]: ...
+    @property
+    def spacing(self) -> float: ...
+    @property
+    def length(self) -> float: ...
+    @property
+    def status_at_nodes(self) -> npt.NDArray[np.uint8]: ...
+    def neighbors_count(self, idx: int) -> int: ...
+    @overload
+    def neighbors_indices(self, idx: int) -> npt.NDArray[np.uint64]: ...
+    @overload
+    def neighbors_indices(self, row: int, col: int) -> npt.NDArray[np.uint64]: ...
+    def neighbors_distances(self, idx: int) -> npt.NDArray[np.float64]: ...
+    @overload
+    def neighbors(self, idx: int) -> List[Neighbor]: ...
+    @overload
+    def neighbors(self, row: int, col: int) -> List[RasterNeighbor]: ...
 
 class UnstructuredMesh:
     def __init__(
@@ -96,9 +171,9 @@ class UnstructuredMesh:
         areas: npt.NDArray[np.float64],
         status_at_nodes: List[Node],
     ) -> None: ...
-    is_structured: bool
-    is_uniform: bool
-    n_neighbors_max: int
+    is_structured: ClassVar[bool]
+    is_uniform: ClassVar[bool]
+    n_neighbors_max: ClassVar[int]
     @property
     def size(self) -> int: ...
     @property

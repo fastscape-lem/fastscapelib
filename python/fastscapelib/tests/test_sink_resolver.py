@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from fastscapelib.flow import (
     FlowDirection,
     FlowGraph,
@@ -46,7 +47,7 @@ def elevation():
     yield elevation
 
 
-def test_no_sink_resolver(grid, elevation):
+def test_no_sink_resolver(grid, elevation) -> None:
     graph = FlowGraph(grid, [SingleFlowRouter()])
 
     new_elevation = graph.update_routes(elevation)
@@ -59,14 +60,14 @@ def test_no_sink_resolver(grid, elevation):
     assert graph.impl().receivers[pit_idx_flat, 0] == pit_idx_flat
 
 
-def test_pflood_sink_resolver_attrs():
+def test_pflood_sink_resolver_attrs() -> None:
     assert PFloodSinkResolver.graph_updated is False
     assert PFloodSinkResolver.elevation_updated is True
     assert PFloodSinkResolver.in_flowdir == FlowDirection.UNDEFINED
     assert PFloodSinkResolver.out_flowdir == FlowDirection.UNDEFINED
 
 
-def test_pflood_sink_resolver(grid, elevation):
+def test_pflood_sink_resolver(grid, elevation) -> None:
     resolver = PFloodSinkResolver()
     assert isinstance(resolver, FlowOperator)
     assert resolver.name == "pflood_sink_resolver"
@@ -91,13 +92,13 @@ def test_pflood_sink_resolver(grid, elevation):
 
 
 class TestMSTSinkResolver:
-    def test_class_attrs(self):
+    def test_class_attrs(self) -> None:
         assert MSTSinkResolver.graph_updated is True
         assert MSTSinkResolver.elevation_updated is True
         assert MSTSinkResolver.in_flowdir == FlowDirection.SINGLE
         assert MSTSinkResolver.out_flowdir == FlowDirection.SINGLE
 
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         resolver = MSTSinkResolver()
         assert isinstance(resolver, FlowOperator)
         assert resolver.basin_method == MSTMethod.KRUSKAL
@@ -118,7 +119,7 @@ class TestMSTSinkResolver:
         assert resolver2.route_method == MSTRouteMethod.BASIC
 
     @pytest.mark.parametrize("mst_method", [MSTMethod.KRUSKAL, MSTMethod.BORUVKA])
-    def test_resolve_basic(self, grid, elevation, mst_method):
+    def test_resolve_basic(self, grid, elevation, mst_method) -> None:
         resolver = MSTSinkResolver(mst_method, MSTRouteMethod.BASIC)
         graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
 
@@ -142,7 +143,7 @@ class TestMSTSinkResolver:
         assert graph.impl().receivers_distance[12, 0] == np.sqrt(2)
 
     @pytest.mark.parametrize("mst_method", [MSTMethod.KRUSKAL, MSTMethod.BORUVKA])
-    def test_resolve_carve(self, grid, elevation, mst_method):
+    def test_resolve_carve(self, grid, elevation, mst_method) -> None:
         resolver = MSTSinkResolver(mst_method, MSTRouteMethod.CARVE)
         graph = FlowGraph(grid, [SingleFlowRouter(), resolver])
 
@@ -174,7 +175,7 @@ class TestMSTSinkResolver:
         MSTSinkResolver(MSTMethod.BORUVKA, MSTRouteMethod.CARVE),
     ],
 )
-def test_conservation_drainage_area(resolver):
+def test_conservation_drainage_area(resolver) -> None:
     # High-level test for sink resolvers that checks the conservation of
     # drainage area (sum of drainage area at domain fixed bounaries = total
     # domain area)
@@ -209,7 +210,7 @@ def test_conservation_drainage_area(resolver):
         MSTSinkResolver(MSTMethod.BORUVKA, MSTRouteMethod.CARVE),
     ],
 )
-def test_nb_of_basins(resolver):
+def test_nb_of_basins(resolver) -> None:
     # High-level test for sink resolvers that checks that the total number of
     # basins equals the number of (fixed value) boundary nodes at grid borders
     # (i.e., only outer basins)

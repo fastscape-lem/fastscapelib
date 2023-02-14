@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
+
 from fastscapelib.flow import (
     FlowDirection,
     FlowGraph,
@@ -14,7 +15,7 @@ from fastscapelib.grid import NodeStatus, RasterBoundaryStatus, RasterGrid
 
 
 @pytest.fixture
-def grid():
+def grid() -> RasterGrid:
     return RasterGrid(
         [10, 20],
         [1.0, 2.0],
@@ -23,14 +24,14 @@ def grid():
     )
 
 
-def test_flow_snapshot_class_attr():
+def test_flow_snapshot_class_attr() -> None:
     assert FlowSnapshot.graph_updated is False
     assert FlowSnapshot.elevation_updated is False
     assert FlowSnapshot.in_flowdir == FlowDirection.UNDEFINED
     assert FlowSnapshot.out_flowdir == FlowDirection.UNDEFINED
 
 
-def test_flow_snapshot_constructor():
+def test_flow_snapshot_constructor() -> None:
     snapshot = FlowSnapshot("test")
     assert isinstance(snapshot, FlowOperator)
     assert snapshot.name == "flow_snapshot"
@@ -41,12 +42,12 @@ def test_flow_snapshot_constructor():
     assert repr(snapshot) == "FlowSnapshot 'test' (graph=True, elevation=False)"
 
 
-def test_flow_snapshot_error(grid):
+def test_flow_snapshot_error(grid) -> None:
     with pytest.raises(ValueError, match="no flow routing operator defined before"):
         FlowGraph(grid, [FlowSnapshot("test"), SingleFlowRouter()])
 
 
-def test_flow_snapshot_items(grid):
+def test_flow_snapshot_items(grid) -> None:
     graph = FlowGraph(
         grid,
         [
@@ -64,7 +65,7 @@ def test_flow_snapshot_items(grid):
     assert isinstance(graph.elevation_snapshot("a"), np.ndarray)
 
 
-def test_snapshot_graph(grid):
+def test_snapshot_graph(grid) -> None:
     graph = FlowGraph(
         grid,
         [SingleFlowRouter(), FlowSnapshot("a"), MSTSinkResolver(), FlowSnapshot("b")],
@@ -107,7 +108,7 @@ def test_snapshot_graph(grid):
         snapshot_a.update_routes(elevation)
 
 
-def test_snapshot_elevation(grid):
+def test_snapshot_elevation(grid) -> None:
     graph = FlowGraph(
         grid,
         [
