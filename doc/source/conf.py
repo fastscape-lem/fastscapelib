@@ -90,6 +90,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "breathe",
     "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
     "myst_nb",
 ]
 
@@ -115,6 +116,17 @@ exclude_patterns = [
 
 pygments_style = "sphinx"
 highlight_language = "c++"
+
+napoleon_numpy_docstring = True
+napoleon_use_param = True
+napoleon_use_rtype = False
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "array_like": ":term:`array_like`",
+    "array-like": ":term:`array-like <array_like>`",
+}
+typehints_defaults = "comma"
+typehints_use_rtype = False
 
 # -- Options for HTML output -------------------------------------------------
 
