@@ -12,6 +12,7 @@ Channel erosion
 
 .. autosummary::
    :toctree: _api_generated/
+   :template: fastscapelib-class-template.rst
 
    SPLEroder
 
@@ -20,5 +21,6 @@ Hillslope erosion
 
 .. autosummary::
    :toctree: _api_generated/
+   :template: fastscapelib-class-template.rst
 
    DiffusionADIEroder

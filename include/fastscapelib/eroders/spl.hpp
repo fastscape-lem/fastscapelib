@@ -195,7 +195,7 @@ namespace fastscapelib
 
         /**
          * Returns the number of nodes for which erosion has been arbitrarily
-         * limited during the last computation.
+         * limited during the last computed time-step.
          *
          * To ensure numerical stability, channel erosion may not lower the
          * elevation of a node such that it reverts the slope with any of its
