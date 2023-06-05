@@ -5,6 +5,5 @@
 .. autosummary::
    :toctree: _api_generated/
 
-   FlowDirection
    MSTMethod
    MSTRouteMethod

@@ -91,6 +91,7 @@ extensions = [
     "breathe",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
+    "sphinx_remove_toctrees",
     "myst_nb",
 ]
 
@@ -117,6 +118,9 @@ exclude_patterns = [
 pygments_style = "sphinx"
 highlight_language = "c++"
 
+# not working yet (https://github.com/sphinx-doc/sphinx/issues/5379)
+autodoc_member_order = "bysource"
+
 napoleon_numpy_docstring = True
 napoleon_use_param = True
 napoleon_use_rtype = False
@@ -127,6 +131,8 @@ napoleon_type_aliases = {
 }
 typehints_defaults = "comma"
 typehints_use_rtype = False
+
+remove_from_toctrees = ["api_python/_api_generated/*"]
 
 # -- Options for HTML output -------------------------------------------------
 

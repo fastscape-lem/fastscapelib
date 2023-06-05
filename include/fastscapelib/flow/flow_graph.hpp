@@ -239,6 +239,9 @@ namespace fastscapelib
          * The accumulated values represent at each node of the graph the
          * integral of the source over the node upslope contributing area.
          *
+         * For example, if the source units are meters (height), the units of
+         * the output accumulated values are cubic meters (volume).
+         *
          * @param src The source, must be given per area unit and have the same
          * shape than ``grid_shape``.
          *

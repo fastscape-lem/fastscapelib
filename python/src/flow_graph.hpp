@@ -539,20 +539,48 @@ namespace fastscapelib
 
 
     template <class G>
-    void register_py_flow_graph_init(py::class_<py_flow_graph>& pyfg)
+    void register_py_flow_graph_init(py::class_<py_flow_graph>& pyfg, bool add_docstrings = false)
     {
-        pyfg.def(py::init([](G& grid, const py::list& operators)
-                          { return std::make_unique<py_flow_graph>(grid, operators); }));
+        auto init_func = [](G& grid, const py::list& operators)
+        { return std::make_unique<py_flow_graph>(grid, operators); };
+
+        if (add_docstrings)
+        {
+            pyfg.def(py::init(init_func),
+                     R"doc(__init__(self, grid: Any, operators: List[FlowOperator]) -> None
+
+                     FlowGraph initializer.
+
+                     Parameters
+                     ----------
+                     grid : object
+                         Any Fastscapelib grid object.
+                     operators : list
+                         A list of :class:`FlowOperator` instances that will be
+                         applied in chain (in the given order) when computing
+                         the graph (flow routing).
+
+                     )doc");
+        }
+        else
+        {
+            pyfg.def(py::init(init_func));
+        }
     }
 
     template <class OP>
     void register_operator_static_attrs(
         py::class_<OP, fs::flow_operator, std::shared_ptr<OP>>& pyop)
     {
-        pyop.def_readonly_static("graph_updated", &OP::graph_updated)
-            .def_readonly_static("elevation_updated", &OP::elevation_updated)
-            .def_readonly_static("in_flowdir", &OP::in_flowdir)
-            .def_readonly_static("out_flowdir", &OP::out_flowdir);
+        pyop.def_readonly_static("elevation_updated",
+                                 &OP::elevation_updated,
+                                 "True if the operator updates the input elevation")
+            .def_readonly_static(
+                "graph_updated", &OP::graph_updated, "True if the operator updates the graph")
+            .def_readonly_static(
+                "in_flowdir", &OP::in_flowdir, "Expected :class:`FlowDirection` of the input graph")
+            .def_readonly_static(
+                "out_flowdir", &OP::out_flowdir, ":class:`FlowDirection` of the output graph");
     }
 }
 
