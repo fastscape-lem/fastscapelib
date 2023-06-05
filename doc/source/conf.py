@@ -139,7 +139,7 @@ remove_from_toctrees = ["api_python/_api_generated/*"]
 html_theme = "furo"
 html_title = ""
 
-html_theme_options = dict(
+html_theme_options = {
     # Sphinx book theme
     # repository_url="https://github.com/fastscape-lem/fastscapelib",
     # repository_branch="main",
@@ -151,7 +151,10 @@ html_theme_options = dict(
     # extra_navbar="",
     # navbar_footer_text="",
     # Furo Theme
-    footer_icons=[
+    "sidebar_hide_name": True,
+    "light_logo": "fastscapelib_logo.svg",
+    "dark_logo": "fastscapelib_logo.svg",
+    "footer_icons": [
         {
             "name": "GitHub",
             "url": "https://github.com/fastscape-lem/fastscapelib",
@@ -163,7 +166,7 @@ html_theme_options = dict(
             "class": "",
         },
     ],
-)
+}
 html_static_path = ["_static"]
 htmlhelp_basename = "fastscapelibdoc"
 
