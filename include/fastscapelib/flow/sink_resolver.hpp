@@ -29,6 +29,11 @@ namespace fastscapelib
      * al., 2014). This variant prevents flat surfaces and hence ensure
      * that the flow can be routed towards the outlets without disruption.
      *
+     * \rst
+     * See :cite:t:`Barnes2014` for a more detailed description of the algorithm.
+     *
+     * \endrst
+     *
      */
     struct pflood_sink_resolver : public flow_operator
     {
@@ -98,6 +103,11 @@ namespace fastscapelib
      * This operator also use the updated routes in closed depressions to
      * fill these with nearly flat surfaces (a tiny slope ensure natural
      * flow routing for the operators applied after this one).
+     *
+     * \rst
+     * See :cite:t:`Cordonnier2019` for a more detailed description of the algorithm.
+     *
+     * \endrst
      *
      * @see fastscapelib::basin_graph
      *

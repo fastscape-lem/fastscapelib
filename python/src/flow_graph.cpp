@@ -211,8 +211,8 @@ add_flow_graph_bindings(py::module& m)
                   R"doc(Priority-flood sink resolver operator.
 
             This flow operator fills the closed depressions in the topographic
-            surface using the priority flood algorithm +epsilon variant (Barnes et
-            al., 2014). This variant prevents flat surfaces and hence ensure
+            surface using the priority flood algorithm +epsilon variant :cite:p:`Barnes2014`.
+            This variant prevents flat surfaces and hence ensure
             that the flow can be routed towards the outlets without disruption.
 
             )doc");
@@ -272,7 +272,7 @@ add_flow_graph_bindings(py::module& m)
             This flow operator re-routes the flow trapped in closed depressions
             towards their spill, using an efficient algorithm that explicitly
             computes a graph of (inner and outer) basins and reduces it as a tree
-            (Cordonnier et al., 2019).
+            :cite:p:`Cordonnier2019`.
 
             It requires a single flow graph as input.
 

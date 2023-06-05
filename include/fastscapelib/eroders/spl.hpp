@@ -48,6 +48,9 @@ namespace fastscapelib
      * set to zero.
      *
      * \rst
+     *
+     * See :cite:t:`Braun2013` for more details on the numerical scheme used here.
+     *
      * .. note::
      *    This implementation supports multiple direction flow, although only for
      *    the linear case.

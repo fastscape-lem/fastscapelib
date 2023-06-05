@@ -10,3 +10,12 @@ the latest version of fastscapelib.
 
 .. image:: https://zenodo.org/badge/133639708.svg
    :target: https://zenodo.org/badge/latestdoi/133639708
+
+Related Publications
+--------------------
+
+Below is a list of publications that are referenced in this documentation. It
+mostly corresponds to articles that describe the algorithms implemented in this
+library.
+
+.. bibliography::

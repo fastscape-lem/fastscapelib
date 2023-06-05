@@ -54,6 +54,7 @@ doc/_xml/
 doc/_build/
 doc/*.tmp
 doc/source/api_python/_api_generated
+doc/source/.auctex-auto
 
 # Jupyter artefacts
 .ipynb_checkpoints/

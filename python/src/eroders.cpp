@@ -37,7 +37,8 @@ add_spl_bindings(py::module& m)
         Braun and Willet's (2013) and has been slightly adapted.
 
         For more details about the Stream Power Law and the numerical scheme used
-        here, see :cpp:class:`~fastscapelib::spl_eroder` from the C++ API.
+        here, see :cpp:class:`~fastscapelib::spl_eroder` from the C++ API. See also
+        :cite:t:`Braun2013`.
 
         )doc");
 

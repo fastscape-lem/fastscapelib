@@ -92,6 +92,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "sphinx_remove_toctrees",
+    "sphinxcontrib.bibtex",
     "myst_nb",
 ]
 
@@ -114,6 +115,8 @@ exclude_patterns = [
     "Thumbs.db",
     ".DS_Store",
 ]
+
+bibtex_bibfiles = ["references.bib"]
 
 pygments_style = "sphinx"
 highlight_language = "c++"
