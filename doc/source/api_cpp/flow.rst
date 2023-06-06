@@ -17,6 +17,8 @@ Defined in ``fastscapelib/flow/flow_graph_impl.hpp``
 
 .. doxygenstruct:: fastscapelib::flow_graph_fixed_array_tag
 
+.. _cpp-api-flow-operators:
+
 Flow operators
 --------------
 

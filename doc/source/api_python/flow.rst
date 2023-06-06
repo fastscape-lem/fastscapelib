@@ -13,6 +13,8 @@ Flow graph
    FlowGraph
    FlowGraphImpl
 
+.. _py-api-flow-operators:
+
 Flow operators
 --------------
 
