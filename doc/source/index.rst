@@ -16,6 +16,12 @@ Documentation index
    citation
 
 .. toctree::
+   :caption: User Guide
+   :maxdepth: 1
+
+   guide_flow
+
+.. toctree::
    :caption: C++ API Reference
    :maxdepth: 1
 

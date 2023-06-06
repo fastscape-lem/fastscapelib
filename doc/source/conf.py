@@ -93,6 +93,7 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx_remove_toctrees",
     "sphinxcontrib.bibtex",
+    "sphinx_design",
     "myst_nb",
 ]
 
@@ -118,8 +119,9 @@ exclude_patterns = [
 
 bibtex_bibfiles = ["references.bib"]
 
-pygments_style = "sphinx"
+# pygments_style = "sphinx"
 highlight_language = "c++"
+myst_enable_extensions = ["colon_fence"]
 
 # not working yet (https://github.com/sphinx-doc/sphinx/issues/5379)
 autodoc_member_order = "bysource"
@@ -171,6 +173,7 @@ html_theme_options = {
     ],
 }
 html_static_path = ["_static"]
+html_favicon = "_static/favicon.ico"
 htmlhelp_basename = "fastscapelibdoc"
 
 # -- Breathe configuration -------------------------------------------------
