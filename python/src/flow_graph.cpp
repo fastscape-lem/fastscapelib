@@ -158,6 +158,9 @@ add_flow_graph_bindings(py::module& m)
             This flow operator routes all the flow passing through a grid node
             towards its neighbors node of steepest slope.
 
+            On a raster grid with 8-node connectivity, this is equivalent to the
+            so-called "D8" algorithm :cite:p:`OCallaghan1984`.
+
             )doc");
 
     fs::register_operator_static_attrs(srouter_op);
