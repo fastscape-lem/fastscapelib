@@ -15,7 +15,7 @@ Related Publications
 --------------------
 
 Below is a list of publications that are referenced in this documentation. It
-mostly corresponds to articles that describe the algorithms implemented in this
-library.
+mostly corresponds to the articles that describe the algorithms implemented in
+this library.
 
 .. bibliography::

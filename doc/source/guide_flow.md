@@ -284,8 +284,8 @@ passed to the {py:class}`~fastscapelib.FlowGraph` constructor. Calling
 {py:meth}`~fastscapelib.FlowGraph.update_routes()` will execute all the
 operators one after each other.
 
-Here are a few examples from simple to more advanced strategies (grid setup is
-skipped for more clarity, see the [flow graph full example
+Here below are a few examples from simple to more advanced strategies (grid
+setup is skipped for more clarity, see the [flow graph full example
 above](guide-flow-graph)).
 
 ### Single Direction Flow Routing
@@ -316,12 +316,12 @@ topography before computing the flow paths.
 ```{code-block} C++
 #include "fastscapelib/flow/sink_resolver.hpp"
 
-fs::flow_graph<fs::raster_grid> single_graph_nodeps(
+fs::flow_graph<fs::raster_grid> single_graph_nosink(
     grid, { fs::pflood_sink_resolver(), fs::single_flow_router() });
 ```
 
 ```{code-block} Python
-single_graph_nodeps = fs.FlowGraph(
+single_graph_nosink = fs.FlowGraph(
     grid, [fs.PFloodSinkResolver(), fs.SingleFlowRouter()]
 )
 ```
@@ -337,12 +337,12 @@ the flow trapped in closed depressions.
 ```{code-block} C++
 #include "fastscapelib/flow/sink_resolver.hpp"
 
-fs::flow_graph<fs::raster_grid> single_graph_nodeps2(
+fs::flow_graph<fs::raster_grid> single_graph_nosink2(
     grid, { fs::single_flow_router(), fs::mst_sink_resolver() });
 ```
 
 ```{code-block} Python
-single_graph_nodeps2 = fs.FlowGraph(
+single_graph_nosink2 = fs.FlowGraph(
     grid, [fs.SingleFlowRouter(), fs.MSTSinkResolver()]
 )
 ```
@@ -356,7 +356,7 @@ new depressions). However, {py:class}`~fastscapelib.MSTSinkResolver` requires
 pre-computed single flow paths while
 {py:class}`~fastscapelib.PFloodSinkResolver` has no specific requirement.
 
-### Multiple Direction Flow Routing
+### Multiple Direction Flow Routing (with Snapshots)
 
 Here is a more advanced example where depression-free multiple direction flow
 paths are obtained after applying several operators. Two graph snapshots are also
@@ -375,7 +375,7 @@ fs::flow_graph<fs::raster_grid> multi_graph(
     { fs::single_flow_router(),
       fs::flow_snapshot("single")
       fs::mst_sink_resolver(),
-      fs::flow_snapshot("single_nodeps"),
+      fs::flow_snapshot("single_nosink"),
       mrouter_ptr });
 ```
 
@@ -388,7 +388,7 @@ multi_graph = fs.FlowGraph(
         fs.SingleFlowRouter(),
         fs.FlowSnapshot("single"),
         fs.MSTSinkResolver(),
-        fs.FlowSnapshot("single_nodeps"),
+        fs.FlowSnapshot("single_nosink"),
         mrouter,
     ],
 )

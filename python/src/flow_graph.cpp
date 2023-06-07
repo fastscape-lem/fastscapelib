@@ -183,6 +183,21 @@ add_flow_graph_bindings(py::module& m)
             local slope between a node and its neighbors (power relationship with a
             fixed exponent parameter).
 
+            The fraction :math:`f_{i,j}` of flow routed from node :math:`i` to its
+            neighbor :math:`j` is given by
+
+            .. math::
+
+               f_{i,j} = \frac{\max (0, S_{i, j}^p)}{\sum_{k \in N} \max (0, S_{i, k}^p)}
+
+            where :math:`p` is the slope exponent parameter, :math:`S_{i, j}` is
+            the slope between :math:`i`, :math:`j` and :math:`N` is the set of
+            all neighbors of :math:`i`.
+
+            Depending on the value of the slope exponent parameter, this is
+            equivalent to the methods described in :cite:t:`Quinn1991` or
+            :cite:t:`Holmgren1994`.
+
             )doc");
 
     fs::register_operator_static_attrs(mrouter_op);
