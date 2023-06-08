@@ -1,7 +1,10 @@
+References
+==========
+
 .. _citation:
 
-Citing fastscapelib
-===================
+Citing Fastscapelib
+-------------------
 
 If you want to use fastscapelib in a scientific publication, we would
 appreciate a citation. We provide DOIs for specific versions via

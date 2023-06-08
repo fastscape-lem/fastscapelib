@@ -1,0 +1,10 @@
+/* Main index page overview cards */
+
+.sd-card-img-top {
+  width: 20% !important;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}

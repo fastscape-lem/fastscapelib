@@ -1,3 +1,5 @@
+.. _cpp-api-eroders:
+
 Eroders
 =======
 

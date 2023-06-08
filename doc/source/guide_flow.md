@@ -13,8 +13,8 @@ simulations.
 Fastscapelib implements a collection of efficient, state-of-the-art algorithms
 for flow routing (e.g., {cite:p}`Braun2013`, {cite:p}`Barnes2014`,
 {cite:p}`Cordonnier2019`). Those algorithms are optimized for LEMs (i.e.,
-require updating the flow paths repeatedly) and may be run through a flexible
-and user-friendly API.
+require updating the flow paths repeatedly) and are accessible through a
+flexible and user-friendly API.
 
 (guide-flow-graph)=
 ## Flow Graph
@@ -43,7 +43,8 @@ the flow paths (graph edges).
 
 A {cpp:class}`~fastscapelib::flow_graph` (C++) or
 {py:class}`~fastscapelib.FlowGraph` (Python) object can be created from any grid
-object (see Section TODO), e.g., in the example below from a raster grid:
+object (see Section [](guide-grids)), e.g., in the example below from a raster
+grid:
 
 ````{tab-set-code}
 ```{code-block} C++
@@ -87,7 +88,8 @@ nodes of the graph to be set as "base level" (or outlet) nodes ([Figure
 1](fig_grid_vs_graph)).
 
 These specific nodes may collect input flow but cannot release any output flow
-(or that have an unknown flow receiver).
+(it could also mean that the flow is leaving the modeled domain or sub-domain,
+e.g., surface land water entering the sea).
 
 By default, all grid nodes with status
 {py:attr}`~fastscapelib.NodeStatus.FIXED_VALUE_BOUNDARY` are set as base
@@ -144,9 +146,9 @@ new_elevation = graph.update_routes(elevation)
 ````
 
 {py:meth}`~fastscapelib.FlowGraph.update_routes` returns another elevation
-field, which may or may not differ from the input elevation field depending on
-the applied flow operators. Some operators fill the closed depressions found in
-the input topography.
+field, which may differ from the input elevation field depending on the applied
+flow operators (e.g., some operators fill the closed depressions found in the
+input topography).
 
 :::{note}
 
@@ -171,9 +173,9 @@ A flow operator is a "routing unit" that:
   {py:meth}`~fastscapelib.FlowGraph.update_routes` method
 - may expose its own parameters
 
-There are currently three categories of operators. See the {ref}`C++
+There are currently three categories of operators (see the {ref}`C++
 <cpp-api-flow-operators>` and {ref}`Python <py-api-flow-operators>` API
-reference for a full list of available operators.
+reference for a full list of available operators).
 
 ### Flow Routers
 
@@ -321,7 +323,7 @@ so-called "D8" algorithm {cite:p}`OCallaghan1984`.
 ### Flow Routing Across Closed Depressions
 
 The priority flood sink resolver {py:class}`~fastscapelib.PFloodSinkResolver`
-{cite:p}`Barnes2014` can be used for filling the closed depressions in the
+{cite:p}`Barnes2014` can be used to fill the closed depressions in the
 topography before computing the flow paths.
 
 ````{tab-set-code}
@@ -361,10 +363,10 @@ single_graph_nosink2 = fs.FlowGraph(
 ````
 
 Compared to {py:class}`~fastscapelib.PFloodSinkResolver`,
-{py:class}`~fastscapelib.MSTSinkResolver` can be much more efficient when the
-number of closed depressions found in the topography is small (usually the case
-after some time steps in LEM simulations where erosion processes do not create
-new depressions). However, {py:class}`~fastscapelib.MSTSinkResolver` requires
+{py:class}`~fastscapelib.MSTSinkResolver` can be much faster to execute when the
+number of closed depressions found in the topography is small (often the case in
+LEM simulations already after a few time steps if no process is creating new
+closed depressions). However, {py:class}`~fastscapelib.MSTSinkResolver` requires
 pre-computed single flow paths while
 {py:class}`~fastscapelib.PFloodSinkResolver` has no specific requirement.
 
@@ -466,7 +468,7 @@ diagnostics.
 
 The input source term passed to {py:meth}`~fastscapelib.FlowGraph.accumulate`
 must expressed in units per-area. It will be integrated uniformly over the area
-covered by each grid node (cell).
+surrounded by each grid node (cell).
 
 :::
 

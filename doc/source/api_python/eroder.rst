@@ -1,3 +1,5 @@
+.. _py-api-eroders:
+
 Eroders
 =======
 

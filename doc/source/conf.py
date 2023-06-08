@@ -173,6 +173,7 @@ html_theme_options = {
     ],
 }
 html_static_path = ["_static"]
+html_css_files = ["style.css"]
 html_favicon = "_static/favicon.ico"
 htmlhelp_basename = "fastscapelibdoc"
 
