@@ -24,10 +24,22 @@ Directed Acyclic Graph or DAG) that connects each grid node to its flow
 receiver(s) (neighbors).
 
 The flow graph data structure is distinct although closely related to a grid
-(Figure TODO):
+([Figure 1](fig_grid_vs_graph)):
 
 - each graph node correspond to a grid node
 - graph edges together form a subset of the grid (implicit or explicit) edges
+
+```{figure} _static/fig_grid_vs_graph.svg
+:name: fig_grid_vs_graph
+:alt: Flow graph on a raster grid
+:align: center
+
+Figure 1: Two kinds of flow graphs (left: single flow direction, right: multiple
+flow direction) on top of a raster grid with 8-node connectivity. Dots are grid
+(and graph) nodes, dots with a different color at the borders are the base level
+nodes, thin dashed lines represent the grid connectivity and thick arrows are
+the flow paths (graph edges).
+```
 
 A {cpp:class}`~fastscapelib::flow_graph` (C++) or
 {py:class}`~fastscapelib.FlowGraph` (Python) object can be created from any grid
@@ -67,10 +79,12 @@ A sequence of flow operators must be passed as second argument to the flow graph
 constructor in order to define the flow routing strategy (see Sections
 [](guide-flow-operators) and [](guide-flow-routing-strategies)).
 
+(guide-base-level-nodes)=
 ### Base Level Nodes
 
 The flow routing algorithms implemented in Fastscapelib require one or more
-nodes of the graph to be set as "base level" (or outlet) nodes.
+nodes of the graph to be set as "base level" (or outlet) nodes ([Figure
+1](fig_grid_vs_graph)).
 
 These specific nodes may collect input flow but cannot release any output flow
 (or that have an unknown flow receiver).
@@ -79,6 +93,7 @@ By default, all grid nodes with status
 {py:attr}`~fastscapelib.NodeStatus.FIXED_VALUE_BOUNDARY` are set as base
 level nodes when creating a flow graph.
 
+(guide-compute-flow-paths)=
 ### Initializing / Updating the Flow Paths
 
 Creating a new flow graph object doesn't compute any flow path yet. To
@@ -136,7 +151,7 @@ the input topography.
 :::{note}
 
 {py:meth}`~fastscapelib.FlowGraph.update_routes` never updates in-place the
-values of the elevation field passed as input.
+values of the input elevation field.
 
  :::
 
@@ -146,31 +161,27 @@ values of the elevation field passed as input.
 Flow can be routed over the topographic surface in many different ways ;
 choosing one approach over another highly depends on the case studied.
 Fastscapelib relies on the concept of "flow operators" that provide a flexible
-and convenient solution for implementing simple to advanced flow routing
-strategies.
+and convenient solution for implementing simple to advanced [flow routing
+strategies](guide-flow-routing-strategies).
 
 A flow operator is a "routing unit" that:
 
 - may read and/or modify in-place the flow graph instance to which it has been attached
-- may read and/or update (in a copy) the elevation values passed to the
+- may read and/or update (a copy of) the elevation values passed to the
   {py:meth}`~fastscapelib.FlowGraph.update_routes` method
-- may expose zero, one or more parameters with values that can be changed at any
-  time between two consecutive calls to
-  {py:meth}`~fastscapelib.FlowGraph.update_routes`
+- may expose its own parameters
 
 There are currently three categories of operators. See the {ref}`C++
 <cpp-api-flow-operators>` and {ref}`Python <py-api-flow-operators>` API
-reference for a full list of available operators) and see Section
-[](guide-flow-routing-strategies) for a few examples on how to use them
-together.
+reference for a full list of available operators.
 
 ### Flow Routers
 
 Flow router operators generally compute new flow paths from scratch and fully
 update the flow graph. The updated flow graph has a defined
-{py:class}`~fastscapelib.FlowDirection`: either ``SINGLE`` (one unique receiver
-per node) or ``MULTI`` (flow partitioned among multiple receiver nodes with
-fixed or variable weights).
+{py:class}`~fastscapelib.FlowDirection`: either ``SINGLE`` with one unique
+receiver per node or ``MULTI`` where the flow is partitioned among multiple
+receiver nodes with fixed or variable weights ([Figure 1](fig_grid_vs_graph)).
 
 
 ````{tab-set-code}
@@ -205,7 +216,8 @@ fs.MultiFlowRouter.out_flowdir      # fs.FlowDirection.MULTI
 
 Sink resolver operators may either update the flow graph or the topographic
 surface (or both) so that no flow is trapped in closed depressions (i.e., every
-flow path is ensured to reach one of the base level nodes).
+flow path is ensured to reach one of the [base level
+nodes](guide-base-level-nodes)).
 
 Some operators like {py:class}`~fastscapelib.PFloodSinkResolver` only update the
 topographic surface and do not require any pre-existing flow paths, while other
@@ -443,11 +455,12 @@ snapshot.update_routes(elevation)  # Error (read-only)!
 
 ## Flow Accumulation
 
-Once its flow paths have been computed, a {py:class}`~fastscapelib.FlowGraph`
-object can be used to advect and accumulate some quantity along the flow network
-via the {py:meth}`~fastscapelib.FlowGraph.accumulate` method. This is handy for
-computing a range of variables needed during a simulation or simply useful as
-model output or diagnostic.
+After [computing the flow paths](guide-compute-flow-paths), a
+{py:class}`~fastscapelib.FlowGraph` object is ready to accumulate some locally
+produced quantity or flux along the network via the
+{py:meth}`~fastscapelib.FlowGraph.accumulate` method. This is handy for
+computing a range of simulation internal variables, model outputs and/or
+diagnostics.
 
 :::{note}
 
@@ -459,7 +472,7 @@ covered by each grid node (cell).
 
 A few examples:
 
-- drainage area (or upslope contributing area)
+- *drainage area (or upslope contributing area)*
 
 ````{tab-set-code}
 ```{code-block} C++
@@ -473,7 +486,7 @@ drainage_area = graph.accumulate(1.0)
 
 Where ``drainage_area`` has dimensions {math}`[L^2]`.
 
-- water discharge computed from local surface runoff rate
+- *water discharge computed from local surface runoff rate*
 
 ````{tab-set-code}
 ```{code-block} C++
@@ -492,7 +505,7 @@ discharge = graph.accumulate(runoff_rate)
 Where ``runoff_rate`` has dimensions {math}`[L/T]` and ``discharge`` has
 dimensions {math}`[L^3/T]`.
 
-- sediment volume computed from vertical (local) erosion:
+- *sediment volume computed from vertical (local) erosion*
 
 ````{tab-set-code}
 ```{code-block} C++
@@ -516,18 +529,24 @@ dimensions {math}`[L^3]`.
 ## Advanced Usage
 
 For advanced use cases it is possible to have read-only access to the graph
-internal representation via the {py:meth}`~fastscapelib.FlowGraph.impl` method
-that returns the {py:class}`~fastscapelib.FlowGraphImpl` instance attached to
-the flow graph.
+internal data via the {py:meth}`~fastscapelib.FlowGraph.impl` method, which
+returns the {py:class}`~fastscapelib.FlowGraphImpl` instance attached to the
+flow graph.
 
 :::{warning}
 
 Relying on graph internal data for implementing custom logic in 3rd-party code
-should be only in last resort. Always prefer
-{py:meth}`~fastscapelib.FlowGraph.accumulate` when possible.
+should be done only when there is no alternative. Always prefer
+{py:meth}`~fastscapelib.FlowGraph.accumulate` when possible. Feedback and/or
+feature requests are also
+[welcome](https://github.com/fastscape-lem/fastscapelib/discussions).
 
 {py:class}`~fastscapelib.FlowGraphImpl` is an implementation detail and
 shouldn't be taken as stable API. In C++ this class is under the
 `fastscapelib::detail` namespace.
+
+Graph internal data should **never** be updated directly, or at your own risk!
+Only flow operators may do this internally. If direct update is possible this is
+probably a bug.
 
 :::
