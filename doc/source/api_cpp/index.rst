@@ -1,9 +1,10 @@
-:orphan:
-
 C++ API Reference
 =================
 
-- :doc:`grid`
-- :doc:`flow`
-- :doc:`eroder`
-- :doc:`utilities`
+.. toctree::
+   :maxdepth: 1
+
+   grid
+   flow
+   eroder
+   utilities

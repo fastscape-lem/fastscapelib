@@ -30,7 +30,7 @@ v3.0`_. See LICENSE file.
 
 .. _`GNU General Public License v3.0`: https://www.gnu.org/licenses/gpl-3.0.en.html
 
-fastscapelib uses some code from other projects. Their licenses are
+Fastscapelib uses some code from other projects. Their licenses are
 reproduced in the "licenses" directory.
 
 Acknowledgment
@@ -45,7 +45,7 @@ group of the GFZ Helmholtz Centre Potsdam.
 Citing fastscapelib
 -------------------
 
-If you use fastscapelib in a scientific publication, we would
+If you use Fastscapelib in a scientific publication, we would
 appreciate a `citation`_.
 
 .. _`citation`: http://fastscapelib.readthedocs.io/en/latest/citation.html

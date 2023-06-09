@@ -12,7 +12,6 @@ topographic data and landscape evolution modeling.
 `Discussions <https://github.com/fastscape-lem/fastscapelib/discussions>`__ |
 `Releases <https://github.com/fastscape-lem/fastscapelib/releases>`__
 
-
 .. grid:: 2
    :gutter: 3
 
@@ -71,23 +70,12 @@ topographic data and landscape evolution modeling.
    guide_eroders
 
 .. toctree::
-   :caption: C++ API Reference
+   :caption: API Reference
    :hidden:
    :maxdepth: 1
 
-   api_cpp/grid
-   api_cpp/flow
-   api_cpp/eroder
-   api_cpp/utilities
-
-.. toctree::
-   :caption: Python API Reference
-   :hidden:
-   :maxdepth: 1
-
-   api_python/grid
-   api_python/flow
-   api_python/eroder
+   api_cpp/index
+   api_python/index
 
 .. toctree::
    :caption: Developer Guide
@@ -96,7 +84,7 @@ topographic data and landscape evolution modeling.
 
    build_options
 
-Citing fastscapelib
+Citing Fastscapelib
 -------------------
 
 :ref:`How to cite Fastscapelib? <citation>`

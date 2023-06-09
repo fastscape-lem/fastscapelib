@@ -33,7 +33,7 @@ if on_rtd:
 # -- Project information -----------------------------------------------------
 
 project = "Fastscapelib"
-copyright = "2018, Benoit Bovy"
+copyright = "since 2018, Fastscapelib developers"
 author = "Benoit Bovy"
 
 

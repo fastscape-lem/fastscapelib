@@ -3,40 +3,59 @@
 Build and Configuration
 =======================
 
-Build options
+Include Fastscapelib in a CMake Project
+---------------------------------------
+
+After :ref:`installing Fastscapelib C++ headers <install-cpp>` (in a default
+location), you should be able to use CMake's `find_package
+<https://cmake.org/cmake/help/latest/command/find_package.html>`_ to ensure
+these will be found when building your CMake project:
+
+.. code:: cmake
+
+   find_package(fastscapelib REQUIRED)
+
+Don't forget to link your target library or application with Fastscapelib:
+
+.. code:: cmake
+
+   target_link_libraries(_your_target INTERFACE fastscapelib)
+
+Build Options
 -------------
 
-``fastscapelib`` build supports the following options (all disabled by
+Fastscapelib provides the following CMake build options (all disabled by
 default). See below for more explanations.
 
-- ``BUILD_TESTS``: enables the ``run_test`` target.
-- ``BUILD_BENCHMARK``: enables the ``run_benchmark`` target.
-- ``DOWNLOAD_GTEST``: downloads google-test and builds it locally
-  instead of using a binary installation.
-- ``GTEST_SRC_DIR``: indicates where to find the google-test sources
-  instead of downloading them.
-- ``BUILD_PYTHON_MODULE``: enables building fastscapelib as a Python
-  extension.
-- ``DOWNLOAD_XTENSOR``: downloads xtensor development version (master
-  branch on github) and uses it to build fastscapelib (useful for
-  testing - might be needed for building fastscapelib development
-  version).
+.. list-table::
+   :widths: 25 75
 
-Build and run tests
--------------------
+   * - ``BUILD_TESTS``
+     - Enables :ref:`building the C++ tests <run-cpp-tests>`
+   * - ``BUILD_BENCHMARK``
+     - Enables :ref:`building the micro-benchmarks <run-benchmarks>`
+   * - ``DOWNLOAD_GTEST``
+     - Downloads google-test and builds it locally instead of using a binary
+       installation
+   * - ``GTEST_SRC_DIR``
+     - Indicates where to find the google-test sources instead of downloading
+       them
+   * - ``BUILD_PYTHON_MODULE``
+     - Enables building fastscapelib as a Python extension (internal use only!
+       see :ref:`install-python` for instructions on how to build and install the
+       Python library from source)
+   * - ``DOWNLOAD_XTENSOR``
+     - Downloads xtensor development version (master branch on GitHub) and uses
+       it to build fastscapelib (useful for testing)
 
-Fastscapelib has a test suite based on google-test_. The enabled
-``BUILD_TESTS`` adds the target ``run_tests`` which builds and runs
-the whole test suite, e.g.,
+.. _run-cpp-tests:
 
-.. code::
+Build and Run the C++ Tests
+---------------------------
 
-   $ mkdir build
-   $ cd build
-   $ cmake -DBUILD_TESTS=ON ..
-   $ make run_tests
+Fastscapelib has a test suite based on google-test_.
 
-Google-test must have been already installed, e.g., using conda:
+You can install google-test, e.g., using conda:
 
 .. code::
 
@@ -44,40 +63,70 @@ Google-test must have been already installed, e.g., using conda:
 
 Alternatively, google-test may be downloaded automatically by enabling
 ``DOWNLOAD_GTEST``, or a custom install path may be given by setting
-``GTEST_SRC_DIR``. Note that enabling ``DOWNLOAD_GTEST`` or setting
-``GTEST_SRC_DIR`` enables ``BUILD_TESTS``.
+``GTEST_SRC_DIR`` (setting ``DOWNLOAD_GTEST=ON`` or
+``GTEST_SRC_DIR=/path/to/gtest`` automatically sets ``BUILD_TESTS=ON``).
+
+To build the tests, run the following commands from the source root directory:
+
+.. code::
+
+   $ cmake -S . -B build/tests -DBUILD_TESTS=ON
+   $ cmake --build build/tests
+
+Then to run all the tests:
+
+.. code::
+
+   $ ctest -T test --output-on-failure build/tests
 
 .. _google-test: https://github.com/google/googletest
 
-Build and run benchmarks
-------------------------
+Run the Python Tests
+--------------------
 
-Fastscapelib has also a benchmark suite based on
-google-benchmark_. Building and running benchmarks is similar to
-building and running tests (the ``BUILD_BENCHMARK`` option and
-``run_benchmark`` target are used instead). Note that
-``BUILD_BENCHMARK`` automatically downloads google-benchmark.
+Running the Python tests requires pytest_. You can install it using, e.g., conda:
+
+.. code::
+
+  $ conda install pytest -c conda-forge
+
+
+After :ref:`(re)installing the Fastscapelib Python library <install-python>`,
+you can run the tests using the following command (from the repository root
+directory):
+
+.. code::
+
+   $ pytest -v .
+
+.. _pytest: https://docs.pytest.org/
+
+.. _run-benchmarks:
+
+Build and Run the Benchmarks
+----------------------------
+
+Fastscapelib has also a micro-benchmark suite based on
+google-benchmark_.
+
+You can install google-benchmark, e.g., using conda:
+
+.. code::
+
+  $ conda install benchmark -c conda-forge
+
+To build the benchmarks, run the following commands from the source root
+directory:
+
+.. code::
+
+   $ cmake -S . -B build/benchmarks -DBUILD_BENCHMARK=ON
+   $ cmake --build build/benchmarks
+
+Then to run all the benchmarks:
+
+.. code::
+
+   $ build/benchmarks/./benchmark_fastscapelib
 
 .. _google-benchmark: https://github.com/google/benchmark
-
-Build the Python extension
---------------------------
-
-Fastscapelib has Python bindings, which can be built by enabling
-``BUILD_PYTHON_MODULE``, e.g.,
-
-.. code::
-
-   $ mkdir build
-   $ cd build
-   $ cmake -DBUILD_PYTHON_MODULE=ON ..
-   $ make _fastscapelib_py
-
-Note that the created Python library is not intended to be directly
-used within a regular Python installation. The preferred way to build
-and install fastscapelib locally is to use pip:
-
-.. code::
-
-   $ cd python
-   $ pip install -e .

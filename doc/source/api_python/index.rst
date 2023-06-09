@@ -1,8 +1,9 @@
-:orphan:
-
 Python API Reference
 ====================
 
-- :doc:`grid`
-- :doc:`flow`
-- :doc:`eroder`
+.. toctree::
+   :maxdepth: 1
+
+   grid
+   flow
+   eroder

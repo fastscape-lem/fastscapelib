@@ -2,20 +2,20 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="89.624855mm"
+   width="99.058998mm"
    height="89.96759mm"
-   viewBox="0 0 89.62486 89.96759"
+   viewBox="0 0 99.059004 89.96759"
    version="1.1"
    id="svg1040"
-   inkscape:version="0.92.4 (f8dce91, 2019-08-02)"
-   sodipodi:docname="index_contribute.svg">
+   inkscape:version="1.2.2 (b0a8486, 2022-12-01)"
+   sodipodi:docname="index_contribute.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
      id="defs1034" />
   <sodipodi:namedview
@@ -26,8 +26,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.35"
-     inkscape:cx="683.11893"
-     inkscape:cy="-59.078181"
+     inkscape:cx="284.28571"
+     inkscape:cy="-60"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -37,9 +37,12 @@
      fit-margin-bottom="0"
      inkscape:window-width="930"
      inkscape:window-height="472"
-     inkscape:window-x="2349"
-     inkscape:window-y="267"
-     inkscape:window-maximized="0" />
+     inkscape:window-x="1336"
+     inkscape:window-y="243"
+     inkscape:window-maximized="0"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
   <metadata
      id="metadata1037">
     <rdf:RDF>
@@ -48,7 +51,6 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -59,7 +61,7 @@
      transform="translate(234.72009,17.466935)">
     <g
        id="g875"
-       transform="matrix(0.99300176,0,0,0.99300176,-133.24106,-172.58804)">
+       transform="matrix(0.99300176,0,0,0.99300176,-128.51561,-172.58804)">
       <path
          sodipodi:nodetypes="ccc"
          inkscape:connector-curvature="0"
