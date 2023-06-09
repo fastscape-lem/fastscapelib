@@ -22,6 +22,8 @@ import platform
 import re
 import subprocess
 
+from matplotlib.font_manager import FontManager
+
 # -- Doxygen build on RTD ----------------------------------------------------
 
 on_rtd = os.environ.get("READTHEDOCS", None) == "True"
@@ -98,8 +100,8 @@ extensions = [
 ]
 
 extlinks = {
-    "issue": ("https://github.com/fastscape-lem/fastscapelib/issues/%s", "GH"),
-    "pull": ("https://github.com/fastscape-lem/fastscapelib/pull/%s", "PR"),
+    "issue": ("https://github.com/fastscape-lem/fastscapelib/issues/%s", "#"),
+    "pull": ("https://github.com/fastscape-lem/fastscapelib/pull/%s", "#"),
 }
 
 templates_path = ["_templates"]
@@ -138,6 +140,14 @@ typehints_defaults = "comma"
 typehints_use_rtype = False
 
 remove_from_toctrees = ["api_python/_api_generated/*"]
+
+# -- Myst-NB config ----------------------------------------------------------
+
+# This is to mitigate errors on CI VMs, where you can get the message:
+# Matplotlib is building the font cache" in output notebooks
+FontManager()
+
+nb_kernel_rgx_aliases = {".*fastscapelib.*": "python3"}
 
 # -- Options for HTML output -------------------------------------------------
 

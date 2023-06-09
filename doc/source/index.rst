@@ -22,6 +22,7 @@ topographic data and landscape evolution modeling.
       started with a few examples.
 
       - :doc:`install`
+      - :doc:`examples/index`
 
    .. grid-item-card::  User Guide
       :img-top: _static/index_user_guide.svg
@@ -57,8 +58,9 @@ topographic data and landscape evolution modeling.
    :maxdepth: 1
 
    install
-   release_notes
+   examples/index
    references
+   release_notes
 
 .. toctree::
    :caption: User Guide
