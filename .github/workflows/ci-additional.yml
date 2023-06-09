@@ -1,0 +1,40 @@
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+name: CI Additional
+
+jobs:
+  mypy:
+    name: Mypy
+    runs-on: "ubuntu-latest"
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-name: fastscapelib-dev
+          cache-environment: true
+          create-args: >-
+            python=3.11
+            numpy
+            cmake
+            xtensor-python
+            pip
+            mypy
+
+      - name: Build and install Fastscapelib Python
+        run: |
+          cd python
+          python -m pip install . -v
+
+      - name: Run mypy
+        run: |
+          python -m mypy --install-types
