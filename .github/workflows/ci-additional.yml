@@ -29,6 +29,7 @@ jobs:
             xtensor-python
             pip
             mypy
+            pytest
 
       - name: Build and install Fastscapelib Python
         run: |
