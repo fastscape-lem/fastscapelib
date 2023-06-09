@@ -45,8 +45,8 @@ topographic data and landscape evolution modeling.
    .. grid-item-card:: Developer Guide
       :img-top: _static/index_contribute.svg
 
-      The developer guide is for anyone who would like to contribute improving the
-      Fastscapelib library!
+      The developer guide is for anyone who would like to customize, integrate
+      or contribute improving the Fastscapelib library!
 
       - :doc:`build_options`
 

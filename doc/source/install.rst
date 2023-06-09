@@ -36,7 +36,7 @@ recommend installing either the C++ or Python library using conda_ (or mamba_).
        :link-type: ref
        :text-align: center
 
-       Install the Python library with conda_.
+       Install the pre-compiled Python library with conda_.
 
    .. grid-item-card:: Python / from source
        :img-top: _static/python_logo.svg
