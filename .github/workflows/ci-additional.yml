@@ -37,4 +37,5 @@ jobs:
 
       - name: Run mypy
         run: |
-          python -m mypy . --exclude=build
+          cd python
+          python -m mypy . --exclude=build --install-types --non-interactive
