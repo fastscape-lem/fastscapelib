@@ -50,6 +50,16 @@ flow routing, eroder classes, etc.)
 
        2-d raster grid, block uplift + stream-power law + hillslope diffusion.
 
+   .. grid-item-card:: Mountain
+       :link: mountain_cpp
+       :link-type: doc
+       :text-align: center
+
+       |cpp-logo|
+       ^^^
+
+       2-d raster grid, block uplift + stream-power law + hillslope diffusion.
+
    .. grid-item-card:: Escarpment
        :link: escarpment_py
        :link-type: doc
@@ -79,5 +89,6 @@ flow routing, eroder classes, etc.)
    river_profile_py
    river_profile_cpp
    mountain_py
+   mountain_cpp
    escarpment_py
    inner_base_levels_py
