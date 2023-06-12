@@ -6,6 +6,8 @@ Install Fastscapelib
 Choose the way to install Fastscapelib that best suits your needs. In general we
 recommend installing either the C++ or Python library using conda_ (or mamba_).
 
+|
+
 .. |conda-logo| image:: _static/conda_logo.svg
    :width: 20%
    :height: 2ex
@@ -46,6 +48,7 @@ recommend installing either the C++ or Python library using conda_ (or mamba_).
 
        Download, build and install the Python library from source using Pip.
 
+|
 
 .. _download-fastscapelib:
 

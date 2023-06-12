@@ -3,8 +3,9 @@ Fastscapelib
 
 |Build Status| |Doc Status| |Zenodo|
 
-A C++/Python library of efficient algorithms for processing topographic data and
-landscape evolution modeling.
+A C++/Python library of efficient and reusable algorithms for processing
+topographic data and landscape evolution modeling. It aims at providing a
+toolkit for building your own Landscape Evolution Models (LEMs).
 
 .. |Build Status| image:: https://github.com/fastscape-lem/fastscapelib/actions/workflows/tests.yml/badge.svg?branch=main
    :target: https://github.com/fastscape-lem/fastscapelib/actions/workflows/tests.yml
