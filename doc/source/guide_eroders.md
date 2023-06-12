@@ -38,4 +38,4 @@ reference for more details on each available erosion process.
 
 ## Examples
 
-TODO (see Section examples).
+See {doc}`examples/index`.
