@@ -1,6 +1,8 @@
 Utilities
 =========
 
+.. _xtensor-selectors:
+
 Xtensor container selectors
 ---------------------------
 
