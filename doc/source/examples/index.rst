@@ -24,6 +24,7 @@ flow routing, eroder classes, etc.)
        :link: river_profile_py
        :link-type: doc
        :text-align: center
+       :img-bottom: ../_static/fig_river_profile.png
 
        |python-logo|
        ^^^
@@ -34,6 +35,7 @@ flow routing, eroder classes, etc.)
        :link: river_profile_cpp
        :link-type: doc
        :text-align: center
+       :img-bottom: ../_static/fig_river_profile.png
 
        |cpp-logo|
        ^^^
@@ -44,6 +46,7 @@ flow routing, eroder classes, etc.)
        :link: mountain_py
        :link-type: doc
        :text-align: center
+       :img-bottom: ../_static/fig_mountain.png
 
        |python-logo|
        ^^^
@@ -54,6 +57,7 @@ flow routing, eroder classes, etc.)
        :link: mountain_cpp
        :link-type: doc
        :text-align: center
+       :img-bottom: ../_static/fig_mountain.png
 
        |cpp-logo|
        ^^^
@@ -64,17 +68,19 @@ flow routing, eroder classes, etc.)
        :link: escarpment_py
        :link-type: doc
        :text-align: center
+       :img-bottom: ../_static/fig_escarpment.png
 
        |python-logo|
        ^^^
 
-       2-d raster grid, semi-infinite domain (half-periodic boundaries), stream-power
-       law + hillslope diffusion.
+       2-d raster grid, semi-infinite domain (half-periodic boundaries),
+       multiple direction flow, stream-power law + hillslope diffusion.
 
    .. grid-item-card:: Inner Base Levels
        :link: inner_base_levels_py
        :link-type: doc
        :text-align: center
+       :img-bottom: ../_static/fig_inner_base_levels.png
 
        |python-logo|
        ^^^

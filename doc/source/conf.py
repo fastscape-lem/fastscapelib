@@ -169,6 +169,7 @@ html_theme_options = {
     "sidebar_hide_name": True,
     "light_logo": "fastscapelib_logo.svg",
     "dark_logo": "fastscapelib_logo.svg",
+    "announcement": "Fastscapelib is in <em>active development</em> (refactoring) and will be released soon, stay tuned!",
     "footer_icons": [
         {
             "name": "GitHub",
