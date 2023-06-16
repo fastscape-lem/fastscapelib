@@ -165,10 +165,11 @@ See {cpp:class}`~fastscapelib::neighbors_cache` and
 ### Implementation(s)
 
 The template class {cpp:class}`~fastscapelib::flow_graph` is distinct from its
-implementation done in the template class `flow_graph_impl`. Both expose a
-``Tag`` template parameter for selecting a given implementation.
+implementation done in the template class `flow_graph_impl<G, S, Tag>`. Both
+expose the same template parameters, where ``Tag`` is used for selecting a given
+graph implementation (or representation).
 
-Currently, Fastscapelib only supports one implementation that uses fixed-shape
+Currently, Fastscapelib only supports one implementation based on fixed-shape
 arrays to store the graph topology. This implementation is selected via the
 {cpp:class}`~fastscapelib::flow_graph_fixed_array_tag` type. Other
 implementations may be added in the future, for example based on linked-lists or
@@ -240,25 +241,30 @@ classDiagram
 ```
 
 The {cpp:class}`~fastscapelib::flow_operator` abstract base class provides the
-operator interface. Each operator must be defined as a child class, where the
+operator interface. Each operator must be defined as a subclass, where the
 operator parameters (if any) should also be defined.
 
 The ``flow_operator_impl<FG, OP, Tag>`` implementation template class must be
 specialized for a given {cpp:class}`~fastscapelib::flow_operator` subclass
-(``OP``) as well as a given {ref}`flow graph implementation
-<internals-flow-graph-impl>` type (``FG``) and tag (``Tag``). The implementation
-base class has the following methods and members:
+(``OP``) as well as a given {ref}`flow graph implementation tag
+<internals-flow-graph-impl>` (``Tag``). The actual flow graph implementation
+type (``FG``) will also depend on the type ``G`` of the grid used to create the
+flow graph (i.e., ``FG`` is equivalent to ``flow_graph_impl<G, S, Tag>``).
+
+The implementation base class has the following methods and members:
 
 - ``apply()``: method through which the actual logic of the operator is executed
-  (should be implemented by every operator at least for one graph implementation)
-- ``save()``: method used by {cpp:class}`~fastscapelib::flow_snapshot` (generally
-  not implemented by other operators)
+  and that should be re-implemented by every operator at least for one graph
+  implementation
+- ``save()``: method re-implemented by {cpp:class}`~fastscapelib::flow_snapshot`
+  and generally not re-implemented by other operators
 - ``m_op_ptr``: a shared pointer to an instance of ``OP``, useful for accessing the
   operator parameter values, if any
 
 The template class ``flow_operator_sequence<FG>`` serves as an intermediate for
-instantiating the implementation of each operator that has been passed to
-{cpp:class}`~fastscapelib::flow_graph`. This is done via the template class
+instantiating the implementation of each of the operators that have been passed
+to {cpp:class}`~fastscapelib::flow_graph`. This is done via the template class
 ``flow_operator_impl_facade<FG>``, which implements [type
 erasure](https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Type_Erasure) so that
-operators of different types can be added to the sequence.
+implementation specializations of arbitrary operators types ``OP`` can be added
+to the sequence.
