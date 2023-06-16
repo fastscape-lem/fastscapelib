@@ -95,6 +95,7 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx_remove_toctrees",
     "sphinxcontrib.bibtex",
+    "sphinxcontrib.mermaid",
     "sphinx_design",
     "myst_nb",
 ]

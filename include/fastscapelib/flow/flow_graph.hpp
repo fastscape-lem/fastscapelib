@@ -23,8 +23,8 @@ namespace fastscapelib
      * the topographic surface.
      *
      * @tparam G The grid type.
-     * @tparam Tag The flow graph implementation tag.
      * @tparam S The xtensor container selector for data array members.
+     * @tparam Tag The flow graph implementation tag.
      */
     template <class G, class S = typename G::xt_selector, class Tag = flow_graph_fixed_array_tag>
     class flow_graph
