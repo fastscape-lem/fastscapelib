@@ -84,9 +84,9 @@ runtime). It is implemented using the Curiously Recurring Template Pattern
 
 - the {cpp:class}`~fastscapelib::grid` and
   {cpp:class}`~fastscapelib::structured_grid` base classes both have a ``G``
-  template parameter that corresponds to one of the grid final (leaf) classes
+  template parameter that represents one of the grid final (leaf) classes
 - those base classes also have a ``derived_grid()`` protected method to cast the
-  grid instance into the ``G`` grid type
+  grid instance into the ``G`` grid (leaf) type
 
 See the class diagram below (showing only a subset of the public API for
 clarity). See also the {doc}`grid API reference <api_cpp/grid>` for more
@@ -123,9 +123,9 @@ classDiagram
 ### Grid Inner Types
 
 The grid base classes need some types and values that are specific to each grid
-type (e.g., grid resolution, number of dimensions of grid field arrays, maximum
-number of node neighbors, etc.) and that must therefore be defined in grid leaf
-classes.
+derived type (e.g., grid resolution, number of dimensions of grid field arrays,
+maximum number of node neighbors, etc.) and that must therefore be defined in
+grid leaf classes.
 
 However, with CRTP this is not possible since a CRTP leaf class is only declared
 when the CRTP base class is being defined.
@@ -186,8 +186,8 @@ implementation classes <internals-flow-operators>`.
 It is not possible with [Pybind11](https://pybind11.readthedocs.io) to expose in
 Python a C++ template class that is not fully specialized.
 
-Since the template class {cpp:class}`~fastscapelib::flow_graph` has the grid type
-as template parameter ``G``, we rely on the [type
+Since the template class {cpp:class}`~fastscapelib::flow_graph` has the grid
+(leaf) type as template parameter ``G``, we rely on the [type
 erasure](https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Type_Erasure)
 technique in order to avoid exposing separate flow graph classes in Python for
 each grid type.
@@ -199,7 +199,7 @@ each grid type.
 Like the flow graph, the architecture of flow operators decouples an operator
 from its implementation(s) so that it will be possible to later support other
 graph internal representations while reusing the same operators. It also makes
-easier exposing flow operators in Python, since
+easier exposing the flow operator classes in Python, since
 {cpp:class}`~fastscapelib::flow_operator` is not a template class, nor any of
 its subclasses.
 
@@ -240,31 +240,45 @@ classDiagram
     }
 ```
 
+### Operator (Interface) Classes
+
 The {cpp:class}`~fastscapelib::flow_operator` abstract base class provides the
-operator interface. Each operator must be defined as a subclass, where the
-operator parameters (if any) should also be defined.
+operator interface. Each operator must be defined as a subclass, within which
+the operator parameters (if any) should also be defined.
 
-The ``flow_operator_impl<FG, OP, Tag>`` implementation template class must be
-specialized for a given {cpp:class}`~fastscapelib::flow_operator` subclass
-(``OP``) as well as a given {ref}`flow graph implementation tag
-<internals-flow-graph-impl>` (``Tag``). The actual flow graph implementation
-type (``FG``) will also depend on the type ``G`` of the grid used to create the
-flow graph (i.e., ``FG`` is equivalent to ``flow_graph_impl<G, S, Tag>``).
+### Operator Implementation (Template) Class
 
-The implementation base class has the following methods and members:
+The ``flow_operator_impl<FG, OP, Tag>`` template class is where all the
+operators are implemented. It must be partially specialized for the two
+following template parameters:
+
+- ``OP`` (flow operator type): at least one specialization must exist for each
+  {cpp:class}`~fastscapelib::flow_operator` subclass.
+- ``Tag`` ({ref}`flow graph implementation tag <internals-flow-graph-impl>`): a
+  flow operator may be implemented for one or more of the available flow graph
+  representations.
+
+It is not specialized regarding the ``FG`` parameter (actual flow graph
+implementation type), which also depends on the grid (leaf) type ``G`` passed
+from the flow graph (i.e., ``FG`` is equivalent to ``flow_graph_impl<G, S,
+Tag>``).
+
+``flow_operator_impl<FG, OP, Tag>`` inherits from a base class that has the
+following methods and members:
 
 - ``apply()``: method through which the actual logic of the operator is executed
-  and that should be re-implemented by every operator at least for one graph
-  implementation
+  and that should be re-implemented by every operator
 - ``save()``: method re-implemented by {cpp:class}`~fastscapelib::flow_snapshot`
   and generally not re-implemented by other operators
 - ``m_op_ptr``: a shared pointer to an instance of ``OP``, useful for accessing the
   operator parameter values, if any
+
+### Operator Sequence Class
 
 The template class ``flow_operator_sequence<FG>`` serves as an intermediate for
 instantiating the implementation of each of the operators that have been passed
 to {cpp:class}`~fastscapelib::flow_graph`. This is done via the template class
 ``flow_operator_impl_facade<FG>``, which implements [type
 erasure](https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Type_Erasure) so that
-implementation specializations of arbitrary operators types ``OP`` can be added
-to the sequence.
+instances of ``flow_operator_impl<FG, OP, Tag>`` of arbitrary operators types
+``OP`` can be built and added to the sequence at runtime.
