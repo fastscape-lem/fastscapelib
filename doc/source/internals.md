@@ -135,30 +135,6 @@ As a workaround, those grid inner types and values are defined in a separate
 template class {cpp:class}`~fastscapelib::grid_inner_types` that is specialized
 for each grid leaf class.
 
-### Neighbor Nodes Cache
-
-Fastscapelib implements a caching system for retrieving neighbor node indices,
-which is particularly useful for speeding-up neighbor lookup on structured
-(raster) grids. Such a cache helps avoiding repetitive operations like checking
-if the current is on the boundary and finding reflective neighbors (looped
-boundary) if any. However, that speed-up is achieved at the expense of memory.
-
-The cache is exposed as a template parameter for
-{cpp:class}`~fastscapelib::raster_grid_xt` so that this behavior may be
-customized (cache may be disabled). For other grid types like
-{cpp:class}`~fastscapelib::unstructured_mesh_xt` with explicit topology, the
-cache is not needed and not used.
-
-:::{note}
-
-In the Python bindings the cache is enabled for raster grids and there is
-currently no option to disable it
-
-:::
-
-See {cpp:class}`~fastscapelib::neighbors_cache` and
-{cpp:class}`~fastscapelib::neighbors_no_cache` for more details.
-
 ## Flow Graph
 
 (internals-flow-graph-impl)=
