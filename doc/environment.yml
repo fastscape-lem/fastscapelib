@@ -2,5 +2,18 @@ name: fastscapelib-docs
 channels:
   - conda-forge
 dependencies:
+  - python=3.9
   - breathe
   - cmake
+  - xtensor-python
+  - pybind11
+  - numpy
+  - matplotlib-base
+  - sphinx
+  - sphinx-remove-toctrees
+  - sphinxcontrib-bibtex
+  - sphinxcontrib-mermaid
+  - sphinx-design
+  - sphinx-autodoc-typehints
+  - myst-nb
+  - pip
