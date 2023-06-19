@@ -24,6 +24,7 @@ building your own Landscape Evolution Models (LEMs).
       New to Fastscapelib? Check the guide on how to install the library and get
       started with a few examples.
 
+      - :doc:`why_fastscapelib`
       - :doc:`install`
       - :doc:`examples/index`
 
@@ -61,6 +62,7 @@ building your own Landscape Evolution Models (LEMs).
    :hidden:
    :maxdepth: 1
 
+   why_fastscapelib
    install
    examples/index
    references

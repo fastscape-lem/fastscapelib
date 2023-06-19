@@ -1,3 +1,4 @@
+(internals)=
 # Internals of Fastscapelib
 
 This section provides information about Fastscapelib's internals, its design and
@@ -12,13 +13,13 @@ in C++ will help you better understand its internals.
 
 :::
 
+(internals-xtensor-language-bindings)=
 ## Xtensor & Language Bindings
 
-Fastscapelib heavily relies on the
-[Xtensor](https://xtensor.readthedocs.io/en/latest/) C++ library for both its
-API and its internals. Xtensor provides multi-dimensional array containers that
-may be handled in a very similar way than [NumPy](https://numpy.org/) arrays in
-Python.
+Fastscapelib heavily relies on the [Xtensor](https://xtensor.readthedocs.io) C++
+library for both its API and its internals. Xtensor provides multi-dimensional
+array containers that may be handled in a very similar way than
+[NumPy](https://numpy.org/) arrays in Python.
 
 For usage within C++ there are two main container types {cpp:type}`xt::xtensor`
 and {cpp:type}`xt::xarray` with a static and dynamic number of dimensions,
