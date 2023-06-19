@@ -55,6 +55,7 @@ building your own Landscape Evolution Models (LEMs).
 
       - :doc:`build_options`
       - :doc:`internals`
+      - :doc:`contributing`
 
 
 .. toctree::
@@ -92,6 +93,7 @@ building your own Landscape Evolution Models (LEMs).
 
    build_options
    internals
+   contributing
 
 Citing Fastscapelib
 -------------------

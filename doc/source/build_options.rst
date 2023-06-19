@@ -81,6 +81,8 @@ Then to run all the tests:
 
 .. _google-test: https://github.com/google/googletest
 
+.. _run-python-tests:
+
 Run the Python Tests
 --------------------
 
