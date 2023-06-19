@@ -164,7 +164,7 @@ commands from the source root directory:
 .. code-block:: bash
 
    $ cd python
-   $ pip install .
+   $ python -m pip install .
 
 .. _cmake: https://cmake.org/
 .. _conda: https://conda.io/docs/
