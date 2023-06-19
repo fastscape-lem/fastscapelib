@@ -1,7 +1,20 @@
 (guide-grids)=
 # Grids
 
+All algorithms implemented here for landscape evolution modeling are ultimately
+based on grids or meshes.
+
+Fastscapelib provides convenient classes for dealing with various kinds of grids
+via some unified API. Those classes together form a well-defined layer of
+abstraction on top of which algorithms (flow routing, differential equation
+solvers, etc.) may be implemented in a grid-agnostic fashion.
+
 ## Types of Grids
+
+## Grid Representation
+
+Nodes and explicit or implicit connectivity. Faces or cells are not represented
+explicitly (only via area).
 
 ## Node Status and Boundary Conditions
 
