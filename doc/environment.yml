@@ -16,4 +16,5 @@ dependencies:
   - sphinx-design
   - sphinx-autodoc-typehints
   - myst-nb
+  - furo
   - pip
