@@ -22,7 +22,9 @@ recommend installing either the C++ or Python library using conda_ (or mamba_).
        :link-type: ref
        :text-align: center
 
-       Install the C++ (header-only) library with conda_.
+       Install the C++ (header-only) library with conda_
+
+       (stable versions)
 
    .. grid-item-card:: C++ / from source
        :img-top: _static/cpp_logo.svg
@@ -30,7 +32,9 @@ recommend installing either the C++ or Python library using conda_ (or mamba_).
        :link-type: ref
        :text-align: center
 
-       Download and install the C++ (header-only) library with CMake.
+       Download and install the C++ (header-only) library with CMake
+
+       (stable & development versions)
 
    .. grid-item-card:: Python / |conda-logo|
        :img-top: _static/python_logo.svg
@@ -38,7 +42,9 @@ recommend installing either the C++ or Python library using conda_ (or mamba_).
        :link-type: ref
        :text-align: center
 
-       Install the pre-compiled Python library with conda_.
+       Install the pre-compiled Python library with conda_
+
+       (stable versions)
 
    .. grid-item-card:: Python / from source
        :img-top: _static/python_logo.svg
@@ -46,7 +52,9 @@ recommend installing either the C++ or Python library using conda_ (or mamba_).
        :link-type: ref
        :text-align: center
 
-       Download, build and install the Python library from source using Pip.
+       Download, build and install the Python library from source using Pip
+
+       (stable & development versions)
 
 |
 
@@ -55,10 +63,10 @@ recommend installing either the C++ or Python library using conda_ (or mamba_).
 Download the Fastscapelib Source
 --------------------------------
 
-If you want to build Fastscapelib from source, you can either download the last
-release `here <https://github.com/fastscape-lem/fastscapelib/releases/latest>`_
-or you can clone the source repository using git (by default it will clone the
-active development ``main`` branch):
+You can either download the last stable version as an archive `here
+<https://github.com/fastscape-lem/fastscapelib/releases/latest>`_ or you can
+clone the source repository using git (by default it will clone the active
+development ``main`` branch):
 
 .. code-block:: bash
 
@@ -83,9 +91,9 @@ in a (CMake) project.
 Using Conda
 ~~~~~~~~~~~
 
-Fastscapelib conda_ packages are available via the conda-forge channel. You can
-install Fastscapelib's C++ headers all dependencies using the following command
-(alternatively you can use mamba_):
+Fastscapelib conda_ packages are available for all stable versions via the
+conda-forge channel. You can install Fastscapelib's C++ headers all dependencies
+using the following command (alternatively you can use mamba_):
 
 .. code-block:: bash
 
@@ -129,9 +137,9 @@ Install the Python Library
 Using Conda
 ~~~~~~~~~~~
 
-Fastscapelib's Python bindings are available as binary conda_ packages for
-Linux, MacOS and Windows via the conda-forge channel. You can install it using
-the following command (alternatively you can use mamba_):
+Fastscapelib's Python bindings are available for all stable versions as binary
+conda_ packages for Linux, MacOS and Windows via the conda-forge channel. You
+can install it using the following command (alternatively you can use mamba_):
 
 .. code-block:: bash
 
