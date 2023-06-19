@@ -19,6 +19,8 @@ Defined in ``fastscapelib/flow/flow_graph_impl.hpp``
 
 .. _cpp-api-flow-operators:
 
+|
+
 Flow operators
 --------------
 
@@ -32,6 +34,8 @@ Defined in ``fastscapelib/flow/flow_operator.hpp``
 .. doxygenclass:: fastscapelib::flow_operator_sequence
    :members:
 
+|
+
 Flow routers
 ~~~~~~~~~~~~
 
@@ -40,7 +44,7 @@ Defined in ``fastscapelib/flow/flow_router.hpp``
 - :cpp:class:`~fastscapelib::single_flow_router`
 - :cpp:class:`~fastscapelib::multi_flow_router`
 
-----
+|
 
 .. doxygenclass:: fastscapelib::single_flow_router
    :members:
@@ -50,6 +54,8 @@ Defined in ``fastscapelib/flow/flow_router.hpp``
    :members:
    :undoc-members:
 
+|
+
 Sink resolvers
 ~~~~~~~~~~~~~~
 
@@ -58,7 +64,7 @@ Defined in ``fastscapelib/flow/sink_resolver.hpp``
 - :cpp:struct:`~fastscapelib::pflood_sink_resolver`
 - :cpp:class:`~fastscapelib::mst_sink_resolver`
 
-----
+|
 
 .. doxygenstruct:: fastscapelib::pflood_sink_resolver
    :members:
@@ -70,6 +76,8 @@ Defined in ``fastscapelib/flow/sink_resolver.hpp``
    :members:
    :undoc-members:
 
+|
+
 Flow snapshots
 ~~~~~~~~~~~~~~
 
@@ -77,11 +85,13 @@ Defined in ``fastscapelib/flow/flow_snapshot.hpp``
 
 - :cpp:class:`~fastscapelib::flow_snapshot`
 
-----
+|
 
 .. doxygenclass:: fastscapelib::flow_snapshot
    :members:
    :undoc-members:
+
+|
 
 Basin graph
 -----------

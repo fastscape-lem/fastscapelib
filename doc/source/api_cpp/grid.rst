@@ -10,6 +10,8 @@ Grid elements
 - :cpp:struct:`~fastscapelib::neighbor`
 - :cpp:struct:`~fastscapelib::raster_neighbor`
 
+|
+
 Grid boundaries
 ---------------
 
@@ -17,10 +19,14 @@ Grid boundaries
 - :cpp:class:`~fastscapelib::profile_boundary_status`
 - :cpp:class:`~fastscapelib::raster_boundary_status`
 
+|
+
 Grid inner types
 ----------------
 
 .. doxygenstruct:: fastscapelib::grid_inner_types
+
+|
 
 Base classes and structures
 ---------------------------
@@ -34,7 +40,7 @@ Defined in ``fastscapelib/grid/base.hpp``.
 - :cpp:class:`~fastscapelib::grid`
 - :cpp:class:`~fastscapelib::structured_grid`
 
-----
+|
 
 .. doxygenenum:: fastscapelib::node_status
 
@@ -57,6 +63,8 @@ Defined in ``fastscapelib/grid/structured_grid.hpp``
    :members:
    :undoc-members:
 
+|
+
 Caching neighbor indices
 ------------------------
 
@@ -71,7 +79,7 @@ unstructured meshes where the topology is already fully contained.
 - :cpp:class:`~fastscapelib::neighbors_cache`
 - :cpp:class:`~fastscapelib::neighbors_no_cache`
 
-----
+|
 
 .. doxygenclass:: fastscapelib::neighbors_cache
    :members:
@@ -80,6 +88,8 @@ unstructured meshes where the topology is already fully contained.
 .. doxygenclass:: fastscapelib::neighbors_no_cache
    :members:
    :undoc-members:
+
+|
 
 Profile grid
 ------------
@@ -91,7 +101,7 @@ Defined in ``fastscapelib/grid/profile_grid.hpp``.
 - :cpp:class:`~template\<class S, class C = neighbors_cache\<2>> fastscapelib::profile_grid_xt`
 - :cpp:type:`~fastscapelib::profile_grid`
 
-----
+|
 
 .. doxygenclass:: fastscapelib::profile_boundary_status
    :members:
@@ -106,6 +116,8 @@ Defined in ``fastscapelib/grid/profile_grid.hpp``.
 
 .. doxygentypedef:: fastscapelib::profile_grid
 
+|
+
 Raster grid
 -----------
 
@@ -119,7 +131,7 @@ Defined in ``fastscapelib/grid/raster_grid.hpp``.
 - :cpp:class:`~template\<class S, raster_connect RC, class C = neighbors_cache\<raster_neighbors\<RC>::_n_neighbors_max>> fastscapelib::raster_grid_xt`
 - :cpp:type:`~fastscapelib::raster_grid`
 
-----
+|
 
 .. doxygenstruct:: fastscapelib::raster_node
    :members:
@@ -142,6 +154,8 @@ Defined in ``fastscapelib/grid/raster_grid.hpp``.
 
 .. doxygentypedef:: fastscapelib::raster_grid
 
+|
+
 Unstructured mesh
 -----------------
 
@@ -151,7 +165,7 @@ Defined in ``fastscapelib/grid/unstructured_mesh.hpp``.
 - :cpp:class:`~template\<class S, unsigned int N = 30> fastscapelib::unstructured_mesh_xt`
 - :cpp:type:`~fastscapelib::unstructured_mesh`
 
-----
+|
 
 .. doxygenstruct:: fastscapelib::grid_inner_types< unstructured_mesh_xt< S, N > >
    :members:
