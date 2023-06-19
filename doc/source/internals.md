@@ -121,6 +121,13 @@ classDiagram
     class unstructured_mesh_xt
 ```
 
+### Python Bindings
+
+Note that since we use static polymorphism, only the grid leaf classes are
+exposed in Python, i.e., {cpp:class}`~fastscapelib::grid` and
+{cpp:class}`~fastscapelib::structured_grid` have no Python bindings and the grid
+Python classes have no common base class.
+
 ### Grid Inner Types
 
 The grid base classes need some types and values that are specific to each grid
@@ -185,9 +192,9 @@ diagram below.
 
 ```{mermaid}
 classDiagram
-    flow_operator "1" *-- "1" flow_operator_impl_base~FG, OP~
+    flow_operator "1" *-- "1" flow_operator_impl_base~FG, OP~: shared pointer
     flow_operator_impl_base~OP~ <|-- flow_operator_impl~FG, OP, Tag~
-    flow_operator_impl~FG, OP, Tag~ "1" *-- "1" flow_operator_impl_facade~FG~
+    flow_operator_impl~FG, OP, Tag~ "1" *-- "1" flow_operator_impl_facade~FG~ : type erasure
     flow_operator_sequence~FG~ "1" --* "n" flow_operator_impl_facade~FG~
     flow_operator_sequence~FG~ "1" *-- "1" flow_graph~G, S, Tag~
     class flow_operator{
@@ -196,6 +203,9 @@ classDiagram
         +in_flowdir
         +out_flowdir
         +virtual name()
+    }
+    class flow_graph~G, S, Tag~{
+        +operators()
     }
     class flow_operator_impl_base~FG, OP~{
         #m_op_ptr
@@ -211,9 +221,6 @@ classDiagram
         +elevation_updated()
         +graph_updated()
         +out_flowdir()
-    }
-    class flow_graph~G, S, Tag~{
-        +operators()
     }
 ```
 
@@ -247,8 +254,9 @@ following methods and members:
   and that should be re-implemented by every operator
 - ``save()``: method re-implemented by {cpp:class}`~fastscapelib::flow_snapshot`
   and generally not re-implemented by other operators
-- ``m_op_ptr``: a shared pointer to an instance of ``OP``, useful for accessing the
-  operator parameter values, if any
+- ``m_op_ptr``: a shared pointer to an instance of ``OP``, useful for accessing
+  from within the implementation code the current values set for the operator
+  parameters, if any
 
 ### Operator Sequence Class
 
