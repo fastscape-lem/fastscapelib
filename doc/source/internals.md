@@ -172,9 +172,8 @@ Python a C++ template class that is not fully specialized.
 
 Since the template class {cpp:class}`~fastscapelib::flow_graph` has the grid
 (leaf) type as template parameter ``G``, we rely on the [type
-erasure](https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Type_Erasure)
-technique in order to avoid exposing separate flow graph classes in Python for
-each grid type.
+erasure](https://en.wikipedia.org/wiki/Type_erasure) technique in order to avoid
+exposing separate flow graph classes in Python for each grid type.
 
 (internals-flow-operators)=
 
@@ -264,6 +263,6 @@ The template class ``flow_operator_sequence<FG>`` serves as an intermediate for
 instantiating the implementation of each of the operators that have been passed
 to {cpp:class}`~fastscapelib::flow_graph`. This is done via the template class
 ``flow_operator_impl_facade<FG>``, which implements [type
-erasure](https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Type_Erasure) so that
-instances of ``flow_operator_impl<FG, OP, Tag>`` of arbitrary operators types
-``OP`` can be built and added to the sequence at runtime.
+erasure](https://en.wikipedia.org/wiki/Type_erasure) so that instances of
+``flow_operator_impl<FG, OP, Tag>`` of arbitrary operators types ``OP`` can be
+built and added to the sequence at runtime.

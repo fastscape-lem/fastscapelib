@@ -163,8 +163,8 @@ values of the input elevation field.
 Flow can be routed over the topographic surface in many different ways ;
 choosing one approach over another highly depends on the case studied.
 Fastscapelib relies on the concept of "flow operators" that provide a flexible
-and convenient solution for implementing simple to advanced [flow routing
-strategies](guide-flow-routing-strategies).
+and convenient solution for implementing simple to advanced {ref}`flow routing
+strategies <guide-flow-routing-strategies>`.
 
 A flow operator is a "routing unit" that:
 
@@ -183,7 +183,8 @@ Flow router operators generally compute new flow paths from scratch and fully
 update the flow graph. The updated flow graph has a defined
 {py:class}`~fastscapelib.FlowDirection`: either ``SINGLE`` with one unique
 receiver per node or ``MULTI`` where the flow is partitioned among multiple
-receiver nodes with fixed or variable weights ([Figure 1](fig_grid_vs_graph)).
+receiver nodes with fixed or variable weights ({ref}`Figure 1
+<fig_grid_vs_graph>`).
 
 
 ````{tab-set-code}
@@ -218,8 +219,8 @@ fs.MultiFlowRouter.out_flowdir      # fs.FlowDirection.MULTI
 
 Sink resolver operators may either update the flow graph or the topographic
 surface (or both) so that no flow is trapped in closed depressions (i.e., every
-flow path is ensured to reach one of the [base level
-nodes](guide-base-level-nodes)).
+flow path is ensured to reach one of the {ref}`base level nodes
+<guide-base-level-nodes>`).
 
 Some operators like {py:class}`~fastscapelib.PFloodSinkResolver` only update the
 topographic surface and do not require any pre-existing flow paths, while other
@@ -299,8 +300,8 @@ passed to the {py:class}`~fastscapelib.FlowGraph` constructor. Calling
 operators one after each other.
 
 Here below are a few examples from simple to more advanced strategies (grid
-setup is skipped for more clarity, see the [flow graph full example
-above](guide-flow-graph)).
+setup is skipped for more clarity, see the {ref}`flow graph full example
+above <guide-flow-graph>`).
 
 ### Single Direction Flow Routing
 
@@ -457,7 +458,7 @@ snapshot.update_routes(elevation)  # Error (read-only)!
 
 ## Flow Accumulation
 
-After [computing the flow paths](guide-compute-flow-paths), a
+After {ref}`computing the flow paths <guide-compute-flow-paths>`, a
 {py:class}`~fastscapelib.FlowGraph` object is ready to accumulate some locally
 produced quantity or flux along the network via the
 {py:meth}`~fastscapelib.FlowGraph.accumulate` method. This is handy for
