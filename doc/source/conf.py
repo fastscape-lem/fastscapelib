@@ -124,7 +124,7 @@ bibtex_bibfiles = ["references.bib"]
 
 # pygments_style = "sphinx"
 highlight_language = "c++"
-myst_enable_extensions = ["colon_fence"]
+myst_enable_extensions = ["colon_fence", "substitution"]
 
 # not working yet (https://github.com/sphinx-doc/sphinx/issues/5379)
 autodoc_member_order = "bysource"
