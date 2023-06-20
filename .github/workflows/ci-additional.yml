@@ -7,6 +7,16 @@ on:
 name: CI Additional
 
 jobs:
+  check-links:
+    name: Check links
+    runs-on: "ubuntu-latest"
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@master
+
+    - name: Markdown link check
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+
   mypy:
     name: Mypy
     runs-on: "ubuntu-latest"
