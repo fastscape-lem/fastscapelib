@@ -24,7 +24,7 @@ Directed Acyclic Graph or DAG) that connects each grid node to its flow
 receiver(s) (neighbors).
 
 The flow graph data structure is distinct although closely related to a grid
-([Figure 1](fig_grid_vs_graph)):
+({ref}`Figure 1 <fig_grid_vs_graph>`):
 
 - each graph node correspond to a grid node
 - graph edges together form a subset of the grid (implicit or explicit) edges
@@ -43,8 +43,8 @@ the flow paths (graph edges).
 
 A {cpp:class}`~fastscapelib::flow_graph` (C++) or
 {py:class}`~fastscapelib.FlowGraph` (Python) object can be created from any grid
-object (see Section [](guide-grids)), e.g., in the example below from a raster
-grid:
+object (see Section {ref}`guide-grids`), e.g., in the example below from a
+raster grid:
 
 ````{tab-set-code}
 ```{code-block} C++
@@ -78,14 +78,14 @@ graph = fs.FlowGraph(grid, [fs.SingleFlowRouter()])
 
 A sequence of flow operators must be passed as second argument to the flow graph
 constructor in order to define the flow routing strategy (see Sections
-[](guide-flow-operators) and [](guide-flow-routing-strategies)).
+{ref}`guide-flow-operators` and {ref}`guide-flow-routing-strategies`).
 
 (guide-base-level-nodes)=
 ### Base Level Nodes
 
 The flow routing algorithms implemented in Fastscapelib require one or more
-nodes of the graph to be set as "base level" (or outlet) nodes ([Figure
-1](fig_grid_vs_graph)).
+nodes of the graph to be set as "base level" (or outlet) nodes ({ref}`Figure 1
+<fig_grid_vs_graph>`).
 
 These specific nodes may collect input flow but cannot release any output flow
 (it could also mean that the flow is leaving the modeled domain or sub-domain,
