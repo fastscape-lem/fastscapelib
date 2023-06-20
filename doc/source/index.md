@@ -2,7 +2,8 @@
 
 Fastscapelib is a C++/Python library of efficient and reusable algorithms for
 landscape evolution modeling. It aims at providing a (bare bones) toolkit for
-building your own Landscape Evolution Models (LEMs).
+building your own Landscape Evolution Models (LEMs) or integrating it with other
+existing codes or models.
 
 **Useful links**:
 [Home](http://fastscapelib.readthedocs.io/) |
