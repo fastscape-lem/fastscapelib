@@ -8,7 +8,8 @@ fashion.
 
 ## Types of Grids
 
-The table below describes the type of grids that are currently available in Fastscapelib.
+The table below describes the type of grids that are currently available in
+Fastscapelib (also illustrated in {ref}`Figure 1 <fig_grid_types>`).
 
 ```{list-table} Grid types
 :header-rows: 1
@@ -43,13 +44,23 @@ The table below describes the type of grids that are currently available in Fast
     given to the grid constructor).
  ```
 
+```{figure} _static/fig_grid_types.svg
+:name: fig_grid_types
+:alt: Grid types and representation
+:align: center
+
+Figure 1: Grid types (left: profile, center: raster, right: unstructured mesh)
+and representation (points: nodes, dashed lines: implicit or explicit
+connectivity).
+```
+
 ## Grid Representation
 
 Fastscapelib currently implements a simple representation for all of its grids,
 which only includes the grid nodes (points) and their implicit or explicit
-connectivity. See Sections {ref}`grid-node-iterators` and
-{ref}`connectivity-node-neighbors` for how to iterate through grid nodes and
-their neighbors.
+connectivity ({ref}`Figure 1 <fig_grid_types>`). See Sections
+{ref}`grid-node-iterators` and {ref}`connectivity-node-neighbors` for how to
+iterate through grid nodes and their neighbors.
 
 Grid faces or cells are not represented explicitly, i.e., cell vertices and
 edges are not stored as grid data members. However, the area of the cell
@@ -444,7 +455,8 @@ overloads to use row and column indices instead of grid flat indices.
 
 {cpp:class}`~fastscapelib::raster_grid_xt` (C++) exposes a template parameter
 that allows choosing the grid connectivity among three modes (see
-{cpp:enum}`~fastscapelib::raster_connect`):
+{cpp:enum}`~fastscapelib::raster_connect` and {ref}`Figure 2
+<fig_raster_connect>`):
 
 - ``queen`` (8-node connectivity, including diagonals, set by default)
 - ``rook`` (4-node connectivity, no diagonal)
@@ -455,6 +467,14 @@ that allows choosing the grid connectivity among three modes (see
 {py:class}`~fastscapelib.RasterGrid` (Python) only supports the ``queen`` mode.
 
 :::
+
+```{figure} _static/fig_raster_connect.svg
+:name: fig_raster_connect
+:alt: Raster connectivity modes
+:align: center
+
+Figure 2: Raster grid connectivity modes: queen (left), rook (center) and bishop (right).
+```
 
 ### Caching Neighbor Node Indices
 
