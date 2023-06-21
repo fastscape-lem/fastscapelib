@@ -1,4 +1,4 @@
-import _fastscapelib_py
-from _fastscapelib_py import *
-
-__version__ = _fastscapelib_py.__version__
+from _fastscapelib_py import __version__  # type: ignore[import]
+from fastscapelib.eroders import *
+from fastscapelib.flow import *
+from fastscapelib.grid import *

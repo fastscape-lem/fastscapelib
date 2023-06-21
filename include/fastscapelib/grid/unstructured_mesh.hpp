@@ -15,6 +15,9 @@ namespace fastscapelib
     template <class S, unsigned int N>
     class unstructured_mesh_xt;
 
+    /**
+     * Unstructured mesh specialized types.
+     */
     template <class S, unsigned int N>
     struct grid_inner_types<unstructured_mesh_xt<S, N>>
     {
@@ -32,11 +35,13 @@ namespace fastscapelib
     };
 
     /**
-     * @class unstructured_mesh_xt
      * @brief 2-dimensional unstructured mesh.
      *
-     * @tparam S xtensor container selector for data array members.
-     * @tparam N Max number of grid node neighbors.
+     * Fastscapelib grid adapter for a 2-d triangulated mesh. This class
+     * requires an input mesh (it doesn't provide any meshing capability).
+     *
+     * @tparam S The xtensor container selector for data array members.
+     * @tparam N The maximum number of grid node neighbors.
      */
     template <class S, unsigned int N = 30>
     class unstructured_mesh_xt : public grid<unstructured_mesh_xt<S, N>>
@@ -107,6 +112,24 @@ namespace fastscapelib
     };
 
 
+    /**
+     * @name Constructors
+     */
+    //@{
+    /**
+     * Creates a new mesh.
+     *
+     * @param points The mesh node x,y coordinates (expects an array of shape [N, 2]).
+     * @param neighbors_indices_ptr The lookup offsets of the neighbors of each mesh node
+     *                              (expects an array of shape [N+1]).
+     * @param neighbors_indices The node neighbor indices (flattened array)
+     * @param convex_hull_indices The indices of the boundary nodes.
+     * @param areas The area of the cells centered to each mesh node (array of shape [N]).
+     * @param status_at_nodes Manually define the status at any node on the mesh.
+     *
+     * If ``status_at_nodes`` is empty, a "fixed value" status is set for all
+     * boundary nodes.
+     */
     template <class S, unsigned int N>
     unstructured_mesh_xt<S, N>::unstructured_mesh_xt(const points_type& points,
                                                      const indices_type& neighbors_indices_ptr,
@@ -132,6 +155,7 @@ namespace fastscapelib
         compute_neighbors_counts();
         compute_neighbors_distances();
     }
+    //@}
 
     // pre-compute and store the number of neighbors wastes memory for such trivial operation
     // but it is needed since the `neighbors_count` public method returns a const reference
@@ -206,19 +230,37 @@ namespace fastscapelib
         m_status_at_nodes = temp_status_at_nodes;
     }
 
+    /**
+     * @name Grid properties
+     */
+    //@{
     template <class S, unsigned int N>
     inline auto unstructured_mesh_xt<S, N>::node_area(const size_type& idx) const noexcept
         -> grid_data_type
     {
         return m_areas[idx];
     }
+    //@}
 
+    /**
+     * @name Grid topology
+     */
+    /**
+     * Returns the number of neighbors of a given grid node.
+     *
+     * @param idx The grid node flat index.
+     *
+     * @see fastscapelib::grid<G>::neighbors_indices,
+     *      fastscapelib::grid<G>::neighbors_distances,
+     *      fastscapelib::grid<G>::neighbors
+     */
     template <class S, unsigned int N>
     auto unstructured_mesh_xt<S, N>::neighbors_count(const size_type& idx) const
         -> const neighbors_count_type&
     {
         return m_neighbors_counts[idx];
     }
+    //@}
 
     template <class S, unsigned int N>
     void unstructured_mesh_xt<S, N>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
@@ -243,11 +285,13 @@ namespace fastscapelib
 
     /**
      * @typedef unstructured_mesh
-     * Alias template on unstructured_mesh_xt with ``xt::xtensor`` used
-     * as array container type for data members.
+     *
+     * \rst
+     * Alias template on ``unstructured_mesh_xt`` with :cpp:type:`xt::xtensor`
+     * used as array container type for data members.
      *
      * This is mainly for convenience when using in C++ applications.
-     *
+     * \endrst
      */
     using unstructured_mesh = unstructured_mesh_xt<xt_selector>;
 }

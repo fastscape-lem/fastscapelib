@@ -3,13 +3,14 @@
 
 #pragma once
 
-#include <vector>
+#include <algorithm>
 #include <array>
-#include <queue>
-#include <stack>
 #include <limits>
 #include <numeric>
-#include <algorithm>
+#include <queue>
+#include <stack>
+#include <stdexcept>
+#include <vector>
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/flow/flow_graph_impl.hpp"
@@ -21,10 +22,25 @@
 namespace fastscapelib
 {
 
+    /**
+     * Algorithm used to compute the reduced graph (tree) of basins (minimum
+     * spanning tree).
+     *
+     * Kruskal's algorithm is rather simple and has non-linear complexity \f$O(E
+     * \log V)\f$ where \f$E\f$ is the number of basin connections and \f$V\f$
+     * is the number of basins.
+     *
+     * Boruvka's algorithm is more advanced and has linear complexity for planar
+     * graphs (most flow graphs are planar except, e.g., those built on raster
+     * grids with connectivity including the diagonals).
+     *
+     * The gain in performance of Boruvka's algorithm over Kruskal's one is
+     * significant only for (very) large graphs.
+     */
     enum class mst_method
     {
-        kruskal,
-        boruvka
+        kruskal, /**< Kruskal's algorithm. */
+        boruvka  /**< Boruvka's algorithm. */
     };
 
 
@@ -35,6 +51,18 @@ namespace fastscapelib
     }
 
 
+    /**
+     * Represents a graph of adjacent basins (catchments) connected via a two
+     * "pass" nodes where the water flow spills from one basin into another.
+     *
+     * \rst
+     * Such graph is built and used by :cpp:class:`~fastscapelib::mst_sink_resolver`
+     * to resolve flow routing accross closed depressions in the surface topography.
+     * \endrst
+     *
+     * @tparam FG The flow graph implementation type (only
+     * ``flow_graph_fixed_array_tag`` is supported).
+     */
     template <class FG>
     class basin_graph
     {
@@ -50,21 +78,17 @@ namespace fastscapelib
         using data_type = typename flow_graph_impl_type::data_type;
         using data_array_type = typename flow_graph_impl_type::data_array_type;
 
-        /*
-         * Represents an edge of the graph of flow basins. It contains the
-         * indices of the two connected basins as well as the indices of the
-         * grid nodes forming the pass crossing the basins (+ the elevation of
-         * the pass, i.e., the max. elevation among the two pass nodes, and the
-         * pass length, i.e., the distance between the two pass nodes).
+        /**
+         * Represents an edge of the graph of basins.
          */
         struct edge
         {
-            size_type link[2];
-            size_type pass[2];
-            data_type pass_elevation;
-            data_type pass_length;
+            size_type link[2]; /**< Indices of the two connected basins */
+            size_type pass[2]; /**< Indices of the grid nodes forming the pass accross the basins */
+            data_type pass_elevation; /**< Maximum elevation among the two pass nodes */
+            data_type pass_length;    /**< Distance between the two pass nodes */
 
-            /*
+            /**
              * Create a new edge with no assigned pass yet.
              */
             static edge make_edge(const size_type& from, const size_type& to)
@@ -84,38 +108,72 @@ namespace fastscapelib
             }
         };
 
-
+        /**
+         * Create a new graph of basins from a flow graph.
+         *
+         * @param flow_graph_impl A flow graph implementation instance (fixed array).
+         * @param basin_method The algorithm used to compute the reduced tree of basins.
+         *
+         * \rst
+         * .. warning::
+         *    A basin graph requires a flow graph with single direction flow paths as
+         *    its current state. However, no validation is done here since the state of
+         *    the same flow graph may later change from single to multiple direction
+         *    after the basin graph has been (re)computed.
+         * \endrst
+         */
         basin_graph(const flow_graph_impl_type& flow_graph_impl, mst_method basin_method)
             : m_flow_graph_impl(flow_graph_impl)
             , m_mst_method(basin_method)
         {
             m_perf_boruvka = 0;
-
-            // TODO: check shape of receivers (should be single flow)
         }
 
+        /**
+         * Returns the total number of basins.
+         */
         inline size_type basins_count() const
         {
             return m_flow_graph_impl.outlets().size();
         }
 
+        /**
+         * Returns a vector of node indices that represent the outlets of each
+         * of the basins in this graph.
+         */
         inline const std::vector<size_type>& outlets() const
         {
             return m_flow_graph_impl.outlets();
         }
 
+        /**
+         * Returns the edges of the graph of basins.
+         */
         const std::vector<edge>& edges() const
         {
             return m_edges;
         }
 
+        /**
+         * Returns the reduced graph (tree) of basins after applying the
+         * selected minimum spanning tree algorithm.
+         */
         const std::vector<size_type>& tree() const
         {
             return m_tree;
         }
 
+        /**
+         * Update (re-compute from-scratch) the graph and its reduced tree from
+         * the given topographic surface.
+         *
+         * @param elevation The topographic surface elevation at each grid node.
+         */
         void update_routes(const data_array_type& elevation);
 
+        /**
+         * Boruvka's algorithm performance diagnostic.
+         */
         size_t perf_boruvka() const
         {
             return m_perf_boruvka;

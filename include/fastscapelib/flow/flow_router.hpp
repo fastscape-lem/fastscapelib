@@ -10,11 +10,16 @@
 namespace fastscapelib
 {
 
-    /*
+    /**
      * Single direction flow router operator.
      *
      * This flow operator routes all the flow passing through a grid node
      * towards its neighbors node of steepest slope.
+     *
+     * \rst
+     * On a raster grid with 8-node connectivity, this is equivalent to the
+     * so-called "D8" algorithm :cite:p:`OCallaghan1984`.
+     * \endrst
      *
      */
     class single_flow_router : public flow_operator
@@ -33,7 +38,7 @@ namespace fastscapelib
     namespace detail
     {
 
-        /*
+        /**
          * Single flow router operator implementation.
          */
         template <class FG>
@@ -68,7 +73,7 @@ namespace fastscapelib
 
                 donors_count.fill(0);
 
-                for (auto i : grid.nodes_indices())
+                for (auto i : grid.node_indices())
                 {
                     receivers(i, 0) = i;
                     dist2receivers(i, 0) = 0;
@@ -102,13 +107,29 @@ namespace fastscapelib
     }
 
 
-    /*
+    /**
      * Multiple direction flow router operator.
      *
      * This flow operator partitions the flow passing through a grid node among
      * its downslope neighbor nodes. Flow partitioning is proportional to the
      * local slope between a node and its neighbors (power relationship with a
      * fixed exponent parameter).
+     *
+     * The fraction \f$f_{i,j}\f$ of flow routed from node \f$i\f$ to its
+     * neighbor \f$j\f$ is given by
+     *
+     * @f[
+     * f_{i,j} = \frac{\max (0, S_{i, j}^p)}{\sum_{k \in N} \max (0, S_{i, k}^p)}
+     * @f]
+     *
+     * where \f$p\f$ is the slope exponent parameter, \f$S_{i, j}\f$ is the
+     * slope between \f$i\f$, \f$j\f$ and \f$N\f$ is the set of all neighbors of
+     * \f$i\f$.
+     *
+     * \rst
+     * Depending on the value of the slope exponent parameter, this is equivalent to
+     * the methods described in :cite:t:`Quinn1991` or :cite:t:`Holmgren1994`.
+     * \endrst
      *
      */
     class multi_flow_router : public flow_operator
@@ -122,6 +143,11 @@ namespace fastscapelib
         static constexpr bool graph_updated = true;
         static constexpr flow_direction out_flowdir = flow_direction::multi;
 
+        /**
+         * Create a new multi flow router operator.
+         *
+         * @param slope_exp The flow partition slope exponent.
+         */
         multi_flow_router(double slope_exp)
             : m_slope_exp(slope_exp)
         {
@@ -134,7 +160,7 @@ namespace fastscapelib
     namespace detail
     {
 
-        /*
+        /**
          * Multiple direction flow router operator implementation.
          */
         template <class FG>
@@ -169,7 +195,7 @@ namespace fastscapelib
 
                 donors_count.fill(0);
 
-                for (auto i : grid.nodes_indices())
+                for (auto i : grid.node_indices())
                 {
                     if (grid.status_at_nodes().data()[i] == node_status::fixed_value_boundary)
                     {

@@ -10,7 +10,7 @@
 namespace fastscapelib
 {
 
-    /*
+    /**
      * Flow direction enum class.
      *
      * Used as a tag to specify the kind of flow graph (i.e., single, multiple
@@ -34,7 +34,7 @@ namespace fastscapelib
         multi
     };
 
-    /*
+    /**
      * Flow operator.
      *
      * It represents a logical unit that can read and/or modify in-place the flow
@@ -57,11 +57,29 @@ namespace fastscapelib
         {
         }
 
+        /**
+         * Returns the name of the operator.
+         */
         inline virtual std::string name() const noexcept = 0;
 
+        /**
+         * Whether the operator updates topographic elevation.
+         */
         static constexpr bool elevation_updated = false;
+
+        /**
+         * Whether the operator updates the flow graph.
+         */
         static constexpr bool graph_updated = false;
+
+        /**
+         * The type of flow direction required as input of this operator.
+         */
         static constexpr flow_direction in_flowdir = flow_direction::undefined;
+
+        /**
+         * The output flow direction type of this operator.
+         */
         static constexpr flow_direction out_flowdir = flow_direction::undefined;
     };
 
@@ -69,7 +87,7 @@ namespace fastscapelib
     namespace detail
     {
 
-        /*
+        /**
          * Flow operator implementation base class.
          *
          * It exposes two methods:
@@ -125,7 +143,7 @@ namespace fastscapelib
             std::shared_ptr<const OP> m_op_ptr;
         };
 
-        /*
+        /**
          * Flow operator implementation.
          *
          * This template class is not directly constructible. Template specialized
@@ -144,7 +162,7 @@ namespace fastscapelib
             flow_operator_impl(std::shared_ptr<OP> ptr) = delete;
         };
 
-        /*
+        /**
          * Flow operator implementation facade.
          *
          * This facade class implements type erasure so that multiple flow operators
@@ -243,7 +261,7 @@ namespace fastscapelib
     template <class G, class S, class Tag>
     class flow_graph;
 
-    /*
+    /**
      * Immutable container of flow operators (e.g., flow routers, sink resolvers,
      * flow snapshots) that are applied in chain when updating a flow graph.
      *
@@ -251,7 +269,7 @@ namespace fastscapelib
      * used internally as an entity of flow_graph and can (should) be created
      * implicitly in the flow_graph constructor.
      *
-     * @tparam FG The flow graph implementation type
+     * @tparam FG The flow graph implementation type.
      */
     template <class FG>
     class flow_operator_sequence
@@ -304,20 +322,23 @@ namespace fastscapelib
             return *this;
         }
 
-        /*
-         * STL-compatible iterators for looping over the operators.
+        /**
+         * STL-compatible iterator pointing to the 1st operator.
          */
         iterator_type begin()
         {
             return m_op_vec.begin();
         }
 
+        /**
+         * STL-compatible iterator pointing to the last operator.
+         */
         iterator_type end()
         {
             return m_op_vec.end();
         }
 
-        /*
+        /**
          * Returns true if at least one operator in the sequence
          * updates topographic elevation.
          */
@@ -326,7 +347,7 @@ namespace fastscapelib
             return m_elevation_updated;
         }
 
-        /*
+        /**
          * Returns true if at least one operator in the sequence
          * updates the flow graph.
          */
@@ -335,7 +356,7 @@ namespace fastscapelib
             return m_graph_updated;
         }
 
-        /*
+        /**
          * Returns the flow direction type (single, multiple or undefined)
          * of the final state of the flow graph, after having applied all operators.
          */
@@ -344,7 +365,7 @@ namespace fastscapelib
             return m_out_flowdir;
         }
 
-        /*
+        /**
          * Returns true if all intermediate states of the flow graph
          * have single flow directions.
          */
@@ -353,7 +374,7 @@ namespace fastscapelib
             return m_all_single_flow;
         }
 
-        /*
+        /**
          * Returns true if the graph snapshot given by ``name`` is single flow.
          */
         bool snapshot_single_flow(std::string name)
@@ -361,7 +382,7 @@ namespace fastscapelib
             return m_graph_snapshot_single_flow.at(name);
         }
 
-        /*
+        /**
          * Returns the names of all flow graph snapshots to create.
          */
         const std::vector<std::string>& graph_snapshot_keys() const
@@ -369,7 +390,7 @@ namespace fastscapelib
             return m_graph_snapshot_keys;
         }
 
-        /*
+        /**
          * Returns the names of all topographic elevation snapshots to create.
          */
         const std::vector<std::string>& elevation_snapshot_keys() const

@@ -20,13 +20,13 @@ namespace fastscapelib
     namespace detail
     {
 
-        /*
+        /**
          * Flow operator implementation forward declaration.
          */
         template <class FG, class OP, class Tag>
         class flow_operator_impl;
 
-        /*
+        /**
          * Flow graph implementation.
          *
          * Implements the graph underlying data structures and API
@@ -44,7 +44,7 @@ namespace fastscapelib
         class flow_graph_impl;
     }
 
-    /*
+    /**
      * Fixed array flow graph implementation.
      *
      * This implementation uses fixed shape arrays to store the graph

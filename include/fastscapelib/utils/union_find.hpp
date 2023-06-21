@@ -18,7 +18,7 @@ namespace fastscapelib
     {
 
         /**
-         * @class
+         * @class union_find
          * @brief Union-Find data structure
          *
          * The union find is a standard data structure for storing and merging equivalence

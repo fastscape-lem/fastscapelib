@@ -60,4 +60,8 @@ target_compile_features(${PY_FASTSCAPELIB} PUBLIC cxx_std_17)
 # ============
 
 install(TARGETS ${PY_FASTSCAPELIB}
-        DESTINATION ${SP_DIR})
+    DESTINATION ${SP_DIR})
+
+# install type annotations
+install(FILES _fastscapelib_py.pyi
+    DESTINATION ${SP_DIR})

@@ -21,13 +21,18 @@
 namespace fastscapelib
 {
 
-    /*
+    /**
      * Priority-flood sink resolver operator.
      *
      * This flow operator fills the closed depressions in the topographic
      * surface using the priority flood algorithm +epsilon variant (Barnes et
      * al., 2014). This variant prevents flat surfaces and hence ensure
      * that the flow can be routed towards the outlets without disruption.
+     *
+     * \rst
+     * See :cite:t:`Barnes2014` for a more detailed description of the algorithm.
+     *
+     * \endrst
      *
      */
     struct pflood_sink_resolver : public flow_operator
@@ -44,7 +49,7 @@ namespace fastscapelib
     namespace detail
     {
 
-        /*
+        /**
          * Priority-flood sink resolver operator implementation.
          */
         template <class FG, class Tag>
@@ -68,26 +73,43 @@ namespace fastscapelib
     }
 
 
+    /**
+     * Method used by ``mst_sink_resolver`` to route flow within each closed
+     * depressions.
+     *
+     * The ``basic`` method is the most efficient one but does not result in a
+     * "realistic", planar flow graph.
+     *
+     * The ``carve`` method mimics carving a narrow canyon within the
+     * depression.
+     */
     enum class mst_route_method
     {
-        basic,
-        carve
+        basic, /**< Connect the pit node directly to the depression spill node. */
+        carve  /**< Revert the (unique) flow path between the spill and pit nodes */
     };
 
 
-    /*
+    /**
      * Minimum Spanning Tree (MST) sink resolver operator.
      *
      * This flow operator re-routes the flow trapped in closed depressions
      * towards their spill, using an efficient algorithm that explicitly
      * computes a graph of (inner and outer) basins and reduces it as a tree
-     * (Cordonnier et al,, 2019).
+     * (Cordonnier et al., 2019).
      *
      * It requires a single flow graph as input.
      *
      * This operator also use the updated routes in closed depressions to
      * fill these with nearly flat surfaces (a tiny slope ensure natural
      * flow routing for the operators applied after this one).
+     *
+     * \rst
+     * See :cite:t:`Cordonnier2019` for a more detailed description of the algorithm.
+     *
+     * \endrst
+     *
+     * @see fastscapelib::basin_graph
      *
      */
     class mst_sink_resolver : public flow_operator
@@ -118,7 +140,7 @@ namespace fastscapelib
     namespace detail
     {
 
-        /*
+        /**
          * Minimum Spanning Tree (MST) sink resolver operator implementation.
          */
         template <class FG>

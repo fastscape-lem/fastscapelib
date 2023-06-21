@@ -3,11 +3,10 @@ Fastscapelib
 
 |Build Status| |Doc Status| |Zenodo|
 
-A C++ library of efficient algorithms for processing topographic data
-and landscape evolution modeling.
-
-This library currently has Python bindings and is easily extensible to
-other languages.
+A C++/Python library of efficient and reusable algorithms for landscape
+evolution modeling. It aims at providing a (bare bones) toolkit for building
+your own Landscape Evolution Models (LEMs) or integrating it with other existing
+codes or models.
 
 .. |Build Status| image:: https://github.com/fastscape-lem/fastscapelib/actions/workflows/tests.yml/badge.svg?branch=main
    :target: https://github.com/fastscape-lem/fastscapelib/actions/workflows/tests.yml
@@ -33,7 +32,7 @@ v3.0`_. See LICENSE file.
 
 .. _`GNU General Public License v3.0`: https://www.gnu.org/licenses/gpl-3.0.en.html
 
-fastscapelib uses some code from other projects. Their licenses are
+Fastscapelib uses some code from other projects. Their licenses are
 reproduced in the "licenses" directory.
 
 Acknowledgment
@@ -48,7 +47,7 @@ group of the GFZ Helmholtz Centre Potsdam.
 Citing fastscapelib
 -------------------
 
-If you use fastscapelib in a scientific publication, we would
+If you use Fastscapelib in a scientific publication, we would
 appreciate a `citation`_.
 
 .. _`citation`: http://fastscapelib.readthedocs.io/en/latest/citation.html

@@ -30,6 +30,37 @@ namespace fastscapelib
     };
 
 
+    /**
+     * Hillslope erosion using linear diffusion.
+     *
+     * It numerically solves the diffusion equation using an Alternating
+     * Direction Implicit (ADI) scheme.
+     *
+     * The equation is given by:
+     *
+     * @f[
+     * \frac{\partial h}{\partial t} = K \nabla^2 h
+     * @f]
+     *
+     * where \f$K\f$ is an erosion coefficient (diffusivity) and \f$\nabla^2
+     * h\f$ is the local curvature of the topographic surface.
+     *
+     * This equation implies that the amount of sediment eroded is linearly
+     * proportional to the local gradient of the topographic surface.
+     *
+     * \rst
+     * .. warning::
+     *    Only raster grids are supported.
+     *
+     * .. note::
+     *    This eroder assumes Dirichlet boundary conditions at the border
+     *    nodes of the raster grid.
+     * \endrst
+     *
+     * @tparam FG The raster grid type.
+     * @tparam S The xtensor container selector for data array members.
+     *
+     */
     template <class G, class S = typename G::xt_selector>
     class diffusion_adi_eroder
     {
@@ -41,6 +72,14 @@ namespace fastscapelib
         using data_array_type = xt_array_t<xt_selector, data_type>;
         using data_tensor_type = xt_tensor_t<xt_selector, data_type, grid_type::xt_ndims()>;
 
+        /**
+         * Create a new diffusion ADI eroder.
+         *
+         * @param grid The input raster grid.
+         * @param k_coef The \f$K\f$ value (spatially uniform or variable).
+         *
+         * @tparam K Either a scalar float type or an array (xtensor expression) type.
+         */
         template <class K>
         diffusion_adi_eroder(G& grid,
                              K&& k_coef,
@@ -56,6 +95,9 @@ namespace fastscapelib
             set_k_coef(k_coef);
         };
 
+        /**
+         * Return the \f$K\f$ value.
+         */
         data_array_type k_coef()
         {
             if (m_k_coef_is_scalar)
@@ -68,6 +110,9 @@ namespace fastscapelib
             }
         }
 
+        /**
+         * Set a spatially uniform, scalar \f$K\f$ value.
+         */
         template <class T>
         void set_k_coef(T value, typename std::enable_if_t<std::is_floating_point<T>::value>* = 0)
         {
@@ -77,6 +122,12 @@ namespace fastscapelib
             set_factors();
         };
 
+        /**
+         * Set a spatially variable, array \f$K\f$ value.
+         *
+         * The array expression or container must have the same shape than the
+         * raster grid arrays.
+         */
         template <class K>
         void set_k_coef(K&& value, typename std::enable_if_t<xt::is_xexpression<K>::value>* = 0)
         {
@@ -90,6 +141,12 @@ namespace fastscapelib
             set_factors();
         };
 
+        /**
+         * Solve diffusion for one time step.
+         *
+         * @param elevation The elevation of surface topography at each grid node.
+         * @param dt The duration of the time step.
+         */
         const data_array_type& erode(const data_array_type& elevation, double dt);
 
     private:
@@ -303,6 +360,15 @@ namespace fastscapelib
     }
 
 
+    /**
+     * Helper to create a new diffusion ADI eroder.
+     *
+     * @param grid The input raster grid.
+     * @param k_coef The \f$K\f$ value (spatially uniform or variable).
+     *
+     * @tparam G The raster grid type.
+     * @tparam K Either a scalar float type or an array (xtensor expression) type.
+     */
     template <class G, class K>
     diffusion_adi_eroder<G> make_diffusion_adi_eroder(G& grid, K&& k_coef)
     {

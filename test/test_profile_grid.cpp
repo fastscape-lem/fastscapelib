@@ -190,7 +190,7 @@ namespace fastscapelib
 
         TEST_F(profile_grid, node_area)
         {
-            for (auto n : fixed_grid.nodes_indices())
+            for (auto n : fixed_grid.node_indices())
             {
                 EXPECT_EQ(fixed_grid.node_area(n), 1.3);
                 EXPECT_EQ(looped_grid.node_area(n), 1.4);

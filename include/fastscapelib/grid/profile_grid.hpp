@@ -99,6 +99,9 @@ namespace fastscapelib
     template <class S, class C>
     class profile_grid_xt;
 
+    /**
+     * Profile grid specialized types.
+     */
     template <class S, class C>
     struct grid_inner_types<profile_grid_xt<S, C>>
     {
@@ -120,13 +123,12 @@ namespace fastscapelib
     };
 
     /**
-     * @class profile_grid_xt
-     * @brief 1-dimensional uniform grid.
+     * 1-dimensional uniform grid.
      *
-     * Used for modeling single channel or hillslope profiles.
+     * Useful for modeling single channel or hillslope profiles.
      *
-     * @tparam S xtensor container selector for data array members.
-     * @tparam C Grid neighbors cache type.
+     * @tparam S The xtensor container selector for data array members.
+     * @tparam C The grid neighbor nodes cache type.
      */
     template <class S, class C = neighbors_cache<2>>
     class profile_grid_xt : public structured_grid<profile_grid_xt<S, C>>
@@ -164,7 +166,6 @@ namespace fastscapelib
                                            const std::vector<node>& status_at_nodes = {});
 
         inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
-        inline const neighbors_count_type& neighbors_count(const code_type& code) const noexcept;
 
     protected:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
@@ -217,7 +218,7 @@ namespace fastscapelib
      *
      * @param size Total number of grid nodes.
      * @param spacing Distance between two adjacent grid nodes.
-     * @param status_at_bounds Status at boundary nodes (left & right grid edges).
+     * @param status_at_bounds Status at boundary nodes (left/right grid edges).
      * @param status_at_nodes Manually define the status at any node on the grid.
      */
     template <class S, class C>
@@ -299,19 +300,25 @@ namespace fastscapelib
         }
     }
 
+    /**
+     * @name Grid topology
+     */
+    /**
+     * Returns the number of neighbors of a given grid node.
+     *
+     * @param idx The grid node flat index.
+     *
+     * @see fastscapelib::grid<G>::neighbors_indices,
+     *      fastscapelib::grid<G>::neighbors_distances,
+     *      fastscapelib::grid<G>::neighbors
+     */
     template <class S, class C>
-    auto profile_grid_xt<S, C>::neighbors_count(const size_type& idx) const noexcept
+    inline auto profile_grid_xt<S, C>::neighbors_count(const size_type& idx) const noexcept
         -> const neighbors_count_type&
     {
         return m_neighbors_count[gcode(idx)];
     }
-
-    template <class S, class C>
-    auto profile_grid_xt<S, C>::neighbors_count(const code_type& code) const noexcept
-        -> const neighbors_count_type&
-    {
-        return m_neighbors_count[code];
-    }
+    //@}
 
     template <class S, class C>
     void profile_grid_xt<S, C>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
@@ -384,11 +391,13 @@ namespace fastscapelib
 
     /**
      * @typedef profile_grid
-     * Alias template on profile_grid_xt with ``xt::xtensor`` used
-     * as array container type for data members.
+     *
+     * \rst
+     * Alias template on ``profile_grid_xt`` with :cpp:type:`xt::xtensor`
+     * used as array container type for data members.
      *
      * This is mainly for convenience when using in C++ applications.
-     *
+     * \endrst
      */
     using profile_grid = profile_grid_xt<xt_selector>;
 }

@@ -31,12 +31,18 @@ namespace fastscapelib
     template <class G>
     void register_grid_static_properties(py::class_<G>& pyg)
     {
-        pyg.def_property_readonly_static("is_structured",
-                                         [](py::object /*self*/) { return G::is_structured(); })
-            .def_property_readonly_static("is_uniform",
-                                          [](py::object /*self*/) { return G::is_uniform(); })
-            .def_property_readonly_static("n_neighbors_max",
-                                          [](py::object /*self*/) { return G::n_neighbors_max(); });
+        pyg.def_property_readonly_static(
+               "is_structured",
+               [](py::object /*self*/) { return G::is_structured(); },
+               "Returns True if the grid type is structured.")
+            .def_property_readonly_static(
+                "is_uniform",
+                [](py::object /*self*/) { return G::is_uniform(); },
+                "Returns True if the grid type has uniform node spacing.")
+            .def_property_readonly_static(
+                "n_neighbors_max",
+                [](py::object /*self*/) { return G::n_neighbors_max(); },
+                "Returns the maximum number of grid node neighbors.");
     }
 
     /*
@@ -46,10 +52,16 @@ namespace fastscapelib
     template <class G>
     void register_base_grid_properties(py::class_<G>& pyg)
     {
-        pyg.def_property_readonly("size", [](const G& g) { return g.size(); });
-        pyg.def_property_readonly("shape", [](const G& g) { return g.shape(); });
-        pyg.def_property_readonly("status_at_nodes",
-                                  [](const G& g) { return g.status_at_nodes(); });
+        pyg.def_property_readonly(
+            "size", [](const G& g) { return g.size(); }, "Returns the total number of grid nodes.");
+        pyg.def_property_readonly(
+            "shape",
+            [](const G& g) { return g.shape(); },
+            "Returns the shape of the grid node arrays.");
+        pyg.def_property_readonly(
+            "status_at_nodes",
+            [](const G& g) { return g.status_at_nodes(); },
+            "Returns the array of grid node status.");
     }
 
     /*
@@ -65,8 +77,14 @@ namespace fastscapelib
         using property_t = std::
             conditional_t<std::is_same<G, py_raster_grid>::value, xt::pytensor<double, 1>, double>;
 
-        pyg.def_property_readonly("spacing", [](const G& g) -> property_t { return g.spacing(); });
-        pyg.def_property_readonly("length", [](const G& g) -> property_t { return g.length(); });
+        pyg.def_property_readonly(
+            "spacing",
+            [](const G& g) -> property_t { return g.spacing(); },
+            "Returns the fixed distance between two adjacent nodes for each dimension.");
+        pyg.def_property_readonly(
+            "length",
+            [](const G& g) -> property_t { return g.length(); },
+            "Returns the total length of the grid for each of its dimension.");
     }
 
     template <class G>
@@ -124,10 +142,88 @@ namespace fastscapelib
     {
         auto grid_funcs = py_grid_funcs<G>();
 
-        pyg.def("neighbors_count", grid_funcs.m_neighbors_count)
-            .def("neighbors_indices", grid_funcs.m_neighbors_indices)
-            .def("neighbors_distances", grid_funcs.m_neighbors_distances)
-            .def("neighbors", grid_funcs.m_neighbors);
+        pyg.def("neighbors_count",
+                grid_funcs.m_neighbors_count,
+                py::arg("idx"),
+                R"doc(neighbors_count(idx: int) -> int
+
+            Returns the number of neighbors at a given node.
+
+            Parameters
+            ----------
+            idx : int
+                The grid node (flat) index.
+
+            )doc");
+
+        pyg.def("neighbors_indices",
+                grid_funcs.m_neighbors_indices,
+                py::arg("idx"),
+                R"doc(neighbors_indices(idx: int) -> numpy.ndarray
+
+            Returns the (flat) indices of the neighbors of a given node.
+
+            Parameters
+            ----------
+            idx : int
+                The grid node (flat) index.
+
+            Returns
+            -------
+            indices : numpy.ndarray
+                A 1-dimensional array of node (flat) indices (int).
+
+            Notes
+            -----
+            For a :class:`RasterGrid`, it is also possible to provide
+            ``row`` and ``col`` indices as arguments.
+
+            )doc");
+
+        pyg.def("neighbors_distances",
+                grid_funcs.m_neighbors_distances,
+                py::arg("idx"),
+                R"doc(neighbors_distances(idx: int) -> numpy.ndarray
+
+            Returns the distances from a given node to its neighbors.
+
+            Parameters
+            ----------
+            idx : int
+                The grid node (flat) index.
+
+            Returns
+            -------
+            distances : numpy.ndarray
+                A 1-dimensional array of node distances (float). The neighbor order is
+                the same than the one returned by ``neighbors_indices(idx)``.
+
+            )doc");
+
+        pyg.def("neighbors",
+                grid_funcs.m_neighbors,
+                py::arg("idx"),
+                R"doc(neighbors(idx: int) -> List[Neighbor]
+
+            Returns the neighbors of a given node.
+
+            Parameters
+            ----------
+            idx : int
+                The grid node (flat) index.
+
+            Returns
+            -------
+            neighbors : list
+                A list of :class:`Neighbor` instances.
+
+            Notes
+            -----
+            For a :class:`RasterGrid`, it is also possible to provide
+            ``row`` and ``col`` indices as arguments, which returns a
+            list of :class:`RasterNeighbor` instances.
+
+            )doc");
     }
 
     class py_raster_grid_funcs

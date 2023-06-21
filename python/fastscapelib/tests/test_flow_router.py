@@ -9,19 +9,19 @@ from fastscapelib.flow import (
     PFloodSinkResolver,
     SingleFlowRouter,
 )
-from fastscapelib.grid import (
-    Node,
-    NodeStatus,
-    ProfileGrid,
-    RasterBoundaryStatus,
-    RasterGrid,
-    RasterNode,
-)
+from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
 
 
 class TestSingleFlowRouter:
+    profile_flow_graph: FlowGraph
+    profile_elevation: np.ndarray
+    result_profile_elevation: np.ndarray
+    raster_flow_graph: FlowGraph
+    raster_elevation: np.ndarray
+    result_raster_elevation: np.ndarray
+
     @classmethod
-    def setup_class(cls):
+    def setup_class(cls) -> None:
         profile_grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
         cls.profile_flow_graph = FlowGraph(profile_grid, [SingleFlowRouter()])
         cls.profile_elevation = np.array([0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0])
@@ -58,19 +58,19 @@ class TestSingleFlowRouter:
             cls.raster_elevation
         )
 
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         router = SingleFlowRouter()
         assert isinstance(router, FlowOperator)
         assert router.name == "single_flow_router"
         assert repr(router) == "SingleFlowRouter"
 
-    def test_class_attrs(self):
+    def test_class_attrs(self) -> None:
         assert SingleFlowRouter.graph_updated is True
         assert SingleFlowRouter.elevation_updated is False
         assert SingleFlowRouter.in_flowdir == FlowDirection.UNDEFINED
         assert SingleFlowRouter.out_flowdir == FlowDirection.SINGLE
 
-    def test_receivers(self):
+    def test_receivers(self) -> None:
         npt.assert_equal(
             self.profile_flow_graph.impl().receivers[:, 0],
             np.array([0, 0, 2, 2, 3, 6, 7, 7]),
@@ -81,12 +81,12 @@ class TestSingleFlowRouter:
             np.array([4, 5, 6, 7, 8, 9, 10, 11, 13, 13, 13, 15, 12, 13, 14, 15]),
         )
 
-    def test_receivers_count(self):
+    def test_receivers_count(self) -> None:
         npt.assert_equal(self.profile_flow_graph.impl().receivers_count, np.ones(8))
 
         npt.assert_equal(self.raster_flow_graph.impl().receivers_count, np.ones(16))
 
-    def test_receivers_distance(self):
+    def test_receivers_distance(self) -> None:
         npt.assert_equal(
             self.profile_flow_graph.impl().receivers_distance[:, 0],
             np.array([0, 1, 0, 1, 1, 1, 1, 0]) * 2.2,
@@ -117,7 +117,7 @@ class TestSingleFlowRouter:
             ),
         )
 
-    def test_receivers_weight(self):
+    def test_receivers_weight(self) -> None:
         npt.assert_equal(
             self.profile_flow_graph.impl().receivers_weight[:, 0], np.ones(8)
         )
@@ -125,7 +125,7 @@ class TestSingleFlowRouter:
             self.raster_flow_graph.impl().receivers_weight[:, 0], np.ones(16)
         )
 
-    def test_donors(self):
+    def test_donors(self) -> None:
         m = np.iinfo(np.uint64).max
         expected_donors = (
             np.array(
@@ -171,7 +171,7 @@ class TestSingleFlowRouter:
             self.raster_flow_graph.impl().donors, np.squeeze(expected_donors)
         )
 
-    def test_donors_count(self):
+    def test_donors_count(self) -> None:
         npt.assert_equal(
             self.profile_flow_graph.impl().donors_count,
             np.array([1, 0, 2, 1, 0, 0, 1, 1]),
@@ -182,7 +182,7 @@ class TestSingleFlowRouter:
             np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 3, 0, 1]),
         )
 
-    def test_dfs_indices(self):
+    def test_dfs_indices(self) -> None:
         npt.assert_equal(
             self.profile_flow_graph.impl().dfs_indices,
             np.array([0, 1, 2, 3, 4, 7, 6, 5]),
@@ -195,7 +195,7 @@ class TestSingleFlowRouter:
 
 
 class TestMultiFlowRouter:
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         router = MultiFlowRouter()
         assert isinstance(router, FlowOperator)
         assert router.name == "multi_flow_router"
@@ -208,13 +208,13 @@ class TestMultiFlowRouter:
         router.slope_exp = 0.5
         assert router.slope_exp == 0.5
 
-    def test_class_attrs(self):
+    def test_class_attrs(self) -> None:
         assert MultiFlowRouter.graph_updated is True
         assert MultiFlowRouter.elevation_updated is False
         assert MultiFlowRouter.in_flowdir == FlowDirection.UNDEFINED
         assert MultiFlowRouter.out_flowdir == FlowDirection.MULTI
 
-    def test_graph_topology(self):
+    def test_graph_topology(self) -> None:
         # test on a 3x3 tiny grid with base levels at all border nodes
         grid = RasterGrid(
             [3, 3],
@@ -256,7 +256,7 @@ class TestMultiFlowRouter:
             (2.0, [2 / 12, 1 / 12, 2 / 12, 1 / 12, 1 / 12, 2 / 12, 1 / 12, 2 / 12]),
         ],
     )
-    def test_flow_partitions(self, slope_exp, weights):
+    def test_flow_partitions(self, slope_exp, weights) -> None:
         # test on a 3x3 tiny grid with base levels at all border nodes
         grid = RasterGrid(
             [3, 3],
@@ -281,7 +281,7 @@ class TestMultiFlowRouter:
 @pytest.mark.parametrize(
     "router", [SingleFlowRouter(), MultiFlowRouter(0.0), MultiFlowRouter(2.0)]
 )
-def test_conservation_area(router):
+def test_conservation_area(router) -> None:
     # High level test: conservative flow routing
     nrows = 10
     ncols = 8
@@ -316,7 +316,7 @@ def test_conservation_area(router):
 @pytest.mark.parametrize(
     "router", [SingleFlowRouter(), MultiFlowRouter(0.0), MultiFlowRouter(2.0)]
 )
-def test_monotonic_dfs(router):
+def test_monotonic_dfs(router) -> None:
     # High level test: monotonic elevation for dfs indices
     nrows = 10
     ncols = 8

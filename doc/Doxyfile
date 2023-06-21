@@ -10,5 +10,10 @@ GENERATE_XML      = YES
 RECURSIVE         = YES
 QUIET             = YES
 JAVADOC_AUTOBRIEF = YES
+EXCLUDE_SYMBOLS = detail::*,*::detail::*
+EXTRACT_STATIC = YES
 WARN_IF_UNDOCUMENTED = NO
 MACRO_EXPANSION = YES
+SOURCE_BROWSER = YES
+ALIASES = "rst=^^\verbatim embed:rst:leading-asterisk^^"
+ALIASES += "endrst=\endverbatim"
