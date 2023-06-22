@@ -17,9 +17,8 @@ set(CMAKE_MODULE_PATH
 # Versioning
 # ==========
 
-include(VersionUtils)
-set_version_str("${FASTSCAPELIB_INCLUDE_DIR}")
-message(STATUS "Building fastscapelib v${VERSION_STR}")
+set(FASTSCAPELIB_VERSION "0.1.3")
+message(STATUS "Building fastscapelib v${FASTSCAPELIB_VERSION}")
 
 # Dependencies
 # ============
@@ -177,7 +176,7 @@ export(EXPORT ${PROJECT_NAME}-targets
 set(_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 unset(CMAKE_SIZEOF_VOID_P)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-                                 VERSION ${VERSION_STR}
+                                 VERSION ${FASTSCAPELIB_VERSION}
                                  COMPATIBILITY AnyNewerVersion)
 set(CMAKE_SIZEOF_VOID_P ${_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P})
 

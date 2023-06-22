@@ -15,11 +15,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-from __future__ import print_function
-
 import os
-import platform
-import re
 import subprocess
 
 from matplotlib.font_manager import FontManager
@@ -31,56 +27,17 @@ on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 if on_rtd:
     subprocess.call("cd ..; doxygen", shell=True)
 
-
 # -- Project information -----------------------------------------------------
 
 project = "Fastscapelib"
 copyright = "since 2018, Fastscapelib developers"
 author = "Benoit Bovy"
-
-
-# -- Version -----------------------------------------------------------------
-
-
-def check_cmake_version():
-    try:
-        out = subprocess.check_output(["cmake", "--version"])
-    except OSError:
-        raise RuntimeError("CMake must be installed to build this project")
-
-    if platform.system() == "Windows":
-        cmake_version = LooseVersion(
-            re.search(r"version\s*([\d.]+)", out.decode()).group(1)
-        )
-        if cmake_version < "3.1.0":
-            raise RuntimeError("CMake >= 3.1.0 is required on Windows")
-
-
-def get_version():
-    """Get version string using git, formatted according to pep440
-    (call cmake script).
-
-    """
-    check_cmake_version()
-
-    cmake_script = os.path.join("cmake", "PrintVersion.cmake")
-    out = subprocess.check_output(
-        ["cmake", "-DINCLUDEDIR=include", "-P", cmake_script],
-        cwd=os.path.join(os.pardir, os.pardir),
-        stderr=subprocess.STDOUT,
-    )
-    version_str = out.decode().strip()
-    return version_str
-
-
-_version_str = get_version()
-print("building doc for fastscapelib version ", _version_str)
-
 # The short X.Y version
-version = _version_str
+version = "0.1.3"
 # The full version, including alpha/beta/rc tags
-release = _version_str
+release = version
 
+print("building doc for fastscapelib version ", version)
 
 # -- General configuration ---------------------------------------------------
 
@@ -156,16 +113,6 @@ html_theme = "furo"
 html_title = ""
 
 html_theme_options = {
-    # Sphinx book theme
-    # repository_url="https://github.com/fastscape-lem/fastscapelib",
-    # repository_branch="main",
-    # path_to_docs="doc",
-    # use_edit_page_button=True,
-    # use_repository_button=True,
-    # use_issues_button=True,
-    # home_page_in_toc=False,
-    # extra_navbar="",
-    # navbar_footer_text="",
     # Furo Theme
     "sidebar_hide_name": True,
     "light_logo": "fastscapelib_logo.svg",
@@ -194,7 +141,6 @@ htmlhelp_basename = "fastscapelibdoc"
 breathe_projects = {"fastscapelib": "../_xml"}
 breathe_default_project = "fastscapelib"
 breathe_show_include = True
-
 
 # -- Options for intersphinx extension ---------------------------------------
 

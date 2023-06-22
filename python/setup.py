@@ -1,47 +1,12 @@
 import os
 import platform
-import re
 import subprocess
 import sys
-from distutils.version import LooseVersion
 
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 
 CMAKE_OPTIONS = {"BUILD_PYTHON_MODULE": "ON"}
-
-
-def check_cmake_version():
-    try:
-        out = subprocess.check_output(["cmake", "--version"])
-    except OSError:
-        raise RuntimeError("CMake must be installed to build this project")
-
-    if platform.system() == "Windows":
-        cmake_version = LooseVersion(
-            re.search(r"version\s*([\d.]+)", out.decode()).group(1)
-        )
-        if cmake_version < "3.1.0":
-            raise RuntimeError("CMake >= 3.1.0 is required on Windows")
-
-
-def get_version():
-    """Get version string using git, source (root) directory, or conda
-    build environment variable, formatted according to pep440.
-
-    This functions calls a cmake script.
-
-    """
-    check_cmake_version()
-
-    cmake_script = os.path.join("cmake", "PrintVersion.cmake")
-    cmake_args = ["-DINCLUDEDIR=include", "-P", cmake_script]
-
-    out = subprocess.check_output(
-        ["cmake"] + cmake_args, cwd=os.pardir, stderr=subprocess.STDOUT
-    )
-    version_str = out.decode().strip()
-    return version_str
 
 
 class CMakeExtension(Extension):
@@ -54,8 +19,6 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def run(self):
-        check_cmake_version()
-
         for ext in self.extensions:
             self.build_extension(ext)
 
@@ -84,9 +47,6 @@ class CMakeBuild(build_ext):
             build_args += ["--", "-j2"]
 
         env = os.environ.copy()
-        env["CXXFLAGS"] = '{} -DVERSION_INFO=\\"{}\\"'.format(
-            env.get("CXXFLAGS", ""), self.distribution.get_version()
-        )
 
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
@@ -107,7 +67,7 @@ ext_modules = [
 
 setup(
     name="fastscapelib",
-    version=get_version(),
+    version="0.1.3",
     maintainer="Benoit Bovy",
     maintainer_email="benbovy@gmail.com",
     url="https://github.com/fastscape-lem/fastscapelib",

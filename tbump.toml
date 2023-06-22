@@ -1,0 +1,40 @@
+[version]
+current = "0.1.3"
+regex = '''
+  (?P<major>\d+)
+  \.
+  (?P<minor>\d+)
+  \.
+  (?P<patch>\d+)
+'''
+
+[git]
+message_template = "bump to {new_version}"
+tag_template = "v{new_version}"
+
+[[file]]
+src = "CMakeLists.txt"
+search = "FASTSCAPELIB_VERSION \"{current_version}\""
+
+[[file]]
+src = "include/fastscapelib/version.hpp"
+version_template = "{major}"
+search = "#define FASTSCAPELIB_VERSION_MAJOR {current_version}"
+
+[[file]]
+src = "include/fastscapelib/version.hpp"
+version_template = "{minor}"
+search = "#define FASTSCAPELIB_VERSION_MINOR {current_version}"
+
+[[file]]
+src = "include/fastscapelib/version.hpp"
+version_template = "{patch}"
+search = "#define FASTSCAPELIB_VERSION_PATCH {current_version}"
+
+[[file]]
+src = "doc/source/conf.py"
+search = "version = \"{current_version}\""
+
+[[file]]
+src = "python/setup.py"
+search = "version=\"{current_version}\""
