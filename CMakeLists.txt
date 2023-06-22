@@ -10,9 +10,10 @@ message(STATUS "Building fastscapelib v${PROJECT_VERSION}")
 set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 OPTION(DOWNLOAD_XTENSOR "Download xtensor from github (master)" OFF)
-OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
 OPTION(BUILD_TESTS "build fastscapelib test suite" OFF)
+OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
 OPTION(BUILD_BENCHMARK "build fastscapelib benchmark suite" OFF)
+OPTION(DOWNLOAD_GBENCHMARK "build gbenchmark from downloaded sources" OFF)
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/cmake
@@ -128,6 +129,10 @@ endif()
 if(BUILD_TESTS)
   enable_testing()
   add_subdirectory(test)
+endif()
+
+if(DOWNLOAD_GBENCHMARK OR GBENCHMARK_SRC_DIR)
+  set(BUILD_BENCHMARK ON)
 endif()
 
 if(BUILD_BENCHMARK)

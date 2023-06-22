@@ -1,65 +1,35 @@
-cmake_minimum_required(VERSION 3.1)
-
-message(STATUS "Forcing benchmark build type to Release")
-set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-
+cmake_minimum_required(VERSION 3.15)
 
 # Dependencies
 # ============
 
-# -- Build benchmark independently of fastscapelib
-if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    project(xtensor-benchmark)
-
-    find_package(xtensor REQUIRED CONFIG)
-    find_package(fastscapelib REQUIRED CONFIG)
-endif ()
-
-# -- Google benchmark
 if(DOWNLOAD_GBENCHMARK OR GBENCHMARK_SRC_DIR)
+    include(FetchContent)
+
     if(DOWNLOAD_GBENCHMARK)
-        # Download and unpack googlebenchmark at configure time
-        configure_file(downloadGBenchmark.cmake.in
-        googlebenchmark-download/CMakeLists.txt)
+        FetchContent_Declare(googlebenchmark
+            GIT_REPOSITORY https://github.com/google/benchmark.git
+            GIT_TAG v1.8.0)
     else()
-        # Copy local source of googlebenchmark at configure time
-        configure_file(copyGBenchmark.cmake.in
-        googlebenchmark-download/CMakeLists.txt)
+        FetchContent_Declare(googlebenchmark
+            SOURCE_DIR GBENCHMARK_SRC_DIR
+            )
     endif()
 
-    execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . -DBENCHMARK_ENABLE_TESTING=OFF
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-download)
+    set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable building benchmark tests" FORCE)
+    set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "Disable installing benchmark" FORCE)
 
-    if(result)
-        message(FATAL_ERROR "CMake step for googlebenchmark failed: ${result}")
-    endif()
-
-    execute_process(COMMAND ${CMAKE_COMMAND} --build .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-download)
-
-    if(result)
-        message(FATAL_ERROR "Build step for googlebenchmark failed: ${result}")
-    endif()
-
-    # Add googlebenchmark directly to our build.
-    add_subdirectory(
-        ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-src
-        ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-build
-        EXCLUDE_FROM_ALL)
-
-    set(GBENCHMARK_LIBRARIES benchmark)
+    FetchContent_MakeAvailable(googlebenchmark)
 
 else()
     find_package(benchmark REQUIRED)
-    set(GBENCHMARK_LIBRARIES benchmark::benchmark)
 endif()
 
 # Compiler configuration
 # ======================
 
-include(CheckCXXCompilerFlag)
+message(STATUS "Forcing benchmark build type to Release")
+set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" U_CMAKE_BUILD_TYPE)
 
@@ -70,31 +40,11 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ffast-math")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-parameter -Wextra -Wreorder")
 
-    CHECK_CXX_COMPILER_FLAG("-std=c++17" HAS_CPP17_FLAG)
-
-    if (HAS_CPP17_FLAG)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-        # cleaner?
-        # https://pabloariasal.github.io/2018/02/19/its-time-to-do-cmake-right/
-        # cmake min version: 3.8
-        #target_compile_features(fastscapelib INTERFACE cxx_std_17)
-    else()
-        message(FATAL_ERROR "Unsupported compiler -- fastscapelib requires C++17 support!")
-    endif()
-
     # Enable link time optimization and set the default symbol
     # visibility to hidden (very important to obtain small binaries)
     if (NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEBUG)
         # Default symbol visibility
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-
-        # Check for Link Time Optimization support
-        # (GCC/Clang)
-        # LTO had to be removed as google benchmark doesn't build with it
-        # CHECK_CXX_COMPILER_FLAG("-flto" HAS_LTO_FLAG)
-        # if (HAS_LTO_FLAG)
-        #     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
-        # endif()
 
         # Intel equivalent to LTO is called IPO
         if (CMAKE_CXX_COMPILER_ID MATCHES "Intel")
@@ -138,7 +88,8 @@ set(FASTSCAPELIB_BENCHMARK_SRC
 foreach(filename IN LISTS FASTSCAPELIB_BENCHMARK_SRC)
     string(REPLACE ".cpp" "" targetname ${filename})
     add_executable(${targetname} ${filename} ${FASTSCAPELIB_BENCHMARK_HEADERS} main.cpp)
-    target_link_libraries(${targetname} PRIVATE fastscapelib ${GBENCHMARK_LIBRARIES})
+    target_link_libraries(${targetname} PRIVATE fastscapelib benchmark::benchmark)
+    target_compile_features(${targetname} PRIVATE cxx_std_17)
 endforeach()
 
 # -- build a global target for all benchmarks
@@ -146,4 +97,6 @@ add_executable(benchmark_fastscapelib
         ${FASTSCAPELIB_BENCHMARK_SRC} ${FASTSCAPELIB_BENCHMARK_HEADERS} main.cpp)
 
 target_link_libraries(benchmark_fastscapelib
-        PRIVATE fastscapelib ${GBENCHMARK_LIBRARIES})
+        PRIVATE fastscapelib benchmark::benchmark)
+
+target_compile_features(benchmark_fastscapelib PRIVATE cxx_std_17)

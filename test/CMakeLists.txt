@@ -7,25 +7,23 @@ if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
     include(FetchContent)
 
     if(DOWNLOAD_GTEST)
-        FetchContent_Declare(
-            googletest
+        FetchContent_Declare(googletest
             GIT_REPOSITORY https://github.com/google/googletest
             GIT_TAG tags/v1.13.0
             GIT_SHALLOW TRUE)
     else()
-        FetchContent_Declare(
-            googletest
+        FetchContent_Declare(googletest
             SOURCE_DIR GTEST_SRC_DIR
             )
     endif()
+
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "Always use msvcrt.dll" FORCE)
 
     FetchContent_MakeAvailable(googletest)
 
     # do not install googletest by default when running cmake --install
     set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
-
-    # For Windows: Prevent overriding the parent project's compiler/linker settings
-    set(gtest_force_shared_crt ON CACHE BOOL "Always use msvcrt.dll" FORCE)
 else()
     find_package(GTest REQUIRED)
 endif()
