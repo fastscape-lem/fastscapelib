@@ -37,6 +37,7 @@ jobs:
             numpy
             cmake
             xtensor-python
+            scikit-build-core
             pip
             mypy
             pytest
