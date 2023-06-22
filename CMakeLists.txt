@@ -25,38 +25,25 @@ set(CMAKE_MODULE_PATH
 # ============
 
 # -- xtensor (optionally from source download)
-if(DOWNLOAD_XTENSOR)
-    configure_file(downloadXTensor.cmake.in
-      xtensor-download/CMakeLists.txt)
+if(FS_DOWNLOAD_XTENSOR)
+    include(FetchContent)
 
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xtensor-download
-    )
+    message(STATUS "Downloading xtensor development version (master branch)")
 
-    if(result)
-        message(FATAL_ERROR "CMake configuration step for xtensor failed: ${result}")
-    endif()
+    FetchContent_Declare(xtensor
+      GIT_REPOSITORY https://github.com/xtensor-stack/xtensor
+      GIT_TAG master
+      GIT_SHALLOW TRUE)
 
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} --build .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xtensor-download
-    )
+    set(CPP17 ON CACHE BOOL "Enable C++17 for xtensor" FORCE)
+    set(FS_DOWNLOAD_GBENCHMARK OFF CACHE BOOL
+      "skip downloading google-benchmark via xtensor" FORCE)
 
-    if(result)
-        message(FATAL_ERROR "CMake build step for xtensor failed: ${result}")
-    endif()
-
-    set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_BINARY_DIR}/xtensor-build ${CMAKE_MODULE_PATH}")
-    find_package(xtensor REQUIRED PATHS "${CMAKE_CURRENT_BINARY_DIR}/xtensor-build" NO_DEFAULT_PATH)
+    FetchContent_MakeAvailable(xtensor)
 else()
     find_package(xtensor REQUIRED)
+    message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 endif()
-
-get_target_property(xtensor_INCLUDE_DIRS xtensor INTERFACE_INCLUDE_DIRECTORIES)
-message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 
 # Installation directories
 # ========================
