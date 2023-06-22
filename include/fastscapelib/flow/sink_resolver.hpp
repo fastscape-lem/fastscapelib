@@ -9,6 +9,7 @@
 #ifndef FASTSCAPELIB_FLOW_SINK_RESOLVER_H
 #define FASTSCAPELIB_FLOW_SINK_RESOLVER_H
 
+#include <iostream>
 #include <limits>
 #include <memory>
 
@@ -89,6 +90,19 @@ namespace fastscapelib
         carve  /**< Revert the (unique) flow path between the spill and pit nodes */
     };
 
+    inline std::ostream& operator<<(std::ostream& os, const mst_route_method meth)
+    {
+        switch (meth)
+        {
+            case mst_route_method::basic:
+                os << "basic";
+                break;
+            case mst_route_method::carve:
+                os << "carve";
+                break;
+        }
+        return os;
+    }
 
     /**
      * Minimum Spanning Tree (MST) sink resolver operator.
@@ -135,6 +149,12 @@ namespace fastscapelib
         mst_method m_basin_method = mst_method::kruskal;
         mst_route_method m_route_method = mst_route_method::carve;
     };
+
+    inline std::ostream& operator<<(std::ostream& os, const mst_sink_resolver resolver)
+    {
+        os << resolver.m_basin_method << "-" << resolver.m_route_method;
+        return os;
+    }
 
 
     namespace detail

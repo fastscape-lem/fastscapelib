@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <iostream>
 #include <limits>
 #include <numeric>
 #include <queue>
@@ -43,6 +44,19 @@ namespace fastscapelib
         boruvka  /**< Boruvka's algorithm. */
     };
 
+    inline std::ostream& operator<<(std::ostream& os, const mst_method meth)
+    {
+        switch (meth)
+        {
+            case mst_method::kruskal:
+                os << "kruskal";
+                break;
+            case mst_method::boruvka:
+                os << "boruvka";
+                break;
+        }
+        return os;
+    }
 
     namespace testing
     {
