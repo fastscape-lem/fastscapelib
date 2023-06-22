@@ -9,13 +9,13 @@ message(STATUS "Building fastscapelib v${PROJECT_VERSION}")
 
 set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-OPTION(DOWNLOAD_XTENSOR "Download xtensor from github (master)" OFF)
-OPTION(BUILD_TESTS "build fastscapelib test suite" OFF)
-OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
-OPTION(GTEST_SRC_DIR "build gtest from local sources" OFF)
-OPTION(BUILD_BENCHMARKS "build fastscapelib benchmark suite" OFF)
-OPTION(DOWNLOAD_GBENCHMARK "build gbenchmark from downloaded sources" OFF)
-OPTION(GBENCHMARK_SRC_DIR "build gbenchmark from local sources" OFF)
+OPTION(FS_DOWNLOAD_XTENSOR "Download and use xtensor development version" OFF)
+OPTION(FS_BUILD_TESTS "Build fastscapelib test suite" OFF)
+OPTION(FS_DOWNLOAD_GTEST "Build gtest from downloaded sources" OFF)
+OPTION(FS_GTEST_SRC_DIR "Build gtest from local sources" OFF)
+OPTION(FS_BUILD_BENCHMARKS "Build fastscapelib benchmark suite" OFF)
+OPTION(FS_DOWNLOAD_GBENCHMARK "Build gbenchmark from downloaded sources" OFF)
+OPTION(FS_GBENCHMARK_SRC_DIR "Build gbenchmark from local sources" OFF)
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/cmake
@@ -124,20 +124,20 @@ target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor)
 target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_17)
 
 # -- optional subdirectories
-if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
-  set(BUILD_TESTS ON)
+if(FS_DOWNLOAD_GTEST OR FS_GTEST_SRC_DIR)
+  set(FS_BUILD_TESTS ON)
 endif()
 
-if(BUILD_TESTS)
+if(FS_BUILD_TESTS)
   enable_testing()
   add_subdirectory(test)
 endif()
 
-if(DOWNLOAD_GBENCHMARK OR GBENCHMARK_SRC_DIR)
-  set(BUILD_BENCHMARKS ON)
+if(FS_DOWNLOAD_GBENCHMARK OR FS_GBENCHMARK_SRC_DIR)
+  set(FS_BUILD_BENCHMARKS ON)
 endif()
 
-if(BUILD_BENCHMARKS)
+if(FS_BUILD_BENCHMARKS)
   add_subdirectory(benchmark)
 endif()
 

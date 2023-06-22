@@ -45,7 +45,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cmake -S . -B build \
-            -DDOWNLOAD_GTEST=ON \
+            -DFS_DOWNLOAD_GTEST=ON \
             -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
 
       - name: Build Fastscapelib

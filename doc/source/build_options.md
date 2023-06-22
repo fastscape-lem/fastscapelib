@@ -27,23 +27,23 @@ default). See below for more explanations.
 ```{list-table}
 :widths: 25 75
 
-* - ``BUILD_TESTS``
+* - ``FS_BUILD_TESTS``
   - Enables {ref}`building the C++ tests <run-cpp-tests>`
-* - ``DOWNLOAD_GTEST``
+* - ``FS_DOWNLOAD_GTEST``
   - Downloads google-test and builds it locally instead of using a binary
     installation
-* - ``GTEST_SRC_DIR``
+* - ``FS_GTEST_SRC_DIR``
   - Indicates where to find the google-test sources instead of downloading
     them
-* - ``BUILD_BENCHMARKS``
+* - ``FS_BUILD_BENCHMARKS``
   - Enables {ref}`building the micro-benchmarks <run-benchmarks>`
-* - ``DOWNLOAD_GBENCHMARK``
+* - ``FS_DOWNLOAD_GBENCHMARK``
   - Downloads google-benchmark and builds it locally instead of using a binary
     installation
-* - ``GBENCHMARK_SRC_DIR``
+* - ``FS_GBENCHMARK_SRC_DIR``
   - Indicates where to find the google-benchmark sources instead of downloading
     them
-* - ``DOWNLOAD_XTENSOR``
+* - ``FS_DOWNLOAD_XTENSOR``
   - Downloads xtensor development version (master branch on GitHub) and uses
     it to build fastscapelib (useful for testing)
 ```
@@ -61,14 +61,14 @@ $ conda install gtest -c conda-forge
 ```
 
 Alternatively, google-test may be downloaded automatically by enabling
-`DOWNLOAD_GTEST`, or a custom install path may be given by setting
-`GTEST_SRC_DIR` (setting `DOWNLOAD_GTEST=ON` or `GTEST_SRC_DIR=/path/to/gtest`
-automatically sets `BUILD_TESTS=ON`).
+`FS_DOWNLOAD_GTEST`, or a custom install path may be given by setting
+`FS_GTEST_SRC_DIR` (setting `FS_DOWNLOAD_GTEST=ON` or
+`FS_GTEST_SRC_DIR=/path/to/gtest` automatically sets `FS_BUILD_TESTS=ON`).
 
 To build the tests, run the following commands from the source root directory:
 
 ```
-$ cmake -S . -B build/tests -DBUILD_TESTS=ON
+$ cmake -S . -B build/tests -DFS_BUILD_TESTS=ON
 $ cmake --build build/tests
 ```
 
@@ -110,16 +110,16 @@ $ conda install benchmark -c conda-forge
 ```
 
 Alternatively, google-benchmark may be downloaded automatically by enabling
-`DOWNLOAD_GBENCHMARK`, or a custom install path may be given by setting
-`GBENCHMARK_SRC_DIR` (setting `DOWNLOAD_GBENCHMARK=ON` or
-`GBENCHMARK_SRC_DIR=/path/to/gbenchmark` automatically sets
-`BUILD_BENCHMARKS=ON`).
+`FS_DOWNLOAD_GBENCHMARK`, or a custom install path may be given by setting
+`FS_GBENCHMARK_SRC_DIR` (setting `FS_DOWNLOAD_GBENCHMARK=ON` or
+`FS_GBENCHMARK_SRC_DIR=/path/to/gbenchmark` automatically sets
+`FS_BUILD_BENCHMARKS=ON`).
 
 To build the benchmarks, run the following commands from the source root
 directory:
 
 ```
-$ cmake -S . -B build/benchmarks -DBUILD_BENCHMARKS=ON
+$ cmake -S . -B build/benchmarks -DFS_BUILD_BENCHMARKS=ON
 $ cmake --build build/benchmarks
 ```
 

@@ -3,16 +3,20 @@ cmake_minimum_required(VERSION 3.15)
 # Dependencies
 # ============
 
-if(DOWNLOAD_GBENCHMARK OR GBENCHMARK_SRC_DIR)
+if(FS_DOWNLOAD_GBENCHMARK OR FS_GBENCHMARK_SRC_DIR)
     include(FetchContent)
 
-    if(DOWNLOAD_GBENCHMARK)
+    if(FS_DOWNLOAD_GBENCHMARK)
+        message(STATUS "Downloading google-benchmark v1.8.0")
+
         FetchContent_Declare(googlebenchmark
             GIT_REPOSITORY https://github.com/google/benchmark.git
             GIT_TAG v1.8.0)
     else()
+        message(STATUS "Build google-benchmark from local directory")
+
         FetchContent_Declare(googlebenchmark
-            SOURCE_DIR GBENCHMARK_SRC_DIR
+            SOURCE_DIR FS_GBENCHMARK_SRC_DIR
             )
     endif()
 

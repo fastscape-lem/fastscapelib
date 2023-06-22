@@ -3,17 +3,21 @@ cmake_minimum_required(VERSION 3.15)
 # Dependencies
 # ============
 
-if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
+if(FS_DOWNLOAD_GTEST OR FS_GTEST_SRC_DIR)
     include(FetchContent)
 
-    if(DOWNLOAD_GTEST)
+    if(FS_DOWNLOAD_GTEST)
+        message(STATUS "Downloading googletest v1.13.0")
+
         FetchContent_Declare(googletest
             GIT_REPOSITORY https://github.com/google/googletest
             GIT_TAG tags/v1.13.0
             GIT_SHALLOW TRUE)
     else()
+        message(STATUS "Build googletest from local directory")
+
         FetchContent_Declare(googletest
-            SOURCE_DIR GTEST_SRC_DIR
+            SOURCE_DIR FS_GTEST_SRC_DIR
             )
     endif()
 
