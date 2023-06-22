@@ -134,7 +134,7 @@ endif()
 
 # -- CMake configuration
 #    o Package config (makes the package importable using find_package in another project)
-configure_package_config_file(${PROJECT_NAME}Config.cmake.in
+configure_package_config_file(cmake/${PROJECT_NAME}Config.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     INSTALL_DESTINATION ${CMAKECONFIG_INSTALL_DIR})
 
