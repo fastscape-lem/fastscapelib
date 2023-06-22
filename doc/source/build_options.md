@@ -29,18 +29,20 @@ default). See below for more explanations.
 
 * - ``BUILD_TESTS``
   - Enables {ref}`building the C++ tests <run-cpp-tests>`
-* - ``BUILD_BENCHMARK``
-  - Enables {ref}`building the micro-benchmarks <run-benchmarks>`
 * - ``DOWNLOAD_GTEST``
   - Downloads google-test and builds it locally instead of using a binary
     installation
 * - ``GTEST_SRC_DIR``
   - Indicates where to find the google-test sources instead of downloading
     them
-* - ``BUILD_PYTHON_MODULE``
-  - Enables building fastscapelib as a Python extension (internal use only!
-    see {ref}`install-python` for instructions on how to build and install the
-    Python library from source)
+* - ``BUILD_BENCHMARKS``
+  - Enables {ref}`building the micro-benchmarks <run-benchmarks>`
+* - ``DOWNLOAD_GBENCHMARK``
+  - Downloads google-benchmark and builds it locally instead of using a binary
+    installation
+* - ``GBENCHMARK_SRC_DIR``
+  - Indicates where to find the google-benchmark sources instead of downloading
+    them
 * - ``DOWNLOAD_XTENSOR``
   - Downloads xtensor development version (master branch on GitHub) and uses
     it to build fastscapelib (useful for testing)
@@ -107,11 +109,17 @@ You can install google-benchmark, e.g., using conda:
 $ conda install benchmark -c conda-forge
 ```
 
+Alternatively, google-benchmark may be downloaded automatically by enabling
+`DOWNLOAD_GBENCHMARK`, or a custom install path may be given by setting
+`GBENCHMARK_SRC_DIR` (setting `DOWNLOAD_GBENCHMARK=ON` or
+`GBENCHMARK_SRC_DIR=/path/to/gbenchmark` automatically sets
+`BUILD_BENCHMARKS=ON`).
+
 To build the benchmarks, run the following commands from the source root
 directory:
 
 ```
-$ cmake -S . -B build/benchmarks -DBUILD_BENCHMARK=ON
+$ cmake -S . -B build/benchmarks -DBUILD_BENCHMARKS=ON
 $ cmake --build build/benchmarks
 ```
 

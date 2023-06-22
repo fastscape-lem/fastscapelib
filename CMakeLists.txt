@@ -12,8 +12,10 @@ set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 OPTION(DOWNLOAD_XTENSOR "Download xtensor from github (master)" OFF)
 OPTION(BUILD_TESTS "build fastscapelib test suite" OFF)
 OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
-OPTION(BUILD_BENCHMARK "build fastscapelib benchmark suite" OFF)
+OPTION(GTEST_SRC_DIR "build gtest from local sources" OFF)
+OPTION(BUILD_BENCHMARKS "build fastscapelib benchmark suite" OFF)
 OPTION(DOWNLOAD_GBENCHMARK "build gbenchmark from downloaded sources" OFF)
+OPTION(GBENCHMARK_SRC_DIR "build gbenchmark from local sources" OFF)
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/cmake
@@ -132,10 +134,10 @@ if(BUILD_TESTS)
 endif()
 
 if(DOWNLOAD_GBENCHMARK OR GBENCHMARK_SRC_DIR)
-  set(BUILD_BENCHMARK ON)
+  set(BUILD_BENCHMARKS ON)
 endif()
 
-if(BUILD_BENCHMARK)
+if(BUILD_BENCHMARKS)
   add_subdirectory(benchmark)
 endif()
 
