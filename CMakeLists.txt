@@ -141,16 +141,10 @@ if(BUILD_PYTHON_MODULE)
 endif()
 
 # -- CMake configuration
-
 #    o Package config (makes the package importable using find_package in another project)
 configure_package_config_file(${PROJECT_NAME}Config.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     INSTALL_DESTINATION ${CMAKECONFIG_INSTALL_DIR})
-
-#    o pkg-config
-configure_file(${PROJECT_NAME}.pc.in
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
-    @ONLY)
 
 # Installation
 # ============
@@ -180,13 +174,8 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Conf
                                  COMPATIBILITY AnyNewerVersion)
 set(CMAKE_SIZEOF_VOID_P ${_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P})
 
-#    o Package config
+#    o install config files
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
   DESTINATION ${CMAKECONFIG_INSTALL_DIR})
-
-#    o pkg-config
-install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/")
