@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
+
 from fastscapelib.grid import Neighbor, Node, NodeStatus, UnstructuredMesh
 
 

@@ -2,6 +2,7 @@ from typing import ClassVar, List, Union, overload
 
 import numpy as np
 import numpy.typing as npt
+
 from fastscapelib.grid import ProfileGrid, RasterGrid, UnstructuredMesh
 
 Grid = Union[ProfileGrid, RasterGrid, UnstructuredMesh]
