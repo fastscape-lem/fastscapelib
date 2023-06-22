@@ -1,4 +1,56 @@
 from _fastscapelib_py import __version__  # type: ignore[import]
-from fastscapelib.eroders import *
-from fastscapelib.flow import *
-from fastscapelib.grid import *
+
+from fastscapelib.eroders import DiffusionADIEroder, SPLEroder  # type: ignore[import]
+from fastscapelib.flow import (  # type: ignore[import]
+    FlowDirection,
+    FlowGraph,
+    FlowGraphImpl,
+    FlowOperator,
+    FlowSnapshot,
+    MSTMethod,
+    MSTRouteMethod,
+    MSTSinkResolver,
+    MultiFlowRouter,
+    PFloodSinkResolver,
+    SingleFlowRouter,
+)
+from fastscapelib.grid import (  # type: ignore[import]
+    Neighbor,
+    Node,
+    NodeStatus,
+    ProfileBoundaryStatus,
+    ProfileGrid,
+    RasterBoundaryStatus,
+    RasterGrid,
+    RasterNeighbor,
+    RasterNode,
+    UnstructuredMesh,
+)
+
+__all__ = [
+    "__version__",
+    "DiffusionADIEroder",
+    "SPLEroder",
+    "Neighbor",
+    "Node",
+    "NodeStatus",
+    "ProfileBoundaryStatus",
+    "ProfileGrid",
+    "RasterBoundaryStatus",
+    "RasterGrid",
+    "RasterNeighbor",
+    "RasterNode",
+    "UnstructuredMesh",
+    "FlowDirection",
+    "FlowGraph",
+    "FlowGraphImpl",
+    "FlowOperator",
+    "FlowOperator",
+    "FlowSnapshot",
+    "MSTMethod",
+    "MSTRouteMethod",
+    "MSTSinkResolver",
+    "MultiFlowRouter",
+    "PFloodSinkResolver",
+    "SingleFlowRouter",
+]

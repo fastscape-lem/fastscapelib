@@ -146,11 +146,11 @@ $ conda install fastscapelib-python -c conda-forge
 
 ### From Source Using Pip
 
-Fastscapelib's Python bindings require Python (3.8+), numpy, [pybind11] and
-[xtensor-python], which are all available on conda-forge:
+Fastscapelib's Python bindings require Python (3.8+), pip, numpy, [pybind11],
+[xtensor-python] and [scikit-build-core] which are all available on conda-forge:
 
 ```bash
-$ conda install python numpy pybind11 xtensor-python -c conda-forge
+$ conda install python pip numpy pybind11 xtensor-python scikit-build-core -c conda-forge
 ```
 
 After {ref}`downloading the Fastscapelib source <download-fastscapelib>`, you
@@ -158,9 +158,22 @@ can build and install the Python package using `pip`. Run the following commands
 from the source root directory:
 
 ```bash
-$ cd python
-$ python -m pip install .
+$ python -m pip install . --no-build-isolation
 ```
+
+The ``--no-build-isolation`` option is required since xtensor-python cannot yet
+be installed using pip. You can pass extra options like in the example below,
+which builds the Python extension in ``Debug`` mode in a given directory (useful
+for cached builds):
+
+```bash
+$ python -m pip install . \
+$   --no-build-isolation \
+$   --config-settings=cmake.build-type=Debug \
+$   --config-settings=build-dir=build/skbuild
+```
+
+See [scikit-build-core]'s documentation for more available options.
 
 [cmake]: https://cmake.org/
 [conda]: https://conda.io/docs/
@@ -168,3 +181,4 @@ $ python -m pip install .
 [pybind11]: https://github.com/pybind/pybind11
 [xtensor]: https://xtensor.readthedocs.io
 [xtensor-python]: https://xtensor-python.readthedocs.io
+[scikit-build-core]: https://scikit-build-core.readthedocs.io

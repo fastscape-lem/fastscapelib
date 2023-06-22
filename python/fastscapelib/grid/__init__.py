@@ -1,5 +1,3 @@
-from typing import Union
-
 from _fastscapelib_py.grid import (  # type: ignore[import]
     Neighbor,
     Node,

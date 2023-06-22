@@ -1,0 +1,45 @@
+[build-system]
+requires = [
+    "scikit-build-core",
+    "pybind11",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "fastscapelib"
+version = "0.1.3"
+description = "A C++/Python library of efficient algorithms for landscape evolution modeling"
+keywords = ["modeling", "topography", "geomorphology", "landscape-evolution"]
+readme = "README.rst"
+license = {text = "GPL-3.0 license"}
+authors = [
+    {name = "Benoît Bovy"},
+]
+maintainers = [
+    {name = "Fastscapelib contributors"},
+]
+requires-python = ">=3.8"
+dependencies = ["numpy"]
+
+[project.urls]
+Home = "https://fastscapelib.readthedocs.io"
+Repository = "https://github.com/fastscape-lem/fastscapelib"
+
+[project.optional-dependencies]
+test = ["pytest>=6.0"]
+
+[tool.scikit-build]
+wheel.packages = ["python/fastscapelib"]
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+float_to_top = true
+default_section = "THIRDPARTY"
+known_first_party = "fastscapelib"
+
+[tool.mypy]
+exclude = [
+    "doc/source/conf.py",
+    "build/",
+]

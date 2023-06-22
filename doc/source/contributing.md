@@ -107,8 +107,7 @@ removed or modified:
 To run ``mypy``:
 
 ```
-$ cd python
-$ python -m mypy . --exclude=build
+$ python -m mypy .
 ```
 
 ## Contributing to the Documentation

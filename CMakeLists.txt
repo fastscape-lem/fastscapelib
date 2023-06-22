@@ -1,6 +1,11 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.15)
 
-project(fastscapelib)
+project(
+  fastscapelib
+  VERSION "0.1.3"
+  LANGUAGES CXX)
+
+message(STATUS "Building fastscapelib v${PROJECT_VERSION}")
 
 set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -8,17 +13,10 @@ OPTION(DOWNLOAD_XTENSOR "Download xtensor from github (master)" OFF)
 OPTION(DOWNLOAD_GTEST "build gtest from downloaded sources" OFF)
 OPTION(BUILD_TESTS "build fastscapelib test suite" OFF)
 OPTION(BUILD_BENCHMARK "build fastscapelib benchmark suite" OFF)
-OPTION(BUILD_PYTHON_MODULE "build fastscapelib Python bindings" OFF)
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/cmake
     ${CMAKE_MODULE_PATH})
-
-# Versioning
-# ==========
-
-set(FASTSCAPELIB_VERSION "0.1.3")
-message(STATUS "Building fastscapelib v${FASTSCAPELIB_VERSION}")
 
 # Dependencies
 # ============
@@ -136,7 +134,7 @@ if(BUILD_BENCHMARK)
   add_subdirectory(benchmark)
 endif()
 
-if(BUILD_PYTHON_MODULE)
+if(SKBUILD)
   add_subdirectory(python)
 endif()
 
@@ -146,36 +144,38 @@ configure_package_config_file(${PROJECT_NAME}Config.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     INSTALL_DESTINATION ${CMAKECONFIG_INSTALL_DIR})
 
-# Installation
-# ============
+# Installation of the C++ library
+# ===============================
 
-# -- fastscapelib header files
-install(FILES ${FASTSCAPELIB_HEADERS}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fastscapelib)
+if(NOT SKBUILD)
+  # -- fastscapelib header files
+  install(FILES ${FASTSCAPELIB_HEADERS}
+          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fastscapelib)
 
-# -- CMake configuration
-#    o create/install targets
-install(TARGETS ${FASTSCAPELIB_TARGET}
-        EXPORT ${PROJECT_NAME}-targets)
+  # -- CMake configuration
+  #    o create/install targets
+  install(TARGETS ${FASTSCAPELIB_TARGET}
+          EXPORT ${PROJECT_NAME}-targets)
 
-install(EXPORT ${PROJECT_NAME}-targets
-        FILE ${PROJECT_NAME}Targets.cmake
-        DESTINATION ${CMAKECONFIG_INSTALL_DIR})
+  install(EXPORT ${PROJECT_NAME}-targets
+          FILE ${PROJECT_NAME}Targets.cmake
+          DESTINATION ${CMAKECONFIG_INSTALL_DIR})
 
-#    o make targets also importable from the build dir
-export(EXPORT ${PROJECT_NAME}-targets
-       FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake)
+  #    o make targets also importable from the build dir
+  export(EXPORT ${PROJECT_NAME}-targets
+         FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake)
 
-#    o version file (fastscapelib is header-only and does not depend on the architecture)
-set(_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
-unset(CMAKE_SIZEOF_VOID_P)
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-                                 VERSION ${FASTSCAPELIB_VERSION}
-                                 COMPATIBILITY AnyNewerVersion)
-set(CMAKE_SIZEOF_VOID_P ${_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P})
+  #    o version file (fastscapelib is header-only and does not depend on the architecture)
+  set(_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
+  unset(CMAKE_SIZEOF_VOID_P)
+  write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+                                   VERSION ${PROJECT_VERSION}
+                                   COMPATIBILITY AnyNewerVersion)
+  set(CMAKE_SIZEOF_VOID_P ${_FASTSCAPELIB_CMAKE_SIZEOF_VOID_P})
 
-#    o install config files
-install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-  DESTINATION ${CMAKECONFIG_INSTALL_DIR})
+  #    o install config files
+  install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR})
+endif()

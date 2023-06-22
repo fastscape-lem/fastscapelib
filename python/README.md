@@ -1,5 +1,4 @@
-Fastscapelib-python
-===================
+# Fastscapelib-Python
 
 Fastscapelib's Python bindings.
 

@@ -80,13 +80,12 @@ jobs:
       - name: Install dependencies (Conda)
         shell: bash -l {0}
         run: |
-          conda install python=${{ matrix.python-version }} cmake xtensor-python pytest pip
+          conda install python=${{ matrix.python-version }} numpy scikit-build-core cmake xtensor-python pytest pip
 
       - name: Build and install Fastscapelib Python
         shell: bash -l {0}
         run: |
-          cd python
-          python -m pip install . -v
+          python -m pip install . -v --no-build-isolation
 
       - name: Run tests
         shell: bash -l {0}
