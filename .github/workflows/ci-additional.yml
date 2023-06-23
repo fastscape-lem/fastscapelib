@@ -22,7 +22,7 @@ jobs:
     runs-on: "ubuntu-latest"
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash -el {0}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -30,17 +30,8 @@ jobs:
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-name: fastscapelib-dev
+          environment-file: environment-python-dev.yml
           cache-environment: true
-          create-args: >-
-            python=3.11
-            numpy
-            cmake
-            xtensor-python
-            scikit-build-core
-            pip
-            mypy
-            pytest
 
       - name: Build and install Fastscapelib Python
         run: |

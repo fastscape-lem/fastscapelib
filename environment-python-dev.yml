@@ -1,0 +1,13 @@
+name: fastscapelib-python-dev
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.8
+  - numpy
+  - xtensor-python
+  - pybind11
+  - cmake
+  - scikit-build-core
+  - pytest
+  - mypy
+  - pip
