@@ -43,7 +43,7 @@ jobs:
       - name: Configure Fastscapelib (CMake)
         run: |
           cmake -S . -B build \
-            -DFS_BUILD_TESTS=ON \
+            -DFS_DOWNLOAD_GTEST=ON \
             -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
 
       - name: Build Fastscapelib
