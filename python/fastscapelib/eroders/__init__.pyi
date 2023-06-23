@@ -2,6 +2,7 @@ from typing import overload
 
 import numpy as np
 import numpy.typing as npt
+
 from fastscapelib.flow import FlowGraph
 from fastscapelib.grid import RasterGrid
 

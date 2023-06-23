@@ -4,13 +4,11 @@ build:
   os: "ubuntu-20.04"
   tools:
     python: "mambaforge-4.10"
+  jobs:
+    post_install:
+      - python -m pip install -v . --no-build-isolation
 
 conda:
   environment: doc/environment.yml
-
-python:
-  install:
-    - method: pip
-      path: python/
 
 formats: []

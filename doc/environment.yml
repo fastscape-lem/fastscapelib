@@ -7,6 +7,7 @@ dependencies:
   - cmake
   - xtensor-python
   - pybind11
+  - scikit-build-core
   - numpy
   - matplotlib-base
   - sphinx

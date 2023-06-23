@@ -37,16 +37,15 @@ jobs:
             numpy
             cmake
             xtensor-python
+            scikit-build-core
             pip
             mypy
             pytest
 
       - name: Build and install Fastscapelib Python
         run: |
-          cd python
-          python -m pip install . -v
+          python -m pip install . -v --no-build-isolation
 
       - name: Run mypy
         run: |
-          cd python
-          python -m mypy . --exclude=build --install-types --non-interactive
+          python -m mypy . --install-types --non-interactive

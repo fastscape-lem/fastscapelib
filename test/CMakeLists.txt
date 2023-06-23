@@ -1,66 +1,41 @@
-cmake_minimum_required(VERSION 3.1)
-
+cmake_minimum_required(VERSION 3.15)
 
 # Dependencies
 # ============
 
-# -- Build tests independently of fastscapelib
-if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    project(fastscapelib-test)
+if(FS_DOWNLOAD_GTEST OR FS_GTEST_SRC_DIR)
+    include(FetchContent)
 
-    find_package(xtensor REQUIRED CONFIG)
-    find_package(fastscapelib REQUIRED CONFIG)
-endif()
+    if(FS_DOWNLOAD_GTEST)
+        message(STATUS "Downloading googletest v1.13.0")
 
-# -- GTest (eventually from source dir or download)
-if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
-    if(DOWNLOAD_GTEST) # Download and unpack googletest at configure time
-        configure_file(downloadGTest.cmake.in googletest-download/CMakeLists.txt)
-    else() # Copy local source of googletest at configure time
-        configure_file(copyGTest.cmake.in googletest-download/CMakeLists.txt)
+        FetchContent_Declare(googletest
+            GIT_REPOSITORY https://github.com/google/googletest
+            GIT_TAG tags/v1.13.0
+            GIT_SHALLOW TRUE)
+    else()
+        message(STATUS "Build googletest from local directory")
+
+        FetchContent_Declare(googletest
+            SOURCE_DIR FS_GTEST_SRC_DIR
+            )
     endif()
 
-    execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download)
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "Always use msvcrt.dll" FORCE)
 
-    if(result)
-        message(FATAL_ERROR "CMake configuration step for googletest failed: ${result}")
-    endif()
+    FetchContent_MakeAvailable(googletest)
 
-    execute_process(COMMAND ${CMAKE_COMMAND} --build .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download)
-
-    if(result)
-        message(FATAL_ERROR "CMake build step for googletest failed: ${result}")
-    endif()
-
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-    # Add googletest directly to our build. This defines the gtest and gtest_main targets.
-    add_subdirectory(
-        ${CMAKE_CURRENT_BINARY_DIR}/googletest-src
-        ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
-        EXCLUDE_FROM_ALL
-        )
-
-    set(GTEST_INCLUDE_DIRS "${gtest_SOURCE_DIR}/include")
-    add_library(GTest::GTest INTERFACE IMPORTED)
-    target_link_libraries(GTest::GTest INTERFACE gtest)
-    add_library(GTest::Main INTERFACE IMPORTED)
-    target_link_libraries(GTest::Main INTERFACE gtest_main)
+    # do not install googletest by default when running cmake --install
+    set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
 else()
     find_package(GTest REQUIRED)
 endif()
 
+include(GoogleTest)
+
 # Compiler configuration
 # ======================
-
-# -- Check C++17 support
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # -- Set compiler flags
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR (CMAKE_CXX_COMPILER_ID MATCHES "Intel" AND NOT WIN32))
@@ -111,10 +86,13 @@ set(FASTSCAPELIB_TEST_SRC
     test_unstructured_mesh.cpp
 )
 
+enable_testing()
+
 # -- build a target for each test
 foreach(filename IN LISTS FASTSCAPELIB_TEST_SRC)
     string(REPLACE ".cpp" "" targetname ${filename})
     add_executable(${targetname} ${filename})
     target_link_libraries(${targetname} PRIVATE fastscapelib GTest::gtest_main)
-    add_test(${targetname} ${targetname})
+    target_compile_features(${targetname} PRIVATE cxx_std_17)
+    gtest_discover_tests(${targetname})
 endforeach()

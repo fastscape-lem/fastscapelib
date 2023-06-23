@@ -158,9 +158,8 @@ arrays to store the graph topology. This implementation is selected via the
 {cpp:class}`~fastscapelib::flow_graph_fixed_array_tag` type. Other
 implementations may be added in the future, for example based on linked-lists or
 sparse matrices, maybe reusing C++ graph libraries like [the Boost Graph
-Library](https://www.boost.org/doc/libs/1_82_0/libs/graph/doc/index.html),
-[LEMON](https://lemon.cs.elte.hu/trac/lemon) or a C++ implementation of
-[GraphBLAS](https://graphblas.org/).
+Library](https://www.boost.org/doc/libs/1_82_0/libs/graph/doc/index.html) or a
+[GraphBLAS](https://graphblas.org/) C++ API.
 
 The same template parameter ``Tag`` is also used by the {ref}`flow operator
 implementation classes <internals-flow-operators>`.
