@@ -171,7 +171,7 @@ namespace fastscapelib
             /*
              * Should be used for graph traversal in an explicit direction.
              */
-            inline stl_container_iterator_wrapper<dfs_indices_type> node_indices_bottomup() const
+            inline stl_container_iterator_wrapper<dfs_indices_type> nodes_indices_bottomup() const
             {
                 return m_dfs_indices;
             }
@@ -333,7 +333,7 @@ namespace fastscapelib
 
             m_outlets.clear();
 
-            for (const auto& inode : node_indices_bottomup())
+            for (const auto& inode : nodes_indices_bottomup())
             {
                 // outlet node has only one receiver: itself
                 if (inode == m_receivers(inode, 0))
@@ -352,12 +352,12 @@ namespace fastscapelib
         auto flow_graph_impl<G, S, flow_graph_fixed_array_tag>::pits()
             -> const std::vector<size_type>&
         {
-            const auto& status_at_nodes = grid().status_at_nodes();
+            const auto& nodes_status = grid().nodes_status();
             m_pits.clear();
 
             for (const auto outlet : m_outlets)
             {
-                if (status_at_nodes.flat(outlet) != node_status::fixed_value)
+                if (nodes_status.flat(outlet) != node_status::fixed_value)
                 {
                     m_pits.push_back(outlet);
                 }
@@ -377,14 +377,14 @@ namespace fastscapelib
             // re-init accumulated values
             acc.fill(0);
 
-            auto node_indices = node_indices_bottomup();
+            auto nodes_indices = nodes_indices_bottomup();
 
-            for (auto inode_ptr = node_indices.rbegin(); inode_ptr != node_indices.rend();
+            for (auto inode_ptr = nodes_indices.rbegin(); inode_ptr != nodes_indices.rend();
                  ++inode_ptr)
             {
                 const auto inode = *inode_ptr;
 
-                acc.flat(inode) += m_grid.node_area(inode) * src_arr(inode);
+                acc.flat(inode) += m_grid.nodes_areas(inode) * src_arr(inode);
 
                 for (size_type r = 0; r < m_receivers_count[inode]; ++r)
                 {

@@ -67,9 +67,9 @@ namespace fastscapelib
 
         using node_status_type = typename base_type::node_status_type;
 
-        void set_status_at_nodes(const std::vector<node>& status_at_nodes);
+        void set_nodes_status(const std::vector<node>& nodes_status);
 
-        inline grid_data_type node_area(const size_type& idx) const noexcept;
+        inline grid_data_type nodes_areas(const size_type& idx) const noexcept;
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
 
         unstructured_mesh_xt(const points_type& points,
@@ -77,7 +77,7 @@ namespace fastscapelib
                              const indices_type& neighbors_indices,
                              const indices_type& convex_hull_indices,
                              const areas_type& areas,
-                             const std::vector<node>& status_at_nodes = {});
+                             const std::vector<node>& nodes_status = {});
 
     protected:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
@@ -94,7 +94,7 @@ namespace fastscapelib
         indices_type m_convex_hull_indices;
         areas_type m_areas;
 
-        node_status_type m_status_at_nodes;
+        node_status_type m_nodes_status;
 
         std::vector<neighbors_distances_impl_type> m_neighbors_distances;
         std::vector<neighbors_count_type> m_neighbors_counts;
@@ -125,9 +125,9 @@ namespace fastscapelib
      * @param neighbors_indices The node neighbor indices (flattened array)
      * @param convex_hull_indices The indices of the boundary nodes.
      * @param areas The area of the cells centered to each mesh node (array of shape [N]).
-     * @param status_at_nodes Manually define the status at any node on the mesh.
+     * @param nodes_status Manually define the status at any node on the mesh.
      *
-     * If ``status_at_nodes`` is empty, a "fixed value" status is set for all
+     * If ``nodes_status`` is empty, a "fixed value" status is set for all
      * boundary nodes.
      */
     template <class S, unsigned int N>
@@ -136,7 +136,7 @@ namespace fastscapelib
                                                      const indices_type& neighbors_indices,
                                                      const indices_type& convex_hull_indices,
                                                      const areas_type& areas,
-                                                     const std::vector<node>& status_at_nodes)
+                                                     const std::vector<node>& nodes_status)
         // no neighbors cache -> base type argument value doesn't matter
         : base_type(0)
         , m_points(points)
@@ -149,7 +149,7 @@ namespace fastscapelib
 
         m_size = points.shape()[0];
         m_shape = { static_cast<typename shape_type::value_type>(m_size) };
-        set_status_at_nodes(status_at_nodes);
+        set_nodes_status(nodes_status);
 
         // counts must be called before distances, both after setting m_size
         compute_neighbors_counts();
@@ -202,13 +202,13 @@ namespace fastscapelib
     }
 
     template <class S, unsigned int N>
-    void unstructured_mesh_xt<S, N>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
+    void unstructured_mesh_xt<S, N>::set_nodes_status(const std::vector<node>& nodes_status)
     {
-        node_status_type temp_status_at_nodes(m_shape, node_status::core);
+        node_status_type temp_nodes_status(m_shape, node_status::core);
 
-        if (status_at_nodes.size() > 0)
+        if (nodes_status.size() > 0)
         {
-            for (const node& n : status_at_nodes)
+            for (const node& n : nodes_status)
             {
                 if (n.status == node_status::looped)
                 {
@@ -216,18 +216,18 @@ namespace fastscapelib
                                                 "unstructured meshes");
                 }
 
-                temp_status_at_nodes.at(n.idx) = n.status;
+                temp_nodes_status.at(n.idx) = n.status;
             }
         }
         else
         {
             // if no status at node is given, set fixed value boundaries for all nodes
             // forming the convex hull
-            auto status_at_qhull_view = xt::index_view(temp_status_at_nodes, m_convex_hull_indices);
+            auto status_at_qhull_view = xt::index_view(temp_nodes_status, m_convex_hull_indices);
             status_at_qhull_view = node_status::fixed_value;
         }
 
-        m_status_at_nodes = temp_status_at_nodes;
+        m_nodes_status = temp_nodes_status;
     }
 
     /**
@@ -235,7 +235,7 @@ namespace fastscapelib
      */
     //@{
     template <class S, unsigned int N>
-    inline auto unstructured_mesh_xt<S, N>::node_area(const size_type& idx) const noexcept
+    inline auto unstructured_mesh_xt<S, N>::nodes_areas(const size_type& idx) const noexcept
         -> grid_data_type
     {
         return m_areas[idx];

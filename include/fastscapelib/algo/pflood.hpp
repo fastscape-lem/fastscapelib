@@ -87,7 +87,7 @@ namespace fastscapelib
 
             for (size_type idx = 0; idx < grid.size(); ++idx)
             {
-                if (grid.status_at_nodes()[idx] == fastscapelib::node_status::fixed_value)
+                if (grid.nodes_status()[idx] == fastscapelib::node_status::fixed_value)
                 {
                     open.emplace(pflood_node<G, elev_t>(idx, elevation_flat(idx)));
                     closed(idx) = true;

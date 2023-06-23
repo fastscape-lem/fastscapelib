@@ -59,8 +59,8 @@ namespace fastscapelib
             [](const G& g) { return g.shape(); },
             "Returns the shape of the grid node arrays.");
         pyg.def_property_readonly(
-            "status_at_nodes",
-            [](const G& g) { return g.status_at_nodes(); },
+            "nodes_status",
+            [](const G& g) { return g.nodes_status(); },
             "Returns the array of grid node status.");
     }
 

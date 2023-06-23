@@ -102,7 +102,7 @@ namespace fastscapelib
                                                                 fs::node_status::core,
                                                                 fs::node_status::core,
                                                                 fs::node_status::looped };
-            ASSERT_EQ(g1.status_at_nodes(), expected_status);
+            ASSERT_EQ(g1.nodes_status(), expected_status);
 
             std::vector<fs::node> nodes_vector2{ fs::node({ 15, fs::node_status::core }) };
             ASSERT_THROW(grid_type(size, 1.3, fs::node_status::fixed_value, nodes_vector2),
@@ -182,12 +182,12 @@ namespace fastscapelib
             EXPECT_EQ(looped_grid.length(), 5.6);
         }
 
-        TEST_F(profile_grid, node_area)
+        TEST_F(profile_grid, nodes_areas)
         {
-            for (auto n : fixed_grid.node_indices())
+            for (auto n : fixed_grid.nodes_indices())
             {
-                EXPECT_EQ(fixed_grid.node_area(n), 1.3);
-                EXPECT_EQ(looped_grid.node_area(n), 1.4);
+                EXPECT_EQ(fixed_grid.nodes_areas(n), 1.3);
+                EXPECT_EQ(looped_grid.nodes_areas(n), 1.4);
             }
         }
 

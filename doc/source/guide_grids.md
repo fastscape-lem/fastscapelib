@@ -62,10 +62,18 @@ connectivity ({ref}`Figure 1 <fig_grid_types>`). See Sections
 {ref}`grid-node-iterators` and {ref}`connectivity-node-neighbors` for how to
 iterate through grid nodes and their neighbors.
 
-Grid faces or cells are not represented explicitly, i.e., cell vertices and
-edges are not stored as grid data members. However, the area of the cell
-surrounding a given node can be accessed via the
-{cpp:func}`~fastscapelib::grid::node_area` method (C++ only).
+Grid method names follow these conventions:
+
+- ``nodes_xxx()``: get node-specific grid information either for all nodes, a
+  subset of the nodes or one specific node depending on the (overloaded) method.
+- ``neighbors_xxx()``: get grid information about the neighbors of a given grid
+  node.
+
+Although grid faces or cells are not represented explicitly (i.e., cell geometry
+is stored as grid data members), some of their properties are exposed through
+the grid API using the conventions above (e.g.,
+{cpp:func}`~fastscapelib::grid::nodes_areas` returns the area of the direct
+vicinity of each node).
 
 (node-status-boundary-conditions)=
 ## Node Status and Boundary Conditions
@@ -76,10 +84,10 @@ edges and/or inside the grid. All possible labels are defined in the
 {cpp:enum}`~fastscapelib::node_status` (C++) and
 {py:class}`~fastscapelib.NodeStatus` (Python) enum classes.
 
-All grids expose a ``status_at_nodes`` parameter in their constructor, which
+All grids expose a ``nodes_status`` parameter in their constructor, which
 allows setting specific statuses for one or more nodes anywhere on the grid
 (some restrictions may apply for the `LOOPED` status). Each grid also
-exposes a ``status_at_nodes`` read-only getter or property that returns the
+exposes a ``nodes_status`` read-only getter or property that returns the
 status of all grid nodes as an array.
 
 Uniform grids {py:class}`~fastscapelib.ProfileGrid` and
@@ -309,10 +317,10 @@ elevation = np.random.uniform(size=grid.shape)
 Fastscapelib provides a convenient, stl-compatible way to iterate over the grid
 nodes in C++, possibly filtered by {ref}`node status
 <node-status-boundary-conditions>`, using
-{cpp:func}`~fastscapelib::grid::node_indices`.
+{cpp:func}`~fastscapelib::grid::nodes_indices`.
 
 In Python, this can be done "manually" using the ``size`` and
-``status_at_nodes`` properties.
+``nodes_status`` properties.
 
 :::{note}
 
@@ -339,7 +347,7 @@ fs::raster_grid grid({ 101, 101 }, { 200.0, 200.0 }, bs);
 //
 // iterate over all grid nodes
 //
-for (auto& idx_flat : grid.node_indices())
+for (auto& idx_flat : grid.nodes_indices())
 {
     // on a raster grid, flat index corresponds to the
     // current row index * total nb. of rows + current column index
@@ -349,7 +357,7 @@ for (auto& idx_flat : grid.node_indices())
 //
 // iterate over fixed-value nodes (all border nodes in this case)
 //
-for (auto& idx_flat : grid.node_indices(fixed_value))
+for (auto& idx_flat : grid.nodes_indices(fixed_value))
 {
     std::cout << "current node flat index: " << idx_flat << std::endl;
 }
@@ -364,7 +372,7 @@ fixed_value = fs.NodeStatus.FIXED_VALUE
 bs = fs.RasterBoundaryStatus(fixed_value)
 grid = fs.RasterGrid([100, 100], [200.0, 200.0], bs, [])
 
-node_status_flat = grid.status_at_nodes.ravel()
+node_status_flat = grid.nodes_status.ravel()
 
 # iterate over all grid nodes (slow!)
 for idx_flat in range(grid.size):
@@ -414,7 +422,7 @@ fs::raster_grid grid({ 101, 101 }, { 200.0, 200.0 }, bs);
 //
 fs::raster_grid::neighbors_type neighbors;
 
-for (auto& idx_flat : grid.node_indices())
+for (auto& idx_flat : grid.nodes_indices())
 {
     for (auto& nb : grid.neighbors(idx_flat, neighbors))
     {

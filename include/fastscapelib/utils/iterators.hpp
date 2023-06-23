@@ -93,13 +93,13 @@ namespace fastscapelib
      * @tparam G The grid type.
      */
     template <class G>
-    class grid_node_indices
+    class grid_nodes_indices
     {
     public:
         using filter_func_type = std::function<bool(G&, typename G::size_type)>;
         using iterator = detail::grid_node_index_iterator<G>;
 
-        grid_node_indices(G& grid, filter_func_type func = nullptr)
+        grid_nodes_indices(G& grid, filter_func_type func = nullptr)
             : m_grid(grid)
         {
             if (!func)

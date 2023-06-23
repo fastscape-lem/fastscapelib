@@ -52,21 +52,21 @@ class TestUnstructuredMesh:
         assert mesh.size == 5
         assert mesh.shape == [5]
 
-    def test_status_at_nodes_default(self, mesh_args) -> None:
+    def test_nodes_status_default(self, mesh_args) -> None:
         # all boundary nodes (convex hull) have fixed value status
         mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
 
-        actual = mesh.status_at_nodes
+        actual = mesh.nodes_status
         expected = np.zeros(mesh.size, dtype=np.uint8)
         expected[mesh_args["convex_hull_indices"]] = 1
 
         npt.assert_array_equal(actual, expected)
 
-    def test_status_at_nodes_custom(self, mesh_args) -> None:
+    def test_nodes_status_custom(self, mesh_args) -> None:
         bc = [Node(2, NodeStatus.FIXED_VALUE)]
         mesh = UnstructuredMesh(*mesh_args.values(), bc)  # type: ignore[call-arg]
 
-        actual = mesh.status_at_nodes
+        actual = mesh.nodes_status
         expected = np.zeros(mesh.size, dtype=np.uint8)
         expected[2] = 1
 

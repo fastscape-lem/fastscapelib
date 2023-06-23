@@ -142,7 +142,7 @@ namespace fastscapelib
                 // previous node is a direct receiver of current visited node
                 // (dfs_indices always in bottom->up direction)
                 size_type i = 0;
-                for (const auto& inode : graph.impl().node_indices_bottomup())
+                for (const auto& inode : graph.impl().nodes_indices_bottomup())
                 {
                     auto irec = receivers(inode, 0);
                     if (irec == inode)
@@ -169,7 +169,7 @@ namespace fastscapelib
                 // elevation decrease for the next node to visit unless it is an
                 // outlet
                 size_type i = this->grid.size();
-                auto indices = graph.impl().node_indices_bottomup();
+                auto indices = graph.impl().nodes_indices_bottomup();
 
                 for (auto inode = indices.rbegin(); inode != indices.rend(); ++inode)
                 {

@@ -157,13 +157,13 @@ namespace fastscapelib
 
         profile_grid_xt(size_type size,
                         spacing_type spacing,
-                        const profile_boundary_status& status_at_bounds,
-                        const std::vector<node>& status_at_nodes = {});
+                        const profile_boundary_status& bounds_status,
+                        const std::vector<node>& nodes_status = {});
 
         static profile_grid_xt from_length(size_type size,
                                            length_type length,
-                                           const profile_boundary_status& status_at_bounds,
-                                           const std::vector<node>& status_at_nodes = {});
+                                           const profile_boundary_status& bounds_status,
+                                           const std::vector<node>& nodes_status = {});
 
         inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
 
@@ -180,10 +180,10 @@ namespace fastscapelib
 
         xt::xtensor<code_type, 1> m_gcode_idx;
 
-        node_status_type m_status_at_nodes;
-        profile_boundary_status m_status_at_bounds;
+        node_status_type m_nodes_status;
+        profile_boundary_status m_bounds_status;
 
-        void set_status_at_nodes(const std::vector<node>& status_at_nodes);
+        void set_nodes_status(const std::vector<node>& nodes_status);
 
         static constexpr std::array<std::ptrdiff_t, 3> offsets{ { 0, -1, 1 } };
         std::vector<neighbors_type> m_all_neighbors;
@@ -218,23 +218,23 @@ namespace fastscapelib
      *
      * @param size Total number of grid nodes.
      * @param spacing Distance between two adjacent grid nodes.
-     * @param status_at_bounds Status at boundary nodes (left/right grid edges).
-     * @param status_at_nodes Manually define the status at any node on the grid.
+     * @param bounds_status Status at boundary nodes (left/right grid edges).
+     * @param nodes_status Manually define the status at any node on the grid.
      */
     template <class S, class C>
     profile_grid_xt<S, C>::profile_grid_xt(size_type size,
                                            spacing_type spacing,
-                                           const profile_boundary_status& status_at_bounds,
-                                           const std::vector<node>& status_at_nodes)
+                                           const profile_boundary_status& bounds_status,
+                                           const std::vector<node>& nodes_status)
         : base_type(size)
         , m_size(size)
         , m_spacing(spacing)
-        , m_status_at_bounds(status_at_bounds)
+        , m_bounds_status(bounds_status)
     {
         m_shape = { static_cast<typename shape_type::value_type>(m_size) };
         m_length = static_cast<spacing_type>(size - 1) * spacing;
         m_node_area = spacing;
-        set_status_at_nodes(status_at_nodes);
+        set_nodes_status(nodes_status);
         build_gcode();
         build_neighbors_distances();
         build_neighbors_count();
@@ -250,18 +250,18 @@ namespace fastscapelib
      *
      * @param size Total number of grid nodes.
      * @param length Total physical length of the grid.
-     * @param status_at_bounds Status at boundary nodes (left & right grid edges).
-     * @param status_at_nodes Manually define the status at any node on the grid.
+     * @param bounds_status Status at boundary nodes (left & right grid edges).
+     * @param nodes_status Manually define the status at any node on the grid.
      */
     template <class S, class C>
     profile_grid_xt<S, C> profile_grid_xt<S, C>::from_length(
         size_type size,
         length_type length,
-        const profile_boundary_status& status_at_bounds,
-        const std::vector<node>& status_at_nodes)
+        const profile_boundary_status& bounds_status,
+        const std::vector<node>& nodes_status)
     {
         spacing_type spacing = length / static_cast<length_type>(size - 1);
-        return profile_grid_xt<S, C>(size, spacing, status_at_bounds, status_at_nodes);
+        return profile_grid_xt<S, C>(size, spacing, bounds_status, nodes_status);
     }
     //@}
 
@@ -290,7 +290,7 @@ namespace fastscapelib
     template <class S, class C>
     void profile_grid_xt<S, C>::build_neighbors_count()
     {
-        if (m_status_at_bounds.is_horizontal_looped())
+        if (m_bounds_status.is_horizontal_looped())
         {
             m_neighbors_count = std::array<neighbors_count_type, 3>({ 2, 2, 2 });
         }
@@ -321,31 +321,31 @@ namespace fastscapelib
     //@}
 
     template <class S, class C>
-    void profile_grid_xt<S, C>::set_status_at_nodes(const std::vector<node>& status_at_nodes)
+    void profile_grid_xt<S, C>::set_nodes_status(const std::vector<node>& nodes_status)
     {
-        node_status_type temp_status_at_nodes(m_shape, node_status::core);
+        node_status_type temp_nodes_status(m_shape, node_status::core);
 
-        temp_status_at_nodes(0) = m_status_at_bounds.left;
-        temp_status_at_nodes(m_size - 1) = m_status_at_bounds.right;
+        temp_nodes_status(0) = m_bounds_status.left;
+        temp_nodes_status(m_size - 1) = m_bounds_status.right;
 
-        for (const node& n : status_at_nodes)
+        for (const node& n : nodes_status)
         {
             if (n.status == node_status::looped)
             {
                 throw std::invalid_argument("node_status::looped is not allowed in "
-                                            "'status_at_nodes' "
-                                            "(use 'status_at_bounds' instead)");
+                                            "'nodes_status' "
+                                            "(use 'bounds_status' instead)");
             }
-            else if (temp_status_at_nodes.at(n.idx) == node_status::looped)
+            else if (temp_nodes_status.at(n.idx) == node_status::looped)
             {
                 throw std::invalid_argument("cannot overwrite the status of a "
                                             "looped boundary node");
             }
 
-            temp_status_at_nodes.at(n.idx) = n.status;
+            temp_nodes_status.at(n.idx) = n.status;
         }
 
-        m_status_at_nodes = temp_status_at_nodes;
+        m_nodes_status = temp_nodes_status;
     }
 
     template <class S, class C>
@@ -361,7 +361,7 @@ namespace fastscapelib
     {
         if (idx == 0)
         {
-            if (m_status_at_bounds.is_horizontal_looped())
+            if (m_bounds_status.is_horizontal_looped())
             {
                 neighbors[0] = m_size - 1;
                 neighbors[1] = 1;
@@ -374,7 +374,7 @@ namespace fastscapelib
         else if (idx == m_size - 1)
         {
             neighbors[0] = m_size - 2;
-            if (m_status_at_bounds.is_horizontal_looped())
+            if (m_bounds_status.is_horizontal_looped())
             {
                 neighbors[1] = 0;
             }

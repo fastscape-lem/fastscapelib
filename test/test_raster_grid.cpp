@@ -61,7 +61,7 @@ namespace fastscapelib
 
             auto expected_status
                 = grid_type::node_status_type{ { fb, fb, fb }, { lb, lg, lb }, { fb, fb, fb } };
-            EXPECT_EQ(g1.status_at_nodes(), expected_status);
+            EXPECT_EQ(g1.nodes_status(), expected_status);
 
             std::vector<fs::raster_node> nodes_vector2{ fs::raster_node({ 15, 15, co }) };
             ASSERT_THROW(grid_type(shape, { 1.4, 1.8 }, fb, nodes_vector2), std::out_of_range);
@@ -103,12 +103,12 @@ namespace fastscapelib
             EXPECT_TRUE(xt::all(xt::equal(looped_grid.length(), length_type({ 5.6, 16.2 }))));
         }
 
-        TEST_F(raster_grid, node_area)
+        TEST_F(raster_grid, nodes_areas)
         {
-            for (auto n : fixed_grid.node_indices())
+            for (auto n : fixed_grid.nodes_indices())
             {
-                EXPECT_EQ(fixed_grid.node_area(n), 1.56);
-                EXPECT_EQ(looped_grid.node_area(n), 2.52);
+                EXPECT_EQ(fixed_grid.nodes_areas(n), 1.56);
+                EXPECT_EQ(looped_grid.nodes_areas(n), 2.52);
             }
         }
 
@@ -146,44 +146,44 @@ namespace fastscapelib
                                        { 18, d1, co } }));
         }
 
-        TEST_F(raster_grid, node_code)
+        TEST_F(raster_grid, nodes_codes)
         {
             // Top-left corner nodes
-            EXPECT_EQ(fixed_grid.node_code(0), 0);
-            EXPECT_EQ(looped_grid.node_code(0), 0);
+            EXPECT_EQ(fixed_grid.nodes_codes(0), 0);
+            EXPECT_EQ(looped_grid.nodes_codes(0), 0);
 
             // Top-right corner nodes
-            EXPECT_EQ(fixed_grid.node_code(shape[1] - 1), 2);
-            EXPECT_EQ(looped_grid.node_code(shape[1] - 1), 2);
+            EXPECT_EQ(fixed_grid.nodes_codes(shape[1] - 1), 2);
+            EXPECT_EQ(looped_grid.nodes_codes(shape[1] - 1), 2);
 
             // Bottom-left corner nodes
-            EXPECT_EQ(fixed_grid.node_code((shape[0] - 1) * shape[1]), 6);
-            EXPECT_EQ(looped_grid.node_code((shape[0] - 1) * shape[1]), 6);
+            EXPECT_EQ(fixed_grid.nodes_codes((shape[0] - 1) * shape[1]), 6);
+            EXPECT_EQ(looped_grid.nodes_codes((shape[0] - 1) * shape[1]), 6);
 
             // Bottom-right corner nodes
-            EXPECT_EQ(fixed_grid.node_code(shape[0] * shape[1] - 1), 8);
-            EXPECT_EQ(looped_grid.node_code(shape[0] * shape[1] - 1), 8);
+            EXPECT_EQ(fixed_grid.nodes_codes(shape[0] * shape[1] - 1), 8);
+            EXPECT_EQ(looped_grid.nodes_codes(shape[0] * shape[1] - 1), 8);
 
             for (std::size_t c = 1; c < shape[1] - 1; ++c)
             {
                 // Top edge nodes (without corners)
-                EXPECT_EQ(fixed_grid.node_code(c), 1);
-                EXPECT_EQ(looped_grid.node_code(c), 1);
+                EXPECT_EQ(fixed_grid.nodes_codes(c), 1);
+                EXPECT_EQ(looped_grid.nodes_codes(c), 1);
 
                 // Bottom edge nodes (without corners)
-                EXPECT_EQ(fixed_grid.node_code((shape[0] - 1) * shape[1] + c), 7);
-                EXPECT_EQ(looped_grid.node_code((shape[0] - 1) * shape[1] + c), 7);
+                EXPECT_EQ(fixed_grid.nodes_codes((shape[0] - 1) * shape[1] + c), 7);
+                EXPECT_EQ(looped_grid.nodes_codes((shape[0] - 1) * shape[1] + c), 7);
             }
 
             for (std::size_t r = 1; r < shape[0] - 1; ++r)
             {
                 // Left edge nodes (without corners)
-                EXPECT_EQ(fixed_grid.node_code(r * shape[1]), 3);
-                EXPECT_EQ(looped_grid.node_code(r * shape[1]), 3);
+                EXPECT_EQ(fixed_grid.nodes_codes(r * shape[1]), 3);
+                EXPECT_EQ(looped_grid.nodes_codes(r * shape[1]), 3);
 
                 // Right edge nodes (without corners)
-                EXPECT_EQ(fixed_grid.node_code((r + 1) * shape[1] - 1), 5);
-                EXPECT_EQ(looped_grid.node_code((r + 1) * shape[1] - 1), 5);
+                EXPECT_EQ(fixed_grid.nodes_codes((r + 1) * shape[1] - 1), 5);
+                EXPECT_EQ(looped_grid.nodes_codes((r + 1) * shape[1] - 1), 5);
             }
 
             for (std::size_t r = 1; r < shape[0] - 1; ++r)
@@ -191,8 +191,8 @@ namespace fastscapelib
                 for (std::size_t c = 1; c < shape[1] - 1; ++c)
                 {
                     // Inner nodes
-                    EXPECT_EQ(fixed_grid.node_code(r * 10 + c), 4);
-                    EXPECT_EQ(looped_grid.node_code(r * 10 + c), 4);
+                    EXPECT_EQ(fixed_grid.nodes_codes(r * 10 + c), 4);
+                    EXPECT_EQ(looped_grid.nodes_codes(r * 10 + c), 4);
                 }
             }
         }

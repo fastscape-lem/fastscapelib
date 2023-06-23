@@ -51,13 +51,13 @@ namespace fastscapelib
             grid_type looped_grid = grid_type(shape, 1.4, fs::node_status::looped);
         };
 
-        TEST_F(structured_grid, node_indices)
+        TEST_F(structured_grid, nodes_indices)
         {
-            auto node_indices = fixed_grid.node_indices();
+            auto nodes_indices = fixed_grid.nodes_indices();
 
             std::size_t sum = 0;
             std::size_t size = 0;
-            for (auto it = node_indices.begin(); it != node_indices.end(); ++it)
+            for (auto it = nodes_indices.begin(); it != nodes_indices.end(); ++it)
             {
                 sum += *it;
                 ++size;
@@ -67,7 +67,7 @@ namespace fastscapelib
 
             sum = 0;
             size = 0;
-            for (auto it = node_indices.rbegin(); it != node_indices.rend(); ++it)
+            for (auto it = nodes_indices.rbegin(); it != nodes_indices.rend(); ++it)
             {
                 sum += *it;
                 ++size;
@@ -77,7 +77,7 @@ namespace fastscapelib
 
             sum = 0;
             size = 0;
-            for (auto idx : fixed_grid.node_indices())
+            for (auto idx : fixed_grid.nodes_indices())
             {
                 sum += idx;
                 ++size;
@@ -86,14 +86,14 @@ namespace fastscapelib
             EXPECT_EQ(size, fixed_grid.size());
         }
 
-        TEST_F(structured_grid, node_indices_status)
+        TEST_F(structured_grid, nodes_indices_status)
         {
-            auto node_indices_fvalue = fixed_grid.node_indices(fs::node_status::fixed_value);
+            auto nodes_indices_fvalue = fixed_grid.nodes_indices(fs::node_status::fixed_value);
 
             {
                 SCOPED_TRACE("test fixed_value begin");
 
-                auto it = node_indices_fvalue.begin();
+                auto it = nodes_indices_fvalue.begin();
 
                 EXPECT_EQ(*it, 0u);
                 EXPECT_EQ(*(it++), 0u);
@@ -107,19 +107,19 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("test fixed_value end");
 
-                auto it = node_indices_fvalue.end();
+                auto it = nodes_indices_fvalue.end();
 
                 EXPECT_EQ(*it, 5u);
                 EXPECT_EQ(*(--it), 4u);
                 EXPECT_EQ(*(--it), 0u);
             }
 
-            auto node_indices_core = fixed_grid.node_indices(fs::node_status::core);
+            auto nodes_indices_core = fixed_grid.nodes_indices(fs::node_status::core);
 
             {
                 SCOPED_TRACE("test core begin");
 
-                auto it = node_indices_core.begin();
+                auto it = nodes_indices_core.begin();
 
                 EXPECT_EQ(*(it++), 1u);
                 EXPECT_EQ(*(it++), 2u);
@@ -130,7 +130,7 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("test core end");
 
-                auto it = node_indices_core.end();
+                auto it = nodes_indices_core.end();
 
                 EXPECT_EQ(*it, 5u);
                 EXPECT_EQ(*(--it), 3u);

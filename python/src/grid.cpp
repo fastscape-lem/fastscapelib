@@ -180,9 +180,9 @@ add_grid_bindings(py::module& m)
                  const std::vector<fs::node>>(),
         py::arg("size"),
         py::arg("spacing"),
-        py::arg("status_at_bounds"),
-        py::arg("status_at_nodes"),
-        R"doc(__init__(self, size: int, spacing: float, status_at_bounds: ProfileBoundaryStatus, status_at_nodes: List[Node]) -> None
+        py::arg("bounds_status"),
+        py::arg("nodes_status"),
+        R"doc(__init__(self, size: int, spacing: float, bounds_status: ProfileBoundaryStatus, nodes_status: List[Node]) -> None
 
         Profile grid initializer (overloaded).
 
@@ -192,9 +192,9 @@ add_grid_bindings(py::module& m)
             Total number of grid nodes.
         spacing : float
             Distance between two adjacent grid nodes.
-        status_at_bounds : :class:`ProfileBoundaryStatus`
+        bounds_status : :class:`ProfileBoundaryStatus`
             Status at boundary nodes (left/right grid edges).
-        status_at_nodes : list
+        nodes_status : list
             A list of :class:`Node` objects to manually define the status at
             any node on the grid. An overloaded initializer also directly accepts
             a list of ``(idx, status)`` tuples for convenience.
@@ -219,9 +219,9 @@ add_grid_bindings(py::module& m)
         &fs::py_profile_grid::from_length,
         py::arg("size"),
         py::arg("length"),
-        py::arg("status_at_bounds"),
-        py::arg("status_at_nodes"),
-        R"doc(from_length(self, size: int, length: float, status_at_bounds: ProfileBoundaryStatus, status_at_nodes: List[Node]) -> None
+        py::arg("bounds_status"),
+        py::arg("nodes_status"),
+        R"doc(from_length(self, size: int, length: float, bounds_status: ProfileBoundaryStatus, nodes_status: List[Node]) -> None
 
         Profile grid initializer from a given total length.
 
@@ -231,9 +231,9 @@ add_grid_bindings(py::module& m)
             Total number of grid nodes.
         length : float
             Total physical length of the grid.
-        status_at_bounds : :class:`ProfileBoundaryStatus`
+        bounds_status : :class:`ProfileBoundaryStatus`
             Status at boundary nodes (left/right grid edges).
-        status_at_nodes : list
+        nodes_status : list
             A list of :class:`Node` objects to manually define the status at
             any node on the grid.
 
@@ -378,9 +378,9 @@ add_grid_bindings(py::module& m)
                  const std::vector<fs::raster_node>>(),
         py::arg("shape"),
         py::arg("spacing"),
-        py::arg("status_at_bounds"),
-        py::arg("status_at_nodes"),
-        R"doc(__init__(self, size: List[int], spacing: array_like, status_at_bounds: RasterBoundaryStatus, status_at_nodes: List[RasterNode]) -> None
+        py::arg("bounds_status"),
+        py::arg("nodes_status"),
+        R"doc(__init__(self, size: List[int], spacing: array_like, bounds_status: RasterBoundaryStatus, nodes_status: List[RasterNode]) -> None
 
         Raster grid initializer.
 
@@ -390,9 +390,9 @@ add_grid_bindings(py::module& m)
             Shape of the grid (number of rows and cols).
         spacing : array_like
             Distance between two adjacent grid nodes (row, cols).
-        status_at_bounds : :class:`RasterBoundaryStatus`
+        bounds_status : :class:`RasterBoundaryStatus`
             Status at boundary nodes (left/right grid edges).
-        status_at_nodes : list
+        nodes_status : list
             A list of :class:`RasterNode` objects to manually define the status at
             any node on the grid.
 
@@ -407,9 +407,9 @@ add_grid_bindings(py::module& m)
         { return fs::py_raster_grid::from_length(shape, length, boundary, status); },
         py::arg("shape"),
         py::arg("length"),
-        py::arg("status_at_bounds"),
-        py::arg("status_at_nodes"),
-        R"doc(from_length(self, shape: tuple, length: array_like, status_at_bounds: RasterBoundaryStatus, status_at_nodes: List[RasterNode]) -> None
+        py::arg("bounds_status"),
+        py::arg("nodes_status"),
+        R"doc(from_length(self, shape: tuple, length: array_like, bounds_status: RasterBoundaryStatus, nodes_status: List[RasterNode]) -> None
 
         Raster grid initializer from given total lengths.
 
@@ -419,9 +419,9 @@ add_grid_bindings(py::module& m)
             Shape of the grid (number of rows and cols).
         length : array_like
             Total physical length of the grid in y (rows) and x (cols).
-        status_at_bounds : :class:`RasterBoundaryStatus`
+        bounds_status : :class:`RasterBoundaryStatus`
             Status at boundary nodes (left/right grid edges).
-        status_at_nodes : list
+        nodes_status : list
             A list of :class:`RasterNode` objects to manually define the status at
             any node on the grid.
 

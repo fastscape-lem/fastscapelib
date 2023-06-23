@@ -58,7 +58,7 @@ namespace fastscapelib
             EXPECT_EQ(mesh.shape(), shape_type({ mesh_size }));
         }
 
-        TEST_F(unstructured_mesh, status_at_nodes)
+        TEST_F(unstructured_mesh, nodes_status)
         {
             {
                 SCOPED_TRACE("default boundary conditions (convex hull nodes = fixed value)");
@@ -66,7 +66,7 @@ namespace fastscapelib
                 grid_type mesh = fs::unstructured_mesh(
                     points, indptr, indices, convex_hull_indices, areas, {});
 
-                auto actual = mesh.status_at_nodes();
+                auto actual = mesh.nodes_status();
 
                 EXPECT_EQ(actual(0), fs::node_status::fixed_value);
                 EXPECT_EQ(actual(1), fs::node_status::fixed_value);
@@ -85,7 +85,7 @@ namespace fastscapelib
                                                        areas,
                                                        { { 2, fs::node_status::fixed_value } });
 
-                auto actual = mesh.status_at_nodes();
+                auto actual = mesh.nodes_status();
 
                 EXPECT_EQ(actual(0), fs::node_status::core);
                 EXPECT_EQ(actual(1), fs::node_status::core);
@@ -107,13 +107,13 @@ namespace fastscapelib
             }
         }
 
-        TEST_F(unstructured_mesh, node_area)
+        TEST_F(unstructured_mesh, nodes_areas)
         {
             grid_type mesh
                 = fs::unstructured_mesh(points, indptr, indices, convex_hull_indices, areas, {});
 
-            EXPECT_EQ(mesh.node_area(0), 1.0);
-            EXPECT_EQ(mesh.node_area(4), 2.0);
+            EXPECT_EQ(mesh.nodes_areas(0), 1.0);
+            EXPECT_EQ(mesh.nodes_areas(4), 2.0);
         }
 
         TEST_F(unstructured_mesh, neighbors_count)
