@@ -10,6 +10,9 @@ jobs:
   test_cpp:
     name: Test C++ (${{ matrix.cfg.label }})
     runs-on: ${{ matrix.cfg.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
     strategy:
       fail-fast: false
       matrix:
@@ -30,30 +33,23 @@ jobs:
           platform: x64
         if: runner.os == 'Linux'
 
-      - name: Setup Conda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          activate-environment: fastscapelib-test
-          channels: conda-forge
-          channel-priority: strict
-
-      - name: Install dependencies (Conda)
-        shell: bash -l {0}
-        run: conda install cmake xtensor
+          environment-file: environment-dev.yml
+          cache-environment: true
+          cache-downloads: false
 
       - name: Configure Fastscapelib (CMake)
-        shell: bash -l {0}
         run: |
           cmake -S . -B build \
             -DFS_DOWNLOAD_GTEST=ON \
             -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
 
       - name: Build Fastscapelib
-        shell: bash -l {0}
         run: cmake --build build
 
       - name: Run tests
-        shell: bash -l {0}
         run: |
           cd build
           ctest -T test --output-on-failure .
@@ -61,6 +57,9 @@ jobs:
   test_py:
     name: Test Python (${{ matrix.os }} / ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
     strategy:
       fail-fast: false
       matrix:
@@ -70,24 +69,19 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Conda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          activate-environment: fastscapelib-test
-          channels: conda-forge
-          channel-priority: strict
-
-      - name: Install dependencies (Conda)
-        shell: bash -l {0}
-        run: |
-          conda install python=${{ matrix.python-version }} numpy scikit-build-core cmake xtensor-python pytest pip
+          environment-file: environment-python-dev.yml
+          cache-environment: true
+          cache-downloads: false
+          create-args: >-
+            python=${{ matrix.python-version }}
 
       - name: Build and install Fastscapelib Python
-        shell: bash -l {0}
         run: |
           python -m pip install . -v --no-build-isolation
 
       - name: Run tests
-        shell: bash -l {0}
         run: |
           pytest python/fastscapelib/tests -vv --color=yes

@@ -1,0 +1,8 @@
+name: fastscapelib-dev
+channels:
+  - conda-forge
+dependencies:
+  - xtensor
+  - cmake
+  - gtest
+  - benchmark

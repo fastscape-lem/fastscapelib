@@ -65,6 +65,14 @@ Alternatively, google-test may be downloaded automatically by enabling
 `FS_GTEST_SRC_DIR` (setting `FS_DOWNLOAD_GTEST=ON` or
 `FS_GTEST_SRC_DIR=/path/to/gtest` automatically sets `FS_BUILD_TESTS=ON`).
 
+:::{tip}
+
+Download and build google-test from source as part of the Fastscapelib build
+process may prevent possible issues with reusing a pre-installed version of
+google-test that has been built with different options or flags.
+
+:::
+
 To build the tests, run the following commands from the source root directory:
 
 ```
