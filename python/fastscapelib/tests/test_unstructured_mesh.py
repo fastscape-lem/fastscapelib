@@ -63,7 +63,7 @@ class TestUnstructuredMesh:
         npt.assert_array_equal(actual, expected)
 
     def test_status_at_nodes_custom(self, mesh_args) -> None:
-        bc = [Node(2, NodeStatus.FIXED_VALUE_BOUNDARY)]
+        bc = [Node(2, NodeStatus.FIXED_VALUE)]
         mesh = UnstructuredMesh(*mesh_args.values(), bc)  # type: ignore[call-arg]
 
         actual = mesh.status_at_nodes
@@ -73,7 +73,7 @@ class TestUnstructuredMesh:
         npt.assert_array_equal(actual, expected)
 
         with pytest.raises(ValueError, match=".*not allowed.*"):
-            UnstructuredMesh(*mesh_args.values(), [Node(2, NodeStatus.LOOPED_BOUNDARY)])  # type: ignore[call-arg]
+            UnstructuredMesh(*mesh_args.values(), [Node(2, NodeStatus.LOOPED)])  # type: ignore[call-arg]
 
     def test_neighbors_count(self, mesh_args) -> None:
         mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
@@ -101,9 +101,9 @@ class TestUnstructuredMesh:
         dist_diag = np.sqrt(0.5**2 + 0.5**2)
 
         assert mesh.neighbors(3) == [
-            Neighbor(2, dist_diag, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(2, dist_diag, NodeStatus.FIXED_VALUE),
             Neighbor(4, 0.5, NodeStatus.CORE),
-            Neighbor(0, dist_diag, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(0, dist_diag, NodeStatus.FIXED_VALUE),
         ]
 
         with pytest.raises(IndexError, match="grid index out of range"):

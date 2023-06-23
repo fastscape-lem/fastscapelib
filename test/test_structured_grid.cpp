@@ -37,9 +37,8 @@ namespace fastscapelib
         protected:
             using node_s = fs::node_status;
 
-            fs::node_status fixed = fs::node_status::fixed_value_boundary;
-            std::array<node_s, 2> loop{ { fs::node_status::looped_boundary,
-                                          fs::node_status::looped_boundary } };
+            fs::node_status fixed = fs::node_status::fixed_value;
+            std::array<node_s, 2> loop{ { fs::node_status::looped, fs::node_status::looped } };
 
             fs::profile_boundary_status fixed_status{ fixed };
             fs::profile_boundary_status looped_status{ loop };
@@ -48,8 +47,8 @@ namespace fastscapelib
             using size_type = typename grid_type::size_type;
 
             size_type shape{ 5 };
-            grid_type fixed_grid = grid_type(shape, 1.3, fs::node_status::fixed_value_boundary);
-            grid_type looped_grid = grid_type(shape, 1.4, fs::node_status::looped_boundary);
+            grid_type fixed_grid = grid_type(shape, 1.3, fs::node_status::fixed_value);
+            grid_type looped_grid = grid_type(shape, 1.4, fs::node_status::looped);
         };
 
         TEST_F(structured_grid, node_indices)
@@ -89,11 +88,10 @@ namespace fastscapelib
 
         TEST_F(structured_grid, node_indices_status)
         {
-            auto node_indices_fvalue
-                = fixed_grid.node_indices(fs::node_status::fixed_value_boundary);
+            auto node_indices_fvalue = fixed_grid.node_indices(fs::node_status::fixed_value);
 
             {
-                SCOPED_TRACE("test fixed_value_boundary begin");
+                SCOPED_TRACE("test fixed_value begin");
 
                 auto it = node_indices_fvalue.begin();
 
@@ -107,7 +105,7 @@ namespace fastscapelib
             }
 
             {
-                SCOPED_TRACE("test fixed_value_boundary end");
+                SCOPED_TRACE("test fixed_value end");
 
                 auto it = node_indices_fvalue.end();
 

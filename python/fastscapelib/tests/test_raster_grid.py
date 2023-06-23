@@ -17,13 +17,13 @@ class TestRasterBoundaryStatus:
         self.bs1 = RasterBoundaryStatus(
             [
                 NodeStatus.CORE,
-                NodeStatus.FIXED_VALUE_BOUNDARY,
+                NodeStatus.FIXED_VALUE,
                 NodeStatus.CORE,
-                NodeStatus.FIXED_VALUE_BOUNDARY,
+                NodeStatus.FIXED_VALUE,
             ]
         )
         self.bs2 = RasterBoundaryStatus(NodeStatus.CORE)
-        self.bs3 = RasterBoundaryStatus(NodeStatus.LOOPED_BOUNDARY)
+        self.bs3 = RasterBoundaryStatus(NodeStatus.LOOPED)
 
     def test__init__(self) -> None:
         # call the setup_method
@@ -32,22 +32,22 @@ class TestRasterBoundaryStatus:
     def test_left(self) -> None:
         assert self.bs1.left == NodeStatus.CORE
         assert self.bs2.left == NodeStatus.CORE
-        assert self.bs3.left == NodeStatus.LOOPED_BOUNDARY
+        assert self.bs3.left == NodeStatus.LOOPED
 
     def test_right(self) -> None:
-        assert self.bs1.right == NodeStatus.FIXED_VALUE_BOUNDARY
+        assert self.bs1.right == NodeStatus.FIXED_VALUE
         assert self.bs2.right == NodeStatus.CORE
-        assert self.bs3.right == NodeStatus.LOOPED_BOUNDARY
+        assert self.bs3.right == NodeStatus.LOOPED
 
     def test_bottom(self) -> None:
-        assert self.bs1.bottom == NodeStatus.FIXED_VALUE_BOUNDARY
+        assert self.bs1.bottom == NodeStatus.FIXED_VALUE
         assert self.bs2.bottom == NodeStatus.CORE
-        assert self.bs3.bottom == NodeStatus.LOOPED_BOUNDARY
+        assert self.bs3.bottom == NodeStatus.LOOPED
 
     def test_top(self) -> None:
         assert self.bs1.top == NodeStatus.CORE
         assert self.bs2.top == NodeStatus.CORE
-        assert self.bs3.top == NodeStatus.LOOPED_BOUNDARY
+        assert self.bs3.top == NodeStatus.LOOPED
 
     def test_is_horizontal_looped(self) -> None:
         assert not self.bs1.is_horizontal_looped
@@ -96,15 +96,15 @@ class TestRasterNeighbor:
     def test_status(self) -> None:
         assert self.n.status == NodeStatus.CORE
 
-        self.n.status = NodeStatus.FIXED_VALUE_BOUNDARY
-        assert self.n.status == NodeStatus.FIXED_VALUE_BOUNDARY
+        self.n.status = NodeStatus.FIXED_VALUE
+        assert self.n.status == NodeStatus.FIXED_VALUE
 
 
 class TestRasterGrid:
     def setup_method(self) -> None:
-        self.bs = bs = RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY)
+        self.bs = bs = RasterBoundaryStatus(NodeStatus.FIXED_VALUE)
         self.g = RasterGrid(
-            [5, 10], [2.2, 2.4], bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)]
+            [5, 10], [2.2, 2.4], bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE)]
         )
 
     def test_static_props(self) -> None:
@@ -117,7 +117,7 @@ class TestRasterGrid:
             [10, 10],
             [2.3, 2.1],
             self.bs,
-            [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)],
+            [RasterNode(0, 5, NodeStatus.FIXED_VALUE)],
         )
         assert g1.size == 100
         npt.assert_almost_equal(g1.spacing, [2.3, 2.1])
@@ -128,7 +128,7 @@ class TestRasterGrid:
                 [5, 10],
                 [2.2, 2.4],
                 self.bs,
-                [RasterNode(20, 255, NodeStatus.FIXED_VALUE_BOUNDARY)],
+                [RasterNode(20, 255, NodeStatus.FIXED_VALUE)],
             )
 
     def test_from_length(self) -> None:
@@ -136,7 +136,7 @@ class TestRasterGrid:
             [11, 11],
             np.r_[23, 21],
             self.bs,
-            [RasterNode(0, 5, NodeStatus.FIXED_VALUE_BOUNDARY)],
+            [RasterNode(0, 5, NodeStatus.FIXED_VALUE)],
         )
         assert g.size == 121
         npt.assert_almost_equal(g.spacing, [2.3, 2.1])
@@ -194,8 +194,8 @@ class TestRasterGrid:
     def test_neighbors(self) -> None:
         dist_diag = np.sqrt(2.2**2 + 2.4**2)
         assert self.g.neighbors(0) == [
-            Neighbor(1, 2.4, NodeStatus.FIXED_VALUE_BOUNDARY),
-            Neighbor(10, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(1, 2.4, NodeStatus.FIXED_VALUE),
+            Neighbor(10, 2.2, NodeStatus.FIXED_VALUE),
             Neighbor(11, dist_diag, NodeStatus.CORE),
         ]
 
@@ -206,8 +206,8 @@ class TestRasterGrid:
         dist_diag = np.sqrt(2.2**2 + 2.4**2)
 
         assert self.g.neighbors(0, 0) == [
-            RasterNeighbor(1, 0, 1, 2.4, NodeStatus.FIXED_VALUE_BOUNDARY),
-            RasterNeighbor(10, 1, 0, 2.2, NodeStatus.FIXED_VALUE_BOUNDARY),
+            RasterNeighbor(1, 0, 1, 2.4, NodeStatus.FIXED_VALUE),
+            RasterNeighbor(10, 1, 0, 2.2, NodeStatus.FIXED_VALUE),
             RasterNeighbor(11, 1, 1, dist_diag, NodeStatus.CORE),
         ]
 

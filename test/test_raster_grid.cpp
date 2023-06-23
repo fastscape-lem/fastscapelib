@@ -52,11 +52,11 @@ namespace fastscapelib
 
         TEST_F(raster_grid, ctor)
         {
-            node_status lg = node_status::fixed_gradient_boundary;
+            node_status lg = node_status::fixed_gradient;
 
             std::array<size_type, 2> shape{ { 3, 3 } };
             std::vector<fs::raster_node> nodes_vector1{ fs::raster_node(
-                { 1, 1, fs::node_status::fixed_gradient_boundary }) };
+                { 1, 1, fs::node_status::fixed_gradient }) };
             auto g1 = grid_type(shape, { 1.4, 1.8 }, hloop, nodes_vector1);
 
             auto expected_status

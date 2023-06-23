@@ -210,9 +210,9 @@ namespace fastscapelib
         {
             for (const node& n : status_at_nodes)
             {
-                if (n.status == node_status::looped_boundary)
+                if (n.status == node_status::looped)
                 {
-                    throw std::invalid_argument("node_status::looped_boundary is not allowed in "
+                    throw std::invalid_argument("node_status::looped is not allowed in "
                                                 "unstructured meshes");
                 }
 
@@ -224,7 +224,7 @@ namespace fastscapelib
             // if no status at node is given, set fixed value boundaries for all nodes
             // forming the convex hull
             auto status_at_qhull_view = xt::index_view(temp_status_at_nodes, m_convex_hull_indices);
-            status_at_qhull_view = node_status::fixed_value_boundary;
+            status_at_qhull_view = node_status::fixed_value;
         }
 
         m_status_at_nodes = temp_status_at_nodes;

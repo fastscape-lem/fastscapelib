@@ -19,7 +19,7 @@ namespace fastscapelib
         {
         protected:
             using node_s = fs::node_status;
-            node_s fixed = node_s::fixed_value_boundary;
+            node_s fixed = node_s::fixed_value;
             node_s core = node_s::core;
 
             using grid_type = fs::unstructured_mesh_xt<fs::xt_selector>;
@@ -68,29 +68,28 @@ namespace fastscapelib
 
                 auto actual = mesh.status_at_nodes();
 
-                EXPECT_EQ(actual(0), fs::node_status::fixed_value_boundary);
-                EXPECT_EQ(actual(1), fs::node_status::fixed_value_boundary);
-                EXPECT_EQ(actual(2), fs::node_status::fixed_value_boundary);
-                EXPECT_EQ(actual(3), fs::node_status::fixed_value_boundary);
+                EXPECT_EQ(actual(0), fs::node_status::fixed_value);
+                EXPECT_EQ(actual(1), fs::node_status::fixed_value);
+                EXPECT_EQ(actual(2), fs::node_status::fixed_value);
+                EXPECT_EQ(actual(3), fs::node_status::fixed_value);
                 EXPECT_EQ(actual(4), fs::node_status::core);
             }
 
             {
                 SCOPED_TRACE("custom boundary conditions");
 
-                grid_type mesh
-                    = fs::unstructured_mesh(points,
-                                            indptr,
-                                            indices,
-                                            convex_hull_indices,
-                                            areas,
-                                            { { 2, fs::node_status::fixed_value_boundary } });
+                grid_type mesh = fs::unstructured_mesh(points,
+                                                       indptr,
+                                                       indices,
+                                                       convex_hull_indices,
+                                                       areas,
+                                                       { { 2, fs::node_status::fixed_value } });
 
                 auto actual = mesh.status_at_nodes();
 
                 EXPECT_EQ(actual(0), fs::node_status::core);
                 EXPECT_EQ(actual(1), fs::node_status::core);
-                EXPECT_EQ(actual(2), fs::node_status::fixed_value_boundary);
+                EXPECT_EQ(actual(2), fs::node_status::fixed_value);
                 EXPECT_EQ(actual(3), fs::node_status::core);
                 EXPECT_EQ(actual(4), fs::node_status::core);
             }
@@ -103,7 +102,7 @@ namespace fastscapelib
                                                    indices,
                                                    convex_hull_indices,
                                                    areas,
-                                                   { { 2, fs::node_status::looped_boundary } }),
+                                                   { { 2, fs::node_status::looped } }),
                              std::invalid_argument);
             }
         }

@@ -49,7 +49,7 @@ namespace fastscapelib
             auto ns = static_cast<std::size_t>(state.range(0));
             std::array<std::size_t, 2> shape = { ns, ns };
 
-            auto grid = fs::raster_grid(shape, { 0.4, 0.4 }, fs::node_status::fixed_value_boundary);
+            auto grid = fs::raster_grid(shape, { 0.4, 0.4 }, fs::node_status::fixed_value);
 
             xt::xtensor<double, 2> elevation = xt::random::rand<T>(shape);
 

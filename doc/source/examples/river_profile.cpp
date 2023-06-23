@@ -17,7 +17,7 @@ main()
 {
     // profile grid and boundary conditions
     using ns = fs::node_status;
-    fs::profile_boundary_status bs{ ns::fixed_value_boundary, ns::core };
+    fs::profile_boundary_status bs{ ns::fixed_value, ns::core };
 
     fs::profile_grid grid = fs::profile_grid(101, 300.0, bs);
 

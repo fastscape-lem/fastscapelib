@@ -57,7 +57,7 @@ raster grid:
 
 namespace fs = fastscapelib;
 
-fs::raster_boundary_status boundaries{ fs::node_status::fixed_value_boundary };
+fs::raster_boundary_status boundaries{ fs::node_status::fixed_value };
 fs::raster_grid grid({ 100, 100 }, { 200.0, 200.0 }, boundaries);
 
 fs::flow_graph<fs::raster_grid> graph(grid, { fs::single_flow_router() });
@@ -69,7 +69,7 @@ fs::flow_graph<fs::raster_grid> graph(grid, { fs::single_flow_router() });
 
 import fastscapelib as fs
 
-boundaries = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE_BOUNDARY)
+boundaries = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
 grid = fs.RasterGrid([100, 100], [200.0, 200.0], boundaries, [])
 
 graph = fs.FlowGraph(grid, [fs.SingleFlowRouter()])
@@ -92,7 +92,7 @@ These specific nodes may collect input flow but cannot release any output flow
 e.g., surface land water entering the sea).
 
 By default, all grid nodes with status
-{py:attr}`~fastscapelib.NodeStatus.FIXED_VALUE_BOUNDARY` are set as base
+{py:attr}`~fastscapelib.NodeStatus.FIXED_VALUE` are set as base
 level nodes when creating a flow graph.
 
 (guide-compute-flow-paths)=
@@ -116,7 +116,7 @@ field defined on the grid):
 
 namespace fs = fastscapelib;
 
-fs::raster_boundary_status boundaries{ fs::node_status::fixed_value_boundary };
+fs::raster_boundary_status boundaries{ fs::node_status::fixed_value };
 fs::raster_grid grid({ 100, 100 }, { 200.0, 200.0 }, boundaries);
 
 fs::flow_graph<fs::raster_grid> graph(grid, { fs::single_flow_router() });
@@ -134,7 +134,7 @@ const auto new_elevation = graph.update_routes(elevation);
 import numpy as np
 import fastscapelib as fs
 
-boundaries = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE_BOUNDARY)
+boundaries = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
 grid = fs.RasterGrid([100, 100], [200.0, 200.0], boundaries, [])
 
 graph = fs.FlowGraph(grid, [fs.SingleFlowRouter()])

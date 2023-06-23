@@ -27,8 +27,8 @@ namespace fastscapelib
             using elev_type = xt::xtensor<double, 2>;
 
             fs::node_status ns_core = fs::node_status::core;
-            fs::node_status ns_fixed = fs::node_status::fixed_value_boundary;
-            fs::node_status ns_looped = fs::node_status::looped_boundary;
+            fs::node_status ns_fixed = fs::node_status::fixed_value;
+            fs::node_status ns_looped = fs::node_status::looped;
 
             std::array<fs::node_status, 4> lclosed = { { ns_fixed, ns_core, ns_core, ns_core } };
             std::array<fs::node_status, 4> vlooped
@@ -54,7 +54,7 @@ namespace fastscapelib
             using elev_type = xt::xtensor<double, 1>;
 
             fs::node_status ns_core = fs::node_status::core;
-            fs::node_status ns_fixed = fs::node_status::fixed_value_boundary;
+            fs::node_status ns_fixed = fs::node_status::fixed_value;
 
             grid_type profile_grid_closed = grid_type(4, 1.0, ns_fixed);
             grid_type profile_grid_half_open = grid_type(4, 1.0, { ns_fixed, ns_core });

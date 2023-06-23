@@ -345,7 +345,7 @@ namespace fastscapelib
             if (irec == idfs)
             {
                 ibasin = basins(idfs);
-                is_inner_basin = status_at_nodes.flat(idfs) != node_status::fixed_value_boundary;
+                is_inner_basin = status_at_nodes.flat(idfs) != node_status::fixed_value;
 
                 if (!is_inner_basin)
                 {
@@ -375,7 +375,7 @@ namespace fastscapelib
                     // outer basin
                     bool skip = ibasin >= nbasin;
                     node_status nstatus = status_at_nodes.flat(outlets()[nbasin]);
-                    bool is_inner_nbasin = nstatus != node_status::fixed_value_boundary;
+                    bool is_inner_nbasin = nstatus != node_status::fixed_value;
                     if (skip && is_inner_nbasin)
                     {
                         continue;

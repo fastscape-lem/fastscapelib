@@ -68,11 +68,11 @@ namespace fastscapelib
             using size_type = typename grid_type::size_type;
 
             // bottom border base-level
-            fs::node_status fixed = fs::node_status::fixed_value_boundary;
+            fs::node_status fixed = fs::node_status::fixed_value;
             fs::node_status core = fs::node_status::core;
             fs::raster_boundary_status bottom_base_level{ { core, core, core, fixed } };
 
-            fs::node_status fb = fs::node_status::fixed_value_boundary;
+            fs::node_status fb = fs::node_status::fixed_value;
             fs::raster_boundary_status fixed_value_status{ fb };
 
             size_type nrows = 10;

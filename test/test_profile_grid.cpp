@@ -16,10 +16,9 @@ namespace fastscapelib
         protected:
             using node_s = fs::node_status;
 
-            node_s fixed = node_s::fixed_value_boundary;
-            std::array<node_s, 2> loop{ { node_s::looped_boundary, node_s::looped_boundary } };
-            std::array<node_s, 2> hill_formed_loop{ { node_s::looped_boundary,
-                                                      node_s::fixed_value_boundary } };
+            node_s fixed = node_s::fixed_value;
+            std::array<node_s, 2> loop{ { node_s::looped, node_s::looped } };
+            std::array<node_s, 2> hill_formed_loop{ { node_s::looped, node_s::fixed_value } };
 
             fs::profile_boundary_status fixed_value_status{ fixed };
             fs::profile_boundary_status looped_status{ loop };
@@ -30,8 +29,8 @@ namespace fastscapelib
             EXPECT_EQ(fixed_value_status.left, fixed);
             EXPECT_EQ(fixed_value_status.right, fixed);
 
-            EXPECT_EQ(looped_status.left, node_s::looped_boundary);
-            EXPECT_EQ(looped_status.right, node_s::looped_boundary);
+            EXPECT_EQ(looped_status.left, node_s::looped);
+            EXPECT_EQ(looped_status.right, node_s::looped);
 
             EXPECT_THROW(fs::profile_boundary_status{ hill_formed_loop }, std::invalid_argument);
         }
@@ -48,10 +47,9 @@ namespace fastscapelib
         protected:
             using node_s = fs::node_status;
 
-            node_s fixed = node_s::fixed_value_boundary;
-            std::array<node_s, 2> loop{ { node_s::looped_boundary, node_s::looped_boundary } };
-            std::array<node_s, 2> hill_formed_loop{ { node_s::looped_boundary,
-                                                      node_s::fixed_value_boundary } };
+            node_s fixed = node_s::fixed_value;
+            std::array<node_s, 2> loop{ { node_s::looped, node_s::looped } };
+            std::array<node_s, 2> hill_formed_loop{ { node_s::looped, node_s::fixed_value } };
 
             fs::profile_boundary_status fixed_value_status{ fixed };
             fs::profile_boundary_status looped_status{ loop };
@@ -61,26 +59,24 @@ namespace fastscapelib
             using shape_type = typename grid_type::shape_type;
 
             size_type size = 5;
-            grid_type fixed_grid = grid_type(size, 1.3, fs::node_status::fixed_value_boundary);
-            grid_type looped_grid = grid_type(size, 1.4, fs::node_status::looped_boundary);
+            grid_type fixed_grid = grid_type(size, 1.3, fs::node_status::fixed_value);
+            grid_type looped_grid = grid_type(size, 1.4, fs::node_status::looped);
 
             fs::node_status status_fixed(std::size_t idx)
             {
-                return ((idx == 0) || (idx == 4)) ? fs::node_status::fixed_value_boundary
+                return ((idx == 0) || (idx == 4)) ? fs::node_status::fixed_value
                                                   : fs::node_status::core;
             };
 
             fs::node_status status_looped(std::size_t idx)
             {
-                return ((idx == 0) || (idx == 4)) ? fs::node_status::looped_boundary
-                                                  : fs::node_status::core;
+                return ((idx == 0) || (idx == 4)) ? fs::node_status::looped : fs::node_status::core;
             };
         };
 
         TEST_F(profile_grid, boundary_status)
         {
-            fs::profile_boundary_status looped_status{ node_s::looped_boundary,
-                                                       node_s::looped_boundary };
+            fs::profile_boundary_status looped_status{ node_s::looped, node_s::looped };
             ASSERT_THROW(fs::profile_boundary_status status{ hill_formed_loop },
                          std::invalid_argument);
 
@@ -98,28 +94,26 @@ namespace fastscapelib
 
         TEST_F(profile_grid, ctor)
         {
-            std::vector<fs::node> nodes_vector1{ fs::node(
-                { 1, fs::node_status::fixed_value_boundary }) };
-            grid_type g1(size, 1.3, fs::node_status::looped_boundary, nodes_vector1);
+            std::vector<fs::node> nodes_vector1{ fs::node({ 1, fs::node_status::fixed_value }) };
+            grid_type g1(size, 1.3, fs::node_status::looped, nodes_vector1);
 
-            auto expected_status
-                = grid_type::node_status_type{ fs::node_status::looped_boundary,
-                                               fs::node_status::fixed_value_boundary,
-                                               fs::node_status::core,
-                                               fs::node_status::core,
-                                               fs::node_status::looped_boundary };
+            auto expected_status = grid_type::node_status_type{ fs::node_status::looped,
+                                                                fs::node_status::fixed_value,
+                                                                fs::node_status::core,
+                                                                fs::node_status::core,
+                                                                fs::node_status::looped };
             ASSERT_EQ(g1.status_at_nodes(), expected_status);
 
             std::vector<fs::node> nodes_vector2{ fs::node({ 15, fs::node_status::core }) };
-            ASSERT_THROW(grid_type(size, 1.3, fs::node_status::fixed_value_boundary, nodes_vector2),
+            ASSERT_THROW(grid_type(size, 1.3, fs::node_status::fixed_value, nodes_vector2),
                          std::out_of_range);
 
             std::vector<fs::node> nodes_vector3{ fs::node({ 0, fs::node_status::core }) };
-            ASSERT_THROW(grid_type(size, 1.3, fs::node_status::looped_boundary, nodes_vector3),
+            ASSERT_THROW(grid_type(size, 1.3, fs::node_status::looped, nodes_vector3),
                          std::invalid_argument);
         }
 
-        TEST_F(profile_grid, neighbors__fixed_value_boundary)
+        TEST_F(profile_grid, neighbors__fixed_value)
         {
             EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_used(), 0u);
             EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_size(), 5u);
@@ -141,13 +135,13 @@ namespace fastscapelib
             EXPECT_EQ(fixed_grid.neighbors_indices_cache().cache_used(), 5u);
         }
 
-        TEST_F(profile_grid, neighbors__looped_boundary)
+        TEST_F(profile_grid, neighbors__looped)
         {
             EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_used(), 0u);
             EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_size(), 5u);
 
             EXPECT_EQ(looped_grid.neighbors(0),
-                      (std::vector<fs::neighbor>{ { 4, 1.4, fs::node_status::looped_boundary },
+                      (std::vector<fs::neighbor>{ { 4, 1.4, fs::node_status::looped },
                                                   { 1, 1.4, fs::node_status::core } }));
 
             for (std::size_t i = 1; i < 4; ++i)
@@ -160,7 +154,7 @@ namespace fastscapelib
             EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_used(), 4u);
             EXPECT_EQ(looped_grid.neighbors(4),
                       (std::vector<fs::neighbor>{ { 3, 1.4, fs::node_status::core },
-                                                  { 0, 1.4, fs::node_status::looped_boundary } }));
+                                                  { 0, 1.4, fs::node_status::looped } }));
             EXPECT_EQ(looped_grid.neighbors_indices_cache().cache_used(), 5u);
         }
 
@@ -200,7 +194,7 @@ namespace fastscapelib
         TEST_F(profile_grid, from_length)
         {
             auto grid_from_length
-                = grid_type::from_length(151, 1500., fs::node_status::fixed_value_boundary);
+                = grid_type::from_length(151, 1500., fs::node_status::fixed_value);
             EXPECT_EQ(grid_from_length.length(), 1500.);
             EXPECT_EQ(grid_from_length.size(), 151u);
             EXPECT_EQ(grid_from_length.spacing(), 10.);

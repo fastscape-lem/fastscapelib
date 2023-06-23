@@ -19,7 +19,7 @@ def grid() -> RasterGrid:
     return RasterGrid(
         [10, 20],
         [1.0, 2.0],
-        RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+        RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
         [],
     )
 

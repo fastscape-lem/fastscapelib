@@ -22,8 +22,8 @@ namespace fastscapelib
         protected:
             using node_s = fs::node_status;
 
-            node_status fb = node_status::fixed_value_boundary;
-            node_status lb = node_status::looped_boundary;
+            node_status fb = node_status::fixed_value;
+            node_status lb = node_status::looped;
             node_status co = node_status::core;
 
             std::array<node_s, 4> hloop{ { lb, lb, fb, fb } };

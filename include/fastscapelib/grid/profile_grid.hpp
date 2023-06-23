@@ -330,13 +330,13 @@ namespace fastscapelib
 
         for (const node& n : status_at_nodes)
         {
-            if (n.status == node_status::looped_boundary)
+            if (n.status == node_status::looped)
             {
-                throw std::invalid_argument("node_status::looped_boundary is not allowed in "
+                throw std::invalid_argument("node_status::looped is not allowed in "
                                             "'status_at_nodes' "
                                             "(use 'status_at_bounds' instead)");
             }
-            else if (temp_status_at_nodes.at(n.idx) == node_status::looped_boundary)
+            else if (temp_status_at_nodes.at(n.idx) == node_status::looped)
             {
                 throw std::invalid_argument("cannot overwrite the status of a "
                                             "looped boundary node");

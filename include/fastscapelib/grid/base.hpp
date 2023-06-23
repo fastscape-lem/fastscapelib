@@ -34,15 +34,15 @@ namespace fastscapelib
      * Exact semantics may differ depending on the grid type or the objects that
      * are consuming grids.
      *
-     * For example, ``looped_boundary`` is used only for structured grids.
+     * For example, ``looped`` is used only for structured grids.
      *
      */
     enum class node_status : std::uint8_t
     {
-        core = 0,                    /**< Inner grid node */
-        fixed_value_boundary = 1,    /**< Dirichlet boundary condition */
-        fixed_gradient_boundary = 2, /**< Neumann boundary condition */
-        looped_boundary = 3          /**< Reflective boundaries */
+        core = 0,           /**< Inner grid node */
+        fixed_value = 1,    /**< Dirichlet boundary condition */
+        fixed_gradient = 2, /**< Neumann boundary condition */
+        looped = 3          /**< Reflective boundaries */
     };
 
     namespace detail
@@ -51,9 +51,9 @@ namespace fastscapelib
         inline bool node_status_cmp(node_status a, node_status b)
         {
             static std::map<node_status, int> priority{ { node_status::core, 0 },
-                                                        { node_status::looped_boundary, 1 },
-                                                        { node_status::fixed_gradient_boundary, 2 },
-                                                        { node_status::fixed_value_boundary, 3 } };
+                                                        { node_status::looped, 1 },
+                                                        { node_status::fixed_gradient, 2 },
+                                                        { node_status::fixed_value, 3 } };
 
             return priority[a] < priority[b];
         }

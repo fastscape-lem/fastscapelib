@@ -79,7 +79,7 @@ namespace fastscapelib
                     dist2receivers(i, 0) = 0;
                     slope_max = std::numeric_limits<double>::min();
 
-                    if (grid.status_at_nodes().flat(i) == node_status::fixed_value_boundary)
+                    if (grid.status_at_nodes().flat(i) == node_status::fixed_value)
                     {
                         continue;
                     }
@@ -197,7 +197,7 @@ namespace fastscapelib
 
                 for (auto i : grid.node_indices())
                 {
-                    if (grid.status_at_nodes().data()[i] == node_status::fixed_value_boundary)
+                    if (grid.status_at_nodes().data()[i] == node_status::fixed_value)
                     {
                         receivers_count(i) = 1;
                         receivers(i, 0) = i;

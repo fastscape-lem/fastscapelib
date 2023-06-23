@@ -25,7 +25,7 @@ TEST(diffusion_adi_eroder, ctor)
     double spacing = 300;
     shape_type shape{ 2, 2 };
 
-    auto grid = fs::raster_grid(shape, { spacing, spacing }, fs::node_status::fixed_value_boundary);
+    auto grid = fs::raster_grid(shape, { spacing, spacing }, fs::node_status::fixed_value);
 
     double k_coef = 1e-3;
     xt::xtensor<double, 2> k_coef_arr = xt::ones<double>({ 2, 2 }) * k_coef;
@@ -82,7 +82,7 @@ TEST(diffusion_adi_eroder, erode)
     auto dy = 0.4;
     auto dx = 0.8;
 
-    auto grid = fs::raster_grid({ 101, 51 }, { dy, dx }, fs::node_status::fixed_value_boundary);
+    auto grid = fs::raster_grid({ 101, 51 }, { dy, dx }, fs::node_status::fixed_value);
 
     double k_coef = 1e-3;
     auto eroder = fs::make_diffusion_adi_eroder(grid, k_coef);

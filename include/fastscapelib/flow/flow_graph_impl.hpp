@@ -357,7 +357,7 @@ namespace fastscapelib
 
             for (const auto outlet : m_outlets)
             {
-                if (status_at_nodes.flat(outlet) != node_status::fixed_value_boundary)
+                if (status_at_nodes.flat(outlet) != node_status::fixed_value)
                 {
                     m_pits.push_back(outlet);
                 }

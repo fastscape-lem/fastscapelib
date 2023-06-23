@@ -114,7 +114,7 @@ namespace fastscapelib
 
         TEST(flow_operator, return_same_elevation_ref)
         {
-            fs::raster_boundary_status bs{ fs::node_status::fixed_value_boundary };
+            fs::raster_boundary_status bs{ fs::node_status::fixed_value };
             auto grid = fs::raster_grid({ 5, 5 }, { 1.0, 1.0 }, bs);
             xt::xarray<double> elevation = xt::zeros<double>(grid.shape());
 
@@ -130,7 +130,7 @@ namespace fastscapelib
 
         TEST(flow_operator, apply)
         {
-            fs::raster_boundary_status bs{ fs::node_status::fixed_value_boundary };
+            fs::raster_boundary_status bs{ fs::node_status::fixed_value };
             auto grid = fs::raster_grid({ 5, 5 }, { 1.0, 1.0 }, bs);
             xt::xarray<double> elevation = xt::zeros<double>(grid.shape());
 

@@ -23,8 +23,7 @@ namespace fastscapelib
             using flow_graph_type = fs::flow_graph<grid_type>;
 
             // test on a 3x3 tiny grid with base levels at all border nodes
-            grid_type grid
-                = grid_type({ 3, 3 }, { 1.0, 1.0 }, fs::node_status::fixed_value_boundary);
+            grid_type grid = grid_type({ 3, 3 }, { 1.0, 1.0 }, fs::node_status::fixed_value);
 
             double sqrt2 = std::sqrt(2.0);
 

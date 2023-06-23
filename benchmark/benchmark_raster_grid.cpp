@@ -30,7 +30,7 @@ namespace fastscapelib
 
             for (auto _ : state)
             {
-                auto rg = grid(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
+                auto rg = grid(shape, { 1., 1. }, fs::node_status::fixed_value);
             }
         }
 
@@ -43,7 +43,7 @@ namespace fastscapelib
 
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape{ { n, n } };
-            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
+            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value);
 
             neighbors_indices_type neighbors_indices;
 
@@ -71,7 +71,7 @@ namespace fastscapelib
 
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape{ { n, n } };
-            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
+            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value);
 
             neighbors_indices_raster_type neighbors_indices;
 
@@ -105,7 +105,7 @@ namespace fastscapelib
 
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape{ { n, n } };
-            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
+            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value);
 
             neighbors_type neighbors;
 
@@ -133,7 +133,7 @@ namespace fastscapelib
 
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape{ { n, n } };
-            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
+            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value);
 
             neighbors_raster_type neighbors;
 

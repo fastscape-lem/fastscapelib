@@ -32,11 +32,11 @@ namespace fastscapelib
             using size_type = typename grid_type::size_type;
 
             // bottom border base-level
-            fs::node_status fixed = fs::node_status::fixed_value_boundary;
+            fs::node_status fixed = fs::node_status::fixed_value;
             fs::node_status core = fs::node_status::core;
             fs::raster_boundary_status bottom_base_level{ { core, core, core, fixed } };
 
-            fs::node_status fb = fs::node_status::fixed_value_boundary;
+            fs::node_status fb = fs::node_status::fixed_value;
             fs::raster_boundary_status fixed_value_status{ fb };
 
             grid_type grid = grid_type({ 5, 5 }, { 1.0, 1.0 }, bottom_base_level);
@@ -228,8 +228,7 @@ namespace fastscapelib
             using flow_graph_type = fs::flow_graph<grid_type>;
             using size_type = typename grid_type::size_type;
 
-            grid_type grid
-                = grid_type({ 101, 101 }, { 1.0, 1.0 }, fs::node_status::fixed_value_boundary);
+            grid_type grid = grid_type({ 101, 101 }, { 1.0, 1.0 }, fs::node_status::fixed_value);
 
             xt::xarray<double> elevation = xt::random::rand<double>(grid.shape());
 

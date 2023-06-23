@@ -36,19 +36,14 @@ add_grid_bindings(py::module& m)
         Exact semantics may differ depending on the grid type or the objects that
         are consuming grids.
 
-        For example, ``LOOPED_BOUNDARY`` is used only for structured grids.
+        For example, ``LOOPED`` is used only for structured grids.
         )doc");
 
     node_status.value("CORE", fs::node_status::core, "Inner grid node")
-        .value("FIXED_VALUE_BOUNDARY",
-               fs::node_status::fixed_value_boundary,
-               "boundary node with fixed value")
-        .value("FIXED_GRADIENT_BOUNDARY",
-               fs::node_status::fixed_gradient_boundary,
-               "boundary node with fixed gradient")
-        .value("LOOPED_BOUNDARY",
-               fs::node_status::looped_boundary,
-               "reflective (periodic) boundary node");
+        .value("FIXED_VALUE", fs::node_status::fixed_value, "boundary node with fixed value")
+        .value(
+            "FIXED_GRADIENT", fs::node_status::fixed_gradient, "boundary node with fixed gradient")
+        .value("LOOPED", fs::node_status::looped, "reflective (periodic) boundary node");
 
     // ==== Binding of the node structure ==== //
     py::class_<fs::node> node(m, "Node", "Represents a grid/mesh node.");
