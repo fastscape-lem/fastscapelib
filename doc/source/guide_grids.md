@@ -319,9 +319,6 @@ nodes in C++, possibly filtered by {ref}`node status
 <node-status-boundary-conditions>`, using
 {cpp:func}`~fastscapelib::grid::nodes_indices`.
 
-In Python, this can be done "manually" using the ``size`` and
-``nodes_status`` properties.
-
 :::{note}
 
 Iterating over grid nodes using pure-Python loops is very slow. In general it is
@@ -367,21 +364,24 @@ for (auto& idx_flat : grid.nodes_indices(fixed_value))
 :linenos:
 
 import fastscapelib as fs
+import numpy as np
 
 fixed_value = fs.NodeStatus.FIXED_VALUE
 bs = fs.RasterBoundaryStatus(fixed_value)
 grid = fs.RasterGrid([100, 100], [200.0, 200.0], bs, [])
 
-node_status_flat = grid.nodes_status.ravel()
-
 # iterate over all grid nodes (slow!)
-for idx_flat in range(grid.size):
+for idx_flat in grid.nodes_indices():
     print(f"current node flat index: {idx_flat}")
 
 # iterate over fixed-value nodes (slow!)
-for idx_flat in range(grid.size):
-    if node_status_flat[idx_flat] == fixed_value:
-        print(f"current node flat index: {idx_flat}")
+for idx_flat in grid.nodes_indices(fixed_value):
+    print(f"current node flat index: {idx_flat}")
+
+# do vectorized operations when possible (fast!)
+data = np.random.rand(size=grid.shape)
+data.ravel()[grid.node_indices(fixed_value)] = 0.0
+
 ```
 ````
 
