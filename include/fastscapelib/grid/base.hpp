@@ -319,8 +319,12 @@ namespace fastscapelib
         shape_type shape() const noexcept;
 
         const node_status_type& nodes_status() const;
+
         xt_type nodes_areas() const;
         grid_data_type nodes_areas(const size_type& idx) const noexcept;
+
+        inline grid_nodes_indices<G> nodes_indices() const;
+        inline grid_nodes_indices<G> nodes_indices(node_status status) const;
 
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
         neighbors_distances_type neighbors_distances(const size_type& idx) const;
@@ -332,9 +336,6 @@ namespace fastscapelib
 
         neighbors_type neighbors(const size_type& idx);
         neighbors_type& neighbors(const size_type& idx, neighbors_type& neighbors);
-
-        inline grid_nodes_indices<G> nodes_indices();
-        inline grid_nodes_indices<G> nodes_indices(node_status status);
 
         const neighbors_cache_type& neighbors_indices_cache();
 
@@ -492,9 +493,10 @@ namespace fastscapelib
      * nodes.
      */
     template <class G>
-    inline grid_nodes_indices<G> grid<G>::nodes_indices()
+    inline grid_nodes_indices<G> grid<G>::nodes_indices() const
     {
-        return grid_nodes_indices<G>(derived_grid());
+        const auto& derived = derived_grid();
+        return grid_nodes_indices<G>(derived);
     };
 
     /**
@@ -504,10 +506,11 @@ namespace fastscapelib
      * @param status The node status.
      */
     template <class G>
-    inline grid_nodes_indices<G> grid<G>::nodes_indices(node_status status)
+    inline grid_nodes_indices<G> grid<G>::nodes_indices(node_status status) const
     {
-        return grid_nodes_indices<G>(derived_grid(),
-                                     [=](grid& grid, size_type idx)
+        const auto& derived = derived_grid();
+        return grid_nodes_indices<G>(derived,
+                                     [=](const grid& grid, size_type idx)
                                      { return grid.nodes_status().flat(idx) == status; });
     };
     //@}
