@@ -492,9 +492,6 @@ namespace fastscapelib
         code_type nodes_codes(const size_type& row, const size_type& col) const noexcept;
         code_type nodes_codes(const size_type& idx) const noexcept;
 
-        template <raster_connect RCA, class CA = C>
-        static raster_grid_xt<S, RCA, CA> clone(const raster_grid_xt& grid);
-
     private:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
         using neighbors_indices_impl_type = typename base_type::neighbors_indices_impl_type;
@@ -984,19 +981,6 @@ namespace fastscapelib
         -> code_type
     {
         return m_nodes_codes[idx];
-    }
-
-    /**
-     * Clone the grid.
-     *
-     * Creates a new raster grid with the same properties but cleared cache.
-     *
-     */
-    template <class S, raster_connect RC, class C>
-    template <raster_connect RCA, class CA>
-    raster_grid_xt<S, RCA, CA> raster_grid_xt<S, RC, C>::clone(const raster_grid_xt& grid)
-    {
-        return raster_grid_xt<S, RCA, CA>(grid.shape(), grid.spacing(), grid.bounds_status());
     }
 
     //@}

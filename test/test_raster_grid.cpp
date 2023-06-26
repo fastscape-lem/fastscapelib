@@ -125,30 +125,6 @@ namespace fastscapelib
             EXPECT_TRUE(xt::all(xt::equal(grid_from_length.spacing(), spacing_type({ 10., 20. }))));
         }
 
-        TEST_F(raster_grid, clone)
-        {
-            using queen_type = fs::raster_grid_xt<fs::xt_selector, fs::raster_connect::queen>;
-            using neighbors_type = std::vector<fs::neighbor>;
-
-            double d1 = std::sqrt(1.3 * 1.3 + 1.2 * 1.2);
-
-            auto queen_fixed = queen_type(shape, { 1.3, 1.2 }, fixed_value_status);
-            EXPECT_EQ(queen_fixed.neighbors(9),        // Top-right corner
-                      (neighbors_type{ { 8, 1.2, fb }, /* Node */
-                                       { 18, d1, co },
-                                       { 19, 1.3, fb } }));
-
-            auto rook_like = fs::raster_grid::clone<raster_connect::rook>(queen_fixed);
-            EXPECT_EQ(rook_like.neighbors(9),          // Top-right corner
-                      (neighbors_type{ { 8, 1.2, fb }, /* Node */
-                                       { 19, 1.3, fb } }));
-
-            auto bishop_like = fs::raster_grid::clone<raster_connect::bishop>(queen_fixed);
-            EXPECT_EQ(bishop_like.neighbors(9),  // Top-right corner
-                      (neighbors_type{           /* Node */
-                                       { 18, d1, co } }));
-        }
-
         TEST_F(raster_grid, nodes_codes)
         {
             // Top-left corner nodes
