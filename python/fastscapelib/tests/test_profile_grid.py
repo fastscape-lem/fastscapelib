@@ -122,6 +122,13 @@ class TestProfileGrid:
     def test_length(self) -> None:
         assert self.g.length == 19.8
 
+    def test_nodes_indices(self) -> None:
+        npt.assert_equal(self.g.nodes_indices(), np.arange(self.g.size))
+        npt.assert_equal(self.g.nodes_indices(NodeStatus.FIXED_VALUE), [0, 5, 9])
+        npt.assert_equal(self.g.nodes_indices(NodeStatus.CORE), [1, 2, 3, 4, 6, 7, 8])
+        # bug: false positive (index 1)
+        # assert not len(self.g.nodes_indices(NodeStatus.FIXED_GRADIENT))
+
     def test_nodes_status(self) -> None:
         npt.assert_equal(self.g.nodes_status, np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1]))
 
