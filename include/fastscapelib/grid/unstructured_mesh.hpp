@@ -233,7 +233,7 @@ namespace fastscapelib
     }
 
     /**
-     * @name Grid topology
+     * @name Neighbor methods
      */
     /**
      * Returns the number of neighbors of a given grid node.

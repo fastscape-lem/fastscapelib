@@ -320,11 +320,11 @@ namespace fastscapelib
 
         const node_status_type& nodes_status() const;
 
-        xt_type nodes_areas() const;
-        grid_data_type nodes_areas(const size_type& idx) const noexcept;
-
         inline grid_nodes_indices<G> nodes_indices() const;
         inline grid_nodes_indices<G> nodes_indices(node_status status) const;
+
+        xt_type nodes_areas() const;
+        grid_data_type nodes_areas(const size_type& idx) const noexcept;
 
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
         neighbors_distances_type neighbors_distances(const size_type& idx) const;
@@ -445,37 +445,6 @@ namespace fastscapelib
     }
 
     /**
-     * Returns a constant reference to the array of status at grid nodes.
-     */
-    template <class G>
-    inline auto grid<G>::nodes_status() const -> const node_status_type&
-    {
-        return derived_grid().m_nodes_status;
-    }
-
-    /**
-     * Returns the areas of the direct vicinity of each grid node as an array.
-     *
-     * Note: this creates a new container or returns a copy.
-     */
-    template <class G>
-    inline auto grid<G>::nodes_areas() const -> xt_type
-    {
-        return std::move(nodes_areas_impl());
-    }
-
-    /**
-     * Returns the area of the direct vicinity of a grid node.
-     *
-     * @param idx The grid node flat index.
-     */
-    template <class G>
-    inline auto grid<G>::nodes_areas(const size_type& idx) const noexcept -> grid_data_type
-    {
-        return nodes_areas_impl(idx);
-    }
-
-    /**
      * Returns the cache used to store node neighbor indices.
      */
     template <class G>
@@ -486,7 +455,7 @@ namespace fastscapelib
     //@}
 
     /**
-     * @name Iterators
+     * @name Node methods
      */
     /**
      * Returns a virtual container that may be used to iterate over all grid
@@ -513,10 +482,52 @@ namespace fastscapelib
                                      [=](const grid& grid, size_type idx)
                                      { return grid.nodes_status().flat(idx) == status; });
     };
+
+    /**
+     * Returns a constant reference to the array of status at grid nodes.
+     */
+    template <class G>
+    inline auto grid<G>::nodes_status() const -> const node_status_type&
+    {
+        return derived_grid().m_nodes_status;
+    }
+
+    /**
+     * Returns the status at a given grid node.
+     *
+     * @param idx The grid node flat index.
+     */
+    template <class G>
+    inline auto grid<G>::nodes_status(const size_type& idx) const -> node_status
+    {
+        return derived_grid().m_nodes_status.flat(idx);
+    }
+
+    /**
+     * Returns the areas of the direct vicinity of each grid node as an array.
+     *
+     * Note: this creates a new container or returns a copy.
+     */
+    template <class G>
+    inline auto grid<G>::nodes_areas() const -> xt_type
+    {
+        return std::move(nodes_areas_impl());
+    }
+
+    /**
+     * Returns the area of the direct vicinity of a grid node.
+     *
+     * @param idx The grid node flat index.
+     */
+    template <class G>
+    inline auto grid<G>::nodes_areas(const size_type& idx) const noexcept -> grid_data_type
+    {
+        return nodes_areas_impl(idx);
+    }
     //@}
 
     /**
-     * @name Grid topology
+     * @name Neighbor methods
      */
     /**
      * Returns the number of neighbors of a given grid node.

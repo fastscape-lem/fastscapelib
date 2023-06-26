@@ -807,7 +807,48 @@ namespace fastscapelib
     }
 
     /**
-     * @name Grid topology
+     * @name Node methods
+     */
+    /**
+     * Given row and col indices, return a code in the range [0,8], which
+     * corresponds to one of the following characteristic locations on the
+     * grid (i.e., inner/border/corner). Use a row-major layout:
+     *
+     *   0 -- 1 -- 2
+     *   |         |
+     *   3    4    5
+     *   |         |
+     *   6 -- 7 -- 8
+     */
+    template <class S, raster_connect RC, class C>
+    inline auto raster_grid_xt<S, RC, C>::nodes_codes(const size_type& row,
+                                                      const size_type& col) const noexcept
+        -> code_type
+    {
+        return m_nodes_codes[ravel_idx(row, col)];
+    }
+
+    /**
+     * Given a flat index, return a code in the range [0,8], which
+     * corresponds to one of the following characteristic locations on the
+     * grid (i.e., inner/border/corner). Use a row-major layout:
+     *
+     *   0 -- 1 -- 2
+     *   |         |
+     *   3    4    5
+     *   |         |
+     *   6 -- 7 -- 8
+     */
+    template <class S, raster_connect RC, class C>
+    inline auto raster_grid_xt<S, RC, C>::nodes_codes(const size_type& idx) const noexcept
+        -> code_type
+    {
+        return m_nodes_codes[idx];
+    }
+
+    //@}
+    /**
+     * @name Neighbor methods
      */
     /**
      * Returns the number of neighbors of a given grid node.
@@ -940,49 +981,6 @@ namespace fastscapelib
 
         return neighbors;
     }
-
-    //@}
-
-    /**
-     * @name Miscellaneous
-     */
-    /**
-     * Given row and col indices, return a code in the range [0,8], which
-     * corresponds to one of the following characteristic locations on the
-     * grid (i.e., inner/border/corner). Use a row-major layout:
-     *
-     *   0 -- 1 -- 2
-     *   |         |
-     *   3    4    5
-     *   |         |
-     *   6 -- 7 -- 8
-     */
-    template <class S, raster_connect RC, class C>
-    inline auto raster_grid_xt<S, RC, C>::nodes_codes(const size_type& row,
-                                                      const size_type& col) const noexcept
-        -> code_type
-    {
-        return m_nodes_codes[ravel_idx(row, col)];
-    }
-
-    /**
-     * Given a flat index, return a code in the range [0,8], which
-     * corresponds to one of the following characteristic locations on the
-     * grid (i.e., inner/border/corner). Use a row-major layout:
-     *
-     *   0 -- 1 -- 2
-     *   |         |
-     *   3    4    5
-     *   |         |
-     *   6 -- 7 -- 8
-     */
-    template <class S, raster_connect RC, class C>
-    inline auto raster_grid_xt<S, RC, C>::nodes_codes(const size_type& idx) const noexcept
-        -> code_type
-    {
-        return m_nodes_codes[idx];
-    }
-
     //@}
 
     template <class S, raster_connect RC, class C>

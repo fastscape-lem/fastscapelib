@@ -58,9 +58,7 @@ connectivity).
 
 Fastscapelib currently implements a simple representation for all of its grids,
 which only includes the grid nodes (points) and their implicit or explicit
-connectivity ({ref}`Figure 1 <fig_grid_types>`). See Sections
-{ref}`grid-node-iterators` and {ref}`connectivity-node-neighbors` for how to
-iterate through grid nodes and their neighbors.
+connectivity ({ref}`Figure 1 <fig_grid_types>`).
 
 Grid method names follow these conventions:
 
@@ -70,10 +68,13 @@ Grid method names follow these conventions:
   node.
 
 Although grid faces or cells are not represented explicitly (i.e., cell geometry
-is stored as grid data members), some of their properties are exposed through
-the grid API using the conventions above (e.g.,
+is not stored as grid data), some of their properties are exposed through the
+grid API using the conventions above (e.g.,
 {cpp:func}`~fastscapelib::grid::nodes_areas` returns the area of the direct
 vicinity of each node).
+
+See Sections {ref}`grid-node-iterators` and {ref}`connectivity-node-neighbors`
+for more details on how to iterate through grid nodes and their neighbors.
 
 (node-status-boundary-conditions)=
 ## Node Status and Boundary Conditions
