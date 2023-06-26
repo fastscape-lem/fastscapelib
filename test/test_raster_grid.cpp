@@ -110,6 +110,9 @@ namespace fastscapelib
                 EXPECT_EQ(fixed_grid.nodes_areas(n), 1.56);
                 EXPECT_EQ(looped_grid.nodes_areas(n), 2.52);
             }
+
+            EXPECT_EQ(fixed_grid.nodes_areas(), xt::ones<double>(fixed_grid.shape()) * 1.56);
+            EXPECT_EQ(looped_grid.nodes_areas(), xt::ones<double>(looped_grid.shape()) * 2.52);
         }
 
         TEST_F(raster_grid, from_length)

@@ -99,6 +99,12 @@ namespace fastscapelib
 
         py_grid_funcs() = default;
 
+        std::function<double(const G&, size_type)> m_nodes_areas = [this](const G& g, size_type idx)
+        {
+            check_in_bounds(g, idx);
+            return g.nodes_areas(idx);
+        };
+
         std::function<count_type(const G&, size_type)> m_neighbors_count
             = [this](const G& g, size_type idx)
         {
@@ -138,9 +144,31 @@ namespace fastscapelib
     };
 
     template <class G>
-    void register_neighbor_methods(py::class_<G>& pyg)
+    void register_grid_methods(py::class_<G>& pyg)
     {
         auto grid_funcs = py_grid_funcs<G>();
+
+        pyg.def("nodes_areas",
+                py::overload_cast<>(&G::nodes_areas, py::const_),
+                R"doc(nodes_areas(*args) -> float | numpy.ndarray
+
+            Returns the area of the direct vicinity of a given node or all
+            nodes.
+
+            Overloaded method that supports the following signatures:
+
+            1. ``nodes_areas() -> numpy.ndarray``
+
+            2. ``nodes_areas(idx: int) -> float``
+
+            Parameters
+            ----------
+            idx : int
+                The grid node (flat) index.
+
+            )doc");
+
+        pyg.def("nodes_areas", grid_funcs.m_nodes_areas, py::arg("idx"));
 
         pyg.def("neighbors_count",
                 grid_funcs.m_neighbors_count,

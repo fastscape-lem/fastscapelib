@@ -294,7 +294,7 @@ namespace fastscapelib
 
         using grid_data_type = typename inner_types::grid_data_type;
         using xt_selector = typename inner_types::xt_selector;
-        using xt_type = xt_tensor_t<xt_selector, grid_data_type, xt_ndims()>;
+        using xt_type = xt_tensor_t<xt_selector, grid_data_type, inner_types::xt_ndims>;
 
         using size_type = typename xt_type::size_type;
         using shape_type = typename xt_type::shape_type;
@@ -319,6 +319,7 @@ namespace fastscapelib
         shape_type shape() const noexcept;
 
         const node_status_type& nodes_status() const;
+        xt_type nodes_areas() const;
         grid_data_type nodes_areas(const size_type& idx) const noexcept;
 
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
@@ -348,6 +349,9 @@ namespace fastscapelib
 
         const derived_grid_type& derived_grid() const noexcept;
         derived_grid_type& derived_grid() noexcept;
+
+        inline xt_type nodes_areas_impl() const;
+        inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
 
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                     const size_type& idx) const;
@@ -449,15 +453,25 @@ namespace fastscapelib
     }
 
     /**
-     * Returns the cell area at grid node.
+     * Returns the areas of the direct vicinity of each grid node as an array.
+     *
+     * Note: this creates a new container or returns a copy.
+     */
+    template <class G>
+    inline auto grid<G>::nodes_areas() const -> xt_type
+    {
+        return std::move(nodes_areas_impl());
+    }
+
+    /**
+     * Returns the area of the direct vicinity of a grid node.
      *
      * @param idx The grid node flat index.
      */
     template <class G>
-    inline auto grid<G>::nodes_areas(const size_type& /*idx*/) const noexcept -> grid_data_type
+    inline auto grid<G>::nodes_areas(const size_type& idx) const noexcept -> grid_data_type
     {
-        // TODO: add node_area_impl?
-        return derived_grid().m_node_area;
+        return nodes_areas_impl(idx);
     }
 
     /**
@@ -625,6 +639,18 @@ namespace fastscapelib
         return neighbors;
     }
     //@}
+
+    template <class G>
+    inline auto grid<G>::nodes_areas_impl() const -> xt_type
+    {
+        return derived_grid().nodes_areas_impl();
+    }
+
+    template <class G>
+    inline auto grid<G>::nodes_areas_impl(const size_type& idx) const noexcept -> grid_data_type
+    {
+        return derived_grid().nodes_areas_impl(idx);
+    }
 
     template <class G>
     inline auto grid<G>::get_nb_indices_from_cache(const size_type& idx)

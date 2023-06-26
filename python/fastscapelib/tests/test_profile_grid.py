@@ -125,6 +125,11 @@ class TestProfileGrid:
     def test_nodes_status(self) -> None:
         npt.assert_equal(self.g.nodes_status, np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1]))
 
+    def test_nodes_areas(self) -> None:
+        assert self.g.nodes_areas(0) == 2.2
+        assert self.g.nodes_areas(2) == 2.2
+        npt.assert_equal(self.g.nodes_areas(), np.full(self.g.size, 2.2))
+
     def test_neighbors_count(self) -> None:
         assert self.g.neighbors_count(0) == 1
         assert self.g.neighbors_count(5) == 2

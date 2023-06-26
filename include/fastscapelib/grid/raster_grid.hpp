@@ -7,6 +7,7 @@
 #include <vector>
 #include <utility>
 
+#include <xtensor/xbroadcast.hpp>
 #include <xtensor/xtensor.hpp>
 
 #include "fastscapelib/grid/base.hpp"
@@ -429,10 +430,13 @@ namespace fastscapelib
     public:
         using self_type = raster_grid_xt<S, RC, C>;
         using base_type = structured_grid<self_type>;
+        using inner_types = grid_inner_types<self_type>;
 
         using grid_data_type = typename base_type::grid_data_type;
 
         using xt_selector = typename base_type::xt_selector;
+        using xt_type = xt_tensor_t<xt_selector, grid_data_type, inner_types::xt_ndims>;
+
         using size_type = typename base_type::size_type;
         using shape_type = typename base_type::shape_type;
 
@@ -534,6 +538,9 @@ namespace fastscapelib
         coded_ndistances_type build_coded_neighbors_distances();
 
         inline const neighbors_offsets_type& neighbor_offsets(code_type code) const noexcept;
+
+        inline xt_type nodes_areas_impl() const;
+        inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
 
         inline const neighbors_distances_impl_type& neighbors_distances_impl(
             const size_type& idx) const noexcept;
@@ -993,6 +1000,19 @@ namespace fastscapelib
     }
 
     //@}
+
+    template <class S, raster_connect RC, class C>
+    inline auto raster_grid_xt<S, RC, C>::nodes_areas_impl() const -> xt_type
+    {
+        return xt::broadcast(m_node_area, m_shape);
+    }
+
+    template <class S, raster_connect RC, class C>
+    inline auto raster_grid_xt<S, RC, C>::nodes_areas_impl(const size_type& /*idx*/) const noexcept
+        -> grid_data_type
+    {
+        return m_node_area;
+    }
 
     template <class S, raster_connect RC, class C>
     inline auto raster_grid_xt<S, RC, C>::neighbors_distances_impl(

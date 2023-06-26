@@ -114,6 +114,8 @@ namespace fastscapelib
 
             EXPECT_EQ(mesh.nodes_areas(0), 1.0);
             EXPECT_EQ(mesh.nodes_areas(4), 2.0);
+
+            EXPECT_EQ(mesh.nodes_areas(), (xt::xtensor<double, 1>{ 1.0, 1.0, 1.0, 1.0, 2.0 }));
         }
 
         TEST_F(unstructured_mesh, neighbors_count)

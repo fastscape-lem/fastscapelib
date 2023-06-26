@@ -13,6 +13,8 @@
 #include <map>
 #include <vector>
 
+#include <xtensor/xbroadcast.hpp>
+
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/grid/structured_grid.hpp"
 
@@ -136,10 +138,13 @@ namespace fastscapelib
     public:
         using self_type = profile_grid_xt<S, C>;
         using base_type = structured_grid<self_type>;
+        using inner_types = grid_inner_types<self_type>;
 
         using grid_data_type = typename base_type::grid_data_type;
 
         using xt_selector = typename base_type::xt_selector;
+        using xt_type = xt_tensor_t<xt_selector, grid_data_type, inner_types::xt_ndims>;
+
         using size_type = typename base_type::size_type;
         using shape_type = typename base_type::shape_type;
 
@@ -196,6 +201,9 @@ namespace fastscapelib
 
         std::array<neighbors_count_type, 3> m_neighbors_count;
         void build_neighbors_count();
+
+        inline xt_type nodes_areas_impl() const;
+        inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
 
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                     const size_type& idx) const;
@@ -346,6 +354,19 @@ namespace fastscapelib
         }
 
         m_nodes_status = temp_nodes_status;
+    }
+
+    template <class S, class C>
+    inline auto profile_grid_xt<S, C>::nodes_areas_impl() const -> xt_type
+    {
+        return xt::broadcast(m_node_area, m_shape);
+    }
+
+    template <class S, class C>
+    inline auto profile_grid_xt<S, C>::nodes_areas_impl(const size_type& /*idx*/) const noexcept
+        -> grid_data_type
+    {
+        return m_node_area;
     }
 
     template <class S, class C>

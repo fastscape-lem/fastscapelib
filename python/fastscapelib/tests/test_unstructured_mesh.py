@@ -75,6 +75,13 @@ class TestUnstructuredMesh:
         with pytest.raises(ValueError, match=".*not allowed.*"):
             UnstructuredMesh(*mesh_args.values(), [Node(2, NodeStatus.LOOPED)])  # type: ignore[call-arg]
 
+    def test_nodes_areas(self, mesh_args) -> None:
+        mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
+
+        assert mesh.nodes_areas(0) == mesh_args["areas"][0]
+        assert mesh.nodes_areas(4) == mesh_args["areas"][4]
+        npt.assert_equal(mesh.nodes_areas(), mesh_args["areas"])
+
     def test_neighbors_count(self, mesh_args) -> None:
         mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
 

@@ -69,7 +69,6 @@ namespace fastscapelib
 
         void set_nodes_status(const std::vector<node>& nodes_status);
 
-        inline grid_data_type nodes_areas(const size_type& idx) const noexcept;
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
 
         unstructured_mesh_xt(const points_type& points,
@@ -98,6 +97,9 @@ namespace fastscapelib
 
         std::vector<neighbors_distances_impl_type> m_neighbors_distances;
         std::vector<neighbors_count_type> m_neighbors_counts;
+
+        inline areas_type nodes_areas_impl() const;
+        inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
 
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                     const size_type& idx) const;
@@ -231,18 +233,6 @@ namespace fastscapelib
     }
 
     /**
-     * @name Grid properties
-     */
-    //@{
-    template <class S, unsigned int N>
-    inline auto unstructured_mesh_xt<S, N>::nodes_areas(const size_type& idx) const noexcept
-        -> grid_data_type
-    {
-        return m_areas[idx];
-    }
-    //@}
-
-    /**
      * @name Grid topology
      */
     /**
@@ -261,6 +251,19 @@ namespace fastscapelib
         return m_neighbors_counts[idx];
     }
     //@}
+
+    template <class S, unsigned int N>
+    inline auto unstructured_mesh_xt<S, N>::nodes_areas_impl() const -> areas_type
+    {
+        return m_areas;
+    }
+
+    template <class S, unsigned int N>
+    inline auto unstructured_mesh_xt<S, N>::nodes_areas_impl(const size_type& idx) const noexcept
+        -> grid_data_type
+    {
+        return m_areas(idx);
+    }
 
     template <class S, unsigned int N>
     void unstructured_mesh_xt<S, N>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,

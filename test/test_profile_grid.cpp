@@ -189,6 +189,9 @@ namespace fastscapelib
                 EXPECT_EQ(fixed_grid.nodes_areas(n), 1.3);
                 EXPECT_EQ(looped_grid.nodes_areas(n), 1.4);
             }
+
+            EXPECT_EQ(fixed_grid.nodes_areas(), xt::ones<double>(fixed_grid.shape()) * 1.3);
+            EXPECT_EQ(looped_grid.nodes_areas(), xt::ones<double>(looped_grid.shape()) * 1.4);
         }
 
         TEST_F(profile_grid, from_length)

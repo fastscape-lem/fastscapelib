@@ -503,9 +503,9 @@ add_flow_graph_bindings(py::module& m)
 
              2. ``accumulate(acc: numpy.ndarray, src: float) -> None``
 
-             3. ``accumulate(src: numpy.ndarray) -> np.ndarray``
+             3. ``accumulate(src: numpy.ndarray) -> numpy.ndarray``
 
-             4. ``accumulate(src: float) -> np.ndarray``
+             4. ``accumulate(src: float) -> numpy.ndarray``
 
              Parameters
              ----------

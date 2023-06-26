@@ -111,7 +111,7 @@ add_grid_bindings(py::module& m)
 
     fs::register_grid_static_properties(umesh);
     fs::register_base_grid_properties(umesh);
-    fs::register_neighbor_methods(umesh);
+    fs::register_grid_methods(umesh);
 
     /*
     ** Profile Grid
@@ -242,7 +242,7 @@ add_grid_bindings(py::module& m)
     fs::register_grid_static_properties(pgrid);
     fs::register_base_grid_properties(pgrid);
     fs::register_structured_grid_properties(pgrid);
-    fs::register_neighbor_methods(pgrid);
+    fs::register_grid_methods(pgrid);
 
     /*
     ** Raster Grid
@@ -430,7 +430,7 @@ add_grid_bindings(py::module& m)
     fs::register_grid_static_properties(rgrid);
     fs::register_base_grid_properties(rgrid);
     fs::register_structured_grid_properties(rgrid);
-    fs::register_neighbor_methods(rgrid);
+    fs::register_grid_methods(rgrid);
 
     auto raster_grid_funcs = fs::py_raster_grid_funcs();
 

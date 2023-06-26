@@ -151,6 +151,12 @@ class TestRasterGrid:
     def test_spacing(self) -> None:
         npt.assert_equal(self.g.spacing, [2.2, 2.4])
 
+    def test_nodes_areas(self) -> None:
+        area = 2.2 * 2.4
+        assert self.g.nodes_areas(0) == area
+        assert self.g.nodes_areas(10) == area
+        npt.assert_equal(self.g.nodes_areas(), np.full(self.g.shape, area))
+
     def test_neighbors_count(self) -> None:
         assert self.g.neighbors_count(0) == 3
         assert self.g.neighbors_count(15) == 8
