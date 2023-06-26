@@ -319,6 +319,7 @@ namespace fastscapelib
         shape_type shape() const noexcept;
 
         const node_status_type& nodes_status() const;
+        node_status nodes_status(const size_type& idx) const;
 
         inline grid_nodes_indices<G> nodes_indices() const;
         inline grid_nodes_indices<G> nodes_indices(node_status status) const;
