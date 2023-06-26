@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <vector>
+
 #include "fastscapelib/grid/profile_grid.hpp"
 
 #include "gtest/gtest.h"
@@ -180,6 +183,33 @@ namespace fastscapelib
         {
             EXPECT_EQ(fixed_grid.length(), 5.2);
             EXPECT_EQ(looped_grid.length(), 5.6);
+        }
+
+        TEST_F(profile_grid, nodes_indices)
+        {
+            {
+                SCOPED_TRACE("no filter");
+                auto indices = fixed_grid.nodes_indices();
+                std::vector<size_type> actual;
+                std::copy(indices.begin(), indices.end(), std::back_inserter(actual));
+                std::vector<size_type> expected{ 0, 1, 2, 3, 4 };
+                EXPECT_EQ(actual, expected);
+            }
+            {
+                SCOPED_TRACE("filter (not empty result)");
+                auto indices = fixed_grid.nodes_indices(node_status::fixed_value);
+                std::vector<size_type> actual;
+                std::copy(indices.begin(), indices.end(), std::back_inserter(actual));
+                std::vector<size_type> expected{ 0, 4 };
+                EXPECT_EQ(actual, expected);
+            }
+            {
+                SCOPED_TRACE("filter (empty result)");
+                auto indices = fixed_grid.nodes_indices(node_status::fixed_gradient);
+                std::vector<size_type> actual;
+                std::copy(indices.begin(), indices.end(), std::back_inserter(actual));
+                EXPECT_EQ(actual.size(), 0);
+            }
         }
 
         TEST_F(profile_grid, nodes_areas)

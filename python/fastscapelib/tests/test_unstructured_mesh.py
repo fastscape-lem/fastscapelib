@@ -52,6 +52,13 @@ class TestUnstructuredMesh:
         assert mesh.size == 5
         assert mesh.shape == [5]
 
+    def test_nodes_indices(self, mesh_args) -> None:
+        mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
+        npt.assert_equal(mesh.nodes_indices(), np.arange(mesh.size))
+        npt.assert_equal(mesh.nodes_indices(NodeStatus.FIXED_VALUE), [0, 1, 2, 3])
+        npt.assert_equal(mesh.nodes_indices(NodeStatus.CORE), [4])
+        assert not len(mesh.nodes_indices(NodeStatus.FIXED_GRADIENT))
+
     def test_nodes_status_default(self, mesh_args) -> None:
         # all boundary nodes (convex hull) have fixed value status
         mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]

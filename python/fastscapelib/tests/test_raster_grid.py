@@ -151,6 +151,15 @@ class TestRasterGrid:
     def test_spacing(self) -> None:
         npt.assert_equal(self.g.spacing, [2.2, 2.4])
 
+    def test_nodes_indices(self) -> None:
+        grid = RasterGrid([3, 3], [2.0, 2.0], self.bs, [])
+        npt.assert_equal(grid.nodes_indices(), np.arange(grid.size))
+        npt.assert_equal(
+            grid.nodes_indices(NodeStatus.FIXED_VALUE), [0, 1, 2, 3, 5, 6, 7, 8]
+        )
+        npt.assert_equal(grid.nodes_indices(NodeStatus.CORE), [4])
+        assert not len(grid.nodes_indices(NodeStatus.FIXED_GRADIENT))
+
     def test_nodes_areas(self) -> None:
         area = 2.2 * 2.4
         assert self.g.nodes_areas(0) == area

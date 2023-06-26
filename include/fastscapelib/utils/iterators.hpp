@@ -33,7 +33,8 @@ namespace fastscapelib
                 , m_grid(grid)
                 , m_filter_func(func)
             {
-                if ((position == 0) && !m_filter_func(grid, position))
+                // iterate to the actual starting position (1st node that pass the filter test)
+                while ((!m_filter_func(m_grid, m_idx)) && (m_idx < m_grid.size()))
                 {
                     ++m_idx;
                 }
