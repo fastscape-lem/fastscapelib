@@ -69,6 +69,9 @@ class TestUnstructuredMesh:
 
         npt.assert_array_equal(actual, expected)
 
+        # should return a copy
+        assert not np.shares_memory(mesh.nodes_status(), mesh.nodes_status())
+
         assert mesh.nodes_status(0) == NodeStatus.FIXED_VALUE
         assert mesh.nodes_status(4) == NodeStatus.CORE
 

@@ -126,7 +126,10 @@ namespace fastscapelib
             return std::move(output);
         };
 
-        std::function<node_status(const G&, size_type)> m_nodes_status
+        std::function<xt::pyarray<node_status>(const G&)> m_nodes_status
+            = [this](const G& g) { return g.nodes_status(); };
+
+        std::function<node_status(const G&, size_type)> m_nodes_status2
             = [this](const G& g, size_type idx)
         {
             check_in_bounds(g, idx);
@@ -210,7 +213,7 @@ namespace fastscapelib
         pyg.def("nodes_indices", grid_funcs.m_nodes_indices2, py::arg("status"));
 
         pyg.def("nodes_status",
-                py::overload_cast<>(&G::nodes_status, py::const_),
+                grid_funcs.m_nodes_status,
                 R"doc(nodes_status(*args) -> NodeStatus | numpy.ndarray
 
             Returns the status of a given node or all nodes.
@@ -226,9 +229,16 @@ namespace fastscapelib
             idx : int
                 The grid node (flat) index.
 
+            Returns
+            -------
+            status : :class:`NodeStatus` or numpy.ndarray
+                If an array is returned, it is a copy of the original array
+                and has the :class:`NodeStatus` enum class values (int) as
+                values.
+
             )doc");
 
-        pyg.def("nodes_status", grid_funcs.m_nodes_status, py::arg("idx"));
+        pyg.def("nodes_status", grid_funcs.m_nodes_status2, py::arg("idx"));
 
         pyg.def("nodes_areas",
                 py::overload_cast<>(&G::nodes_areas, py::const_),

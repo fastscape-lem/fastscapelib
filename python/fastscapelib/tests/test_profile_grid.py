@@ -132,6 +132,9 @@ class TestProfileGrid:
         npt.assert_equal(
             self.g.nodes_status(), np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1])
         )
+        # should return a copy
+        assert not np.shares_memory(self.g.nodes_status(), self.g.nodes_status())
+
         assert self.g.nodes_status(0) == NodeStatus.FIXED_VALUE
         assert self.g.nodes_status(1) == NodeStatus.CORE
 

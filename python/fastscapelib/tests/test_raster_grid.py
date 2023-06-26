@@ -162,7 +162,11 @@ class TestRasterGrid:
 
     def test_nodes_status(self) -> None:
         grid = RasterGrid([3, 3], [2.0, 2.0], self.bs, [])
+
         npt.assert_equal(grid.nodes_status(), [[1, 1, 1], [1, 0, 1], [1, 1, 1]])
+        # should return a copy
+        assert not np.shares_memory(grid.nodes_status(), grid.nodes_status())
+
         assert grid.nodes_status(0) == NodeStatus.FIXED_VALUE
         assert grid.nodes_status(4) == NodeStatus.CORE
 
