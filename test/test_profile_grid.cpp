@@ -97,16 +97,6 @@ namespace fastscapelib
 
         TEST_F(profile_grid, ctor)
         {
-            std::vector<fs::node> nodes_vector1{ fs::node({ 1, fs::node_status::fixed_value }) };
-            grid_type g1(size, 1.3, fs::node_status::looped, nodes_vector1);
-
-            auto expected_status = grid_type::node_status_type{ fs::node_status::looped,
-                                                                fs::node_status::fixed_value,
-                                                                fs::node_status::core,
-                                                                fs::node_status::core,
-                                                                fs::node_status::looped };
-            ASSERT_EQ(g1.nodes_status(), expected_status);
-
             std::vector<fs::node> nodes_vector2{ fs::node({ 15, fs::node_status::core }) };
             ASSERT_THROW(grid_type(size, 1.3, fs::node_status::fixed_value, nodes_vector2),
                          std::out_of_range);
@@ -210,6 +200,21 @@ namespace fastscapelib
                 std::copy(indices.begin(), indices.end(), std::back_inserter(actual));
                 EXPECT_EQ(actual.size(), 0);
             }
+        }
+
+        TEST_F(profile_grid, nodes_status)
+        {
+            std::vector<fs::node> nodes_vector1{ fs::node({ 1, fs::node_status::fixed_value }) };
+            grid_type g1(size, 1.3, fs::node_status::looped, nodes_vector1);
+
+            auto expected_status = grid_type::node_status_type{ fs::node_status::looped,
+                                                                fs::node_status::fixed_value,
+                                                                fs::node_status::core,
+                                                                fs::node_status::core,
+                                                                fs::node_status::looped };
+            ASSERT_EQ(g1.nodes_status(), expected_status);
+            ASSERT_EQ(g1.nodes_status(0), fs::node_status::looped);
+            ASSERT_EQ(g1.nodes_status(1), fs::node_status::fixed_value);
         }
 
         TEST_F(profile_grid, nodes_areas)
