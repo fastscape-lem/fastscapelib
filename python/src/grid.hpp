@@ -60,10 +60,6 @@ namespace fastscapelib
             "shape",
             [](const G& g) { return g.shape(); },
             "Returns the shape of the grid node arrays.");
-        pyg.def_property_readonly(
-            "nodes_status",
-            [](const G& g) { return g.nodes_status(); },
-            "Returns the array of grid node status.");
     }
 
     /*
@@ -128,6 +124,13 @@ namespace fastscapelib
             std::copy(temp.begin(), temp.end(), output.begin());
 
             return std::move(output);
+        };
+
+        std::function<node_status(const G&, size_type)> m_nodes_status
+            = [this](const G& g, size_type idx)
+        {
+            check_in_bounds(g, idx);
+            return g.nodes_status(idx);
         };
 
         std::function<double(const G&, size_type)> m_nodes_areas = [this](const G& g, size_type idx)
@@ -205,6 +208,27 @@ namespace fastscapelib
             )doc");
 
         pyg.def("nodes_indices", grid_funcs.m_nodes_indices2, py::arg("status"));
+
+        pyg.def("nodes_status",
+                py::overload_cast<>(&G::nodes_status, py::const_),
+                R"doc(nodes_status(*args) -> NodeStatus | numpy.ndarray
+
+            Returns the status of a given node or all nodes.
+
+            Overloaded method that supports the following signatures:
+
+            1. ``nodes_status() -> numpy.ndarray``
+
+            2. ``nodes_status(idx: int) -> NodeStatus``
+
+            Parameters
+            ----------
+            idx : int
+                The grid node (flat) index.
+
+            )doc");
+
+        pyg.def("nodes_status", grid_funcs.m_nodes_status, py::arg("idx"));
 
         pyg.def("nodes_areas",
                 py::overload_cast<>(&G::nodes_areas, py::const_),

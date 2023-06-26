@@ -129,7 +129,11 @@ class TestProfileGrid:
         assert not len(self.g.nodes_indices(NodeStatus.FIXED_GRADIENT))
 
     def test_nodes_status(self) -> None:
-        npt.assert_equal(self.g.nodes_status, np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1]))
+        npt.assert_equal(
+            self.g.nodes_status(), np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1])
+        )
+        assert self.g.nodes_status(0) == NodeStatus.FIXED_VALUE
+        assert self.g.nodes_status(1) == NodeStatus.CORE
 
     def test_nodes_areas(self) -> None:
         assert self.g.nodes_areas(0) == 2.2

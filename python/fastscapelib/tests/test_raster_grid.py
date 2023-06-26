@@ -160,6 +160,12 @@ class TestRasterGrid:
         npt.assert_equal(grid.nodes_indices(NodeStatus.CORE), [4])
         assert not len(grid.nodes_indices(NodeStatus.FIXED_GRADIENT))
 
+    def test_nodes_status(self) -> None:
+        grid = RasterGrid([3, 3], [2.0, 2.0], self.bs, [])
+        npt.assert_equal(grid.nodes_status(), [[1, 1, 1], [1, 0, 1], [1, 1, 1]])
+        assert grid.nodes_status(0) == NodeStatus.FIXED_VALUE
+        assert grid.nodes_status(4) == NodeStatus.CORE
+
     def test_nodes_areas(self) -> None:
         area = 2.2 * 2.4
         assert self.g.nodes_areas(0) == area
