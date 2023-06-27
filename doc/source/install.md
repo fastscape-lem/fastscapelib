@@ -25,7 +25,7 @@ recommend installing either the C++ or Python library using [conda] (or
 :link-type: ref
 :text-align: center
 
-Install the C++ (header-only) library with conda_
+Install the C++ (header-only) library with [conda]
 
 (stable versions)
 :::
@@ -35,7 +35,7 @@ Install the C++ (header-only) library with conda_
 :link-type: ref
 :text-align: center
 
-Download and install the C++ (header-only) library with CMake
+Download and install the C++ (header-only) library with [cmake]
 
 (stable & development versions)
 :::
@@ -45,7 +45,7 @@ Download and install the C++ (header-only) library with CMake
 :link-type: ref
 :text-align: center
 
-Install the pre-compiled Python library with conda_
+Install the pre-compiled Python library with [conda]
 
 (stable versions)
 :::
@@ -78,8 +78,8 @@ $ git clone https://github.com/fastscape-lem/fastscapelib
 
 ## Install the C++ Library
 
-Fastscapelib C++ is header only and requires a recent compiler that supports the
-C++17 standards. It also depends on:
+Fastscapelib C++ is header-only and requires a recent compiler that supports the
+C++17 standard. It also depends on:
 
 - [xtensor] (C++ array computing)
 - [cmake] (build and configuration)
@@ -92,8 +92,8 @@ in a (CMake) project.
 ### Using Conda
 
 Fastscapelib [conda] packages are available for all stable versions via the
-conda-forge channel. You can install Fastscapelib's C++ headers all dependencies
-using the following command (alternatively you can use [mamba]):
+conda-forge channel. You can install Fastscapelib's C++ headers and all the
+dependencies using the following command (alternatively you can use [mamba]):
 
 ```bash
 $ conda install fastscapelib -c conda-forge
@@ -130,11 +130,13 @@ options.
 
 ## Install the Python Library
 
+Fastscapelib's Python package requires Python (3.9+) and [numpy].
+
 (install-python-conda)=
 
 ### Using Conda
 
-Fastscapelib's Python bindings are available for all stable versions as binary
+All stable versions of Fastscapelib-Python are available as pre-compiled binary
 [conda] packages for Linux, MacOS and Windows via the conda-forge channel. You
 can install it using the following command (alternatively you can use [mamba]):
 
@@ -146,15 +148,16 @@ $ conda install fastscapelib-python -c conda-forge
 
 ### From Source Using Pip
 
-Fastscapelib's Python bindings require Python (3.8+), pip, numpy, [pybind11],
-[xtensor-python] and [scikit-build-core] which are all available on conda-forge:
+In addition to Python and Numpy, building and installing Fastscapelib-Python
+from source requires [pip], [pybind11], [xtensor-python] and
+[scikit-build-core]. All these dependencies are all available on conda-forge:
 
 ```bash
-$ conda install python pip numpy pybind11 xtensor-python scikit-build-core -c conda-forge
+$ conda install python numpy pybind11 xtensor-python scikit-build-core pip -c conda-forge
 ```
 
 After {ref}`downloading the Fastscapelib source <download-fastscapelib>`, you
-can build and install the Python package using `pip`. Run the following commands
+can build and install the Python package using `pip`. Run the following command
 from the source root directory:
 
 ```bash
@@ -178,7 +181,9 @@ See [scikit-build-core]'s documentation for more available options.
 [cmake]: https://cmake.org/
 [conda]: https://conda.io/docs/
 [mamba]: https://mamba.readthedocs.io/en/latest/
-[pybind11]: https://github.com/pybind/pybind11
+[numpy]: https://numpy.org
+[pip]: https://pip.pypa.io
+[pybind11]: https://pybind11.readthedocs.io
 [xtensor]: https://xtensor.readthedocs.io
 [xtensor-python]: https://xtensor-python.readthedocs.io
 [scikit-build-core]: https://scikit-build-core.readthedocs.io

@@ -16,7 +16,7 @@ find_package(fastscapelib REQUIRED)
 Don't forget to link your target library or application with Fastscapelib:
 
 ```cmake
-target_link_libraries(_your_target INTERFACE fastscapelib)
+target_link_libraries(your_target INTERFACE fastscapelib)
 ```
 
 ## Build Options
