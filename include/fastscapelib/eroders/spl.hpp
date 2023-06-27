@@ -250,7 +250,7 @@ namespace fastscapelib
         m_n_corr = 0;
 
         // iterate over graph nodes in the bottom->up direction
-        for (const auto& inode : flow_graph_impl.node_indices_bottomup())
+        for (const auto& inode : flow_graph_impl.nodes_indices_bottomup())
         {
             data_type inode_elevation = elevation.flat(inode);
             auto r_count = receivers_count[inode];

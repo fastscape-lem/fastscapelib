@@ -31,7 +31,7 @@ TEST(spl_eroder, ctor)
     double spacing = 300;
     shape_type shape{ 2, 2 };
 
-    auto grid = fs::raster_grid(shape, { spacing, spacing }, fs::node_status::fixed_value_boundary);
+    auto grid = fs::raster_grid(shape, { spacing, spacing }, fs::node_status::fixed_value);
 
     auto flow_graph = fs::flow_graph<fs::raster_grid>(grid, { fs::single_flow_router() });
 
@@ -113,7 +113,7 @@ protected:
     xt::xtensor<double, 1> drainage_area = hack_coef * xt::pow(x, hack_exp);
 
     // left base level
-    fs::profile_boundary_status left_base_level{ fs::node_status::fixed_value_boundary,
+    fs::profile_boundary_status left_base_level{ fs::node_status::fixed_value,
                                                  fs::node_status::core };
 
     fs::profile_grid grid
@@ -310,7 +310,7 @@ TEST(spl_eroder__raster_grid, tiny_grid)
     shape_type shape{ 2, 2 };
 
     // top border base-level
-    fs::node_status fixed = fs::node_status::fixed_value_boundary;
+    fs::node_status fixed = fs::node_status::fixed_value;
     fs::node_status core = fs::node_status::core;
     fs::raster_boundary_status top_base_level{ { core, core, fixed, core } };
 
@@ -372,7 +372,7 @@ TEST(spl_eroder, convervation_of_mass)
     using size_type = typename grid_type::size_type;
 
     auto core = fs::node_status::core;
-    auto fixed = fs::node_status::fixed_value_boundary;
+    auto fixed = fs::node_status::fixed_value;
     fs::raster_boundary_status bottom_fixed({ core, core, core, fixed });
     double spacing = 300.0;
     double cell_area = spacing * spacing;

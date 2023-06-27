@@ -30,7 +30,7 @@ namespace fastscapelib
 
             size_type n = static_cast<size_type>(8);
 
-            grid_type grid = grid_type(n, 1., fs::node_status::fixed_value_boundary);
+            grid_type grid = grid_type(n, 1., fs::node_status::fixed_value);
 
             // 3rd node is a pit, 1st and last nodes are base levels
             xt::xtensor<double, 1> elevation{ 0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0 };
@@ -147,9 +147,9 @@ namespace fastscapelib
             using flow_graph_type = fs::flow_graph<grid_type>;
 
             // bottom border base-level
-            fs::node_status fixed = fs::node_status::fixed_value_boundary;
+            fs::node_status fixed = fs::node_status::fixed_value;
             fs::node_status core = fs::node_status::core;
-            fs::node_status looped = fs::node_status::looped_boundary;
+            fs::node_status looped = fs::node_status::looped;
             fs::raster_boundary_status bottom_base_level{ { core, core, core, fixed } };
             fs::raster_boundary_status bottom_base_level_looped{ { looped, looped, core, fixed } };
 

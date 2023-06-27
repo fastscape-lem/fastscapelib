@@ -60,7 +60,7 @@ namespace fastscapelib
             using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
             using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
-            using node_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
+            using nodes_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
 
             using basins_type = xt_tensor_t<py_selector, size_type, 1>;
 
@@ -82,7 +82,7 @@ namespace fastscapelib
 
             virtual const dfs_indices_type& dfs_indices() const = 0;
 
-            virtual node_indices_iterator_type node_indices_bottomup() const = 0;
+            virtual nodes_indices_iterator_type nodes_indices_bottomup() const = 0;
 
             virtual const basins_type& basins() const = 0;
         };
@@ -137,9 +137,9 @@ namespace fastscapelib
                 return m_graph_impl.dfs_indices();
             };
 
-            node_indices_iterator_type node_indices_bottomup() const
+            nodes_indices_iterator_type nodes_indices_bottomup() const
             {
-                return m_graph_impl.node_indices_bottomup();
+                return m_graph_impl.nodes_indices_bottomup();
             }
 
             const basins_type& basins() const
@@ -169,7 +169,7 @@ namespace fastscapelib
         using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
 
         using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
-        using node_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
+        using nodes_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
 
         using basins_type = xt_tensor_t<py_selector, size_type, 1>;
 
@@ -217,9 +217,9 @@ namespace fastscapelib
             return m_wrapper_ptr->dfs_indices();
         };
 
-        node_indices_iterator_type node_indices_bottomup() const
+        nodes_indices_iterator_type nodes_indices_bottomup() const
         {
-            return m_wrapper_ptr->node_indices_bottomup();
+            return m_wrapper_ptr->nodes_indices_bottomup();
         }
 
         const basins_type& basins() const

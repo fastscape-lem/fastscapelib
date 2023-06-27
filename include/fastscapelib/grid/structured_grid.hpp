@@ -44,7 +44,7 @@ namespace fastscapelib
 
     inline bool boundary_status::is_looped(const node_status status) const
     {
-        return status == node_status::looped_boundary;
+        return status == node_status::looped;
     }
 
     /**

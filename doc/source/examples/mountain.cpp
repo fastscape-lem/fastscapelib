@@ -19,7 +19,7 @@ int
 main()
 {
     // raster grid and boundary conditions
-    fs::raster_boundary_status bs(fs::node_status::fixed_value_boundary);
+    fs::raster_boundary_status bs(fs::node_status::fixed_value);
 
     auto grid = fs::raster_grid::from_length({ 201, 301 }, { 5e4, 7.5e4 }, bs);
 

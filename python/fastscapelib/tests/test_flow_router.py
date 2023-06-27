@@ -23,7 +23,7 @@ class TestSingleFlowRouter:
 
     @classmethod
     def setup_class(cls) -> None:
-        profile_grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+        profile_grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
         cls.profile_flow_graph = FlowGraph(profile_grid, [SingleFlowRouter()])
         cls.profile_elevation = np.array([0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0])
         cls.result_profile_elevation = cls.profile_flow_graph.update_routes(
@@ -35,7 +35,7 @@ class TestSingleFlowRouter:
             NodeStatus.CORE,
             NodeStatus.CORE,
             NodeStatus.CORE,
-            NodeStatus.FIXED_VALUE_BOUNDARY,
+            NodeStatus.FIXED_VALUE,
         ]
 
         raster_grid = RasterGrid(
@@ -220,7 +220,7 @@ class TestMultiFlowRouter:
         grid = RasterGrid(
             [3, 3],
             [1.0, 1.0],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
             [],
         )
         diag = np.sqrt(2)
@@ -262,7 +262,7 @@ class TestMultiFlowRouter:
         grid = RasterGrid(
             [3, 3],
             [1.0, 1.0],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
             [],
         )
         sqrt2 = np.sqrt(2)
@@ -292,7 +292,7 @@ def test_conservation_area(router) -> None:
         NodeStatus.CORE,
         NodeStatus.CORE,
         NodeStatus.CORE,
-        NodeStatus.FIXED_VALUE_BOUNDARY,
+        NodeStatus.FIXED_VALUE,
     ]
     grid = RasterGrid(
         [nrows, ncols],
@@ -325,7 +325,7 @@ def test_monotonic_dfs(router) -> None:
     grid = RasterGrid(
         [nrows, ncols],
         [1.0, 1.0],
-        RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+        RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
         [],
     )
 

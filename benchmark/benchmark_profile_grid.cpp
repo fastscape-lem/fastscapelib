@@ -28,7 +28,7 @@ namespace fastscapelib
 
             for (auto _ : state)
             {
-                auto grid = grid_type(shape, 1.3, fs::node_status::fixed_value_boundary);
+                auto grid = grid_type(shape, 1.3, fs::node_status::fixed_value);
             }
         }
 
@@ -40,7 +40,7 @@ namespace fastscapelib
             using neighbors_indices_type = typename grid_type::neighbors_indices_type;
 
             auto size = static_cast<size_type>(state.range(0));
-            auto grid = grid_type(size, 1.3, fs::node_status::fixed_value_boundary);
+            auto grid = grid_type(size, 1.3, fs::node_status::fixed_value);
 
             neighbors_indices_type neighbors_indices;
 
@@ -67,7 +67,7 @@ namespace fastscapelib
             using neighbors_type = typename grid_type::neighbors_type;
 
             auto size = static_cast<size_type>(state.range(0));
-            auto grid = grid_type(size, 1.3, fs::node_status::fixed_value_boundary);
+            auto grid = grid_type(size, 1.3, fs::node_status::fixed_value);
 
             neighbors_type neighbors;
 

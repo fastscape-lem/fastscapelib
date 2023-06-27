@@ -64,7 +64,7 @@ namespace fastscapelib
                 xt::xtensor<double, 1> x = xt::linspace<double>(length + x0, x0, ns);
                 elevation = (length + x0 - x) * 1e-4;
 
-                auto grid = fs::profile_grid(ns, spacing, fs::node_status::fixed_value_boundary);
+                auto grid = fs::profile_grid(ns, spacing, fs::node_status::fixed_value);
 
                 auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 
@@ -91,8 +91,8 @@ namespace fastscapelib
                 auto s = bms::FastscapeSetupBase<bms::surface_type::cone, T>(state.range(0));
                 elevation = s.elevation;
 
-                auto grid = fs::raster_grid(
-                    { { ns, ns } }, { s.dy, s.dy }, fs::node_status::fixed_value_boundary);
+                auto grid
+                    = fs::raster_grid({ { ns, ns } }, { s.dy, s.dy }, fs::node_status::fixed_value);
 
                 auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 

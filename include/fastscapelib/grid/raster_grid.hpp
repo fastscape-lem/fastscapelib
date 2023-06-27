@@ -7,6 +7,7 @@
 #include <vector>
 #include <utility>
 
+#include <xtensor/xbroadcast.hpp>
 #include <xtensor/xtensor.hpp>
 
 #include "fastscapelib/grid/base.hpp"
@@ -177,7 +178,7 @@ namespace fastscapelib
                                                       std::ptrdiff_t right) const;
 
         std::array<neighbors_count_type, 9> build_neighbors_count(
-            const raster_boundary_status& status_at_bounds) const;
+            const raster_boundary_status& bounds_status) const;
     };
 
     /**
@@ -215,19 +216,19 @@ namespace fastscapelib
      * depending on the periodicity of the grid.
      */
     inline auto raster_neighbors<raster_connect::queen>::build_neighbors_count(
-        const raster_boundary_status& status_at_bounds) const -> std::array<neighbors_count_type, 9>
+        const raster_boundary_status& bounds_status) const -> std::array<neighbors_count_type, 9>
     {
         std::array<neighbors_count_type, 9> neighbors_count;
 
-        if (status_at_bounds.is_vertical_looped() && status_at_bounds.is_horizontal_looped())
+        if (bounds_status.is_vertical_looped() && bounds_status.is_horizontal_looped())
         {
             neighbors_count.fill(8);
         }
-        else if (status_at_bounds.is_vertical_looped())
+        else if (bounds_status.is_vertical_looped())
         {
             neighbors_count = std::array<std::uint8_t, 9>({ 5, 8, 5, 5, 8, 5, 5, 8, 5 });
         }
-        else if (status_at_bounds.is_horizontal_looped())
+        else if (bounds_status.is_horizontal_looped())
         {
             neighbors_count = std::array<std::uint8_t, 9>({ 5, 5, 5, 8, 8, 8, 5, 5, 5 });
         }
@@ -251,7 +252,7 @@ namespace fastscapelib
                                                       std::ptrdiff_t right) const;
 
         std::array<neighbors_count_type, 9> build_neighbors_count(
-            const raster_boundary_status& status_at_bounds) const;
+            const raster_boundary_status& bounds_status) const;
     };
 
     /**
@@ -284,19 +285,19 @@ namespace fastscapelib
      * depending on the periodicity of the grid.
      */
     inline auto raster_neighbors<raster_connect::rook>::build_neighbors_count(
-        const raster_boundary_status& status_at_bounds) const -> std::array<neighbors_count_type, 9>
+        const raster_boundary_status& bounds_status) const -> std::array<neighbors_count_type, 9>
     {
         std::array<neighbors_count_type, 9> neighbors_count;
 
-        if (status_at_bounds.is_vertical_looped() && status_at_bounds.is_horizontal_looped())
+        if (bounds_status.is_vertical_looped() && bounds_status.is_horizontal_looped())
         {
             neighbors_count.fill(4);
         }
-        else if (status_at_bounds.is_vertical_looped())
+        else if (bounds_status.is_vertical_looped())
         {
             neighbors_count = std::array<std::uint8_t, 9>({ 3, 4, 3, 3, 4, 3, 3, 4, 3 });
         }
-        else if (status_at_bounds.is_horizontal_looped())
+        else if (bounds_status.is_horizontal_looped())
         {
             neighbors_count = std::array<std::uint8_t, 9>({ 3, 3, 3, 4, 4, 4, 3, 3, 3 });
         }
@@ -320,7 +321,7 @@ namespace fastscapelib
                                                       std::ptrdiff_t right) const;
 
         std::array<neighbors_count_type, 9> build_neighbors_count(
-            const raster_boundary_status& status_at_bounds) const;
+            const raster_boundary_status& bounds_status) const;
     };
 
     /**
@@ -358,19 +359,19 @@ namespace fastscapelib
      * depending on the periodicity of the grid.
      */
     inline auto raster_neighbors<raster_connect::bishop>::build_neighbors_count(
-        const raster_boundary_status& status_at_bounds) const -> std::array<neighbors_count_type, 9>
+        const raster_boundary_status& bounds_status) const -> std::array<neighbors_count_type, 9>
     {
         std::array<neighbors_count_type, 9> neighbors_count;
 
-        if (status_at_bounds.is_vertical_looped() && status_at_bounds.is_horizontal_looped())
+        if (bounds_status.is_vertical_looped() && bounds_status.is_horizontal_looped())
         {
             neighbors_count.fill(4);
         }
-        else if (status_at_bounds.is_vertical_looped())
+        else if (bounds_status.is_vertical_looped())
         {
             neighbors_count = std::array<std::uint8_t, 9>({ 2, 4, 2, 2, 4, 2, 2, 4, 2 });
         }
-        else if (status_at_bounds.is_horizontal_looped())
+        else if (bounds_status.is_horizontal_looped())
         {
             neighbors_count = std::array<std::uint8_t, 9>({ 2, 2, 2, 4, 4, 4, 2, 2, 2 });
         }
@@ -429,10 +430,13 @@ namespace fastscapelib
     public:
         using self_type = raster_grid_xt<S, RC, C>;
         using base_type = structured_grid<self_type>;
+        using inner_types = grid_inner_types<self_type>;
 
         using grid_data_type = typename base_type::grid_data_type;
 
         using xt_selector = typename base_type::xt_selector;
+        using xt_type = xt_tensor_t<xt_selector, grid_data_type, inner_types::xt_ndims>;
+
         using size_type = typename base_type::size_type;
         using shape_type = typename base_type::shape_type;
 
@@ -455,16 +459,16 @@ namespace fastscapelib
 
         raster_grid_xt(const shape_type& shape,
                        const spacing_type& spacing,
-                       const raster_boundary_status& status_at_bounds,
-                       const std::vector<raster_node>& status_at_nodes = {});
+                       const raster_boundary_status& bounds_status,
+                       const std::vector<raster_node>& nodes_status = {});
 
         static raster_grid_xt from_length(const shape_type& shape,
                                           const length_type& length,
-                                          const raster_boundary_status& status_at_bounds,
-                                          const std::vector<raster_node>& status_at_nodes = {});
+                                          const raster_boundary_status& bounds_status,
+                                          const std::vector<raster_node>& nodes_status = {});
 
         shape_type shape() const noexcept;
-        raster_boundary_status status_at_bounds() const noexcept;
+        raster_boundary_status bounds_status() const noexcept;
         inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
 
         using base_type::neighbors_indices;
@@ -485,11 +489,8 @@ namespace fastscapelib
                                                 neighbors_raster_type& neighbors);
         inline neighbors_raster_type neighbors(const size_type& row, const size_type& col);
 
-        code_type node_code(const size_type& row, const size_type& col) const noexcept;
-        code_type node_code(const size_type& idx) const noexcept;
-
-        template <raster_connect RCA, class CA = C>
-        static raster_grid_xt<S, RCA, CA> clone(const raster_grid_xt& grid);
+        code_type nodes_codes(const size_type& row, const size_type& col) const noexcept;
+        code_type nodes_codes(const size_type& idx) const noexcept;
 
     private:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
@@ -499,7 +500,7 @@ namespace fastscapelib
         using coded_ncount_type = std::array<neighbors_count_type, 9>;
         using coded_noffsets_type = std::array<neighbors_offsets_type, 9>;
         using coded_ndistances_type = std::array<neighbors_distances_impl_type, 9>;
-        using node_code_type = xt::xtensor<code_type, 1>;
+        using nodes_codes_type = xt::xtensor<code_type, 1>;
 
         shape_type m_shape;
         size_type m_size;
@@ -507,8 +508,8 @@ namespace fastscapelib
         length_type m_length;
         grid_data_type m_node_area;
 
-        node_status_type m_status_at_nodes;
-        raster_boundary_status m_status_at_bounds;
+        node_status_type m_nodes_status;
+        raster_boundary_status m_bounds_status;
 
         struct corner_node
         {
@@ -518,7 +519,7 @@ namespace fastscapelib
             node_status col_border;
         };
 
-        node_code_type m_nodes_codes;
+        nodes_codes_type m_nodes_codes;
 
         coded_ncount_type m_neighbors_count;
         coded_noffsets_type m_neighbor_offsets;
@@ -527,13 +528,16 @@ namespace fastscapelib
         inline size_type ravel_idx(const size_type& row, const size_type& col) const noexcept;
         inline raster_idx_type unravel_idx(const size_type& idx) const noexcept;
 
-        void set_status_at_nodes(const std::vector<raster_node>& status_at_nodes);
+        void set_nodes_status(const std::vector<raster_node>& nodes_status);
 
         void build_nodes_codes();
         coded_noffsets_type build_coded_neighbors_offsets();
         coded_ndistances_type build_coded_neighbors_distances();
 
         inline const neighbors_offsets_type& neighbor_offsets(code_type code) const noexcept;
+
+        inline xt_type nodes_areas_impl() const;
+        inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
 
         inline const neighbors_distances_impl_type& neighbors_distances_impl(
             const size_type& idx) const noexcept;
@@ -554,27 +558,27 @@ namespace fastscapelib
      *
      * @param shape Shape of the grid (number of rows and cols).
      * @param spacing Distance between two adjacent rows / cols.
-     * @param status_at_bounds Status at boundary nodes (left/right/top/bottom borders).
-     * @param status_at_nodes Manually define the status at any node on the grid.
+     * @param bounds_status Status at boundary nodes (left/right/top/bottom borders).
+     * @param nodes_status Manually define the status at any node on the grid.
      */
     template <class S, raster_connect RC, class C>
     raster_grid_xt<S, RC, C>::raster_grid_xt(const shape_type& shape,
                                              const spacing_type& spacing,
-                                             const raster_boundary_status& status_at_bounds,
-                                             const std::vector<raster_node>& status_at_nodes)
+                                             const raster_boundary_status& bounds_status,
+                                             const std::vector<raster_node>& nodes_status)
         : base_type(shape[0] * shape[1])
         , m_shape(shape)
         , m_spacing(spacing)
-        , m_status_at_bounds(status_at_bounds)
+        , m_bounds_status(bounds_status)
     {
         m_size = shape[0] * shape[1];
         m_length = (xt::adapt(shape) - 1) * spacing;
         m_node_area = xt::prod(spacing)();
 
         build_nodes_codes();
-        m_neighbors_count = this->build_neighbors_count(status_at_bounds);
+        m_neighbors_count = this->build_neighbors_count(bounds_status);
 
-        set_status_at_nodes(status_at_nodes);
+        set_nodes_status(nodes_status);
 
         m_neighbor_offsets = build_coded_neighbors_offsets();
         m_neighbor_distances = build_coded_neighbors_distances();
@@ -590,18 +594,18 @@ namespace fastscapelib
      *
      * @param shape Shape of the grid (number of rows and cols).
      * @param length Total physical lengths of the grid.
-     * @param status_at_bounds Status at boundary nodes (left/right/top/bottom borders).
-     * @param status_at_nodes Manually define the status at any node on the grid.
+     * @param bounds_status Status at boundary nodes (left/right/top/bottom borders).
+     * @param nodes_status Manually define the status at any node on the grid.
      */
     template <class S, raster_connect RC, class C>
     raster_grid_xt<S, RC, C> raster_grid_xt<S, RC, C>::from_length(
         const shape_type& shape,
         const length_type& length,
-        const raster_boundary_status& status_at_bounds,
-        const std::vector<raster_node>& status_at_nodes)
+        const raster_boundary_status& bounds_status,
+        const std::vector<raster_node>& nodes_status)
     {
         spacing_type spacing = length / (xt::adapt(shape) - 1);
-        return raster_grid_xt<S, RC, C>(shape, spacing, status_at_bounds, status_at_nodes);
+        return raster_grid_xt<S, RC, C>(shape, spacing, bounds_status, nodes_status);
     }
     //@}
 
@@ -622,9 +626,9 @@ namespace fastscapelib
      * Returns the grid node status at grid left / right / top / bottom borders.
      */
     template <class S, raster_connect RC, class C>
-    auto raster_grid_xt<S, RC, C>::status_at_bounds() const noexcept -> raster_boundary_status
+    auto raster_grid_xt<S, RC, C>::bounds_status() const noexcept -> raster_boundary_status
     {
-        return m_status_at_bounds;
+        return m_bounds_status;
     }
     //@}
 
@@ -650,58 +654,57 @@ namespace fastscapelib
     }
 
     template <class S, raster_connect RC, class C>
-    void raster_grid_xt<S, RC, C>::set_status_at_nodes(
-        const std::vector<raster_node>& status_at_nodes)
+    void raster_grid_xt<S, RC, C>::set_nodes_status(const std::vector<raster_node>& nodes_status)
     {
-        node_status_type temp_status_at_nodes(m_shape, node_status::core);
+        node_status_type temp_nodes_status(m_shape, node_status::core);
         const auto nrows = static_cast<size_type>(m_shape[0]);
         const auto ncols = static_cast<size_type>(m_shape[1]);
 
         // set border nodes
-        auto left = xt::view(temp_status_at_nodes, xt::all(), 0);
-        left = m_status_at_bounds.left;
+        auto left = xt::view(temp_nodes_status, xt::all(), 0);
+        left = m_bounds_status.left;
 
-        auto right = xt::view(temp_status_at_nodes, xt::all(), xt::keep(-1));
-        right = m_status_at_bounds.right;
+        auto right = xt::view(temp_nodes_status, xt::all(), xt::keep(-1));
+        right = m_bounds_status.right;
 
-        auto top = xt::view(temp_status_at_nodes, 0, xt::all());
-        top = m_status_at_bounds.top;
+        auto top = xt::view(temp_nodes_status, 0, xt::all());
+        top = m_bounds_status.top;
 
-        auto bottom = xt::view(temp_status_at_nodes, xt::keep(-1), xt::all());
-        bottom = m_status_at_bounds.bottom;
+        auto bottom = xt::view(temp_nodes_status, xt::keep(-1), xt::all());
+        bottom = m_bounds_status.bottom;
 
         // set corner nodes
         std::vector<corner_node> corners
-            = { { 0, 0, m_status_at_bounds.top, m_status_at_bounds.left },
-                { 0, ncols - 1, m_status_at_bounds.top, m_status_at_bounds.right },
-                { nrows - 1, 0, m_status_at_bounds.bottom, m_status_at_bounds.left },
-                { nrows - 1, ncols - 1, m_status_at_bounds.bottom, m_status_at_bounds.right } };
+            = { { 0, 0, m_bounds_status.top, m_bounds_status.left },
+                { 0, ncols - 1, m_bounds_status.top, m_bounds_status.right },
+                { nrows - 1, 0, m_bounds_status.bottom, m_bounds_status.left },
+                { nrows - 1, ncols - 1, m_bounds_status.bottom, m_bounds_status.right } };
 
         for (const auto& c : corners)
         {
             node_status cs = std::max(c.row_border, c.col_border, detail::node_status_cmp);
-            temp_status_at_nodes(c.row, c.col) = cs;
+            temp_nodes_status(c.row, c.col) = cs;
         }
 
         // set user-defined nodes
-        for (const raster_node& n : status_at_nodes)
+        for (const raster_node& n : nodes_status)
         {
-            if (n.status == node_status::looped_boundary)
+            if (n.status == node_status::looped)
             {
-                throw std::invalid_argument("node_status::looped_boundary is not allowed in "
-                                            "'status_at_nodes' "
-                                            "(use 'status_at_bounds' instead)");
+                throw std::invalid_argument("node_status::looped is not allowed in "
+                                            "'nodes_status' "
+                                            "(use 'bounds_status' instead)");
             }
-            else if (temp_status_at_nodes.at(n.row, n.col) == node_status::looped_boundary)
+            else if (temp_nodes_status.at(n.row, n.col) == node_status::looped)
             {
                 throw std::invalid_argument("cannot overwrite the status of a "
                                             "looped boundary node");
             }
 
-            temp_status_at_nodes.at(n.row, n.col) = n.status;
+            temp_nodes_status.at(n.row, n.col) = n.status;
         }
 
-        m_status_at_nodes = temp_status_at_nodes;
+        m_nodes_status = temp_nodes_status;
     }
 
     /**
@@ -749,11 +752,11 @@ namespace fastscapelib
         auto dr = static_cast<std::ptrdiff_t>(m_shape[0] - 1);
         auto dc = static_cast<std::ptrdiff_t>(m_shape[1] - 1);
 
-        if (!m_status_at_bounds.is_vertical_looped())
+        if (!m_bounds_status.is_vertical_looped())
         {
             dr = 0;
         }
-        if (!m_status_at_bounds.is_horizontal_looped())
+        if (!m_bounds_status.is_horizontal_looped())
         {
             dc = 0;
         }
@@ -804,7 +807,48 @@ namespace fastscapelib
     }
 
     /**
-     * @name Grid topology
+     * @name Node methods
+     */
+    /**
+     * Given row and col indices, return a code in the range [0,8], which
+     * corresponds to one of the following characteristic locations on the
+     * grid (i.e., inner/border/corner). Use a row-major layout:
+     *
+     *   0 -- 1 -- 2
+     *   |         |
+     *   3    4    5
+     *   |         |
+     *   6 -- 7 -- 8
+     */
+    template <class S, raster_connect RC, class C>
+    inline auto raster_grid_xt<S, RC, C>::nodes_codes(const size_type& row,
+                                                      const size_type& col) const noexcept
+        -> code_type
+    {
+        return m_nodes_codes[ravel_idx(row, col)];
+    }
+
+    /**
+     * Given a flat index, return a code in the range [0,8], which
+     * corresponds to one of the following characteristic locations on the
+     * grid (i.e., inner/border/corner). Use a row-major layout:
+     *
+     *   0 -- 1 -- 2
+     *   |         |
+     *   3    4    5
+     *   |         |
+     *   6 -- 7 -- 8
+     */
+    template <class S, raster_connect RC, class C>
+    inline auto raster_grid_xt<S, RC, C>::nodes_codes(const size_type& idx) const noexcept
+        -> code_type
+    {
+        return m_nodes_codes[idx];
+    }
+
+    //@}
+    /**
+     * @name Neighbor methods
      */
     /**
      * Returns the number of neighbors of a given grid node.
@@ -932,81 +976,38 @@ namespace fastscapelib
                                              n_raster_idx.first,
                                              n_raster_idx.second,
                                              n_distances[i],
-                                             this->status_at_nodes()[n_flat_idx] });
+                                             this->nodes_status()[n_flat_idx] });
         }
 
         return neighbors;
     }
-
     //@}
 
-    /**
-     * @name Miscellaneous
-     */
-    /**
-     * Given row and col indices, return a code in the range [0,8], which
-     * corresponds to one of the following characteristic locations on the
-     * grid (i.e., inner/border/corner). Use a row-major layout:
-     *
-     *   0 -- 1 -- 2
-     *   |         |
-     *   3    4    5
-     *   |         |
-     *   6 -- 7 -- 8
-     */
     template <class S, raster_connect RC, class C>
-    inline auto raster_grid_xt<S, RC, C>::node_code(const size_type& row,
-                                                    const size_type& col) const noexcept
-        -> code_type
+    inline auto raster_grid_xt<S, RC, C>::nodes_areas_impl() const -> xt_type
     {
-        return m_nodes_codes[ravel_idx(row, col)];
+        return xt::broadcast(m_node_area, m_shape);
     }
 
-    /**
-     * Given a flat index, return a code in the range [0,8], which
-     * corresponds to one of the following characteristic locations on the
-     * grid (i.e., inner/border/corner). Use a row-major layout:
-     *
-     *   0 -- 1 -- 2
-     *   |         |
-     *   3    4    5
-     *   |         |
-     *   6 -- 7 -- 8
-     */
     template <class S, raster_connect RC, class C>
-    inline auto raster_grid_xt<S, RC, C>::node_code(const size_type& idx) const noexcept
-        -> code_type
+    inline auto raster_grid_xt<S, RC, C>::nodes_areas_impl(const size_type& /*idx*/) const noexcept
+        -> grid_data_type
     {
-        return m_nodes_codes[idx];
+        return m_node_area;
     }
-
-    /**
-     * Clone the grid.
-     *
-     * Creates a new raster grid with the same properties but cleared cache.
-     *
-     */
-    template <class S, raster_connect RC, class C>
-    template <raster_connect RCA, class CA>
-    raster_grid_xt<S, RCA, CA> raster_grid_xt<S, RC, C>::clone(const raster_grid_xt& grid)
-    {
-        return raster_grid_xt<S, RCA, CA>(grid.shape(), grid.spacing(), grid.status_at_bounds());
-    }
-
-    //@}
 
     template <class S, raster_connect RC, class C>
     inline auto raster_grid_xt<S, RC, C>::neighbors_distances_impl(
         const size_type& idx) const noexcept -> const neighbors_distances_impl_type&
     {
-        return m_neighbor_distances[node_code(idx)];
+        return m_neighbor_distances[nodes_codes(idx)];
     }
 
     template <class S, raster_connect RC, class C>
     inline auto raster_grid_xt<S, RC, C>::neighbors_indices_impl(
         neighbors_indices_impl_type& neighbors, const size_type& idx) const -> void
     {
-        const auto& offsets = neighbor_offsets(node_code(idx));
+        const auto& offsets = neighbor_offsets(nodes_codes(idx));
 
         for (size_type i = 0; i < offsets.size(); ++i)
         {

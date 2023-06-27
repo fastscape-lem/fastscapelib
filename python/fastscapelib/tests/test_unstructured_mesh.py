@@ -52,28 +52,48 @@ class TestUnstructuredMesh:
         assert mesh.size == 5
         assert mesh.shape == [5]
 
-    def test_status_at_nodes_default(self, mesh_args) -> None:
+    def test_nodes_indices(self, mesh_args) -> None:
+        mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
+        npt.assert_equal(mesh.nodes_indices(), np.arange(mesh.size))
+        npt.assert_equal(mesh.nodes_indices(NodeStatus.FIXED_VALUE), [0, 1, 2, 3])
+        npt.assert_equal(mesh.nodes_indices(NodeStatus.CORE), [4])
+        assert not len(mesh.nodes_indices(NodeStatus.FIXED_GRADIENT))
+
+    def test_nodes_status_default(self, mesh_args) -> None:
         # all boundary nodes (convex hull) have fixed value status
         mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
 
-        actual = mesh.status_at_nodes
+        actual = mesh.nodes_status()
         expected = np.zeros(mesh.size, dtype=np.uint8)
         expected[mesh_args["convex_hull_indices"]] = 1
 
         npt.assert_array_equal(actual, expected)
 
-    def test_status_at_nodes_custom(self, mesh_args) -> None:
-        bc = [Node(2, NodeStatus.FIXED_VALUE_BOUNDARY)]
+        # should return a copy
+        assert not np.shares_memory(mesh.nodes_status(), mesh.nodes_status())
+
+        assert mesh.nodes_status(0) == NodeStatus.FIXED_VALUE
+        assert mesh.nodes_status(4) == NodeStatus.CORE
+
+    def test_nodes_status_custom(self, mesh_args) -> None:
+        bc = [Node(2, NodeStatus.FIXED_VALUE)]
         mesh = UnstructuredMesh(*mesh_args.values(), bc)  # type: ignore[call-arg]
 
-        actual = mesh.status_at_nodes
+        actual = mesh.nodes_status()
         expected = np.zeros(mesh.size, dtype=np.uint8)
         expected[2] = 1
 
         npt.assert_array_equal(actual, expected)
 
         with pytest.raises(ValueError, match=".*not allowed.*"):
-            UnstructuredMesh(*mesh_args.values(), [Node(2, NodeStatus.LOOPED_BOUNDARY)])  # type: ignore[call-arg]
+            UnstructuredMesh(*mesh_args.values(), [Node(2, NodeStatus.LOOPED)])  # type: ignore[call-arg]
+
+    def test_nodes_areas(self, mesh_args) -> None:
+        mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
+
+        assert mesh.nodes_areas(0) == mesh_args["areas"][0]
+        assert mesh.nodes_areas(4) == mesh_args["areas"][4]
+        npt.assert_equal(mesh.nodes_areas(), mesh_args["areas"])
 
     def test_neighbors_count(self, mesh_args) -> None:
         mesh = UnstructuredMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
@@ -101,9 +121,9 @@ class TestUnstructuredMesh:
         dist_diag = np.sqrt(0.5**2 + 0.5**2)
 
         assert mesh.neighbors(3) == [
-            Neighbor(2, dist_diag, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(2, dist_diag, NodeStatus.FIXED_VALUE),
             Neighbor(4, 0.5, NodeStatus.CORE),
-            Neighbor(0, dist_diag, NodeStatus.FIXED_VALUE_BOUNDARY),
+            Neighbor(0, dist_diag, NodeStatus.FIXED_VALUE),
         ]
 
         with pytest.raises(IndexError, match="grid index out of range"):

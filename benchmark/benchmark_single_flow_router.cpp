@@ -27,7 +27,7 @@ namespace fastscapelib
 
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape{ { n, n } };
-            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value_boundary);
+            auto grid = grid_type(shape, { 1., 1. }, fs::node_status::fixed_value);
             auto graph = fs::flow_graph<grid_type>(grid, { fs::single_flow_router() });
 
             xt::xtensor<double, 2> elevation = xt::random::rand<double>({ n, n });

@@ -121,7 +121,7 @@ namespace fastscapelib
         template <surface_type S, class T>
         auto synthetic_topography_2d<S, T>::grid() -> grid_type
         {
-            fs::node_status fv = fs::node_status::fixed_value_boundary;
+            fs::node_status fv = fs::node_status::fixed_value;
 
             grid_type grid = fs::raster_grid::from_length(m_shape, { 2.0, 2.0 }, fv);
 

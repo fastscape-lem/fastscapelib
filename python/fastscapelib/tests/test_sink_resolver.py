@@ -21,7 +21,7 @@ def grid():
             NodeStatus.CORE,
             NodeStatus.CORE,
             NodeStatus.CORE,
-            NodeStatus.FIXED_VALUE_BOUNDARY,
+            NodeStatus.FIXED_VALUE,
         ]
     )
     grid = RasterGrid([5, 5], [1, 1], bs, [])
@@ -181,7 +181,7 @@ def test_conservation_drainage_area(resolver) -> None:
     # domain area)
 
     shape = (101, 101)
-    bs = RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY)
+    bs = RasterBoundaryStatus(NodeStatus.FIXED_VALUE)
     grid = RasterGrid([101, 101], [1, 1], bs, [])
 
     elevation = np.random.uniform(size=shape)
@@ -216,7 +216,7 @@ def test_nb_of_basins(resolver) -> None:
     # (i.e., only outer basins)
 
     shape = (101, 101)
-    bs = RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY)
+    bs = RasterBoundaryStatus(NodeStatus.FIXED_VALUE)
     grid = RasterGrid([101, 101], [1, 1], bs, [])
 
     elevation = np.random.uniform(size=shape)

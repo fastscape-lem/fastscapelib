@@ -8,7 +8,7 @@ from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, Ras
 
 class TestSPLEroder:
     def test_constructor_properties(self) -> None:
-        bstatus = RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY)
+        bstatus = RasterBoundaryStatus(NodeStatus.FIXED_VALUE)
         grid = RasterGrid([2, 2], [1.0, 1.0], bstatus, [])
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
@@ -44,7 +44,7 @@ class TestSPLEroder:
     @pytest.mark.parametrize("k_coef", [1e-3, np.full((4), 1e-3)])
     def test_profile_grid(self, k_coef) -> None:
         spacing = 300.0
-        grid = ProfileGrid(4, 300, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+        grid = ProfileGrid(4, 300, [NodeStatus.FIXED_VALUE] * 2, [])
 
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
@@ -81,7 +81,7 @@ class TestSPLEroder:
         top_base_level = [
             NodeStatus.CORE,
             NodeStatus.CORE,
-            NodeStatus.FIXED_VALUE_BOUNDARY,
+            NodeStatus.FIXED_VALUE,
             NodeStatus.CORE,
         ]
 
@@ -129,7 +129,7 @@ def _compute_l2_norm(a1, a2):
 
 class TestDiffusionADIEroder:
     def test_constructor_properties(self) -> None:
-        bstatus = RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY)
+        bstatus = RasterBoundaryStatus(NodeStatus.FIXED_VALUE)
         grid = RasterGrid([2, 2], [1.0, 1.0], bstatus, [])
 
         eroder = DiffusionADIEroder(grid, 1e-3)
@@ -156,7 +156,7 @@ class TestDiffusionADIEroder:
         grid = RasterGrid(
             [101, 51],
             [dy, dx],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
             [],
         )
 

@@ -109,9 +109,9 @@ add_flow_graph_bindings(py::module& m)
             "Returns the total number of donors for each node (1-dimensional array).")
         .def_property_readonly("dfs_indices",
                                &fs::py_flow_graph_impl::dfs_indices,
-                               "Deprecated alias of :attr:`FlowGraphImpl.node_indices_bottomup`.")
+                               "Deprecated alias of :attr:`FlowGraphImpl.nodes_indices_bottomup`.")
         .def_property_readonly(
-            "node_indices_bottomup",
+            "nodes_indices_bottomup",
             &fs::py_flow_graph_impl::dfs_indices,
             R"doc(Returns the node indices ordered topologically from base level nodes up to top nodes.
 
@@ -503,9 +503,9 @@ add_flow_graph_bindings(py::module& m)
 
              2. ``accumulate(acc: numpy.ndarray, src: float) -> None``
 
-             3. ``accumulate(src: numpy.ndarray) -> np.ndarray``
+             3. ``accumulate(src: numpy.ndarray) -> numpy.ndarray``
 
-             4. ``accumulate(src: float) -> np.ndarray``
+             4. ``accumulate(src: float) -> numpy.ndarray``
 
              Parameters
              ----------

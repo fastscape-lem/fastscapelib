@@ -1,9 +1,11 @@
 #ifndef PYFASTSCAPELIB_GRID_H
 #define PYFASTSCAPELIB_GRID_H
 
+#include <algorithm>
 #include <functional>
 #include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 #include "pybind11/pybind11.h"
 
@@ -58,10 +60,6 @@ namespace fastscapelib
             "shape",
             [](const G& g) { return g.shape(); },
             "Returns the shape of the grid node arrays.");
-        pyg.def_property_readonly(
-            "status_at_nodes",
-            [](const G& g) { return g.status_at_nodes(); },
-            "Returns the array of grid node status.");
     }
 
     /*
@@ -98,6 +96,51 @@ namespace fastscapelib
         using neighbors_type = typename G::neighbors_type;
 
         py_grid_funcs() = default;
+
+        std::function<xt::pytensor<size_type, 1>(const G&)> m_nodes_indices = [this](const G& g)
+        {
+            auto indices = g.nodes_indices();
+            auto output = xt::pyarray<size_type>::from_shape({ g.size() });
+            std::copy(indices.begin(), indices.end(), output.begin());
+
+            return std::move(output);
+        };
+
+        std::function<xt::pytensor<size_type, 1>(const G&, node_status)> m_nodes_indices2
+            = [this](const G& g, node_status status)
+        {
+            auto indices = g.nodes_indices(status);
+
+            // need a temporary vector as the container size is not known in advance
+            // and pytensor doesn't support well resizing
+            std::vector<size_type> temp;
+
+            for (auto& idx : g.nodes_indices(status))
+            {
+                temp.push_back(idx);
+            }
+
+            auto output = xt::pyarray<size_type>::from_shape({ temp.size() });
+            std::copy(temp.begin(), temp.end(), output.begin());
+
+            return std::move(output);
+        };
+
+        std::function<xt::pyarray<node_status>(const G&)> m_nodes_status
+            = [this](const G& g) { return g.nodes_status(); };
+
+        std::function<node_status(const G&, size_type)> m_nodes_status2
+            = [this](const G& g, size_type idx)
+        {
+            check_in_bounds(g, idx);
+            return g.nodes_status(idx);
+        };
+
+        std::function<double(const G&, size_type)> m_nodes_areas = [this](const G& g, size_type idx)
+        {
+            check_in_bounds(g, idx);
+            return g.nodes_areas(idx);
+        };
 
         std::function<count_type(const G&, size_type)> m_neighbors_count
             = [this](const G& g, size_type idx)
@@ -138,9 +181,86 @@ namespace fastscapelib
     };
 
     template <class G>
-    void register_neighbor_methods(py::class_<G>& pyg)
+    void register_grid_methods(py::class_<G>& pyg)
     {
         auto grid_funcs = py_grid_funcs<G>();
+
+        pyg.def("nodes_indices",
+                grid_funcs.m_nodes_indices,
+                R"doc(nodes_indices(*args) -> numpy.ndarray
+
+            Returns the (flattened) indices of grid nodes, possibly filtered
+            by node status.
+
+            Overloaded method that supports the following signatures:
+
+            1. ``nodes_indices() -> numpy.ndarray``
+
+            2. ``nodes_indices(status: NodeStatus) -> numpy.ndarray``
+
+            Parameters
+            ----------
+            status : :class:`NodeStatus`
+                The status of the grid nodes to filter in.
+
+            Returns
+            -------
+            indices : numpy.ndarray
+                A new, 1-dimensional array with grid node (filtered) flat indices.
+
+            )doc");
+
+        pyg.def("nodes_indices", grid_funcs.m_nodes_indices2, py::arg("status"));
+
+        pyg.def("nodes_status",
+                grid_funcs.m_nodes_status,
+                R"doc(nodes_status(*args) -> NodeStatus | numpy.ndarray
+
+            Returns the status of a given node or all nodes.
+
+            Overloaded method that supports the following signatures:
+
+            1. ``nodes_status() -> numpy.ndarray``
+
+            2. ``nodes_status(idx: int) -> NodeStatus``
+
+            Parameters
+            ----------
+            idx : int
+                The grid node (flat) index.
+
+            Returns
+            -------
+            status : :class:`NodeStatus` or numpy.ndarray
+                If an array is returned, it is a copy of the original array
+                and has the :class:`NodeStatus` enum class values (int) as
+                values.
+
+            )doc");
+
+        pyg.def("nodes_status", grid_funcs.m_nodes_status2, py::arg("idx"));
+
+        pyg.def("nodes_areas",
+                py::overload_cast<>(&G::nodes_areas, py::const_),
+                R"doc(nodes_areas(*args) -> float | numpy.ndarray
+
+            Returns the area of the direct vicinity of a given node or all
+            nodes.
+
+            Overloaded method that supports the following signatures:
+
+            1. ``nodes_areas() -> numpy.ndarray``
+
+            2. ``nodes_areas(idx: int) -> float``
+
+            Parameters
+            ----------
+            idx : int
+                The grid node (flat) index.
+
+            )doc");
+
+        pyg.def("nodes_areas", grid_funcs.m_nodes_areas, py::arg("idx"));
 
         pyg.def("neighbors_count",
                 grid_funcs.m_neighbors_count,

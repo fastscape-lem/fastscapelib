@@ -16,11 +16,11 @@ from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, Ras
 
 class TestFlowGraph:
     def test___init__(self) -> None:
-        profile_grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+        profile_grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
         raster_grid = RasterGrid(
             [5, 10],
             [2.2, 2.4],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE_BOUNDARY),
+            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
             [],
         )
 
@@ -36,7 +36,7 @@ class TestFlowGraph:
             FlowGraph(raster_grid, ["not a flow operator"])  # type: ignore[list-item]
 
     def test_operators(self) -> None:
-        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
 
         resolver = PFloodSinkResolver()
         router = SingleFlowRouter()
@@ -46,7 +46,7 @@ class TestFlowGraph:
         assert flow_graph.operators == [resolver, router]
 
     def test_single_flow(self) -> None:
-        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
 
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
         assert flow_graph.single_flow is True
@@ -55,7 +55,7 @@ class TestFlowGraph:
         assert flow_graph.single_flow is False
 
     def test_repr(self) -> None:
-        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
         flow_graph = FlowGraph(grid, [SingleFlowRouter(), FlowSnapshot("test")])
 
         actual = repr(flow_graph)
@@ -76,7 +76,7 @@ class TestFlowGraph:
         assert actual == dedent(expected[1:])
 
     def test_update_routes(self) -> None:
-        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         # pit at 3rd node
@@ -116,7 +116,7 @@ class TestFlowGraph:
 
     def test_accumulate_basins(self) -> None:
         # --- test profile grid
-        grid = ProfileGrid(8, 2.0, [NodeStatus.FIXED_VALUE_BOUNDARY] * 2, [])
+        grid = ProfileGrid(8, 2.0, [NodeStatus.FIXED_VALUE] * 2, [])
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         # pit at 3rd node
@@ -144,7 +144,7 @@ class TestFlowGraph:
             NodeStatus.CORE,
             NodeStatus.CORE,
             NodeStatus.CORE,
-            NodeStatus.FIXED_VALUE_BOUNDARY,
+            NodeStatus.FIXED_VALUE,
         ]
 
         # --- test raster grid

@@ -19,7 +19,7 @@ namespace fastscapelib
         {
         protected:
             using node_s = fs::node_status;
-            node_s fixed = node_s::fixed_value_boundary;
+            node_s fixed = node_s::fixed_value;
             node_s core = node_s::core;
 
             using grid_type = fs::unstructured_mesh_xt<fs::xt_selector>;
@@ -58,7 +58,7 @@ namespace fastscapelib
             EXPECT_EQ(mesh.shape(), shape_type({ mesh_size }));
         }
 
-        TEST_F(unstructured_mesh, status_at_nodes)
+        TEST_F(unstructured_mesh, nodes_status)
         {
             {
                 SCOPED_TRACE("default boundary conditions (convex hull nodes = fixed value)");
@@ -66,31 +66,30 @@ namespace fastscapelib
                 grid_type mesh = fs::unstructured_mesh(
                     points, indptr, indices, convex_hull_indices, areas, {});
 
-                auto actual = mesh.status_at_nodes();
+                auto actual = mesh.nodes_status();
 
-                EXPECT_EQ(actual(0), fs::node_status::fixed_value_boundary);
-                EXPECT_EQ(actual(1), fs::node_status::fixed_value_boundary);
-                EXPECT_EQ(actual(2), fs::node_status::fixed_value_boundary);
-                EXPECT_EQ(actual(3), fs::node_status::fixed_value_boundary);
+                EXPECT_EQ(actual(0), fs::node_status::fixed_value);
+                EXPECT_EQ(actual(1), fs::node_status::fixed_value);
+                EXPECT_EQ(actual(2), fs::node_status::fixed_value);
+                EXPECT_EQ(actual(3), fs::node_status::fixed_value);
                 EXPECT_EQ(actual(4), fs::node_status::core);
             }
 
             {
                 SCOPED_TRACE("custom boundary conditions");
 
-                grid_type mesh
-                    = fs::unstructured_mesh(points,
-                                            indptr,
-                                            indices,
-                                            convex_hull_indices,
-                                            areas,
-                                            { { 2, fs::node_status::fixed_value_boundary } });
+                grid_type mesh = fs::unstructured_mesh(points,
+                                                       indptr,
+                                                       indices,
+                                                       convex_hull_indices,
+                                                       areas,
+                                                       { { 2, fs::node_status::fixed_value } });
 
-                auto actual = mesh.status_at_nodes();
+                auto actual = mesh.nodes_status();
 
                 EXPECT_EQ(actual(0), fs::node_status::core);
                 EXPECT_EQ(actual(1), fs::node_status::core);
-                EXPECT_EQ(actual(2), fs::node_status::fixed_value_boundary);
+                EXPECT_EQ(actual(2), fs::node_status::fixed_value);
                 EXPECT_EQ(actual(3), fs::node_status::core);
                 EXPECT_EQ(actual(4), fs::node_status::core);
             }
@@ -103,18 +102,20 @@ namespace fastscapelib
                                                    indices,
                                                    convex_hull_indices,
                                                    areas,
-                                                   { { 2, fs::node_status::looped_boundary } }),
+                                                   { { 2, fs::node_status::looped } }),
                              std::invalid_argument);
             }
         }
 
-        TEST_F(unstructured_mesh, node_area)
+        TEST_F(unstructured_mesh, nodes_areas)
         {
             grid_type mesh
                 = fs::unstructured_mesh(points, indptr, indices, convex_hull_indices, areas, {});
 
-            EXPECT_EQ(mesh.node_area(0), 1.0);
-            EXPECT_EQ(mesh.node_area(4), 2.0);
+            EXPECT_EQ(mesh.nodes_areas(0), 1.0);
+            EXPECT_EQ(mesh.nodes_areas(4), 2.0);
+
+            EXPECT_EQ(mesh.nodes_areas(), (xt::xtensor<double, 1>{ 1.0, 1.0, 1.0, 1.0, 2.0 }));
         }
 
         TEST_F(unstructured_mesh, neighbors_count)

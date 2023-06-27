@@ -58,14 +58,23 @@ connectivity).
 
 Fastscapelib currently implements a simple representation for all of its grids,
 which only includes the grid nodes (points) and their implicit or explicit
-connectivity ({ref}`Figure 1 <fig_grid_types>`). See Sections
-{ref}`grid-node-iterators` and {ref}`connectivity-node-neighbors` for how to
-iterate through grid nodes and their neighbors.
+connectivity ({ref}`Figure 1 <fig_grid_types>`).
 
-Grid faces or cells are not represented explicitly, i.e., cell vertices and
-edges are not stored as grid data members. However, the area of the cell
-surrounding a given node can be accessed via the
-{cpp:func}`~fastscapelib::grid::node_area` method (C++ only).
+Grid method names follow these conventions:
+
+- ``nodes_xxx()``: get node-specific grid information either for all nodes, a
+  subset of the nodes or one specific node depending on the (overloaded) method.
+- ``neighbors_xxx()``: get grid information about the neighbors of a given grid
+  node.
+
+Although grid faces or cells are not represented explicitly (i.e., cell geometry
+is not stored as grid data), some of their properties are exposed through the
+grid API using the conventions above (e.g.,
+{cpp:func}`~fastscapelib::grid::nodes_areas` returns the area of the direct
+vicinity of each node).
+
+See Sections {ref}`grid-node-iterators` and {ref}`connectivity-node-neighbors`
+for more details on how to iterate through grid nodes and their neighbors.
 
 (node-status-boundary-conditions)=
 ## Node Status and Boundary Conditions
@@ -76,10 +85,10 @@ edges and/or inside the grid. All possible labels are defined in the
 {cpp:enum}`~fastscapelib::node_status` (C++) and
 {py:class}`~fastscapelib.NodeStatus` (Python) enum classes.
 
-All grids expose a ``status_at_nodes`` parameter in their constructor, which
+All grids expose a ``nodes_status`` parameter in their constructor, which
 allows setting specific statuses for one or more nodes anywhere on the grid
-(some restrictions may apply for the `LOOPED_BOUNDARY` status). Each grid also
-exposes a ``status_at_nodes`` read-only getter or property that returns the
+(some restrictions may apply for the `LOOPED` status). Each grid also
+exposes a ``nodes_status`` read-only getter or property that returns the
 status of all grid nodes as an array.
 
 Uniform grids {py:class}`~fastscapelib.ProfileGrid` and
@@ -101,7 +110,7 @@ The usage or interpretation of grid node status and boundary conditions may
 differ depending on the case. For example:
 
 - {py:class}`~fastscapelib.FlowGraph` sets as {ref}`base levels
-  <guide-base-level-nodes>` all nodes having the `FIXED_VALUE_BOUNDARY` status
+  <guide-base-level-nodes>` all nodes having the `FIXED_VALUE` status
   by default.
 
 - {py:class}`~fastscapelib.DiffusionADIEroder` ignores the grid node status and
@@ -124,7 +133,7 @@ the grid or on the grid boundaries. See also the {doc}`examples/index`.
 
 namespace fs = fastscapelib;
 
-fs::profile_boundary_status bs(fs::node_status::fixed_value_boundary);
+fs::profile_boundary_status bs(fs::node_status::fixed_value);
 auto grid = fs::profile_grid::from_length(501, 500.0, bs);
 ```
 
@@ -133,7 +142,7 @@ auto grid = fs::profile_grid::from_length(501, 500.0, bs);
 
 import fastscapelib as fs
 
-bs = fs.ProfileBoundaryStatus(fs.NodeStatus.FIXED_VALUE_BOUNDARY)
+bs = fs.ProfileBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
 grid = fs.ProfileGrid.from_length(501, 500.0, bs, [])
 ```
 ````
@@ -155,7 +164,7 @@ auto grid = fs::profile_grid(
     501,
     1.0,
     bs,
-    { fs::node({ 250, fs::node_status::fixed_value_boundary }) });
+    { fs::node({ 250, fs::node_status::fixed_value }) });
 ```
 
 ```{code-block} Python
@@ -168,7 +177,7 @@ grid = fs.ProfileGrid(
     501,
     1.0,
     bs,
-    [fs.Node(250, fs.NodeStatus.FIXED_VALUE_BOUNDARY)],
+    [fs.Node(250, fs.NodeStatus.FIXED_VALUE)],
 )
 ```
 ````
@@ -186,10 +195,10 @@ grid = fs.ProfileGrid(
 
 namespace fs = fastscapelib;
 
-fs::raster_boundary_status bs{ fs::node_status::fixed_value_boundary,
+fs::raster_boundary_status bs{ fs::node_status::fixed_value,
                                fs::node_status::core,
-                               fs::node_status::looped_boundary,
-                               fs::node_status::looped_boundary };
+                               fs::node_status::looped,
+                               fs::node_status::looped };
 
 auto grid = fs::raster_grid({ 101, 201 }, { 1e2, 1e2 }, bs);
 ```
@@ -201,10 +210,10 @@ import fastscapelib as fs
 
 bs = fs.RasterBoundaryStatus(
     [
-        fs.NodeStatus.FIXED_VALUE_BOUNDARY,
+        fs.NodeStatus.FIXED_VALUE,
         fs.NodeStatus.CORE,
-        fs.NodeStatus.LOOPED_BOUNDARY,
-        fs.NodeStatus.LOOPED_BOUNDARY,
+        fs.NodeStatus.LOOPED,
+        fs.NodeStatus.LOOPED,
     ]
 )
 
@@ -267,7 +276,7 @@ raster grid.
 
 namespace fs = fastscapelib;
 
-fs::raster_boundary_status bs{ fs::node_status::fixed_value_boundary };
+fs::raster_boundary_status bs{ fs::node_status::fixed_value };
 fs::raster_grid grid({ 101, 101 }, { 200.0, 200.0 }, bs);
 
 //
@@ -296,7 +305,7 @@ ctype elevation_alt2 = xt::random::rand<dtype>(grid.shape());
 import numpy as np
 import fastscapelib as fs
 
-bs = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE_BOUNDARY)
+bs = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
 grid = fs.RasterGrid([101, 101], [200.0, 200.0], bs, [])
 
 elevation = np.random.uniform(size=grid.shape)
@@ -309,10 +318,7 @@ elevation = np.random.uniform(size=grid.shape)
 Fastscapelib provides a convenient, stl-compatible way to iterate over the grid
 nodes in C++, possibly filtered by {ref}`node status
 <node-status-boundary-conditions>`, using
-{cpp:func}`~fastscapelib::grid::node_indices`.
-
-In Python, this can be done "manually" using the ``size`` and
-``status_at_nodes`` properties.
+{cpp:func}`~fastscapelib::grid::nodes_indices`.
 
 :::{note}
 
@@ -332,14 +338,14 @@ mode).
 
 namespace fs = fastscapelib;
 
-using fixed_value = fs::node_status::fixed_value_boundary;
+using fixed_value = fs::node_status::fixed_value;
 fs::raster_boundary_status bs(fixed_value);
 fs::raster_grid grid({ 101, 101 }, { 200.0, 200.0 }, bs);
 
 //
 // iterate over all grid nodes
 //
-for (auto& idx_flat : grid.node_indices())
+for (auto& idx_flat : grid.nodes_indices())
 {
     // on a raster grid, flat index corresponds to the
     // current row index * total nb. of rows + current column index
@@ -349,7 +355,7 @@ for (auto& idx_flat : grid.node_indices())
 //
 // iterate over fixed-value nodes (all border nodes in this case)
 //
-for (auto& idx_flat : grid.node_indices(fixed_value))
+for (auto& idx_flat : grid.nodes_indices(fixed_value))
 {
     std::cout << "current node flat index: " << idx_flat << std::endl;
 }
@@ -359,21 +365,24 @@ for (auto& idx_flat : grid.node_indices(fixed_value))
 :linenos:
 
 import fastscapelib as fs
+import numpy as np
 
-fixed_value = fs.NodeStatus.FIXED_VALUE_BOUNDARY
+fixed_value = fs.NodeStatus.FIXED_VALUE
 bs = fs.RasterBoundaryStatus(fixed_value)
 grid = fs.RasterGrid([100, 100], [200.0, 200.0], bs, [])
 
-node_status_flat = grid.status_at_nodes.ravel()
-
 # iterate over all grid nodes (slow!)
-for idx_flat in range(grid.size):
+for idx_flat in grid.nodes_indices():
     print(f"current node flat index: {idx_flat}")
 
 # iterate over fixed-value nodes (slow!)
-for idx_flat in range(grid.size):
-    if node_status_flat[idx_flat] == fixed_value:
-        print(f"current node flat index: {idx_flat}")
+for idx_flat in grid.nodes_indices(fixed_value):
+    print(f"current node flat index: {idx_flat}")
+
+# do vectorized operations when possible (fast!)
+data = np.random.rand(size=grid.shape)
+data.ravel()[grid.node_indices(fixed_value)] = 0.0
+
 ```
 ````
 
@@ -406,7 +415,7 @@ in [Numba](http://numba.pydata.org/) jitted functions in non-object mode.
 
 namespace fs = fastscapelib;
 
-fs::raster_boundary_status bs(fs::node_status::fixed_value_boundary);
+fs::raster_boundary_status bs(fs::node_status::fixed_value);
 fs::raster_grid grid({ 101, 101 }, { 200.0, 200.0 }, bs);
 
 //
@@ -414,7 +423,7 @@ fs::raster_grid grid({ 101, 101 }, { 200.0, 200.0 }, bs);
 //
 fs::raster_grid::neighbors_type neighbors;
 
-for (auto& idx_flat : grid.node_indices())
+for (auto& idx_flat : grid.nodes_indices())
 {
     for (auto& nb : grid.neighbors(idx_flat, neighbors))
     {
@@ -429,7 +438,7 @@ for (auto& idx_flat : grid.node_indices())
 
 import fastscapelib as fs
 
-bs = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE_BOUNDARY)
+bs = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
 grid = fs.RasterGrid([100, 100], [200.0, 200.0], bs, [])
 
 for idx_flat in range(grid.size):

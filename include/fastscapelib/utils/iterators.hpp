@@ -26,14 +26,15 @@ namespace fastscapelib
             using pointer = typename base_type::pointer;
             using difference_type = typename base_type::difference_type;
 
-            using filter_func_type = std::function<bool(G&, typename G::size_type)>;
+            using filter_func_type = std::function<bool(const G&, typename G::size_type)>;
 
-            grid_node_index_iterator(G& grid, filter_func_type func, value_type position = 0)
+            grid_node_index_iterator(const G& grid, filter_func_type func, value_type position = 0)
                 : m_idx(position)
                 , m_grid(grid)
                 , m_filter_func(func)
             {
-                if ((position == 0) && !m_filter_func(grid, position))
+                // iterate to the actual starting position (1st node that pass the filter test)
+                while ((!m_filter_func(m_grid, m_idx)) && (m_idx < m_grid.size()))
                 {
                     ++m_idx;
                 }
@@ -67,7 +68,7 @@ namespace fastscapelib
         private:
             mutable value_type m_idx;
 
-            G& m_grid;
+            const G& m_grid;
             filter_func_type m_filter_func;
 
             template <class _G>
@@ -93,18 +94,18 @@ namespace fastscapelib
      * @tparam G The grid type.
      */
     template <class G>
-    class grid_node_indices
+    class grid_nodes_indices
     {
     public:
-        using filter_func_type = std::function<bool(G&, typename G::size_type)>;
+        using filter_func_type = std::function<bool(const G&, typename G::size_type)>;
         using iterator = detail::grid_node_index_iterator<G>;
 
-        grid_node_indices(G& grid, filter_func_type func = nullptr)
+        grid_nodes_indices(const G& grid, filter_func_type func = nullptr)
             : m_grid(grid)
         {
             if (!func)
             {
-                m_filter_func = [](G&, typename G::size_type) { return true; };
+                m_filter_func = [](const G&, typename G::size_type) { return true; };
             }
             else
             {
@@ -133,7 +134,7 @@ namespace fastscapelib
         }
 
     private:
-        G& m_grid;
+        const G& m_grid;
         filter_func_type m_filter_func;
     };
 
