@@ -32,10 +32,9 @@ namespace fastscapelib
             xt::xtensor<double, 2> points{
                 { 0.0, 0.5 }, { 0.5, 0.0 }, { 0.0, -0.5 }, { -0.5, 0.0 }, { 0.0, 0.0 }
             };
-
-            xt::xtensor<size_type, 1> indptr{ 0, 3, 6, 9, 12, 16 };
-            xt::xtensor<size_type, 1> indices{ 4, 3, 1, 4, 2, 0, 4, 3, 1, 2, 4, 0, 2, 3, 1, 0 };
-            xt::xtensor<size_type, 1> convex_hull_indices{ 0, 1, 2, 3 };
+            xt::xtensor<size_type, 2> triangles{
+                { 2, 4, 3 }, { 4, 2, 1 }, { 4, 0, 3 }, { 0, 4, 1 }
+            };
 
             xt::xtensor<double, 1> areas{ 1.0, 1.0, 1.0, 1.0, 2.0 };
         };
@@ -44,15 +43,14 @@ namespace fastscapelib
         {
             EXPECT_EQ(fs::unstructured_mesh::is_structured(), false);
             EXPECT_EQ(fs::unstructured_mesh::is_uniform(), false);
-            EXPECT_EQ(fs::unstructured_mesh::n_neighbors_max(), 30u);
+            EXPECT_EQ(fs::unstructured_mesh::n_neighbors_max(), 0u);
             EXPECT_EQ(fs::unstructured_mesh::xt_ndims(), 1);
         }
 
 
         TEST_F(unstructured_mesh, ctor)
         {
-            grid_type mesh
-                = fs::unstructured_mesh(points, indptr, indices, convex_hull_indices, areas, {});
+            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
 
             EXPECT_EQ(mesh.size(), mesh_size);
             EXPECT_EQ(mesh.shape(), shape_type({ mesh_size }));
@@ -63,8 +61,7 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("default boundary conditions (convex hull nodes = fixed value)");
 
-                grid_type mesh = fs::unstructured_mesh(
-                    points, indptr, indices, convex_hull_indices, areas, {});
+                grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
 
                 auto actual = mesh.nodes_status();
 
@@ -78,12 +75,8 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("custom boundary conditions");
 
-                grid_type mesh = fs::unstructured_mesh(points,
-                                                       indptr,
-                                                       indices,
-                                                       convex_hull_indices,
-                                                       areas,
-                                                       { { 2, fs::node_status::fixed_value } });
+                grid_type mesh = fs::unstructured_mesh(
+                    points, triangles, areas, { { 2, fs::node_status::fixed_value } });
 
                 auto actual = mesh.nodes_status();
 
@@ -97,20 +90,15 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("looped boundary conditions not supported");
 
-                EXPECT_THROW(fs::unstructured_mesh(points,
-                                                   indptr,
-                                                   indices,
-                                                   convex_hull_indices,
-                                                   areas,
-                                                   { { 2, fs::node_status::looped } }),
+                EXPECT_THROW(fs::unstructured_mesh(
+                                 points, triangles, areas, { { 2, fs::node_status::looped } }),
                              std::invalid_argument);
             }
         }
 
         TEST_F(unstructured_mesh, nodes_areas)
         {
-            grid_type mesh
-                = fs::unstructured_mesh(points, indptr, indices, convex_hull_indices, areas, {});
+            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
 
             EXPECT_EQ(mesh.nodes_areas(0), 1.0);
             EXPECT_EQ(mesh.nodes_areas(4), 2.0);
@@ -120,8 +108,7 @@ namespace fastscapelib
 
         TEST_F(unstructured_mesh, neighbors_count)
         {
-            grid_type mesh
-                = fs::unstructured_mesh(points, indptr, indices, convex_hull_indices, areas, {});
+            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
 
             EXPECT_EQ(mesh.neighbors_count(0), 3);
             EXPECT_EQ(mesh.neighbors_count(4), 4);
@@ -129,8 +116,7 @@ namespace fastscapelib
 
         TEST_F(unstructured_mesh, neighbors_indices)
         {
-            grid_type mesh
-                = fs::unstructured_mesh(points, indptr, indices, convex_hull_indices, areas, {});
+            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
 
             EXPECT_EQ(mesh.neighbors_indices(3), (xt::xtensor<std::size_t, 1>{ 2, 4, 0 }));
             EXPECT_EQ(mesh.neighbors_indices(4), (xt::xtensor<std::size_t, 1>{ 2, 3, 1, 0 }));
@@ -138,8 +124,7 @@ namespace fastscapelib
 
         TEST_F(unstructured_mesh, neighbors_distances)
         {
-            grid_type mesh
-                = fs::unstructured_mesh(points, indptr, indices, convex_hull_indices, areas, {});
+            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
 
             double diag_dist = std::sqrt(0.5);
 
@@ -152,8 +137,7 @@ namespace fastscapelib
         {
             using neighbors_type = std::vector<fs::neighbor>;
 
-            grid_type mesh
-                = fs::unstructured_mesh(points, indptr, indices, convex_hull_indices, areas, {});
+            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
 
             double diag_dist = std::sqrt(0.5);
 

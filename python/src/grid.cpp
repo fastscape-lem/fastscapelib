@@ -103,9 +103,7 @@ add_grid_bindings(py::module& m)
         m, "UnstructuredMesh", "A 2-dimensional, triangulated unstructured mesh.");
 
     umesh.def(py::init<const fs::py_unstructured_mesh::points_type,
-                       const fs::py_unstructured_mesh::indices_type,
-                       const fs::py_unstructured_mesh::indices_type,
-                       const fs::py_unstructured_mesh::indices_type,
+                       const fs::py_unstructured_mesh::triangles_type,
                        const fs::py_unstructured_mesh::areas_type,
                        const std::vector<fs::node>&>());
 
