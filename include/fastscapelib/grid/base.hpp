@@ -7,7 +7,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 #include <map>
+#include <vector>
 
 #include "xtensor/xadapt.hpp"
 #include "xtensor/xtensor.hpp"
@@ -117,7 +119,11 @@ namespace fastscapelib
     {
     public:
         static constexpr unsigned int cache_width = N;
-        using neighbors_indices_type = std::array<std::size_t, N>;
+
+        template <class T>
+        using storage_type = std::array<T, N>;
+
+        using neighbors_indices_type = storage_type<std::size_t>;
 
         neighbors_cache(std::size_t size)
             : m_cache(cache_shape_type({ size }))
@@ -193,14 +199,19 @@ namespace fastscapelib
      * A simple pass-through for grid neighbor indices look-up.
      *
      * @tparam N The size of temporary storage of indices (should correspond to
-     * the fixed maximum number of neighbors).
+     * the fixed maximum number of neighbors). If set to zero, the cache will
+     * use a variable size container (``std::vector``) storage type.
      */
     template <unsigned int N>
     class neighbors_no_cache
     {
     public:
         static constexpr unsigned int cache_width = N;
-        using neighbors_indices_type = std::array<std::size_t, N>;
+
+        template <class T>
+        using storage_type = std::conditional_t<N == 0, std::vector<T>, std::array<T, N>>;
+
+        using neighbors_indices_type = storage_type<std::size_t>;
 
         neighbors_no_cache(std::size_t /*size*/)
         {
@@ -341,9 +352,10 @@ namespace fastscapelib
         const neighbors_cache_type& neighbors_indices_cache();
 
     protected:
-        using neighbors_indices_impl_type = typename neighbors_cache_type::neighbors_indices_type;
+        using neighbors_indices_impl_type =
+            typename neighbors_cache_type::template storage_type<size_type>;
         using neighbors_distances_impl_type =
-            typename std::array<grid_data_type, inner_types::n_neighbors_max>;
+            typename neighbors_cache_type::template storage_type<grid_data_type>;
 
         grid(std::size_t size)
             : m_neighbors_indices_cache(neighbors_cache_type(size)){};
