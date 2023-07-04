@@ -95,12 +95,12 @@ add_grid_bindings(py::module& m)
         .def_readwrite("status", &fs::neighbor::status, "Neighbor status.");
 
     /*
-    ** Unstructured Mesh
+    ** Triangular Mesh
     */
 
     // ==== Binding of the TriMesh class ==== //
     py::class_<fs::py_trimesh> umesh(
-        m, "TriMesh", "A 2-dimensional, triangulated unstructured mesh.");
+        m, "TriMesh", "A 2-dimensional, triangular unstructured mesh.");
 
     umesh.def(py::init<const fs::py_trimesh::points_type,
                        const fs::py_trimesh::triangles_type,

@@ -76,7 +76,7 @@ namespace fastscapelib
     class trimesh_xt;
 
     /**
-     * Unstructured mesh specialized types.
+     * 2-d triangular mesh specialized types.
      */
     template <class S, unsigned int N>
     struct grid_inner_types<trimesh_xt<S, N>>
@@ -95,9 +95,9 @@ namespace fastscapelib
     };
 
     /**
-     * @brief 2-dimensional unstructured mesh.
+     * @brief 2-dimensional triangular (unstructured) mesh.
      *
-     * Fastscapelib grid adapter for a 2-d triangulated mesh. This class
+     * Fastscapelib grid adapter for a 2-d triangular mesh. This class
      * requires an input mesh (it doesn't provide any meshing capability).
      *
      * @tparam S The xtensor container selector for data array members.
@@ -171,7 +171,7 @@ namespace fastscapelib
      */
     //@{
     /**
-     * Creates a new mesh.
+     * Creates a new triangular mesh.
      *
      * @param points The mesh node x,y coordinates (array of shape [N, 2]).
      * @param triangles The node indices of the triangles (array of shape [K, 3]).
@@ -271,7 +271,7 @@ namespace fastscapelib
                 if (n.status == node_status::looped)
                 {
                     throw std::invalid_argument("node_status::looped is not allowed in "
-                                                "unstructured meshes");
+                                                "triangular meshes");
                 }
 
                 temp_nodes_status.at(n.idx) = n.status;
@@ -289,25 +289,12 @@ namespace fastscapelib
         m_nodes_status = temp_nodes_status;
     }
 
-    /**
-     * @name Neighbor methods
-     */
-    /**
-     * Returns the number of neighbors of a given grid node.
-     *
-     * @param idx The grid node flat index.
-     *
-     * @see fastscapelib::grid<G>::neighbors_indices,
-     *      fastscapelib::grid<G>::neighbors_distances,
-     *      fastscapelib::grid<G>::neighbors
-     */
     template <class S, unsigned int N>
     auto trimesh_xt<S, N>::neighbors_count(const size_type& idx) const
         -> const neighbors_count_type&
     {
         return m_neighbors_counts[idx];
     }
-    //@}
 
     template <class S, unsigned int N>
     inline auto trimesh_xt<S, N>::nodes_areas_impl() const -> areas_type

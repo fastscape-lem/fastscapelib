@@ -156,8 +156,8 @@ Defined in ``fastscapelib/grid/raster_grid.hpp``.
 
 |
 
-Unstructured mesh
------------------
+Triangular mesh
+---------------
 
 Defined in ``fastscapelib/grid/trimesh.hpp``.
 
