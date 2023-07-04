@@ -171,6 +171,7 @@ namespace fastscapelib
             using graph_impl_type = FG;
             using base_type = flow_operator_impl_base<FG, multi_flow_router>;
             using data_array_type = typename graph_impl_type::data_array_type;
+            using size_type = typename graph_impl_type::grid_type::size_type;
 
             flow_operator_impl(std::shared_ptr<multi_flow_router> ptr)
                 : base_type(std::move(ptr)){};
@@ -178,12 +179,11 @@ namespace fastscapelib
             void apply(graph_impl_type& graph_impl, data_array_type& elevation)
             {
                 using neighbors_type = typename graph_impl_type::grid_type::neighbors_type;
-                using nrec_type = typename graph_impl_type::grid_type::neighbors_count_type;
 
                 double slope;
                 double weight, weights_sum;
                 neighbors_type neighbors;
-                nrec_type nrec;
+                size_type nrec;
 
                 auto& grid = graph_impl.grid();
                 auto& donors = graph_impl.m_donors;
@@ -232,7 +232,7 @@ namespace fastscapelib
                     receivers_count(i) = nrec;
 
                     // normalize weights
-                    for (auto j = 0; j < nrec; j++)
+                    for (size_type j = 0; j < nrec; j++)
                     {
                         receivers_weight(i, j) /= weights_sum;
                     }

@@ -154,7 +154,7 @@ namespace fastscapelib
     {
         using neighbors_offsets_type
             = xt::xtensor<xt::xtensor_fixed<std::ptrdiff_t, xt::xshape<2>>, 1>;
-        using neighbors_count_type = std::uint8_t;
+        using size_type = std::size_t;
     };
 
     /********************
@@ -177,7 +177,7 @@ namespace fastscapelib
                                                       std::ptrdiff_t left,
                                                       std::ptrdiff_t right) const;
 
-        std::array<neighbors_count_type, 9> build_neighbors_count(
+        std::array<size_type, 9> build_neighbors_count(
             const raster_boundary_status& bounds_status) const;
     };
 
@@ -216,9 +216,9 @@ namespace fastscapelib
      * depending on the periodicity of the grid.
      */
     inline auto raster_neighbors<raster_connect::queen>::build_neighbors_count(
-        const raster_boundary_status& bounds_status) const -> std::array<neighbors_count_type, 9>
+        const raster_boundary_status& bounds_status) const -> std::array<size_type, 9>
     {
-        std::array<neighbors_count_type, 9> neighbors_count;
+        std::array<size_type, 9> neighbors_count;
 
         if (bounds_status.is_vertical_looped() && bounds_status.is_horizontal_looped())
         {
@@ -226,15 +226,15 @@ namespace fastscapelib
         }
         else if (bounds_status.is_vertical_looped())
         {
-            neighbors_count = std::array<std::uint8_t, 9>({ 5, 8, 5, 5, 8, 5, 5, 8, 5 });
+            neighbors_count = std::array<size_type, 9>({ 5, 8, 5, 5, 8, 5, 5, 8, 5 });
         }
         else if (bounds_status.is_horizontal_looped())
         {
-            neighbors_count = std::array<std::uint8_t, 9>({ 5, 5, 5, 8, 8, 8, 5, 5, 5 });
+            neighbors_count = std::array<size_type, 9>({ 5, 5, 5, 8, 8, 8, 5, 5, 5 });
         }
         else
         {
-            neighbors_count = std::array<std::uint8_t, 9>({ 3, 5, 3, 5, 8, 5, 3, 5, 3 });
+            neighbors_count = std::array<size_type, 9>({ 3, 5, 3, 5, 8, 5, 3, 5, 3 });
         }
 
         return neighbors_count;
@@ -251,7 +251,7 @@ namespace fastscapelib
                                                       std::ptrdiff_t left,
                                                       std::ptrdiff_t right) const;
 
-        std::array<neighbors_count_type, 9> build_neighbors_count(
+        std::array<size_type, 9> build_neighbors_count(
             const raster_boundary_status& bounds_status) const;
     };
 
@@ -285,9 +285,9 @@ namespace fastscapelib
      * depending on the periodicity of the grid.
      */
     inline auto raster_neighbors<raster_connect::rook>::build_neighbors_count(
-        const raster_boundary_status& bounds_status) const -> std::array<neighbors_count_type, 9>
+        const raster_boundary_status& bounds_status) const -> std::array<size_type, 9>
     {
-        std::array<neighbors_count_type, 9> neighbors_count;
+        std::array<size_type, 9> neighbors_count;
 
         if (bounds_status.is_vertical_looped() && bounds_status.is_horizontal_looped())
         {
@@ -295,15 +295,15 @@ namespace fastscapelib
         }
         else if (bounds_status.is_vertical_looped())
         {
-            neighbors_count = std::array<std::uint8_t, 9>({ 3, 4, 3, 3, 4, 3, 3, 4, 3 });
+            neighbors_count = std::array<size_type, 9>({ 3, 4, 3, 3, 4, 3, 3, 4, 3 });
         }
         else if (bounds_status.is_horizontal_looped())
         {
-            neighbors_count = std::array<std::uint8_t, 9>({ 3, 3, 3, 4, 4, 4, 3, 3, 3 });
+            neighbors_count = std::array<size_type, 9>({ 3, 3, 3, 4, 4, 4, 3, 3, 3 });
         }
         else
         {
-            neighbors_count = std::array<std::uint8_t, 9>({ 2, 3, 2, 3, 4, 3, 2, 3, 2 });
+            neighbors_count = std::array<size_type, 9>({ 2, 3, 2, 3, 4, 3, 2, 3, 2 });
         }
 
         return neighbors_count;
@@ -320,7 +320,7 @@ namespace fastscapelib
                                                       std::ptrdiff_t left,
                                                       std::ptrdiff_t right) const;
 
-        std::array<neighbors_count_type, 9> build_neighbors_count(
+        std::array<size_type, 9> build_neighbors_count(
             const raster_boundary_status& bounds_status) const;
     };
 
@@ -359,9 +359,9 @@ namespace fastscapelib
      * depending on the periodicity of the grid.
      */
     inline auto raster_neighbors<raster_connect::bishop>::build_neighbors_count(
-        const raster_boundary_status& bounds_status) const -> std::array<neighbors_count_type, 9>
+        const raster_boundary_status& bounds_status) const -> std::array<size_type, 9>
     {
-        std::array<neighbors_count_type, 9> neighbors_count;
+        std::array<size_type, 9> neighbors_count;
 
         if (bounds_status.is_vertical_looped() && bounds_status.is_horizontal_looped())
         {
@@ -369,15 +369,15 @@ namespace fastscapelib
         }
         else if (bounds_status.is_vertical_looped())
         {
-            neighbors_count = std::array<std::uint8_t, 9>({ 2, 4, 2, 2, 4, 2, 2, 4, 2 });
+            neighbors_count = std::array<size_type, 9>({ 2, 4, 2, 2, 4, 2, 2, 4, 2 });
         }
         else if (bounds_status.is_horizontal_looped())
         {
-            neighbors_count = std::array<std::uint8_t, 9>({ 2, 2, 2, 4, 4, 4, 2, 2, 2 });
+            neighbors_count = std::array<size_type, 9>({ 2, 2, 2, 4, 4, 4, 2, 2, 2 });
         }
         else
         {
-            neighbors_count = std::array<std::uint8_t, 9>({ 1, 2, 1, 2, 4, 2, 1, 2, 1 });
+            neighbors_count = std::array<size_type, 9>({ 1, 2, 1, 2, 4, 2, 1, 2, 1 });
         }
 
         return neighbors_count;
@@ -406,7 +406,6 @@ namespace fastscapelib
 
         static constexpr uint8_t n_neighbors_max = raster_neighbors<RC>::_n_neighbors_max;
         using neighbors_cache_type = C;
-        using neighbors_count_type = typename raster_neighbors_base::neighbors_count_type;
 
         // structured_grid types
         using length_type = xt::xtensor_fixed<grid_data_type, xt::xshape<2>>;
@@ -449,7 +448,6 @@ namespace fastscapelib
         using raster_idx_type = std::pair<size_type, size_type>;
 
         using neighbors_type = typename base_type::neighbors_type;
-        using neighbors_count_type = typename base_type::neighbors_count_type;
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
         using neighbors_distances_type = typename base_type::neighbors_distances_type;
         using neighbors_indices_raster_type = std::vector<raster_idx_type>;
@@ -469,7 +467,6 @@ namespace fastscapelib
 
         shape_type shape() const noexcept;
         raster_boundary_status bounds_status() const noexcept;
-        inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
 
         using base_type::neighbors_indices;
 
@@ -497,7 +494,7 @@ namespace fastscapelib
         using neighbors_indices_impl_type = typename base_type::neighbors_indices_impl_type;
         using neighbors_offsets_type = typename raster_neighbors<RC>::neighbors_offsets_type;
 
-        using coded_ncount_type = std::array<neighbors_count_type, 9>;
+        using coded_ncount_type = std::array<size_type, 9>;
         using coded_noffsets_type = std::array<neighbors_offsets_type, 9>;
         using coded_ndistances_type = std::array<neighbors_distances_impl_type, 9>;
         using nodes_codes_type = xt::xtensor<code_type, 1>;
@@ -538,6 +535,8 @@ namespace fastscapelib
 
         inline xt_type nodes_areas_impl() const;
         inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
+
+        inline size_type neighbors_count_impl(const size_type& idx) const noexcept;
 
         inline const neighbors_distances_impl_type& neighbors_distances_impl(
             const size_type& idx) const noexcept;
@@ -845,27 +844,11 @@ namespace fastscapelib
     {
         return m_nodes_codes[idx];
     }
-
     //@}
+
     /**
      * @name Neighbor methods
      */
-    /**
-     * Returns the number of neighbors of a given grid node.
-     *
-     * @param idx The grid node flat index.
-     *
-     * @see fastscapelib::grid<G>::neighbors_indices,
-     *      fastscapelib::grid<G>::neighbors_distances,
-     *      fastscapelib::grid<G>::neighbors
-     */
-    template <class S, raster_connect RC, class C>
-    inline auto raster_grid_xt<S, RC, C>::neighbors_count(const size_type& idx) const noexcept
-        -> const neighbors_count_type&
-    {
-        return m_neighbors_count[m_nodes_codes(idx)];
-    }
-
     /**
      * Returns an array of the indices of the neighbors of a given grid node.
      *
@@ -903,7 +886,7 @@ namespace fastscapelib
         neighbors_indices_raster_type& neighbors_indices) -> neighbors_indices_raster_type&
     {
         const size_type flat_idx = ravel_idx(row, col);
-        const auto& n_count = neighbors_count(flat_idx);
+        const auto& n_count = neighbors_count_impl(flat_idx);
         const auto& n_indices = this->get_nb_indices_from_cache(flat_idx);
 
         if (neighbors_indices.size() != n_count)
@@ -911,7 +894,7 @@ namespace fastscapelib
             neighbors_indices.resize({ n_count });
         }
 
-        for (neighbors_count_type i = 0; i < n_count; ++i)
+        for (size_type i = 0; i < n_count; ++i)
         {
             neighbors_indices[i] = unravel_idx(n_indices[i]);
         }
@@ -959,7 +942,7 @@ namespace fastscapelib
         raster_idx_type n_raster_idx;
 
         const size_type flat_idx = ravel_idx(row, col);
-        const auto& n_count = neighbors_count(flat_idx);
+        const auto& n_count = neighbors_count_impl(flat_idx);
         const auto& n_indices = this->get_nb_indices_from_cache(flat_idx);
         const auto& n_distances = neighbors_distances_impl(flat_idx);
 
@@ -968,7 +951,7 @@ namespace fastscapelib
             neighbors.resize({ n_count });
         }
 
-        for (neighbors_count_type i = 0; i < n_count; ++i)
+        for (size_type i = 0; i < n_count; ++i)
         {
             n_flat_idx = n_indices[i];
             n_raster_idx = unravel_idx(n_flat_idx);
@@ -994,6 +977,13 @@ namespace fastscapelib
         -> grid_data_type
     {
         return m_node_area;
+    }
+
+    template <class S, raster_connect RC, class C>
+    inline auto raster_grid_xt<S, RC, C>::neighbors_count_impl(const size_type& idx) const noexcept
+        -> size_type
+    {
+        return m_neighbors_count[m_nodes_codes(idx)];
     }
 
     template <class S, raster_connect RC, class C>

@@ -91,7 +91,6 @@ namespace fastscapelib
 
         static constexpr uint8_t n_neighbors_max = N;
         using neighbors_cache_type = neighbors_no_cache<0>;
-        using neighbors_count_type = std::uint8_t;
     };
 
     /**
@@ -122,13 +121,10 @@ namespace fastscapelib
         using areas_type = xt_tensor_t<xt_selector, grid_data_type, 1>;
 
         using neighbors_type = typename base_type::neighbors_type;
-        using neighbors_count_type = typename base_type::neighbors_count_type;
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
         using neighbors_distances_type = typename base_type::neighbors_distances_type;
 
         using node_status_type = typename base_type::node_status_type;
-
-        const neighbors_count_type& neighbors_count(const size_type& idx) const;
 
         trimesh_xt(const points_type& points,
                    const triangles_type& triangles,
@@ -149,12 +145,13 @@ namespace fastscapelib
 
         std::vector<neighbors_indices_impl_type> m_neighbors_indices;
         std::vector<neighbors_distances_impl_type> m_neighbors_distances;
-        std::vector<neighbors_count_type> m_neighbors_counts;
 
         void set_nodes_status(const std::vector<node>& nodes_status);
 
         inline areas_type nodes_areas_impl() const;
         inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
+
+        inline size_type neighbors_count_impl(const size_type& idx) const;
 
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                     const size_type& idx) const;
@@ -226,7 +223,6 @@ namespace fastscapelib
         // fill node neighbor data and find boundary nodes
 
         m_boundary_nodes.clear();
-        m_neighbors_counts.assign(m_size, 0);
         m_neighbors_indices.resize(m_size);
         m_neighbors_distances.resize(m_size);
 
@@ -241,8 +237,6 @@ namespace fastscapelib
                 m_boundary_nodes.insert(edge_points.second);
             }
 
-            m_neighbors_counts[edge_points.first]++;
-            m_neighbors_counts[edge_points.second]++;
             m_neighbors_indices[edge_points.first].push_back(edge_points.second);
             m_neighbors_indices[edge_points.second].push_back(edge_points.first);
 
@@ -290,10 +284,9 @@ namespace fastscapelib
     }
 
     template <class S, unsigned int N>
-    auto trimesh_xt<S, N>::neighbors_count(const size_type& idx) const
-        -> const neighbors_count_type&
+    inline auto trimesh_xt<S, N>::neighbors_count_impl(const size_type& idx) const -> size_type
     {
-        return m_neighbors_counts[idx];
+        return m_neighbors_indices[idx].size();
     }
 
     template <class S, unsigned int N>
@@ -313,7 +306,7 @@ namespace fastscapelib
     void trimesh_xt<S, N>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                                   const size_type& idx) const
     {
-        const auto& size = m_neighbors_counts[idx];
+        const auto& size = m_neighbors_indices[idx].size();
         neighbors.resize(size);
 
         for (size_type i = 0; i < size; i++)

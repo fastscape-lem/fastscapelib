@@ -47,12 +47,11 @@ namespace fastscapelib
         class flow_graph_impl_wrapper_base
         {
         public:
-            using neighbors_count_type = std::uint8_t;
-            using grid_data_type = double;
             using size_type = std::size_t;
+            using grid_data_type = double;
 
             using donors_type = xt_tensor_t<py_selector, size_type, 2>;
-            using donors_count_type = xt_tensor_t<py_selector, neighbors_count_type, 1>;
+            using donors_count_type = xt_tensor_t<py_selector, size_type, 1>;
 
             using receivers_type = donors_type;
             using receivers_count_type = donors_count_type;
@@ -157,11 +156,10 @@ namespace fastscapelib
     {
     public:
         using size_type = std::size_t;
-        using neighbors_count_type = std::uint8_t;
         using grid_data_type = double;
 
         using donors_type = xt_tensor_t<py_selector, size_type, 2>;
-        using donors_count_type = xt_tensor_t<py_selector, neighbors_count_type, 1>;
+        using donors_count_type = xt_tensor_t<py_selector, size_type, 1>;
 
         using receivers_type = donors_type;
         using receivers_count_type = donors_count_type;

@@ -90,7 +90,7 @@ namespace fastscapelib
     {
     public:
         using size_type = typename G::size_type;
-        using count_type = typename G::neighbors_count_type;
+        using count_type = typename G::size_type;
         using indices_type = typename G::neighbors_indices_type;
         using distances_type = typename G::neighbors_distances_type;
         using neighbors_type = typename G::neighbors_type;

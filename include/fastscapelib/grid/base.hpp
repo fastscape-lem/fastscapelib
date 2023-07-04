@@ -317,7 +317,6 @@ namespace fastscapelib
                       "Cache width is too small!");
 
         using neighbors_type = std::vector<neighbor>;
-        using neighbors_count_type = typename inner_types::neighbors_count_type;
 
         // using xt:xtensor for indices as not all containers support resizing
         // (e.g., using pyarray may cause segmentation faults with Python)
@@ -338,7 +337,7 @@ namespace fastscapelib
         xt_type nodes_areas() const;
         grid_data_type nodes_areas(const size_type& idx) const noexcept;
 
-        const neighbors_count_type& neighbors_count(const size_type& idx) const;
+        size_type neighbors_count(const size_type& idx) const;
         neighbors_distances_type neighbors_distances(const size_type& idx) const;
 
         // no const since it may update the cache internally
@@ -366,6 +365,8 @@ namespace fastscapelib
 
         inline xt_type nodes_areas_impl() const;
         inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
+
+        inline size_type neighbors_count_impl(const size_type& idx) const;
 
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                     const size_type& idx) const;
@@ -548,9 +549,9 @@ namespace fastscapelib
      * @param idx The grid node flat index.
      */
     template <class G>
-    inline auto grid<G>::neighbors_count(const size_type& idx) const -> const neighbors_count_type&
+    inline auto grid<G>::neighbors_count(const size_type& idx) const -> size_type
     {
-        return derived_grid().neighbors_count(idx);
+        return neighbors_count_impl(idx);
     }
 
     /**
@@ -592,7 +593,7 @@ namespace fastscapelib
             neighbors_indices.resize({ n_count });
         }
 
-        for (neighbors_count_type i = 0; i < n_count; ++i)
+        for (size_type i = 0; i < n_count; ++i)
         {
             neighbors_indices[i] = n_indices[i];
         }
@@ -657,7 +658,7 @@ namespace fastscapelib
             neighbors.resize({ n_count });
         }
 
-        for (neighbors_count_type i = 0; i < n_count; ++i)
+        for (size_type i = 0; i < n_count; ++i)
         {
             n_idx = n_indices[i];
             neighbors[i] = neighbor({ n_idx, n_distances[i], nodes_status()[n_idx] });
@@ -677,6 +678,12 @@ namespace fastscapelib
     inline auto grid<G>::nodes_areas_impl(const size_type& idx) const noexcept -> grid_data_type
     {
         return derived_grid().nodes_areas_impl(idx);
+    }
+
+    template <class G>
+    inline auto grid<G>::neighbors_count_impl(const size_type& idx) const -> size_type
+    {
+        return derived_grid().neighbors_count_impl(idx);
     }
 
     template <class G>
