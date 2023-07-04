@@ -181,7 +181,7 @@ class RasterGrid:
     @overload
     def neighbors(self, row: int, col: int) -> List[RasterNeighbor]: ...
 
-class UnstructuredMesh:
+class TriMesh:
     def __init__(
         self,
         points: npt.NDArray[np.float64],

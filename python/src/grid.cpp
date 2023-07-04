@@ -98,13 +98,13 @@ add_grid_bindings(py::module& m)
     ** Unstructured Mesh
     */
 
-    // ==== Binding of the UnstructuredMesh class ==== //
-    py::class_<fs::py_unstructured_mesh> umesh(
-        m, "UnstructuredMesh", "A 2-dimensional, triangulated unstructured mesh.");
+    // ==== Binding of the TriMesh class ==== //
+    py::class_<fs::py_trimesh> umesh(
+        m, "TriMesh", "A 2-dimensional, triangulated unstructured mesh.");
 
-    umesh.def(py::init<const fs::py_unstructured_mesh::points_type,
-                       const fs::py_unstructured_mesh::triangles_type,
-                       const fs::py_unstructured_mesh::areas_type,
+    umesh.def(py::init<const fs::py_trimesh::points_type,
+                       const fs::py_trimesh::triangles_type,
+                       const fs::py_trimesh::areas_type,
                        const std::vector<fs::node>&>());
 
     fs::register_grid_static_properties(umesh);

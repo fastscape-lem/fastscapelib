@@ -5,7 +5,7 @@
 #include "xtensor/xindex_view.hpp"
 #include "xtensor/xtensor.hpp"
 
-#include "fastscapelib/grid/unstructured_mesh.hpp"
+#include "fastscapelib/grid/trimesh.hpp"
 
 
 namespace fs = fastscapelib;
@@ -16,14 +16,14 @@ namespace fastscapelib
     namespace testing
     {
 
-        class unstructured_mesh : public ::testing::Test
+        class trimesh : public ::testing::Test
         {
         protected:
             using node_s = fs::node_status;
             node_s fixed = node_s::fixed_value;
             node_s core = node_s::core;
 
-            using grid_type = fs::unstructured_mesh_xt<fs::xt_selector>;
+            using grid_type = fs::trimesh_xt<fs::xt_selector>;
             using size_type = typename grid_type::size_type;
             using shape_type = typename grid_type::shape_type;
 
@@ -40,29 +40,29 @@ namespace fastscapelib
             xt::xtensor<double, 1> areas{ 1.0, 1.0, 1.0, 1.0, 2.0 };
         };
 
-        TEST_F(unstructured_mesh, static_expr)
+        TEST_F(trimesh, static_expr)
         {
-            EXPECT_EQ(fs::unstructured_mesh::is_structured(), false);
-            EXPECT_EQ(fs::unstructured_mesh::is_uniform(), false);
-            EXPECT_EQ(fs::unstructured_mesh::n_neighbors_max(), 20u);
-            EXPECT_EQ(fs::unstructured_mesh::xt_ndims(), 1);
+            EXPECT_EQ(fs::trimesh::is_structured(), false);
+            EXPECT_EQ(fs::trimesh::is_uniform(), false);
+            EXPECT_EQ(fs::trimesh::n_neighbors_max(), 20u);
+            EXPECT_EQ(fs::trimesh::xt_ndims(), 1);
         }
 
 
-        TEST_F(unstructured_mesh, ctor)
+        TEST_F(trimesh, ctor)
         {
-            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, areas, {});
 
             EXPECT_EQ(mesh.size(), mesh_size);
             EXPECT_EQ(mesh.shape(), shape_type({ mesh_size }));
         }
 
-        TEST_F(unstructured_mesh, nodes_status)
+        TEST_F(trimesh, nodes_status)
         {
             {
                 SCOPED_TRACE("default boundary conditions (boundary nodes = fixed value)");
 
-                grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
+                grid_type mesh = fs::trimesh(points, triangles, areas, {});
 
                 auto actual = mesh.nodes_status();
 
@@ -76,7 +76,7 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("custom boundary conditions");
 
-                grid_type mesh = fs::unstructured_mesh(
+                grid_type mesh = fs::trimesh(
                     points, triangles, areas, { { 2, fs::node_status::fixed_value } });
 
                 auto actual = mesh.nodes_status();
@@ -91,15 +91,15 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("looped boundary conditions not supported");
 
-                EXPECT_THROW(fs::unstructured_mesh(
-                                 points, triangles, areas, { { 2, fs::node_status::looped } }),
-                             std::invalid_argument);
+                EXPECT_THROW(
+                    fs::trimesh(points, triangles, areas, { { 2, fs::node_status::looped } }),
+                    std::invalid_argument);
             }
         }
 
-        TEST_F(unstructured_mesh, nodes_areas)
+        TEST_F(trimesh, nodes_areas)
         {
-            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, areas, {});
 
             EXPECT_EQ(mesh.nodes_areas(0), 1.0);
             EXPECT_EQ(mesh.nodes_areas(4), 2.0);
@@ -107,17 +107,17 @@ namespace fastscapelib
             EXPECT_EQ(mesh.nodes_areas(), (xt::xtensor<double, 1>{ 1.0, 1.0, 1.0, 1.0, 2.0 }));
         }
 
-        TEST_F(unstructured_mesh, neighbors_count)
+        TEST_F(trimesh, neighbors_count)
         {
-            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, areas, {});
 
             EXPECT_EQ(mesh.neighbors_count(0), 3);
             EXPECT_EQ(mesh.neighbors_count(4), 4);
         }
 
-        TEST_F(unstructured_mesh, neighbors_indices)
+        TEST_F(trimesh, neighbors_indices)
         {
-            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, areas, {});
 
             EXPECT_EQ(xt::sort(mesh.neighbors_indices(3)),
                       (xt::xtensor<std::size_t, 1>{ 0, 2, 4 }));
@@ -125,9 +125,9 @@ namespace fastscapelib
                       (xt::xtensor<std::size_t, 1>{ 0, 1, 2, 3 }));
         }
 
-        TEST_F(unstructured_mesh, neighbors_distances)
+        TEST_F(trimesh, neighbors_distances)
         {
-            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, areas, {});
 
             double diag_dist = std::sqrt(0.5);
 
@@ -146,11 +146,11 @@ namespace fastscapelib
             }
         }
 
-        TEST_F(unstructured_mesh, neighbor)
+        TEST_F(trimesh, neighbor)
         {
             using neighbors_type = std::vector<fs::neighbor>;
 
-            grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, areas, {});
 
             double diag_dist = std::sqrt(0.5);
 

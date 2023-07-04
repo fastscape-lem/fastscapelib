@@ -1,5 +1,5 @@
-#ifndef FASTSCAPELIB_GRID_UNSTRUCTURED_MESH_H
-#define FASTSCAPELIB_GRID_UNSTRUCTURED_MESH_H
+#ifndef FASTSCAPELIB_GRID_TRIMESH_H
+#define FASTSCAPELIB_GRID_TRIMESH_H
 
 #include <cmath>
 #include <unordered_map>
@@ -73,13 +73,13 @@ namespace fastscapelib
 
 
     template <class S>
-    class unstructured_mesh_xt;
+    class trimesh_xt;
 
     /**
      * Unstructured mesh specialized types.
      */
     template <class S>
-    struct grid_inner_types<unstructured_mesh_xt<S>>
+    struct grid_inner_types<trimesh_xt<S>>
     {
         static constexpr bool is_structured = false;
         static constexpr bool is_uniform = false;
@@ -103,10 +103,10 @@ namespace fastscapelib
      * @tparam S The xtensor container selector for data array members.
      */
     template <class S>
-    class unstructured_mesh_xt : public grid<unstructured_mesh_xt<S>>
+    class trimesh_xt : public grid<trimesh_xt<S>>
     {
     public:
-        using self_type = unstructured_mesh_xt<S>;
+        using self_type = trimesh_xt<S>;
         using base_type = grid<self_type>;
 
         using grid_data_type = typename base_type::grid_data_type;
@@ -129,10 +129,10 @@ namespace fastscapelib
 
         const neighbors_count_type& neighbors_count(const size_type& idx) const;
 
-        unstructured_mesh_xt(const points_type& points,
-                             const triangles_type& triangles,
-                             const areas_type& areas,
-                             const std::vector<node>& nodes_status = {});
+        trimesh_xt(const points_type& points,
+                   const triangles_type& triangles,
+                   const areas_type& areas,
+                   const std::vector<node>& nodes_status = {});
 
     protected:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
@@ -182,10 +182,10 @@ namespace fastscapelib
      * by more than one triangle).
      */
     template <class S>
-    unstructured_mesh_xt<S>::unstructured_mesh_xt(const points_type& points,
-                                                  const triangles_type& triangles,
-                                                  const areas_type& areas,
-                                                  const std::vector<node>& nodes_status)
+    trimesh_xt<S>::trimesh_xt(const points_type& points,
+                              const triangles_type& triangles,
+                              const areas_type& areas,
+                              const std::vector<node>& nodes_status)
         : base_type(0)
         , m_nodes_points(points)
         , m_nodes_areas(areas)
@@ -259,7 +259,7 @@ namespace fastscapelib
     //@}
 
     template <class S>
-    void unstructured_mesh_xt<S>::set_nodes_status(const std::vector<node>& nodes_status)
+    void trimesh_xt<S>::set_nodes_status(const std::vector<node>& nodes_status)
     {
         node_status_type temp_nodes_status(m_shape, node_status::core);
 
@@ -301,29 +301,28 @@ namespace fastscapelib
      *      fastscapelib::grid<G>::neighbors
      */
     template <class S>
-    auto unstructured_mesh_xt<S>::neighbors_count(const size_type& idx) const
-        -> const neighbors_count_type&
+    auto trimesh_xt<S>::neighbors_count(const size_type& idx) const -> const neighbors_count_type&
     {
         return m_neighbors_counts[idx];
     }
     //@}
 
     template <class S>
-    inline auto unstructured_mesh_xt<S>::nodes_areas_impl() const -> areas_type
+    inline auto trimesh_xt<S>::nodes_areas_impl() const -> areas_type
     {
         return m_nodes_areas;
     }
 
     template <class S>
-    inline auto unstructured_mesh_xt<S>::nodes_areas_impl(const size_type& idx) const noexcept
+    inline auto trimesh_xt<S>::nodes_areas_impl(const size_type& idx) const noexcept
         -> grid_data_type
     {
         return m_nodes_areas(idx);
     }
 
     template <class S>
-    void unstructured_mesh_xt<S>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
-                                                         const size_type& idx) const
+    void trimesh_xt<S>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
+                                               const size_type& idx) const
     {
         const auto& size = m_neighbors_counts[idx];
         neighbors.resize(size);
@@ -335,7 +334,7 @@ namespace fastscapelib
     }
 
     template <class S>
-    auto unstructured_mesh_xt<S>::neighbors_distances_impl(const size_type& idx) const
+    auto trimesh_xt<S>::neighbors_distances_impl(const size_type& idx) const
         -> const neighbors_distances_impl_type&
     {
         return m_neighbors_distances[idx];
@@ -343,16 +342,16 @@ namespace fastscapelib
 
 
     /**
-     * @typedef unstructured_mesh
+     * @typedef trimesh
      *
      * \rst
-     * Alias template on ``unstructured_mesh_xt`` with :cpp:type:`xt::xtensor`
+     * Alias template on ``trimesh_xt`` with :cpp:type:`xt::xtensor`
      * used as array container type for data members.
      *
      * This is mainly for convenience when using in C++ applications.
      * \endrst
      */
-    using unstructured_mesh = unstructured_mesh_xt<xt_selector>;
+    using trimesh = trimesh_xt<xt_selector>;
 }
 
-#endif  // FASTSCAPELIB_GRID_UNSTRUCTURED_MESH_H
+#endif  // FASTSCAPELIB_GRID_TRIMESH_H

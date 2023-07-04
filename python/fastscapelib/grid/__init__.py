@@ -8,7 +8,7 @@ from _fastscapelib_py.grid import (  # type: ignore[import]
     RasterGrid,
     RasterNeighbor,
     RasterNode,
-    UnstructuredMesh,
+    TriMesh,
 )
 
 __all__ = [
@@ -21,5 +21,5 @@ __all__ = [
     "RasterGrid",
     "RasterNeighbor",
     "RasterNode",
-    "UnstructuredMesh",
+    "TriMesh",
 ]

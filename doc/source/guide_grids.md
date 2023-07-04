@@ -29,8 +29,8 @@ Fastscapelib (also illustrated in {ref}`Figure 1 <fig_grid_types>`).
 * - {cpp:class}`~fastscapelib::raster_grid_xt` {py:class}`~fastscapelib.RasterGrid`
   - 2-dimensional, rectangular, uniform, static
   - Evolution of an hillslope, escarpment, drainage basin, orogenic belt, etc.
-* - {cpp:class}`~fastscapelib::unstructured_mesh_xt`
-    {py:class}`~fastscapelib.UnstructuredMesh`
+* - {cpp:class}`~fastscapelib::trimesh_xt`
+    {py:class}`~fastscapelib.TriMesh`
   - 2-dimensional, irregular (triangulated) mesh, static
   - More complex than uniform grids but supports variable resolution
     (mesh refinement) and domain limits with complex shapes or planetary domains
@@ -497,7 +497,7 @@ consumption.
 The cache is exposed as a template parameter for
 {cpp:class}`~fastscapelib::raster_grid_xt` so that this behavior may be
 customized (cache may be disabled). For other grid types like
-{cpp:class}`~fastscapelib::unstructured_mesh_xt` with explicit topology, the
+{cpp:class}`~fastscapelib::trimesh_xt` with explicit topology, the
 cache is not needed and not used.
 
 See {cpp:class}`~fastscapelib::neighbors_cache` and

@@ -274,7 +274,7 @@ namespace fastscapelib
      * .. seealso::
      *   :cpp:class:`~template\<class S, class C> fastscapelib::grid_inner_types\<profile_grid_xt\<S, C>>`,
      *   :cpp:class:`~template\<class S, raster_connect RC, class C> fastscapelib::grid_inner_types\<raster_grid_xt\<S, RC, C>>`,
-     *   :cpp:class:`~template\<class S, unsigned int N> fastscapelib::grid_inner_types\<unstructured_mesh_xt\<S, N>>`
+     *   :cpp:class:`~template\<class S, unsigned int N> fastscapelib::grid_inner_types\<trimesh_xt\<S, N>>`
      * \endrst
      */
     // clang-format on
@@ -322,8 +322,7 @@ namespace fastscapelib
         // using xt:xtensor for indices as not all containers support resizing
         // (e.g., using pyarray may cause segmentation faults with Python)
         using neighbors_indices_type = xt::xtensor<size_type, 1>;
-        using neighbors_distances_type
-            = xt::xtensor<grid_data_type, 1>;  // xt_tensor_t<xt_selector, grid_data_type, 1>;
+        using neighbors_distances_type = xt::xtensor<grid_data_type, 1>;
 
         using node_status_type = xt_tensor_t<xt_selector, node_status, inner_types::xt_ndims>;
 
