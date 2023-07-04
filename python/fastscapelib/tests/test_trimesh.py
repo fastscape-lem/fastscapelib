@@ -17,14 +17,9 @@ def mesh_args():
     points = np.array([[0.0, 0.5], [0.5, 0.0], [0.0, -0.5], [-0.5, 0.0], [0.0, 0.0]])
     triangles = np.array([[2, 4, 3], [4, 2, 1], [4, 0, 3], [0, 4, 1]])
 
-    # for simplicity, let's set the area of boundary nodes all equal to 1
-    # and the area of the inner node equal to 2
-    areas = np.array([1.0, 1.0, 1.0, 1.0, 2.0])
-
     return {
         "points": points,
         "triangles": triangles,
-        "areas": areas,
     }
 
 
@@ -75,12 +70,41 @@ class TestTriMesh:
         with pytest.raises(ValueError, match=".*not allowed.*"):
             TriMesh(*mesh_args.values(), [Node(2, NodeStatus.LOOPED)])  # type: ignore[call-arg]
 
-    def test_nodes_areas(self, mesh_args) -> None:
-        mesh = TriMesh(*mesh_args.values(), [])  # type: ignore[call-arg]
+    def test_nodes_areas(self) -> None:
+        # simple case of 1x1 domain with 9 evenly spaced nodes
+        points = np.array(
+            [
+                [0, 0],
+                [0, 0.5],
+                [0, 1],
+                [0.5, 1],
+                [1, 1],
+                [1, 0.5],
+                [1, 0],
+                [0.5, 0],
+                [0.5, 0.5],
+            ]
+        )
+        triangles = np.array(
+            [
+                [0, 1, 8],
+                [1, 2, 8],
+                [2, 3, 8],
+                [3, 4, 8],
+                [4, 5, 8],
+                [5, 6, 8],
+                [6, 7, 8],
+                [7, 0, 8],
+            ]
+        )
+        mesh = TriMesh(points, triangles, [])  # type: ignore[call-arg]
 
-        assert mesh.nodes_areas(0) == mesh_args["areas"][0]
-        assert mesh.nodes_areas(4) == mesh_args["areas"][4]
-        npt.assert_equal(mesh.nodes_areas(), mesh_args["areas"])
+        assert mesh.nodes_areas(0) == 0.0625
+        assert mesh.nodes_areas(8) == 0.25
+        npt.assert_equal(
+            mesh.nodes_areas(),
+            [0.0625, 0.125, 0.0625, 0.125, 0.0625, 0.125, 0.0625, 0.125, 0.25],
+        )
 
     def test_neighbors_count(self, mesh_args) -> None:
         mesh = TriMesh(*mesh_args.values(), [])  # type: ignore[call-arg]

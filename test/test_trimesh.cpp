@@ -36,8 +36,6 @@ namespace fastscapelib
             xt::xtensor<size_type, 2> triangles{
                 { 2, 4, 3 }, { 4, 2, 1 }, { 4, 0, 3 }, { 0, 4, 1 }
             };
-
-            xt::xtensor<double, 1> areas{ 1.0, 1.0, 1.0, 1.0, 2.0 };
         };
 
         TEST_F(trimesh, static_expr)
@@ -51,7 +49,7 @@ namespace fastscapelib
 
         TEST_F(trimesh, ctor)
         {
-            grid_type mesh = fs::trimesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, {});
 
             EXPECT_EQ(mesh.size(), mesh_size);
             EXPECT_EQ(mesh.shape(), shape_type({ mesh_size }));
@@ -62,7 +60,7 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("default boundary conditions (boundary nodes = fixed value)");
 
-                grid_type mesh = fs::trimesh(points, triangles, areas, {});
+                grid_type mesh = fs::trimesh(points, triangles, {});
 
                 auto actual = mesh.nodes_status();
 
@@ -76,9 +74,8 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("custom boundary conditions");
 
-                grid_type mesh = fs::trimesh(
-                    points, triangles, areas, { { 2, fs::node_status::fixed_value } });
-
+                grid_type mesh
+                    = fs::trimesh(points, triangles, { { 2, fs::node_status::fixed_value } });
                 auto actual = mesh.nodes_status();
 
                 EXPECT_EQ(actual(0), fs::node_status::core);
@@ -91,25 +88,34 @@ namespace fastscapelib
             {
                 SCOPED_TRACE("looped boundary conditions not supported");
 
-                EXPECT_THROW(
-                    fs::trimesh(points, triangles, areas, { { 2, fs::node_status::looped } }),
-                    std::invalid_argument);
+                EXPECT_THROW(fs::trimesh(points, triangles, { { 2, fs::node_status::looped } }),
+                             std::invalid_argument);
             }
         }
 
         TEST_F(trimesh, nodes_areas)
         {
-            grid_type mesh = fs::trimesh(points, triangles, areas, {});
+            // simple case of 1x1 square domain with 9 evenly spaced nodes
+            xt::xtensor<double, 2> points{ { 0.0, 0.0 }, { 0.0, 0.5 }, { 0.0, 1.0 },
+                                           { 0.5, 1.0 }, { 1.0, 1.0 }, { 1.0, 0.5 },
+                                           { 1.0, 0.0 }, { 0.5, 0.0 }, { 0.5, 0.5 } };
+            xt::xtensor<size_type, 2> triangles{
+                { 0, 1, 8 }, { 1, 2, 8 }, { 2, 3, 8 }, { 3, 4, 8 },
+                { 4, 5, 8 }, { 5, 6, 8 }, { 6, 7, 8 }, { 7, 0, 8 },
+            };
+            grid_type mesh = fs::trimesh(points, triangles, {});
 
-            EXPECT_EQ(mesh.nodes_areas(0), 1.0);
-            EXPECT_EQ(mesh.nodes_areas(4), 2.0);
+            EXPECT_EQ(mesh.nodes_areas(0), 0.0625);
+            EXPECT_EQ(mesh.nodes_areas(8), 0.25);
 
-            EXPECT_EQ(mesh.nodes_areas(), (xt::xtensor<double, 1>{ 1.0, 1.0, 1.0, 1.0, 2.0 }));
+            EXPECT_EQ(mesh.nodes_areas(),
+                      (xt::xtensor<double, 1>{
+                          0.0625, 0.125, 0.0625, 0.125, 0.0625, 0.125, 0.0625, 0.125, 0.25 }));
         }
 
         TEST_F(trimesh, neighbors_count)
         {
-            grid_type mesh = fs::trimesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, {});
 
             EXPECT_EQ(mesh.neighbors_count(0), 3);
             EXPECT_EQ(mesh.neighbors_count(4), 4);
@@ -117,7 +123,7 @@ namespace fastscapelib
 
         TEST_F(trimesh, neighbors_indices)
         {
-            grid_type mesh = fs::trimesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, {});
 
             EXPECT_EQ(xt::sort(mesh.neighbors_indices(3)),
                       (xt::xtensor<std::size_t, 1>{ 0, 2, 4 }));
@@ -127,7 +133,7 @@ namespace fastscapelib
 
         TEST_F(trimesh, neighbors_distances)
         {
-            grid_type mesh = fs::trimesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, {});
 
             double diag_dist = std::sqrt(0.5);
 
@@ -150,7 +156,7 @@ namespace fastscapelib
         {
             using neighbors_type = std::vector<fs::neighbor>;
 
-            grid_type mesh = fs::trimesh(points, triangles, areas, {});
+            grid_type mesh = fs::trimesh(points, triangles, {});
 
             double diag_dist = std::sqrt(0.5);
 

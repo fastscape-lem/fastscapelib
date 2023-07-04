@@ -104,7 +104,6 @@ add_grid_bindings(py::module& m)
 
     umesh.def(py::init<const fs::py_trimesh::points_type,
                        const fs::py_trimesh::triangles_type,
-                       const fs::py_trimesh::areas_type,
                        const std::vector<fs::node>&>());
 
     fs::register_grid_static_properties(umesh);

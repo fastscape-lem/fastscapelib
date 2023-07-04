@@ -1,13 +1,17 @@
 #ifndef FASTSCAPELIB_GRID_TRIMESH_H
 #define FASTSCAPELIB_GRID_TRIMESH_H
 
+#include <algorithm>
+#include <array>
 #include <cmath>
+#include <limits>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
-#include "xtensor/xindex_view.hpp"
+#include "xtensor/xstrided_view.hpp"
+#include "xtensor/xhistogram.hpp"
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/xtensor_utils.hpp"
@@ -128,7 +132,6 @@ namespace fastscapelib
 
         trimesh_xt(const points_type& points,
                    const triangles_type& triangles,
-                   const areas_type& areas,
                    const std::vector<node>& nodes_status = {});
 
     protected:
@@ -147,6 +150,7 @@ namespace fastscapelib
         std::vector<neighbors_distances_impl_type> m_neighbors_distances;
 
         void set_nodes_status(const std::vector<node>& nodes_status);
+        void set_nodes_areas(const points_type& points, const triangles_type& triangles);
 
         inline areas_type nodes_areas_impl() const;
         inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
@@ -172,7 +176,6 @@ namespace fastscapelib
      *
      * @param points The mesh node x,y coordinates (array of shape [N, 2]).
      * @param triangles The node indices of the triangles (array of shape [K, 3]).
-     * @param areas The area of the cells centered to each mesh node (array of shape [N]).
      * @param nodes_status Manually define the status at any node on the mesh.
      *
      * If ``nodes_status`` is empty, a "fixed value" status is set for all
@@ -182,11 +185,9 @@ namespace fastscapelib
     template <class S, unsigned int N>
     trimesh_xt<S, N>::trimesh_xt(const points_type& points,
                                  const triangles_type& triangles,
-                                 const areas_type& areas,
                                  const std::vector<node>& nodes_status)
         : base_type(0)
         , m_nodes_points(points)
-        , m_nodes_areas(areas)
     {
         // TODO: sanity checks, e.g., all array shapes are consistent
 
@@ -250,8 +251,81 @@ namespace fastscapelib
         }
 
         set_nodes_status(nodes_status);
+        set_nodes_areas(points, triangles);
     }
     //@}
+
+    template <class S, unsigned int N>
+    void trimesh_xt<S, N>::set_nodes_areas(const points_type& points,
+                                           const triangles_type& triangles)
+    {
+        size_type n_points = points.shape()[0];
+        size_type n_triangles = triangles.shape()[0];
+        double just_above_zero = std::numeric_limits<double>::min();
+
+        std::array<std::array<size_type, 2>, 3> local_idx{ { { 1, 2 }, { 2, 0 }, { 0, 1 } } };
+
+        std::array<size_type, 3> coords_shape{ { 3, n_triangles, 2 } };
+        xt::xtensor<double, 3> half_edge_coords = xt::empty<double>(coords_shape);
+
+        for (size_type t = 0; t < n_triangles; t++)
+        {
+            for (size_type i = 0; i < 3; i++)
+            {
+                auto v1 = local_idx[i][0];
+                auto v2 = local_idx[i][1];
+
+                for (size_type j = 0; j < 2; j++)
+                {
+                    auto p1 = triangles(t, v1);
+                    auto p2 = triangles(t, v2);
+                    half_edge_coords(i, t, j) = points(p2, j) - points(p1, j);
+                }
+            }
+        }
+
+        xt::xtensor<double, 2> ei_dot_ei = xt::sum(half_edge_coords * half_edge_coords, 2);
+        xt::xtensor<double, 2> ei_dot_ej = ei_dot_ei - xt::sum(ei_dot_ei, 0) / 2.0;
+
+        xt::xtensor<double, 1> triangles_areas;
+        triangles_areas.resize({ n_triangles });
+
+        for (size_type t = 0; t < n_triangles; t++)
+        {
+            double area_square
+                = 0.25
+                  * (ei_dot_ej(2, t) * ei_dot_ej(0, t) + ei_dot_ej(0, t) * ei_dot_ej(1, t)
+                     + ei_dot_ej(1, t) * ei_dot_ej(2, t));
+
+            // prevent negative values due to round-off errors
+            triangles_areas(t) = std::sqrt(std::max(area_square, just_above_zero));
+        }
+
+        auto ce_ratios = -ei_dot_ej * 0.25 / triangles_areas;
+        xt::xtensor<double, 2> tri_partitions = ei_dot_ei / 2 * ce_ratios / (3 - 1);
+
+        xt::xtensor<double, 1> weights;
+        weights.resize({ n_triangles * 3 });
+
+        for (size_type t = 0; t < n_triangles; t++)
+        {
+            weights(t) = tri_partitions(1, t) + tri_partitions(2, t);
+            weights(n_triangles + t) = tri_partitions(2, t) + tri_partitions(0, t);
+            weights(n_triangles * 2 + t) = tri_partitions(0, t) + tri_partitions(1, t);
+        }
+
+        auto triangles_t_flat = xt::flatten(xt::transpose(triangles));
+        m_nodes_areas = xt::bincount(triangles_t_flat, weights, n_points);
+
+        // avoid area = 0 for isolated nodes (not nice for logarithm)
+        for (size_type i = 0; i < n_points; i++)
+        {
+            if (m_nodes_areas(i) == 0 && neighbors_count_impl(i) == 0)
+            {
+                m_nodes_areas(i) = just_above_zero;
+            }
+        }
+    }
 
     template <class S, unsigned int N>
     void trimesh_xt<S, N>::set_nodes_status(const std::vector<node>& nodes_status)
