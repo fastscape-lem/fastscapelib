@@ -1,6 +1,7 @@
 #include <stdexcept>
 
 #include "gtest/gtest.h"
+#include "xtensor/xsort.hpp"
 #include "xtensor/xindex_view.hpp"
 #include "xtensor/xtensor.hpp"
 
@@ -43,7 +44,7 @@ namespace fastscapelib
         {
             EXPECT_EQ(fs::unstructured_mesh::is_structured(), false);
             EXPECT_EQ(fs::unstructured_mesh::is_uniform(), false);
-            EXPECT_EQ(fs::unstructured_mesh::n_neighbors_max(), 0u);
+            EXPECT_EQ(fs::unstructured_mesh::n_neighbors_max(), 20u);
             EXPECT_EQ(fs::unstructured_mesh::xt_ndims(), 1);
         }
 
@@ -59,7 +60,7 @@ namespace fastscapelib
         TEST_F(unstructured_mesh, nodes_status)
         {
             {
-                SCOPED_TRACE("default boundary conditions (convex hull nodes = fixed value)");
+                SCOPED_TRACE("default boundary conditions (boundary nodes = fixed value)");
 
                 grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
 
@@ -118,8 +119,10 @@ namespace fastscapelib
         {
             grid_type mesh = fs::unstructured_mesh(points, triangles, areas, {});
 
-            EXPECT_EQ(mesh.neighbors_indices(3), (xt::xtensor<std::size_t, 1>{ 2, 4, 0 }));
-            EXPECT_EQ(mesh.neighbors_indices(4), (xt::xtensor<std::size_t, 1>{ 2, 3, 1, 0 }));
+            EXPECT_EQ(xt::sort(mesh.neighbors_indices(3)),
+                      (xt::xtensor<std::size_t, 1>{ 0, 2, 4 }));
+            EXPECT_EQ(xt::sort(mesh.neighbors_indices(4)),
+                      (xt::xtensor<std::size_t, 1>{ 0, 1, 2, 3 }));
         }
 
         TEST_F(unstructured_mesh, neighbors_distances)
@@ -128,9 +131,19 @@ namespace fastscapelib
 
             double diag_dist = std::sqrt(0.5);
 
-            EXPECT_TRUE(xt::allclose(mesh.neighbors_distances(3),
-                                     (xt::xtensor<double, 1>{ diag_dist, 0.5, diag_dist })));
-            EXPECT_EQ(mesh.neighbors_distances(4), (xt::xtensor<double, 1>{ 0.5, 0.5, 0.5, 0.5 }));
+            {
+                SCOPED_TRACE("node 3");
+                auto sorted_nidx = xt::argsort(mesh.neighbors_indices(3));
+                auto actual = xt::index_view(mesh.neighbors_distances(3), sorted_nidx);
+                xt::xtensor<double, 1> expected{ diag_dist, diag_dist, 0.5 };
+
+                EXPECT_TRUE(xt::allclose(actual, expected));
+            }
+            {
+                SCOPED_TRACE("node 4");
+                EXPECT_EQ(mesh.neighbors_distances(4),
+                          (xt::xtensor<double, 1>{ 0.5, 0.5, 0.5, 0.5 }));
+            }
         }
 
         TEST_F(unstructured_mesh, neighbor)
@@ -141,13 +154,44 @@ namespace fastscapelib
 
             double diag_dist = std::sqrt(0.5);
 
-            EXPECT_EQ(mesh.neighbors(3),
-                      (neighbors_type{
-                          { 2, diag_dist, fixed }, { 4, 0.5, core }, { 0, diag_dist, fixed } }));
-            EXPECT_EQ(
-                mesh.neighbors(4),
-                (neighbors_type{
-                    { 2, 0.5, fixed }, { 3, 0.5, fixed }, { 1, 0.5, fixed }, { 0, 0.5, fixed } }));
+            {
+                SCOPED_TRACE("node 3");
+
+                auto sorted_nidx = xt::argsort(mesh.neighbors_indices(3));
+                auto temp = mesh.neighbors(3);
+                EXPECT_EQ(temp.size(), sorted_nidx.size());
+
+                neighbors_type actual(sorted_nidx.size());
+                for (std::size_t i = 0; i < temp.size(); i++)
+                {
+                    actual[i] = temp[sorted_nidx(i)];
+                }
+
+                neighbors_type expected{ { 0, diag_dist, fixed },
+                                         { 2, diag_dist, fixed },
+                                         { 4, 0.5, core } };
+
+                EXPECT_EQ(actual, expected);
+            }
+            {
+                SCOPED_TRACE("node 4");
+
+                auto sorted_nidx = xt::argsort(mesh.neighbors_indices(4));
+                auto temp = mesh.neighbors(4);
+                EXPECT_EQ(temp.size(), sorted_nidx.size());
+
+                neighbors_type actual(sorted_nidx.size());
+                for (std::size_t i = 0; i < temp.size(); i++)
+                {
+                    actual[i] = temp[sorted_nidx(i)];
+                }
+
+                neighbors_type expected{
+                    { 0, 0.5, fixed }, { 1, 0.5, fixed }, { 2, 0.5, fixed }, { 3, 0.5, fixed }
+                };
+
+                EXPECT_EQ(actual, expected);
+            }
         }
     }
 }

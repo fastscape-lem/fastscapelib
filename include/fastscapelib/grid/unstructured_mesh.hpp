@@ -25,10 +25,9 @@ namespace fastscapelib
          * This hash function yields the same output for simple permutations,
          * which is what we want since the pairs of node indices (2, 5) and
          * (5, 2) both refer to the same edge.
-         *
          */
         template <class T>
-        struct edge_hash
+        struct tri_edge_hash
         {
             std::size_t operator()(const std::pair<T, T>& p) const
             {
@@ -39,8 +38,15 @@ namespace fastscapelib
             }
         };
 
+        /**
+         * Used to extract unique edges in the mesh (or count their occurence).
+         *
+         * This comparator returns true for simple permuations. It is needed in
+         * addition to ``edge_hash`` in order to build a map of unique edges
+         * ignoring permutations.
+         */
         template <class T>
-        struct edge_equal
+        struct tri_edge_equal
         {
             using pair_type = std::pair<T, T>;
 
@@ -56,6 +62,13 @@ namespace fastscapelib
                 }
             }
         };
+
+        template <class T>
+        using tri_edge_type = std::pair<T, T>;
+
+        template <class T>
+        using tri_edge_map = std::
+            unordered_map<tri_edge_type<T>, std::size_t, tri_edge_hash<T>, tri_edge_equal<T>>;
     }
 
 
@@ -159,16 +172,14 @@ namespace fastscapelib
     /**
      * Creates a new mesh.
      *
-     * @param points The mesh node x,y coordinates (expects an array of shape [N, 2]).
-     * @param neighbors_indices_ptr The lookup offsets of the neighbors of each mesh node
-     *                              (expects an array of shape [N+1]).
-     * @param neighbors_indices The node neighbor indices (flattened array)
-     * @param convex_hull_indices The indices of the boundary nodes.
+     * @param points The mesh node x,y coordinates (array of shape [N, 2]).
+     * @param triangles The node indices of the triangles (array of shape [K, 3]).
      * @param areas The area of the cells centered to each mesh node (array of shape [N]).
      * @param nodes_status Manually define the status at any node on the mesh.
      *
      * If ``nodes_status`` is empty, a "fixed value" status is set for all
-     * boundary nodes.
+     * boundary nodes (i.e., the end-points of all the edges that are not shared
+     * by more than one triangle).
      */
     template <class S>
     unstructured_mesh_xt<S>::unstructured_mesh_xt(const points_type& points,
@@ -186,12 +197,10 @@ namespace fastscapelib
 
         // extract and count triangle edges
 
-        using edge_type = std::pair<size_type, size_type>;
-        std::unordered_map<edge_type,
-                           std::size_t,
-                           detail::edge_hash<size_type>,
-                           detail::edge_equal<size_type>>
-            edges_count;
+        using edge_type = detail::tri_edge_type<size_type>;
+        using edge_map = detail::tri_edge_map<size_type>;
+
+        edge_map edges_count;
         const std::array<std::array<size_type, 2>, 3> tri_local_indices{
             { { 1, 2 }, { 2, 0 }, { 0, 1 } }
         };
@@ -202,8 +211,7 @@ namespace fastscapelib
         {
             for (const auto& edge_idx : tri_local_indices)
             {
-                const edge_type key
-                    = std::make_pair(triangles(i, edge_idx[0]), triangles(i, edge_idx[1]));
+                const edge_type key(triangles(i, edge_idx[0]), triangles(i, edge_idx[1]));
 
                 auto result = edges_count.insert({ key, 1 });
                 // increment edge count if already inserted
