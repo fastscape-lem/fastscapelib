@@ -53,6 +53,12 @@ namespace fastscapelib
 
             EXPECT_EQ(mesh.size(), mesh_size);
             EXPECT_EQ(mesh.shape(), shape_type({ mesh_size }));
+
+            xt::xtensor<double, 2> invalid_points{ { 0., 1., 2. } };
+            EXPECT_THROW(fs::trimesh(invalid_points, triangles, {}), std::invalid_argument);
+
+            xt::xtensor<double, 2> invalid_triangles{ { 0., 1. } };
+            EXPECT_THROW(fs::trimesh(points, invalid_triangles, {}), std::invalid_argument);
         }
 
         TEST_F(trimesh, nodes_status)

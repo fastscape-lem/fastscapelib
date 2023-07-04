@@ -149,6 +149,7 @@ namespace fastscapelib
         std::vector<neighbors_indices_impl_type> m_neighbors_indices;
         std::vector<neighbors_distances_impl_type> m_neighbors_distances;
 
+        void set_neighbors(const points_type& points, const triangles_type& triangles);
         void set_nodes_status(const std::vector<node>& nodes_status);
         void set_nodes_areas(const points_type& points, const triangles_type& triangles);
 
@@ -189,11 +190,28 @@ namespace fastscapelib
         : base_type(0)
         , m_nodes_points(points)
     {
-        // TODO: sanity checks, e.g., all array shapes are consistent
+        if (points.shape()[1] != 2)
+        {
+            throw std::invalid_argument("invalid shape for points arrays (expects shape [N, 2])");
+        }
+        if (triangles.shape()[1] != 3)
+        {
+            throw std::invalid_argument(
+                "invalid shape for triangles arrays (expects shape [K, 2])");
+        }
 
         m_size = points.shape()[0];
         m_shape = { static_cast<typename shape_type::value_type>(m_size) };
 
+        set_neighbors(points, triangles);
+        set_nodes_status(nodes_status);
+        set_nodes_areas(points, triangles);
+    }
+    //@}
+
+    template <class S, unsigned int N>
+    void trimesh_xt<S, N>::set_neighbors(const points_type& points, const triangles_type& triangles)
+    {
         // extract and count triangle edges
 
         using edge_type = detail::tri_edge_type<size_type>;
@@ -241,19 +259,15 @@ namespace fastscapelib
             m_neighbors_indices[edge_points.first].push_back(edge_points.second);
             m_neighbors_indices[edge_points.second].push_back(edge_points.first);
 
-            const auto x1 = m_nodes_points(edge_points.first, 0);
-            const auto y1 = m_nodes_points(edge_points.first, 1);
-            const auto x2 = m_nodes_points(edge_points.second, 0);
-            const auto y2 = m_nodes_points(edge_points.second, 1);
+            const auto x1 = points(edge_points.first, 0);
+            const auto y1 = points(edge_points.first, 1);
+            const auto x2 = points(edge_points.second, 0);
+            const auto y2 = points(edge_points.second, 1);
             auto distance = std::sqrt(((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
             m_neighbors_distances[edge_points.first].push_back(distance);
             m_neighbors_distances[edge_points.second].push_back(distance);
         }
-
-        set_nodes_status(nodes_status);
-        set_nodes_areas(points, triangles);
     }
-    //@}
 
     template <class S, unsigned int N>
     void trimesh_xt<S, N>::set_nodes_areas(const points_type& points,
