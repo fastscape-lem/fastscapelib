@@ -185,10 +185,7 @@ class TriMesh:
     def __init__(
         self,
         points: npt.NDArray[np.float64],
-        neighbors_indices_ptr: npt.NDArray[np.uint64],
-        neighbors_indices: npt.NDArray[np.uint64],
-        convex_hull_indices: npt.NDArray[np.uint64],
-        areas: npt.NDArray[np.float64],
+        triangles: npt.NDArray[np.uint64],
         nodes_status: List[Node],
     ) -> None: ...
     is_structured: ClassVar[bool]
