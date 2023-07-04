@@ -99,16 +99,36 @@ add_grid_bindings(py::module& m)
     */
 
     // ==== Binding of the TriMesh class ==== //
-    py::class_<fs::py_trimesh> umesh(
-        m, "TriMesh", "A 2-dimensional, triangular unstructured mesh.");
+    py::class_<fs::py_trimesh> tmesh(m, "TriMesh", "A 2-dimensional, triangular (irregular) mesh.");
 
-    umesh.def(py::init<const fs::py_trimesh::points_type,
-                       const fs::py_trimesh::triangles_type,
-                       const std::vector<fs::node>&>());
+    tmesh.def(
+        py::init<const fs::py_trimesh::points_type,
+                 const fs::py_trimesh::triangles_type,
+                 const std::vector<fs::node>&>(),
+        py::arg("points"),
+        py::arg("triangles"),
+        py::arg("nodes_status"),
+        R"doc(__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: List[Node]) -> None
 
-    fs::register_grid_static_properties(umesh);
-    fs::register_base_grid_properties(umesh);
-    fs::register_grid_methods(umesh);
+        TriMesh initializer (from an existing triangulation).
+
+        Parameters
+        ----------
+        points : array-like
+            Mesh node x,y coordinates (array of shape [N, 2]).
+        triangles : array-like
+            Indices of triangle vertices (array of shape [K, 3]).
+        nodes_status : list
+            A list of :class:`Node` objects to manually define the status at
+            any node on the grid. If empty, "fixed value" is set for all
+            boundary nodes (i.e., end-points of all the edges that are not
+            shared by more than one triangle).
+
+        )doc");
+
+    fs::register_grid_static_properties(tmesh);
+    fs::register_base_grid_properties(tmesh);
+    fs::register_grid_methods(tmesh);
 
     /*
     ** Profile Grid
