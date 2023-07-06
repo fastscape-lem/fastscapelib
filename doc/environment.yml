@@ -10,6 +10,7 @@ dependencies:
   - scikit-build-core
   - numpy
   - matplotlib-base
+  - pygalmesh
   - sphinx
   - sphinx-remove-toctrees
   - sphinxcontrib-bibtex

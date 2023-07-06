@@ -88,6 +88,18 @@ flow routing, eroder classes, etc.)
        2-d raster grid, infinite domain (full-periodic boundaries), custom base
        level nodes, uplift + stream-power law + hillslope diffusion.
 
+   .. grid-item-card:: Catchment (TriMesh)
+       :link: catchment_py
+       :link-type: doc
+       :text-align: center
+       :img-bottom: ../_static/fig_catchment.png
+
+       |python-logo|
+       ^^^
+
+       2-d triangular (irregular) mesh, one catchment with one base level node
+       (outlet), stream-power law + base level lowering.
+
 .. toctree::
    :hidden:
    :maxdepth: 1
@@ -98,3 +110,4 @@ flow routing, eroder classes, etc.)
    mountain_cpp
    escarpment_py
    inner_base_levels_py
+   catchment_py
