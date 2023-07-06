@@ -117,7 +117,6 @@ namespace fastscapelib
 
         static constexpr uint8_t n_neighbors_max = 2u;
         using neighbors_cache_type = C;
-        using neighbors_count_type = std::uint8_t;
 
         // structured_grid types
         using length_type = double;
@@ -154,7 +153,6 @@ namespace fastscapelib
         using code_type = std::uint8_t;
 
         using neighbors_type = typename base_type::neighbors_type;
-        using neighbors_count_type = typename base_type::neighbors_count_type;
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
         using neighbors_distances_type = typename base_type::neighbors_distances_type;
 
@@ -169,8 +167,6 @@ namespace fastscapelib
                                            length_type length,
                                            const profile_boundary_status& bounds_status,
                                            const std::vector<node>& nodes_status = {});
-
-        inline const neighbors_count_type& neighbors_count(const size_type& idx) const noexcept;
 
     protected:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
@@ -199,11 +195,13 @@ namespace fastscapelib
         void build_gcode();
         code_type gcode(const size_type& idx) const;
 
-        std::array<neighbors_count_type, 3> m_neighbors_count;
+        std::array<size_type, 3> m_neighbors_count;
         void build_neighbors_count();
 
         inline xt_type nodes_areas_impl() const;
         inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
+
+        inline size_type neighbors_count_impl(const size_type& idx) const noexcept;
 
         void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                     const size_type& idx) const;
@@ -300,33 +298,13 @@ namespace fastscapelib
     {
         if (m_bounds_status.is_horizontal_looped())
         {
-            m_neighbors_count = std::array<neighbors_count_type, 3>({ 2, 2, 2 });
+            m_neighbors_count = std::array<size_type, 3>({ 2, 2, 2 });
         }
         else
         {
-            m_neighbors_count = std::array<neighbors_count_type, 3>({ 1, 2, 1 });
+            m_neighbors_count = std::array<size_type, 3>({ 1, 2, 1 });
         }
     }
-
-    /**
-     * @name Neighbor methods
-     */
-    /**
-     * Returns the number of neighbors of a given grid node.
-     *
-     * @param idx The grid node flat index.
-     *
-     * @see fastscapelib::grid<G>::neighbors_indices,
-     *      fastscapelib::grid<G>::neighbors_distances,
-     *      fastscapelib::grid<G>::neighbors
-     */
-    template <class S, class C>
-    inline auto profile_grid_xt<S, C>::neighbors_count(const size_type& idx) const noexcept
-        -> const neighbors_count_type&
-    {
-        return m_neighbors_count[gcode(idx)];
-    }
-    //@}
 
     template <class S, class C>
     void profile_grid_xt<S, C>::set_nodes_status(const std::vector<node>& nodes_status)
@@ -367,6 +345,13 @@ namespace fastscapelib
         -> grid_data_type
     {
         return m_node_area;
+    }
+
+    template <class S, class C>
+    inline auto profile_grid_xt<S, C>::neighbors_count_impl(const size_type& idx) const noexcept
+        -> size_type
+    {
+        return m_neighbors_count[gcode(idx)];
     }
 
     template <class S, class C>

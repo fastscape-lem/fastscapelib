@@ -29,9 +29,9 @@ Fastscapelib (also illustrated in {ref}`Figure 1 <fig_grid_types>`).
 * - {cpp:class}`~fastscapelib::raster_grid_xt` {py:class}`~fastscapelib.RasterGrid`
   - 2-dimensional, rectangular, uniform, static
   - Evolution of an hillslope, escarpment, drainage basin, orogenic belt, etc.
-* - {cpp:class}`~fastscapelib::unstructured_mesh_xt`
-    {py:class}`~fastscapelib.UnstructuredMesh`
-  - 2-dimensional, irregular (triangulated) mesh, static
+* - {cpp:class}`~fastscapelib::trimesh_xt`
+    {py:class}`~fastscapelib.TriMesh`
+  - 2-dimensional, triangular (irregular) mesh, static
   - More complex than uniform grids but supports variable resolution
     (mesh refinement) and domain limits with complex shapes or planetary domains
     (no boundary).
@@ -49,7 +49,7 @@ Fastscapelib (also illustrated in {ref}`Figure 1 <fig_grid_types>`).
 :alt: Grid types and representation
 :align: center
 
-Figure 1: Grid types (left: profile, center: raster, right: unstructured mesh)
+Figure 1: Grid types (left: profile, center: raster, right: triangular mesh)
 and representation (points: nodes, dashed lines: implicit or explicit
 connectivity).
 ```
@@ -259,7 +259,7 @@ data variables.
 The dimension(s) of the grid data arrays (i.e., the length of
 {cpp:func}`~fastscapelib::grid::shape` and the value of ``xt_dims``) do not
 always match the number of physical axes of the grid. For example, variables on
-a 2-dimensional unstructured mesh are stored in 1-dimensional arrays.
+a 2-dimensional triangular mesh are stored in 1-dimensional arrays.
 
 :::
 
@@ -497,7 +497,7 @@ consumption.
 The cache is exposed as a template parameter for
 {cpp:class}`~fastscapelib::raster_grid_xt` so that this behavior may be
 customized (cache may be disabled). For other grid types like
-{cpp:class}`~fastscapelib::unstructured_mesh_xt` with explicit topology, the
+{cpp:class}`~fastscapelib::trimesh_xt` with explicit topology, the
 cache is not needed and not used.
 
 See {cpp:class}`~fastscapelib::neighbors_cache` and

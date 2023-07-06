@@ -69,13 +69,11 @@ namespace fastscapelib
             using tag = flow_graph_fixed_array_tag;
 
             using size_type = typename grid_type::size_type;
-            using neighbors_count_type = typename grid_type::neighbors_count_type;
-
             using data_type = typename grid_type::grid_data_type;
             using data_array_type = xt_array_t<xt_selector, data_type>;
 
             using donors_type = xt_tensor_t<xt_selector, size_type, 2>;
-            using donors_count_type = xt_tensor_t<xt_selector, neighbors_count_type, 1>;
+            using donors_count_type = xt_tensor_t<xt_selector, size_type, 1>;
             using receivers_type = donors_type;
             using receivers_count_type = donors_count_type;
             using receivers_distance_type = xt_tensor_t<xt_selector, data_type, 2>;

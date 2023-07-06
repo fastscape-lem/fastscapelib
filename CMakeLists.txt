@@ -85,7 +85,7 @@ set(FASTSCAPELIB_HEADERS
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/profile_grid.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/raster_grid.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/structured_grid.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/unstructured_mesh.hpp
+  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/trimesh.hpp
   # Utils
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/consts.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/iterators.hpp

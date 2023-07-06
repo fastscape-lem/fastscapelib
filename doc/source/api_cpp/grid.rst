@@ -156,23 +156,23 @@ Defined in ``fastscapelib/grid/raster_grid.hpp``.
 
 |
 
-Unstructured mesh
------------------
+Triangular mesh
+---------------
 
-Defined in ``fastscapelib/grid/unstructured_mesh.hpp``.
+Defined in ``fastscapelib/grid/trimesh.hpp``.
 
-- :cpp:class:`~template\<class S, unsigned int N> fastscapelib::grid_inner_types\<unstructured_mesh_xt\<S, N>>`
-- :cpp:class:`~template\<class S, unsigned int N = 30> fastscapelib::unstructured_mesh_xt`
-- :cpp:type:`~fastscapelib::unstructured_mesh`
+- :cpp:class:`~template\<class S, unsigned int N> fastscapelib::grid_inner_types\<trimesh_xt\<S, N>>`
+- :cpp:class:`~template\<class S, unsigned int N = 30> fastscapelib::trimesh_xt`
+- :cpp:type:`~fastscapelib::trimesh`
 
 |
 
-.. doxygenstruct:: fastscapelib::grid_inner_types< unstructured_mesh_xt< S, N > >
+.. doxygenstruct:: fastscapelib::grid_inner_types< trimesh_xt< S, N > >
    :members:
    :undoc-members:
 
-.. doxygenclass:: fastscapelib::unstructured_mesh_xt
+.. doxygenclass:: fastscapelib::trimesh_xt
    :members:
    :undoc-members:
 
-.. doxygentypedef:: fastscapelib::unstructured_mesh
+.. doxygentypedef:: fastscapelib::trimesh

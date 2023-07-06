@@ -14,7 +14,7 @@
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
-#include "fastscapelib/grid/unstructured_mesh.hpp"
+#include "fastscapelib/grid/trimesh.hpp"
 
 #include "pytensor_utils.hpp"
 
@@ -28,7 +28,7 @@ namespace fastscapelib
 
     using py_profile_grid = fs::profile_grid_xt<fs::py_selector>;
     using py_raster_grid = fs::raster_grid_xt<fs::py_selector, fs::raster_connect::queen>;
-    using py_unstructured_mesh = fs::unstructured_mesh_xt<fs::py_selector>;
+    using py_trimesh = fs::trimesh_xt<fs::py_selector>;
 
     template <class G>
     void register_grid_static_properties(py::class_<G>& pyg)
@@ -90,7 +90,7 @@ namespace fastscapelib
     {
     public:
         using size_type = typename G::size_type;
-        using count_type = typename G::neighbors_count_type;
+        using count_type = typename G::size_type;
         using indices_type = typename G::neighbors_indices_type;
         using distances_type = typename G::neighbors_distances_type;
         using neighbors_type = typename G::neighbors_type;

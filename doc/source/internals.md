@@ -96,7 +96,7 @@ details.
 ```{mermaid}
 classDiagram
     grid~G~ <|-- structured_grid~G~
-    grid~G~ <|-- unstructured_mesh_xt
+    grid~G~ <|-- trimesh_xt
     structured_grid~G~ <|-- profile_grid_xt
     structured_grid~G~ <|-- raster_grid_xt
     class grid~G~{
@@ -118,7 +118,7 @@ classDiagram
         +neighbors_indices(row, col)
         +neighbors(row, col)
     }
-    class unstructured_mesh_xt
+    class trimesh_xt
 ```
 
 ### Python Bindings
