@@ -11,4 +11,7 @@ build:
 conda:
   environment: doc/environment.yml
 
+sphinx:
+  fail_on_warning: true
+
 formats: []
