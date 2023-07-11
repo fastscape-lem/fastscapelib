@@ -462,14 +462,15 @@ After {ref}`computing the flow paths <guide-compute-flow-paths>`, a
 {py:class}`~fastscapelib.FlowGraph` object is ready to accumulate some locally
 produced quantity or flux along the network via the
 {py:meth}`~fastscapelib.FlowGraph.accumulate` method. This is handy for
-computing a range of simulation internal variables, model outputs and/or
-diagnostics.
+computing a range of internal variables, model outputs and/or diagnostics during
+a simulation. Flow accumulation requires a source term, which may be spatially
+uniform or variable.
 
 :::{note}
 
 The input source term passed to {py:meth}`~fastscapelib.FlowGraph.accumulate`
 must expressed in units per-area. It will be integrated uniformly over the area
-surrounded by each grid node (cell).
+surrounded by each grid node given by ``nodes_areas()``.
 
 :::
 
@@ -487,7 +488,9 @@ drainage_area = graph.accumulate(1.0)
 ```
 ````
 
-Where ``drainage_area`` has dimensions {math}`[L^2]`.
+Where the source term is equal to 1 (unit-less) so that ``drainage_area`` has
+dimensions {math}`[L^2]` and only results from the accumulation of the node
+(cell) areas along the flow paths.
 
 - *water discharge computed from local surface runoff rate*
 

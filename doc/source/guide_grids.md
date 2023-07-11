@@ -57,8 +57,8 @@ connectivity).
 ## Grid Representation
 
 Fastscapelib currently implements a simple representation for all of its grids,
-which only includes the grid nodes (points) and their implicit or explicit
-connectivity ({ref}`Figure 1 <fig_grid_types>`).
+which only includes the grid nodes (points) and their connectivity ({ref}`Figure
+1 <fig_grid_types>`).
 
 Grid method names follow these conventions:
 
@@ -72,6 +72,14 @@ is not stored as grid data), some of their properties are exposed through the
 grid API using the conventions above (e.g.,
 {cpp:func}`~fastscapelib::grid::nodes_areas` returns the area of the direct
 vicinity of each node).
+
+Grid connectivity may be either implicit (e.g., in a
+{cpp:class}`~fastscapelib::structured_grid` node neighbors are implied by the
+grid structure) or explicit (e.g., the indices of triangle vertices must be
+given to {cpp:type}`~fastscapelib::trimesh`). The
+{cpp:func}`~fastscapelib::grid::neighbors` method and other related methods make
+abstraction of the grid connectivity, which may be viewed as an implementation
+detail.
 
 See Sections {ref}`grid-node-iterators` and {ref}`connectivity-node-neighbors`
 for more details on how to iterate through grid nodes and their neighbors.
