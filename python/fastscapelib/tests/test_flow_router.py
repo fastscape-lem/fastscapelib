@@ -23,7 +23,7 @@ class TestSingleFlowRouter:
 
     @classmethod
     def setup_class(cls) -> None:
-        profile_grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
+        profile_grid = ProfileGrid(8, 2.2, NodeStatus.FIXED_VALUE)
         cls.profile_flow_graph = FlowGraph(profile_grid, [SingleFlowRouter()])
         cls.profile_elevation = np.array([0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0])
         cls.result_profile_elevation = cls.profile_flow_graph.update_routes(

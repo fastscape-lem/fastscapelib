@@ -1,3 +1,6 @@
+#include <optional>
+#include <variant>
+
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
@@ -190,16 +193,35 @@ add_grid_bindings(py::module& m)
     // ==== Binding of the ProfileGrid class ==== //
     py::class_<fs::py_profile_grid> pgrid(m, "ProfileGrid", "A 1-dimensional profile grid.");
 
+    using profile_bounds_status_type = std::
+        variant<fs::node_status, std::array<fs::node_status, 2>, fs::profile_boundary_status>;
+    using profile_nodes_status_type
+        = std::optional<std::map<fs::py_profile_grid::size_type, fs::node_status>>;
+
     pgrid.def(
-        py::init<fs::py_profile_grid::size_type,
-                 fs::py_profile_grid::spacing_type,
-                 const fs::profile_boundary_status&,
-                 const std::vector<fs::node>>(),
+        py::init(
+            [](fs::py_profile_grid::size_type size,
+               fs::py_profile_grid::spacing_type spacing,
+               const profile_bounds_status_type& bounds_status,
+               const profile_nodes_status_type& nodes_status)
+            {
+                auto bstatus = std::visit([](auto&& bs) { return fs::profile_boundary_status(bs); },
+                                          bounds_status);
+
+                if (!nodes_status.has_value())
+                {
+                    return fs::py_profile_grid(size, spacing, bstatus);
+                }
+                else
+                {
+                    return fs::py_profile_grid(size, spacing, bstatus, nodes_status.value());
+                }
+            }),
         py::arg("size"),
         py::arg("spacing"),
         py::arg("bounds_status"),
-        py::arg("nodes_status"),
-        R"doc(__init__(self, size: int, spacing: float, bounds_status: ProfileBoundaryStatus, nodes_status: List[Node]) -> None
+        py::arg("nodes_status") = py::none(),
+        R"doc(__init__(self, size: int, spacing: float, bounds_status: NodeStatus | List[NodeStatus] | ProfileBoundaryStatus, nodes_status: Dict[int, NodeStatus] | None) -> None
 
         Profile grid initializer (overloaded).
 
@@ -209,36 +231,40 @@ add_grid_bindings(py::module& m)
             Total number of grid nodes.
         spacing : float
             Distance between two adjacent grid nodes.
-        bounds_status : :class:`ProfileBoundaryStatus`
+        bounds_status : :class:`NodeStatus` or list or :class:`ProfileBoundaryStatus`
             Status at boundary nodes (left/right grid edges).
-        nodes_status : list
-            A list of :class:`Node` objects to manually define the status at
-            any node on the grid. An overloaded initializer also directly accepts
-            a list of ``(idx, status)`` tuples for convenience.
+        nodes_status : dict, optional
+            A dictionary where keys are node indices and values are
+            :class:`NodeStatus` values. If present (default is ``None``),
+            it is used  to manually define the status at any node on the grid.
 
         )doc");
-    pgrid.def(py::init(
-        [](std::size_t size,
-           fs::py_profile_grid::spacing_type spacing,
-           const std::array<fs::node_status, 2>& bs,
-           const std::vector<std::pair<std::size_t, fs::node_status>>& ns)
-        {
-            std::vector<fs::node> node_vec;
-            for (auto&& node : ns)
-            {
-                node_vec.push_back({ node.first, node.second });
-            }
-            return std::make_unique<fs::py_profile_grid>(size, spacing, bs, node_vec);
-        }));
 
     pgrid.def_static(
         "from_length",
-        &fs::py_profile_grid::from_length,
+        [](fs::py_profile_grid::size_type size,
+           fs::py_profile_grid::length_type length,
+           const profile_bounds_status_type& bounds_status,
+           const profile_nodes_status_type& nodes_status)
+        {
+            auto bstatus = std::visit([](auto&& bs) { return fs::profile_boundary_status(bs); },
+                                      bounds_status);
+
+            if (!nodes_status.has_value())
+            {
+                return fs::py_profile_grid::from_length(size, length, bstatus);
+            }
+            else
+            {
+                return fs::py_profile_grid::from_length(
+                    size, length, bstatus, nodes_status.value());
+            }
+        },
         py::arg("size"),
         py::arg("length"),
         py::arg("bounds_status"),
-        py::arg("nodes_status"),
-        R"doc(from_length(self, size: int, length: float, bounds_status: ProfileBoundaryStatus, nodes_status: List[Node]) -> None
+        py::arg("nodes_status") = py::none(),
+        R"doc(from_length(self, size: int, length: float, bounds_status: NodeStatus | List[NodeStatus] | ProfileBoundaryStatus, nodes_status: Dict[int, NodeStatus] | None) -> None
 
         Profile grid initializer from a given total length.
 
@@ -248,11 +274,12 @@ add_grid_bindings(py::module& m)
             Total number of grid nodes.
         length : float
             Total physical length of the grid.
-        bounds_status : :class:`ProfileBoundaryStatus`
+        bounds_status : :class:`NodeStatus` or list or :class:`ProfileBoundaryStatus`
             Status at boundary nodes (left/right grid edges).
-        nodes_status : list
-            A list of :class:`Node` objects to manually define the status at
-            any node on the grid.
+        nodes_status : dict, optional
+            A dictionary where keys are node indices and values are
+            :class:`NodeStatus` values. If present (default is ``None``),
+            it is used  to manually define the status at any node on the grid.
 
         )doc");
 

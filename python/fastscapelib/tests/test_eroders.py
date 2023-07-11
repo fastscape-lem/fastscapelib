@@ -44,7 +44,7 @@ class TestSPLEroder:
     @pytest.mark.parametrize("k_coef", [1e-3, np.full((4), 1e-3)])
     def test_profile_grid(self, k_coef) -> None:
         spacing = 300.0
-        grid = ProfileGrid(4, 300, [NodeStatus.FIXED_VALUE] * 2, [])
+        grid = ProfileGrid(4, 300, NodeStatus.FIXED_VALUE)
 
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 

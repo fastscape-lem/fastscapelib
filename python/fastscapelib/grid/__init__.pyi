@@ -1,4 +1,4 @@
-from typing import ClassVar, List, Tuple, Type, overload
+from typing import ClassVar, Dict, List, Tuple, Type, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -48,29 +48,20 @@ class ProfileBoundaryStatus:
     def is_horizontal_looped(self) -> bool: ...
 
 class ProfileGrid:
-    @overload
     def __init__(
         self,
         size: int,
         spacing: float,
-        bounds_status: ProfileBoundaryStatus,
-        nodes_status: List[Node],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        size: int,
-        spacing: float,
-        bounds_status: List[NodeStatus],
-        nodes_status: List[Tuple[int, NodeStatus]],
+        bounds_status: NodeStatus | List[NodeStatus] | ProfileBoundaryStatus,
+        nodes_status: Dict[int, NodeStatus] | None = None,
     ) -> None: ...
     @classmethod
     def from_length(
         cls: Type[ProfileGrid],
         size: int,
         length: float,
-        bounds_status: ProfileBoundaryStatus,
-        nodes_status: List[Node],
+        bounds_status: NodeStatus | List[NodeStatus] | ProfileBoundaryStatus,
+        nodes_status: Dict[int, NodeStatus] | None = None,
     ) -> ProfileGrid: ...
     is_structured: ClassVar[bool]
     is_uniform: ClassVar[bool]

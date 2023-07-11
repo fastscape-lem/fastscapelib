@@ -150,8 +150,7 @@ auto grid = fs::profile_grid::from_length(501, 500.0, bs);
 
 import fastscapelib as fs
 
-bs = fs.ProfileBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
-grid = fs.ProfileGrid.from_length(501, 500.0, bs, [])
+grid = fs.ProfileGrid.from_length(501, 500.0, NodeStatus.FIXED_VALUE)
 ```
 ````
 
@@ -168,11 +167,7 @@ grid = fs.ProfileGrid.from_length(501, 500.0, bs, [])
 namespace fs = fastscapelib;
 
 fs::profile_boundary_status bs(fs::node_status::core);
-auto grid = fs::profile_grid(
-    501,
-    1.0,
-    bs,
-    { fs::node({ 250, fs::node_status::fixed_value }) });
+auto grid = fs::profile_grid(501, 1.0, bs, { {250, fs::node_status::fixed_value} });
 ```
 
 ```{code-block} Python
@@ -181,12 +176,7 @@ auto grid = fs::profile_grid(
 import fastscapelib as fs
 
 bs = fs.ProfileBoundaryStatus(fs.NodeStatus.CORE)
-grid = fs.ProfileGrid(
-    501,
-    1.0,
-    bs,
-    [fs.Node(250, fs.NodeStatus.FIXED_VALUE)],
-)
+grid = fs.ProfileGrid(501, 1.0, fs.NodeStatus.CORE, {250: fs.NodeStatus.FIXED_VALUE})
 ```
 ````
 
