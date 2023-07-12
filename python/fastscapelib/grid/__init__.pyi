@@ -177,7 +177,7 @@ class TriMesh:
         self,
         points: npt.NDArray[np.float64],
         triangles: npt.NDArray[np.uint64],
-        nodes_status: List[Node],
+        nodes_status: Dict[int, NodeStatus] | None = None,
     ) -> None: ...
     is_structured: ClassVar[bool]
     is_uniform: ClassVar[bool]

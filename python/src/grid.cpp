@@ -104,14 +104,28 @@ add_grid_bindings(py::module& m)
     // ==== Binding of the TriMesh class ==== //
     py::class_<fs::py_trimesh> tmesh(m, "TriMesh", "A 2-dimensional, triangular (irregular) mesh.");
 
+    using trimesh_nstatus_type = std::optional<fs::py_trimesh::nodes_status_map_type>;
+
     tmesh.def(
-        py::init<const fs::py_trimesh::points_type,
-                 const fs::py_trimesh::triangles_type,
-                 const std::vector<fs::node>&>(),
+        py::init(
+            [](const fs::py_trimesh::points_type points,
+               const fs::py_trimesh::triangles_type triangles,
+               const trimesh_nstatus_type& nodes_status)
+            {
+                if (!nodes_status.has_value())
+                {
+                    return fs::py_trimesh(points, triangles);
+                }
+                else
+                {
+                    const auto& nstatus = nodes_status.value();
+                    return fs::py_trimesh(points, triangles, nstatus);
+                }
+            }),
         py::arg("points"),
         py::arg("triangles"),
-        py::arg("nodes_status"),
-        R"doc(__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: List[Node]) -> None
+        py::arg("nodes_status") = py::none(),
+        R"doc(__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: Dict[int, NodeStatus] | None = None) -> None
 
         TriMesh initializer (from an existing triangulation).
 
@@ -121,11 +135,12 @@ add_grid_bindings(py::module& m)
             Mesh node x,y coordinates (array of shape [N, 2]).
         triangles : array-like
             Indices of triangle vertices (array of shape [K, 3]).
-        nodes_status : list
-            A list of :class:`Node` objects to manually define the status at
-            any node on the grid. If empty, "fixed value" is set for all
-            boundary nodes (i.e., end-points of all the edges that are not
-            shared by more than one triangle).
+        nodes_status : dict, optional
+            A dictionary where keys are node indices and values are
+            :class:`NodeStatus` values for setting the status at any
+            node on the mesh. If ``None`` (default), "fixed value" is set
+            for all boundary nodes (i.e., end-points of all the edges that
+            are not shared by more than one triangle).
 
         )doc");
 

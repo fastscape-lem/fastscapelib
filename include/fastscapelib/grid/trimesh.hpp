@@ -5,6 +5,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -129,10 +130,11 @@ namespace fastscapelib
         using neighbors_distances_type = typename base_type::neighbors_distances_type;
 
         using nodes_status_type = typename base_type::nodes_status_type;
+        using nodes_status_map_type = typename std::map<size_type, node_status>;
 
         trimesh_xt(const points_type& points,
                    const triangles_type& triangles,
-                   const std::vector<node>& nodes_status = {});
+                   const nodes_status_map_type& nodes_status = {});
 
     protected:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
@@ -150,7 +152,7 @@ namespace fastscapelib
         std::vector<neighbors_distances_impl_type> m_neighbors_distances;
 
         void set_neighbors(const points_type& points, const triangles_type& triangles);
-        void set_nodes_status(const std::vector<node>& nodes_status);
+        void set_nodes_status(const nodes_status_map_type& nodes_status);
         void set_nodes_areas(const points_type& points, const triangles_type& triangles);
 
         inline areas_type nodes_areas_impl() const;
@@ -186,7 +188,7 @@ namespace fastscapelib
     template <class S, unsigned int N>
     trimesh_xt<S, N>::trimesh_xt(const points_type& points,
                                  const triangles_type& triangles,
-                                 const std::vector<node>& nodes_status)
+                                 const nodes_status_map_type& nodes_status)
         : base_type(0)
         , m_nodes_points(points)
     {
@@ -342,21 +344,21 @@ namespace fastscapelib
     }
 
     template <class S, unsigned int N>
-    void trimesh_xt<S, N>::set_nodes_status(const std::vector<node>& nodes_status)
+    void trimesh_xt<S, N>::set_nodes_status(const nodes_status_map_type& nodes_status)
     {
         nodes_status_type temp_nodes_status(m_shape, node_status::core);
 
         if (nodes_status.size() > 0)
         {
-            for (const node& n : nodes_status)
+            for (const auto& [idx, status] : nodes_status)
             {
-                if (n.status == node_status::looped)
+                if (status == node_status::looped)
                 {
                     throw std::invalid_argument("node_status::looped is not allowed in "
                                                 "triangular meshes");
                 }
 
-                temp_nodes_status.at(n.idx) = n.status;
+                temp_nodes_status.at(idx) = status;
             }
         }
         else
