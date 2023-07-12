@@ -65,12 +65,11 @@ fs::flow_graph<fs::raster_grid> graph(grid, { fs::single_flow_router() });
 
 ```{code-block} Python
 :linenos:
-:emphasize-lines: 6
+:emphasize-lines: 5
 
 import fastscapelib as fs
 
-boundaries = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
-grid = fs.RasterGrid([100, 100], [200.0, 200.0], boundaries, [])
+grid = fs.RasterGrid([100, 100], [200.0, 200.0], fs.NodeStatus.FIXED_VALUE)
 
 graph = fs.FlowGraph(grid, [fs.SingleFlowRouter()])
 ```
@@ -129,13 +128,12 @@ const auto new_elevation = graph.update_routes(elevation);
 
 ```{code-block} Python
 :linenos:
-:emphasize-lines: 11
+:emphasize-lines: 10
 
 import numpy as np
 import fastscapelib as fs
 
-boundaries = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
-grid = fs.RasterGrid([100, 100], [200.0, 200.0], boundaries, [])
+grid = fs.RasterGrid([100, 100], [200.0, 200.0], fs.NodeStatus.FIXED_VALUE)
 
 graph = fs.FlowGraph(grid, [fs.SingleFlowRouter()])
 

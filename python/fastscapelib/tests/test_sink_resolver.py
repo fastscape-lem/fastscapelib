@@ -11,20 +11,18 @@ from fastscapelib.flow import (
     PFloodSinkResolver,
     SingleFlowRouter,
 )
-from fastscapelib.grid import NodeStatus, RasterBoundaryStatus, RasterGrid
+from fastscapelib.grid import NodeStatus, RasterGrid
 
 
 @pytest.fixture
 def grid():
-    bs = RasterBoundaryStatus(
-        [
-            NodeStatus.CORE,
-            NodeStatus.CORE,
-            NodeStatus.CORE,
-            NodeStatus.FIXED_VALUE,
-        ]
-    )
-    grid = RasterGrid([5, 5], [1, 1], bs, [])
+    bs = [
+        NodeStatus.CORE,
+        NodeStatus.CORE,
+        NodeStatus.CORE,
+        NodeStatus.FIXED_VALUE,
+    ]
+    grid = RasterGrid([5, 5], [1, 1], bs)
 
     yield grid
 
@@ -181,8 +179,7 @@ def test_conservation_drainage_area(resolver) -> None:
     # domain area)
 
     shape = (101, 101)
-    bs = RasterBoundaryStatus(NodeStatus.FIXED_VALUE)
-    grid = RasterGrid([101, 101], [1, 1], bs, [])
+    grid = RasterGrid([101, 101], [1, 1], NodeStatus.FIXED_VALUE)
 
     elevation = np.random.uniform(size=shape)
 
@@ -216,8 +213,7 @@ def test_nb_of_basins(resolver) -> None:
     # (i.e., only outer basins)
 
     shape = (101, 101)
-    bs = RasterBoundaryStatus(NodeStatus.FIXED_VALUE)
-    grid = RasterGrid([101, 101], [1, 1], bs, [])
+    grid = RasterGrid([101, 101], [1, 1], NodeStatus.FIXED_VALUE)
 
     elevation = np.random.uniform(size=shape)
 
