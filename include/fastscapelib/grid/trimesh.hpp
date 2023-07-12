@@ -131,10 +131,15 @@ namespace fastscapelib
 
         using nodes_status_type = typename base_type::nodes_status_type;
         using nodes_status_map_type = typename std::map<size_type, node_status>;
+        using nodes_status_array_type = xt_tensor_t<xt_selector, node_status, 1>;
 
         trimesh_xt(const points_type& points,
                    const triangles_type& triangles,
                    const nodes_status_map_type& nodes_status = {});
+
+        trimesh_xt(const points_type& points,
+                   const triangles_type& triangles,
+                   const nodes_status_array_type& nodes_status);
 
     protected:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
@@ -151,8 +156,10 @@ namespace fastscapelib
         std::vector<neighbors_indices_impl_type> m_neighbors_indices;
         std::vector<neighbors_distances_impl_type> m_neighbors_distances;
 
+        void set_size_shape(const points_type& points, const triangles_type& triangles);
         void set_neighbors(const points_type& points, const triangles_type& triangles);
         void set_nodes_status(const nodes_status_map_type& nodes_status);
+        void set_nodes_status(const nodes_status_array_type& nodes_status);
         void set_nodes_areas(const points_type& points, const triangles_type& triangles);
 
         inline areas_type nodes_areas_impl() const;
@@ -192,24 +199,49 @@ namespace fastscapelib
         : base_type(0)
         , m_nodes_points(points)
     {
-        if (points.shape()[1] != 2)
-        {
-            throw std::invalid_argument("invalid shape for points arrays (expects shape [N, 2])");
-        }
-        if (triangles.shape()[1] != 3)
-        {
-            throw std::invalid_argument(
-                "invalid shape for triangles arrays (expects shape [K, 2])");
-        }
+        set_size_shape(points, triangles);
+        set_neighbors(points, triangles);
+        set_nodes_status(nodes_status);
+        set_nodes_areas(points, triangles);
+    }
 
-        m_size = points.shape()[0];
-        m_shape = { static_cast<typename shape_type::value_type>(m_size) };
-
+    /**
+     * Creates a new triangular mesh.
+     *
+     * @param points The mesh node x,y coordinates (array of shape [N, 2]).
+     * @param triangles The node indices of the triangles (array of shape [K, 3]).
+     * @param nodes_status The status of all nodes on the mesh (array of shape [N]).
+     */
+    template <class S, unsigned int N>
+    trimesh_xt<S, N>::trimesh_xt(const points_type& points,
+                                 const triangles_type& triangles,
+                                 const nodes_status_array_type& nodes_status)
+        : base_type(0)
+        , m_nodes_points(points)
+    {
+        set_size_shape(points, triangles);
         set_neighbors(points, triangles);
         set_nodes_status(nodes_status);
         set_nodes_areas(points, triangles);
     }
     //@}
+
+    template <class S, unsigned int N>
+    void trimesh_xt<S, N>::set_size_shape(const points_type& points,
+                                          const triangles_type& triangles)
+    {
+        if (points.shape()[1] != 2)
+        {
+            throw std::invalid_argument("invalid shape for points array (expects shape [N, 2])");
+        }
+        if (triangles.shape()[1] != 3)
+        {
+            throw std::invalid_argument("invalid shape for triangles array (expects shape [K, 2])");
+        }
+
+        m_size = points.shape()[0];
+        m_shape = { static_cast<typename shape_type::value_type>(m_size) };
+    }
 
     template <class S, unsigned int N>
     void trimesh_xt<S, N>::set_neighbors(const points_type& points, const triangles_type& triangles)
@@ -371,6 +403,17 @@ namespace fastscapelib
         }
 
         m_nodes_status = temp_nodes_status;
+    }
+
+    template <class S, unsigned int N>
+    void trimesh_xt<S, N>::set_nodes_status(const nodes_status_array_type& nodes_status)
+    {
+        if (!xt::same_shape(nodes_status.shape(), m_shape))
+        {
+            throw std::invalid_argument(
+                "invalid shape for nodes_status array (expects shape [N] where N is the total number of nodes)");
+        }
+        m_nodes_status = nodes_status;
     }
 
     template <class S, unsigned int N>

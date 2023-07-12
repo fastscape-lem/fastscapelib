@@ -27,10 +27,20 @@ class TestTriMesh:
         assert TriMesh.n_neighbors_max == 20
 
     def test_constructor(self, mesh_args) -> None:
-        mesh = TriMesh(*mesh_args)
+        points, triangles = mesh_args
+        mesh = TriMesh(points, triangles)
 
         assert mesh.size == 5
         assert mesh.shape == [5]
+
+        with pytest.raises(ValueError, match="invalid shape for points array"):
+            TriMesh(np.array([[0.0, 0.5, 1.0]]), triangles)
+
+        with pytest.raises(ValueError, match="invalid shape for triangles array"):
+            TriMesh(points, np.array([[0, 1]]))
+
+        with pytest.raises(ValueError, match="invalid shape for nodes_status array"):
+            TriMesh(points, triangles, [0])
 
     def test_nodes_indices(self, mesh_args) -> None:
         mesh = TriMesh(*mesh_args)
@@ -40,8 +50,10 @@ class TestTriMesh:
         assert not len(mesh.nodes_indices(NodeStatus.FIXED_GRADIENT))
 
     def test_nodes_status_default(self, mesh_args) -> None:
-        # all boundary nodes (convex hull) have fixed value status
-        mesh = TriMesh(*mesh_args)
+        points, triangles = mesh_args
+
+        # all boundary nodes have fixed value status
+        mesh = TriMesh(points, triangles)
 
         actual = mesh.nodes_status()
         expected = [1, 1, 1, 1, 0]
@@ -53,6 +65,10 @@ class TestTriMesh:
 
         assert mesh.nodes_status(0) == NodeStatus.FIXED_VALUE
         assert mesh.nodes_status(4) == NodeStatus.CORE
+
+        # initialize with an array of node status
+        mesh2 = TriMesh(points, triangles, [1, 1, 0, 1, 1])
+        npt.assert_array_equal(mesh2.nodes_status(), [1, 1, 0, 1, 1])
 
     def test_nodes_status_custom(self, mesh_args) -> None:
         points, triangles = mesh_args

@@ -173,11 +173,19 @@ class RasterGrid:
     def neighbors(self, row: int, col: int) -> List[RasterNeighbor]: ...
 
 class TriMesh:
+    @overload
     def __init__(
         self,
         points: npt.NDArray[np.float64],
         triangles: npt.NDArray[np.uint64],
         nodes_status: Dict[int, NodeStatus] | None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        points: npt.NDArray[np.float64],
+        triangles: npt.NDArray[np.uint64],
+        nodes_status: npt.ArrayLike,
     ) -> None: ...
     is_structured: ClassVar[bool]
     is_uniform: ClassVar[bool]

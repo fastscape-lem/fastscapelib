@@ -55,10 +55,14 @@ namespace fastscapelib
             EXPECT_EQ(mesh.shape(), shape_type({ mesh_size }));
 
             xt::xtensor<double, 2> invalid_points{ { 0., 1., 2. } };
-            EXPECT_THROW(fs::trimesh(invalid_points, triangles, {}), std::invalid_argument);
+            EXPECT_THROW(fs::trimesh(invalid_points, triangles), std::invalid_argument);
 
             xt::xtensor<double, 2> invalid_triangles{ { 0., 1. } };
-            EXPECT_THROW(fs::trimesh(points, invalid_triangles, {}), std::invalid_argument);
+            EXPECT_THROW(fs::trimesh(points, invalid_triangles), std::invalid_argument);
+
+            xt::xtensor<node_status, 1> invalid_nodes_status{ fs::node_status::core };
+            EXPECT_THROW(fs::trimesh(points, triangles, invalid_nodes_status),
+                         std::invalid_argument);
         }
 
         TEST_F(trimesh, nodes_status)
@@ -89,6 +93,18 @@ namespace fastscapelib
                 EXPECT_EQ(actual(2), fs::node_status::fixed_value);
                 EXPECT_EQ(actual(3), fs::node_status::core);
                 EXPECT_EQ(actual(4), fs::node_status::core);
+            }
+
+            {
+                SCOPED_TRACE("custom boundary conditions (array)");
+
+                auto core = fs::node_status::core;
+                auto fixed = fs::node_status::fixed_value;
+
+                xt::xtensor<node_status, 1> nodes_status{ core, core, fixed, core, core };
+                grid_type mesh = fs::trimesh(points, triangles, nodes_status);
+
+                EXPECT_EQ(mesh.nodes_status(), nodes_status);
             }
 
             {

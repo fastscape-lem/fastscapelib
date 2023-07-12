@@ -106,28 +106,37 @@ add_grid_bindings(py::module& m)
 
     using trimesh_nstatus_type = std::optional<fs::py_trimesh::nodes_status_map_type>;
 
-    tmesh.def(
-        py::init(
-            [](const fs::py_trimesh::points_type points,
-               const fs::py_trimesh::triangles_type triangles,
-               const trimesh_nstatus_type& nodes_status)
-            {
-                if (!nodes_status.has_value())
-                {
-                    return fs::py_trimesh(points, triangles);
-                }
-                else
-                {
-                    const auto& nstatus = nodes_status.value();
-                    return fs::py_trimesh(points, triangles, nstatus);
-                }
-            }),
-        py::arg("points"),
-        py::arg("triangles"),
-        py::arg("nodes_status") = py::none(),
-        R"doc(__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: Dict[int, NodeStatus] | None = None) -> None
+    tmesh.def(py::init(
+                  [](const fs::py_trimesh::points_type& points,
+                     const fs::py_trimesh::triangles_type& triangles,
+                     const trimesh_nstatus_type& nodes_status)
+                  {
+                      if (!nodes_status.has_value())
+                      {
+                          return fs::py_trimesh(points, triangles);
+                      }
+                      else
+                      {
+                          const auto& nstatus = nodes_status.value();
+                          return fs::py_trimesh(points, triangles, nstatus);
+                      }
+                  }),
+              py::arg("points"),
+              py::arg("triangles"),
+              py::arg("nodes_status") = py::none(),
+              R"doc(__init__(*args, **kwargs) -> None
 
         TriMesh initializer (from an existing triangulation).
+
+        Overloaded initializer.
+
+        1. ``__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: Dict[int, NodeStatus] | None = None) -> None``
+
+        Create a new mesh with a dictionary of node status (optional).
+
+        2. ``__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: np.ndarray) -> None``
+
+        Create a new mesh with an array of node status.
 
         Parameters
         ----------
@@ -135,14 +144,22 @@ add_grid_bindings(py::module& m)
             Mesh node x,y coordinates (array of shape [N, 2]).
         triangles : array-like
             Indices of triangle vertices (array of shape [K, 3]).
-        nodes_status : dict, optional
+        nodes_status : dict or array-like, optional
             A dictionary where keys are node indices and values are
             :class:`NodeStatus` values for setting the status at any
             node on the mesh. If ``None`` (default), "fixed value" is set
             for all boundary nodes (i.e., end-points of all the edges that
-            are not shared by more than one triangle).
+            are not shared by more than one triangle). Alternatively, an
+            array of shape [N] can be given for setting the status of all
+            nodes at once.
 
         )doc");
+    tmesh.def(py::init<const fs::py_trimesh::points_type&,
+                       const fs::py_trimesh::triangles_type&,
+                       const fs::py_trimesh::nodes_status_array_type&>(),
+              py::arg("points"),
+              py::arg("triangles"),
+              py::arg("nodes_status"));
 
     fs::register_grid_static_properties(tmesh);
     fs::register_base_grid_properties(tmesh);
