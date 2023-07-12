@@ -8,7 +8,6 @@ from fastscapelib.grid import (
     RasterBoundaryStatus,
     RasterGrid,
     RasterNeighbor,
-    RasterNode,
 )
 
 
@@ -103,9 +102,7 @@ class TestRasterNeighbor:
 class TestRasterGrid:
     def setup_method(self) -> None:
         self.bs = bs = RasterBoundaryStatus(NodeStatus.FIXED_VALUE)
-        self.g = RasterGrid(
-            [5, 10], [2.2, 2.4], bs, [RasterNode(0, 5, NodeStatus.FIXED_VALUE)]
-        )
+        self.g = RasterGrid([5, 10], [2.2, 2.4], bs, {(0, 5): NodeStatus.FIXED_VALUE})
 
     def test_static_props(self) -> None:
         assert RasterGrid.is_structured is True
@@ -113,12 +110,7 @@ class TestRasterGrid:
         assert RasterGrid.n_neighbors_max == 8
 
     def test_constructor(self) -> None:
-        g1 = RasterGrid(
-            [10, 10],
-            [2.3, 2.1],
-            self.bs,
-            [RasterNode(0, 5, NodeStatus.FIXED_VALUE)],
-        )
+        g1 = RasterGrid([10, 10], [2.3, 2.1], self.bs, {(0, 5): NodeStatus.FIXED_VALUE})
         assert g1.size == 100
         npt.assert_almost_equal(g1.spacing, [2.3, 2.1])
         npt.assert_almost_equal(g1.length, [20.7, 18.9])
@@ -128,7 +120,7 @@ class TestRasterGrid:
                 [5, 10],
                 [2.2, 2.4],
                 self.bs,
-                [RasterNode(20, 255, NodeStatus.FIXED_VALUE)],
+                {(20, 255): NodeStatus.FIXED_VALUE},
             )
 
     @pytest.mark.parametrize(
@@ -140,16 +132,13 @@ class TestRasterGrid:
         ],
     )
     def test_constructor_bounds_status(self, bounds_status) -> None:
-        g = RasterGrid([2, 2], [2.0, 2.0], bounds_status, [])
+        g = RasterGrid([2, 2], [2.0, 2.0], bounds_status)
         expected = np.ones((2, 2)) * NodeStatus.FIXED_VALUE.value
         npt.assert_array_equal(g.nodes_status(), expected)
 
     def test_from_length(self) -> None:
         g = RasterGrid.from_length(
-            [11, 11],
-            np.r_[23, 21],
-            self.bs,
-            [RasterNode(0, 5, NodeStatus.FIXED_VALUE)],
+            [11, 11], np.r_[23, 21], self.bs, {(0, 5): NodeStatus.FIXED_VALUE}
         )
         assert g.size == 121
         npt.assert_almost_equal(g.spacing, [2.3, 2.1])
@@ -178,7 +167,7 @@ class TestRasterGrid:
         npt.assert_equal(self.g.spacing, [2.2, 2.4])
 
     def test_nodes_indices(self) -> None:
-        grid = RasterGrid([3, 3], [2.0, 2.0], self.bs, [])
+        grid = RasterGrid([3, 3], [2.0, 2.0], self.bs)
         npt.assert_equal(grid.nodes_indices(), np.arange(grid.size))
         npt.assert_equal(
             grid.nodes_indices(NodeStatus.FIXED_VALUE), [0, 1, 2, 3, 5, 6, 7, 8]
@@ -187,7 +176,7 @@ class TestRasterGrid:
         assert not len(grid.nodes_indices(NodeStatus.FIXED_GRADIENT))
 
     def test_nodes_status(self) -> None:
-        grid = RasterGrid([3, 3], [2.0, 2.0], self.bs, [])
+        grid = RasterGrid([3, 3], [2.0, 2.0], self.bs)
 
         npt.assert_equal(grid.nodes_status(), [[1, 1, 1], [1, 0, 1], [1, 1, 1]])
         # should return a copy

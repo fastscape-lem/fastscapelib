@@ -128,7 +128,7 @@ namespace fastscapelib
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
         using neighbors_distances_type = typename base_type::neighbors_distances_type;
 
-        using node_status_type = typename base_type::node_status_type;
+        using nodes_status_type = typename base_type::nodes_status_type;
 
         trimesh_xt(const points_type& points,
                    const triangles_type& triangles,
@@ -144,7 +144,7 @@ namespace fastscapelib
         points_type m_nodes_points;
         areas_type m_nodes_areas;
         std::unordered_set<size_type> m_boundary_nodes;
-        node_status_type m_nodes_status;
+        nodes_status_type m_nodes_status;
 
         std::vector<neighbors_indices_impl_type> m_neighbors_indices;
         std::vector<neighbors_distances_impl_type> m_neighbors_distances;
@@ -344,7 +344,7 @@ namespace fastscapelib
     template <class S, unsigned int N>
     void trimesh_xt<S, N>::set_nodes_status(const std::vector<node>& nodes_status)
     {
-        node_status_type temp_nodes_status(m_shape, node_status::core);
+        nodes_status_type temp_nodes_status(m_shape, node_status::core);
 
         if (nodes_status.size() > 0)
         {

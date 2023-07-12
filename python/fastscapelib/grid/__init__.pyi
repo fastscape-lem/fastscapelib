@@ -128,7 +128,7 @@ class RasterGrid:
         shape: List[int],
         spacing: npt.ArrayLike,
         bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus,
-        nodes_status: List[RasterNode] | None = None,
+        nodes_status: Dict[Tuple[int, int], NodeStatus] | None = None,
     ) -> None: ...
     @classmethod
     def from_length(
@@ -136,7 +136,7 @@ class RasterGrid:
         shape: List[int],
         length: npt.ArrayLike,
         bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus,
-        nodes_status: List[RasterNode] | None = None,
+        nodes_status: Dict[Tuple[int, int], NodeStatus] | None = None,
     ) -> RasterGrid: ...
     is_structured: ClassVar[bool]
     is_uniform: ClassVar[bool]

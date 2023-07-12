@@ -209,11 +209,11 @@ namespace fastscapelib
                                                                  fs::node_status::fixed_value } };
             grid_type g1(size, 1.3, fs::node_status::looped, nodes_status);
 
-            auto expected_status = grid_type::node_status_type{ fs::node_status::looped,
-                                                                fs::node_status::fixed_value,
-                                                                fs::node_status::core,
-                                                                fs::node_status::core,
-                                                                fs::node_status::looped };
+            auto expected_status = grid_type::nodes_status_type{ fs::node_status::looped,
+                                                                 fs::node_status::fixed_value,
+                                                                 fs::node_status::core,
+                                                                 fs::node_status::core,
+                                                                 fs::node_status::looped };
             ASSERT_EQ(g1.nodes_status(), expected_status);
             ASSERT_EQ(g1.nodes_status(0), fs::node_status::looped);
             ASSERT_EQ(g1.nodes_status(1), fs::node_status::fixed_value);

@@ -195,8 +195,7 @@ add_grid_bindings(py::module& m)
 
     using profile_bstatus_type = std::
         variant<fs::node_status, std::array<fs::node_status, 2>, fs::profile_boundary_status>;
-    using profile_nstatus_type
-        = std::optional<std::map<fs::py_profile_grid::size_type, fs::node_status>>;
+    using profile_nstatus_type = std::optional<fs::py_profile_grid::nodes_status_map_type>;
 
     pgrid.def(
         py::init(
@@ -419,9 +418,7 @@ add_grid_bindings(py::module& m)
 
     using raster_bstatus_type
         = std::variant<fs::node_status, std::array<fs::node_status, 4>, fs::raster_boundary_status>;
-    // using raster_nstatus_type = std::optional<std::map<fs::py_raster_grid::size_type,
-    // fs::node_status>>;
-    using raster_nstatus_type = std::optional<std::vector<fs::raster_node>>;
+    using raster_nstatus_type = std::optional<fs::py_raster_grid::nodes_status_map_type>;
 
     rgrid.def(
         py::init(
@@ -447,7 +444,7 @@ add_grid_bindings(py::module& m)
         py::arg("spacing"),
         py::arg("bounds_status"),
         py::arg("nodes_status") = py::none(),
-        R"doc(__init__(self, size: List[int], spacing: array_like, bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus, nodes_status: List[RasterNode] | None = None) -> None
+        R"doc(__init__(self, size: List[int], spacing: array_like, bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus, nodes_status: Dict[Tuple[int, int], NodeStatus] | None = None) -> None
 
         Raster grid initializer.
 
@@ -459,9 +456,10 @@ add_grid_bindings(py::module& m)
             Distance between two adjacent grid nodes (row, cols).
         bounds_status : :class:`NodeStatus` or list or :class:`RasterBoundaryStatus`
             Status at boundary borders (left/right/top/bottom grid borders).
-        nodes_status : list, optional
-            A list of :class:`RasterNode` objects to manually define the status at
-            any node on the grid.
+        nodes_status : dict, optional
+            A dictionary where keys are node (row, col) indices and values are
+            :class:`NodeStatus` values. If present (default is ``None``),
+            it is used to manually define the status at any node on the grid.
 
         )doc");
 
@@ -489,7 +487,7 @@ add_grid_bindings(py::module& m)
         py::arg("length"),
         py::arg("bounds_status"),
         py::arg("nodes_status") = py::none(),
-        R"doc(from_length(self, shape: tuple, length: array_like, bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus, nodes_status: List[RasterNode] | None = None) -> None
+        R"doc(from_length(self, shape: tuple, length: array_like, bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus, nodes_status: Dict[Tuple[int, int], NodeStatus] | None = None) -> None
 
         Raster grid initializer from given total lengths.
 
@@ -501,9 +499,10 @@ add_grid_bindings(py::module& m)
             Total physical length of the grid in y (rows) and x (cols).
         bounds_status : :class:`NodeStatus` or list or :class:`RasterBoundaryStatus`
             Status at boundary borders (left/right/top/bottom grid borders).
-        nodes_status : list, optional
-            A list of :class:`RasterNode` objects to manually define the status at
-            any node on the grid.
+        nodes_status : dict, optional
+            A dictionary where keys are node (row, col) indices and values are
+            :class:`NodeStatus` values. If present (default is ``None``),
+            it is used to manually define the status at any node on the grid.
 
         )doc");
 

@@ -156,18 +156,18 @@ namespace fastscapelib
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
         using neighbors_distances_type = typename base_type::neighbors_distances_type;
 
-        using node_status_type = typename base_type::node_status_type;
+        using nodes_status_type = typename base_type::nodes_status_type;
+        using nodes_status_map_type = typename std::map<size_type, node_status>;
 
         profile_grid_xt(size_type size,
                         spacing_type spacing,
                         const profile_boundary_status& bounds_status,
-                        const std::map<size_type, node_status>& nodes_status = {});
+                        const nodes_status_map_type& nodes_status = {});
 
         static profile_grid_xt from_length(size_type size,
                                            length_type length,
                                            const profile_boundary_status& bounds_status,
-                                           const std::map<size_type, node_status>& nodes_status
-                                           = {});
+                                           const nodes_status_map_type& nodes_status = {});
 
     protected:
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
@@ -182,7 +182,7 @@ namespace fastscapelib
 
         xt::xtensor<code_type, 1> m_gcode_idx;
 
-        node_status_type m_nodes_status;
+        nodes_status_type m_nodes_status;
         profile_boundary_status m_bounds_status;
 
         void set_nodes_status(const std::map<size_type, node_status>& nodes_status);
@@ -232,7 +232,7 @@ namespace fastscapelib
     profile_grid_xt<S, C>::profile_grid_xt(size_type size,
                                            spacing_type spacing,
                                            const profile_boundary_status& bounds_status,
-                                           const std::map<size_type, node_status>& nodes_status)
+                                           const nodes_status_map_type& nodes_status)
         : base_type(size)
         , m_size(size)
         , m_spacing(spacing)
@@ -265,7 +265,7 @@ namespace fastscapelib
         size_type size,
         length_type length,
         const profile_boundary_status& bounds_status,
-        const std::map<size_type, node_status>& nodes_status)
+        const nodes_status_map_type& nodes_status)
     {
         spacing_type spacing = length / static_cast<length_type>(size - 1);
         return profile_grid_xt<S, C>(size, spacing, bounds_status, nodes_status);
@@ -311,7 +311,7 @@ namespace fastscapelib
     void profile_grid_xt<S, C>::set_nodes_status(
         const std::map<size_type, node_status>& nodes_status)
     {
-        node_status_type temp_nodes_status(m_shape, node_status::core);
+        nodes_status_type temp_nodes_status(m_shape, node_status::core);
 
         temp_nodes_status(0) = m_bounds_status.left;
         temp_nodes_status(m_size - 1) = m_bounds_status.right;
