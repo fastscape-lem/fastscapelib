@@ -127,16 +127,16 @@ class RasterGrid:
         self,
         shape: List[int],
         spacing: npt.ArrayLike,
-        bounds_status: RasterBoundaryStatus,
-        nodes_status: List[RasterNode],
+        bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus,
+        nodes_status: List[RasterNode] | None = None,
     ) -> None: ...
     @classmethod
     def from_length(
         cls: Type[RasterGrid],
         shape: List[int],
         length: npt.ArrayLike,
-        bounds_status: RasterBoundaryStatus,
-        nodes_status: List[RasterNode],
+        bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus,
+        nodes_status: List[RasterNode] | None = None,
     ) -> RasterGrid: ...
     is_structured: ClassVar[bool]
     is_uniform: ClassVar[bool]

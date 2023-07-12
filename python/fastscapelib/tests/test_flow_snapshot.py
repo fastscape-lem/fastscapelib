@@ -11,17 +11,12 @@ from fastscapelib.flow import (
     PFloodSinkResolver,
     SingleFlowRouter,
 )
-from fastscapelib.grid import NodeStatus, RasterBoundaryStatus, RasterGrid
+from fastscapelib.grid import NodeStatus, RasterGrid
 
 
 @pytest.fixture
 def grid() -> RasterGrid:
-    return RasterGrid(
-        [10, 20],
-        [1.0, 2.0],
-        RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
-        [],
-    )
+    return RasterGrid([10, 20], [1.0, 2.0], NodeStatus.FIXED_VALUE)
 
 
 def test_flow_snapshot_class_attr() -> None:

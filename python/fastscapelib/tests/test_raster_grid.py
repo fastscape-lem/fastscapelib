@@ -112,7 +112,7 @@ class TestRasterGrid:
         assert RasterGrid.is_uniform is True
         assert RasterGrid.n_neighbors_max == 8
 
-    def test___init__(self) -> None:
+    def test_constructor(self) -> None:
         g1 = RasterGrid(
             [10, 10],
             [2.3, 2.1],
@@ -131,6 +131,19 @@ class TestRasterGrid:
                 [RasterNode(20, 255, NodeStatus.FIXED_VALUE)],
             )
 
+    @pytest.mark.parametrize(
+        "bounds_status",
+        [
+            NodeStatus.FIXED_VALUE,
+            [NodeStatus.FIXED_VALUE] * 4,
+            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
+        ],
+    )
+    def test_constructor_bounds_status(self, bounds_status) -> None:
+        g = RasterGrid([2, 2], [2.0, 2.0], bounds_status, [])
+        expected = np.ones((2, 2)) * NodeStatus.FIXED_VALUE.value
+        npt.assert_array_equal(g.nodes_status(), expected)
+
     def test_from_length(self) -> None:
         g = RasterGrid.from_length(
             [11, 11],
@@ -141,6 +154,19 @@ class TestRasterGrid:
         assert g.size == 121
         npt.assert_almost_equal(g.spacing, [2.3, 2.1])
         npt.assert_almost_equal(g.length, [23.0, 21.0])
+
+    @pytest.mark.parametrize(
+        "bounds_status",
+        [
+            NodeStatus.FIXED_VALUE,
+            [NodeStatus.FIXED_VALUE] * 4,
+            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
+        ],
+    )
+    def test_from_length_bounds_status(self, bounds_status) -> None:
+        g = RasterGrid.from_length([2, 2], [20.0, 20.0], bounds_status)
+        expected = np.ones((2, 2)) * NodeStatus.FIXED_VALUE.value
+        npt.assert_array_equal(g.nodes_status(), expected)
 
     def test_size(self) -> None:
         assert self.g.size == 50

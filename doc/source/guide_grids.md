@@ -101,9 +101,10 @@ status of all grid nodes as an array.
 
 Uniform grids {py:class}`~fastscapelib.ProfileGrid` and
 {py:class}`~fastscapelib.RasterGrid` also provide convenient ways to set the
-status of the edge or border nodes in their constructors, respectively using
+status of the edge or border nodes in their constructors, respectively via
 {py:class}`~fastscapelib.ProfileBoundaryStatus` and
-{py:class}`~fastscapelib.RasterBoundaryStatus`.
+{py:class}`~fastscapelib.RasterBoundaryStatus` (which may be constructed
+implicitly).
 
 :::{note}
 
@@ -175,7 +176,6 @@ auto grid = fs::profile_grid(501, 1.0, bs, { {250, fs::node_status::fixed_value}
 
 import fastscapelib as fs
 
-bs = fs.ProfileBoundaryStatus(fs.NodeStatus.CORE)
 grid = fs.ProfileGrid(501, 1.0, fs.NodeStatus.CORE, {250: fs.NodeStatus.FIXED_VALUE})
 ```
 ````
@@ -206,16 +206,14 @@ auto grid = fs::raster_grid({ 101, 201 }, { 1e2, 1e2 }, bs);
 
 import fastscapelib as fs
 
-bs = fs.RasterBoundaryStatus(
-    [
-        fs.NodeStatus.FIXED_VALUE,
-        fs.NodeStatus.CORE,
-        fs.NodeStatus.LOOPED,
-        fs.NodeStatus.LOOPED,
-    ]
-)
+bs = [
+    fs.NodeStatus.FIXED_VALUE,
+    fs.NodeStatus.CORE,
+    fs.NodeStatus.LOOPED,
+    fs.NodeStatus.LOOPED,
+]
 
-grid = fs.RasterGrid([101, 201], [1e2, 1e2], bs, [])
+grid = fs.RasterGrid([101, 201], [1e2, 1e2], bs)
 ```
 ````
 
@@ -303,8 +301,7 @@ ctype elevation_alt2 = xt::random::rand<dtype>(grid.shape());
 import numpy as np
 import fastscapelib as fs
 
-bs = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
-grid = fs.RasterGrid([101, 101], [200.0, 200.0], bs, [])
+grid = fs.RasterGrid([101, 101], [200.0, 200.0], fs.NodeStatus.FIXED_VALUE)
 
 elevation = np.random.uniform(size=grid.shape)
 ```
@@ -366,8 +363,7 @@ import fastscapelib as fs
 import numpy as np
 
 fixed_value = fs.NodeStatus.FIXED_VALUE
-bs = fs.RasterBoundaryStatus(fixed_value)
-grid = fs.RasterGrid([100, 100], [200.0, 200.0], bs, [])
+grid = fs.RasterGrid([100, 100], [200.0, 200.0], fixed_value)
 
 # iterate over all grid nodes (slow!)
 for idx_flat in grid.nodes_indices():
@@ -436,8 +432,7 @@ for (auto& idx_flat : grid.nodes_indices())
 
 import fastscapelib as fs
 
-bs = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
-grid = fs.RasterGrid([100, 100], [200.0, 200.0], bs, [])
+grid = fs.RasterGrid([100, 100], [200.0, 200.0], fs.NodeStatus.FIXED_VALUE)
 
 for idx_flat in range(grid.size):
     neighbors = grid.neighbors(idx_flat)

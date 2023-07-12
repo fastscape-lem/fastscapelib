@@ -193,17 +193,17 @@ add_grid_bindings(py::module& m)
     // ==== Binding of the ProfileGrid class ==== //
     py::class_<fs::py_profile_grid> pgrid(m, "ProfileGrid", "A 1-dimensional profile grid.");
 
-    using profile_bounds_status_type = std::
+    using profile_bstatus_type = std::
         variant<fs::node_status, std::array<fs::node_status, 2>, fs::profile_boundary_status>;
-    using profile_nodes_status_type
+    using profile_nstatus_type
         = std::optional<std::map<fs::py_profile_grid::size_type, fs::node_status>>;
 
     pgrid.def(
         py::init(
             [](fs::py_profile_grid::size_type size,
                fs::py_profile_grid::spacing_type spacing,
-               const profile_bounds_status_type& bounds_status,
-               const profile_nodes_status_type& nodes_status)
+               const profile_bstatus_type& bounds_status,
+               const profile_nstatus_type& nodes_status)
             {
                 auto bstatus = std::visit([](auto&& bs) { return fs::profile_boundary_status(bs); },
                                           bounds_status);
@@ -214,7 +214,8 @@ add_grid_bindings(py::module& m)
                 }
                 else
                 {
-                    return fs::py_profile_grid(size, spacing, bstatus, nodes_status.value());
+                    const auto& nstatus = nodes_status.value();
+                    return fs::py_profile_grid(size, spacing, bstatus, nstatus);
                 }
             }),
         py::arg("size"),
@@ -244,8 +245,8 @@ add_grid_bindings(py::module& m)
         "from_length",
         [](fs::py_profile_grid::size_type size,
            fs::py_profile_grid::length_type length,
-           const profile_bounds_status_type& bounds_status,
-           const profile_nodes_status_type& nodes_status)
+           const profile_bstatus_type& bounds_status,
+           const profile_nstatus_type& nodes_status)
         {
             auto bstatus = std::visit([](auto&& bs) { return fs::profile_boundary_status(bs); },
                                       bounds_status);
@@ -256,8 +257,8 @@ add_grid_bindings(py::module& m)
             }
             else
             {
-                return fs::py_profile_grid::from_length(
-                    size, length, bstatus, nodes_status.value());
+                const auto& nstatus = nodes_status.value();
+                return fs::py_profile_grid::from_length(size, length, bstatus, nstatus);
             }
         },
         py::arg("size"),
@@ -415,16 +416,38 @@ add_grid_bindings(py::module& m)
 
         )doc");
 
+
+    using raster_bstatus_type
+        = std::variant<fs::node_status, std::array<fs::node_status, 4>, fs::raster_boundary_status>;
+    // using raster_nstatus_type = std::optional<std::map<fs::py_raster_grid::size_type,
+    // fs::node_status>>;
+    using raster_nstatus_type = std::optional<std::vector<fs::raster_node>>;
+
     rgrid.def(
-        py::init<const fs::py_raster_grid::shape_type&,
-                 const xt::pytensor<double, 1>&,
-                 const fs::raster_boundary_status&,
-                 const std::vector<fs::raster_node>>(),
+        py::init(
+            [](const fs::py_raster_grid::shape_type& shape,
+               const xt::pytensor<double, 1>& spacing,
+               const raster_bstatus_type& bounds_status,
+               const raster_nstatus_type& nodes_status)
+            {
+                auto bstatus = std::visit([](auto&& bs) { return fs::raster_boundary_status(bs); },
+                                          bounds_status);
+
+                if (!nodes_status.has_value())
+                {
+                    return fs::py_raster_grid(shape, spacing, bstatus);
+                }
+                else
+                {
+                    const auto& nstatus = nodes_status.value();
+                    return fs::py_raster_grid(shape, spacing, bstatus, nstatus);
+                }
+            }),
         py::arg("shape"),
         py::arg("spacing"),
         py::arg("bounds_status"),
-        py::arg("nodes_status"),
-        R"doc(__init__(self, size: List[int], spacing: array_like, bounds_status: RasterBoundaryStatus, nodes_status: List[RasterNode]) -> None
+        py::arg("nodes_status") = py::none(),
+        R"doc(__init__(self, size: List[int], spacing: array_like, bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus, nodes_status: List[RasterNode] | None = None) -> None
 
         Raster grid initializer.
 
@@ -434,9 +457,9 @@ add_grid_bindings(py::module& m)
             Shape of the grid (number of rows and cols).
         spacing : array_like
             Distance between two adjacent grid nodes (row, cols).
-        bounds_status : :class:`RasterBoundaryStatus`
-            Status at boundary nodes (left/right grid edges).
-        nodes_status : list
+        bounds_status : :class:`NodeStatus` or list or :class:`RasterBoundaryStatus`
+            Status at boundary borders (left/right/top/bottom grid borders).
+        nodes_status : list, optional
             A list of :class:`RasterNode` objects to manually define the status at
             any node on the grid.
 
@@ -446,14 +469,27 @@ add_grid_bindings(py::module& m)
         "from_length",
         [](const fs::py_raster_grid::shape_type& shape,
            const xt::pytensor<double, 1>& length,
-           const fs::raster_boundary_status& boundary,
-           const std::vector<fs::raster_node> status)
-        { return fs::py_raster_grid::from_length(shape, length, boundary, status); },
+           const raster_bstatus_type& bounds_status,
+           const raster_nstatus_type& nodes_status)
+        {
+            auto bstatus = std::visit([](auto&& bs) { return fs::raster_boundary_status(bs); },
+                                      bounds_status);
+
+            if (!nodes_status.has_value())
+            {
+                return fs::py_raster_grid::from_length(shape, length, bstatus);
+            }
+            else
+            {
+                const auto& nstatus = nodes_status.value();
+                return fs::py_raster_grid::from_length(shape, length, bstatus, nstatus);
+            }
+        },
         py::arg("shape"),
         py::arg("length"),
         py::arg("bounds_status"),
-        py::arg("nodes_status"),
-        R"doc(from_length(self, shape: tuple, length: array_like, bounds_status: RasterBoundaryStatus, nodes_status: List[RasterNode]) -> None
+        py::arg("nodes_status") = py::none(),
+        R"doc(from_length(self, shape: tuple, length: array_like, bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus, nodes_status: List[RasterNode] | None = None) -> None
 
         Raster grid initializer from given total lengths.
 
@@ -463,9 +499,9 @@ add_grid_bindings(py::module& m)
             Shape of the grid (number of rows and cols).
         length : array_like
             Total physical length of the grid in y (rows) and x (cols).
-        bounds_status : :class:`RasterBoundaryStatus`
-            Status at boundary nodes (left/right grid edges).
-        nodes_status : list
+        bounds_status : :class:`NodeStatus` or list or :class:`RasterBoundaryStatus`
+            Status at boundary borders (left/right/top/bottom grid borders).
+        nodes_status : list, optional
             A list of :class:`RasterNode` objects to manually define the status at
             any node on the grid.
 

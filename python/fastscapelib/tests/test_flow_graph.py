@@ -11,18 +11,13 @@ from fastscapelib.flow import (
     PFloodSinkResolver,
     SingleFlowRouter,
 )
-from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
+from fastscapelib.grid import NodeStatus, ProfileGrid, RasterGrid
 
 
 class TestFlowGraph:
     def test___init__(self) -> None:
         profile_grid = ProfileGrid(8, 2.2, NodeStatus.FIXED_VALUE)
-        raster_grid = RasterGrid(
-            [5, 10],
-            [2.2, 2.4],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
-            [],
-        )
+        raster_grid = RasterGrid([5, 10], [2.2, 2.4], NodeStatus.FIXED_VALUE)
 
         FlowGraph(profile_grid, [SingleFlowRouter()])
         FlowGraph(raster_grid, [PFloodSinkResolver(), SingleFlowRouter()])
@@ -148,12 +143,8 @@ class TestFlowGraph:
         ]
 
         # --- test raster grid
-        rgrid = RasterGrid(
-            [4, 4],
-            [1.0, 1.0],
-            RasterBoundaryStatus(bottom_base_level),
-            [],
-        )
+        rgrid = RasterGrid([4, 4], [1.0, 1.0], bottom_base_level)
+
         flow_graph = FlowGraph(rgrid, [SingleFlowRouter()])
 
         # planar surface tilted along the y-axis + small carved channel
