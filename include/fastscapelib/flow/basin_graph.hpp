@@ -314,7 +314,6 @@ namespace fastscapelib
         const auto& dfs_indices = m_flow_graph_impl.dfs_indices();
 
         auto& grid = m_flow_graph_impl.grid();
-        const auto& nodes_status = grid.nodes_status();
 
         // used to (re)initalize container index / position
         size_type init_idx = static_cast<size_type>(-1);
@@ -345,7 +344,7 @@ namespace fastscapelib
             if (irec == idfs)
             {
                 ibasin = basins(idfs);
-                is_inner_basin = nodes_status.flat(idfs) != node_status::fixed_value;
+                is_inner_basin = !m_flow_graph_impl.is_base_level(idfs);
 
                 if (!is_inner_basin)
                 {
@@ -374,8 +373,7 @@ namespace fastscapelib
                     // already connected adjacent basin unless the latter is an
                     // outer basin
                     bool skip = ibasin >= nbasin;
-                    node_status nstatus = nodes_status.flat(outlets()[nbasin]);
-                    bool is_inner_nbasin = nstatus != node_status::fixed_value;
+                    bool is_inner_nbasin = !m_flow_graph_impl.is_base_level(outlets()[nbasin]);
                     if (skip && is_inner_nbasin)
                     {
                         continue;

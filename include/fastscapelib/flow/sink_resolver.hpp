@@ -68,7 +68,7 @@ namespace fastscapelib
 
             void apply(graph_impl_type& graph_impl, data_array_type& elevation)
             {
-                fill_sinks_sloped(graph_impl.grid(), elevation);
+                fill_sinks_sloped(graph_impl, elevation);
             }
         };
     }

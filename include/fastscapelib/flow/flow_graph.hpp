@@ -70,6 +70,9 @@ namespace fastscapelib
                     "must have at least one operator that defines the output flow direction type");
             }
 
+            // initialize default base levels at fixed value nodes
+            m_impl.reset_base_levels(m_grid.nodes_indices(node_status::fixed_value));
+
             // pre-allocate graph and elevation snapshots
             for (const auto& key : m_operators.graph_snapshot_keys())
             {
