@@ -85,13 +85,10 @@ namespace fastscapelib
 
             const auto elevation_flat = xt::flatten(elevation);
 
-            for (size_type idx = 0; idx < graph_impl.size(); ++idx)
+            for (size_type idx : graph_impl.base_levels())
             {
-                if (graph_impl.is_base_level(idx))
-                {
-                    open.emplace(pflood_node<FG, elev_t>(idx, elevation_flat(idx)));
-                    closed(idx) = true;
-                }
+                open.emplace(pflood_node<FG, elev_t>(idx, elevation_flat(idx)));
+                closed(idx) = true;
             }
         }
 
@@ -122,7 +119,7 @@ namespace fastscapelib
 
                 for (auto n_idx : grid.neighbors_indices(inode.m_idx, neighbors_indices))
                 {
-                    if (closed(n_idx))
+                    if (graph_impl.is_masked(n_idx) || closed(n_idx))
                     {
                         continue;
                     }
@@ -175,7 +172,7 @@ namespace fastscapelib
 
                 for (auto n_idx : grid.neighbors_indices(inode.m_idx, neighbors_indices))
                 {
-                    if (closed(n_idx))
+                    if (graph_impl.is_masked(n_idx) || closed(n_idx))
                     {
                         continue;
                     }

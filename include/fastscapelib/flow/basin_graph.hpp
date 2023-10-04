@@ -338,9 +338,14 @@ namespace fastscapelib
 
         for (const auto idfs : dfs_indices)
         {
+            if (m_flow_graph_impl.is_masked(idfs))
+            {
+                continue;
+            }
+
             const auto irec = receivers(idfs, 0);
 
-            // any new basin visited
+            // any new basin visited (inner or outer)
             if (irec == idfs)
             {
                 ibasin = basins(idfs);
@@ -367,6 +372,11 @@ namespace fastscapelib
 
                 for (auto n : grid.neighbors(idfs, neighbors))
                 {
+                    if (m_flow_graph_impl.is_masked(n.idx))
+                    {
+                        continue;
+                    }
+
                     const size_type nbasin = basins(n.idx);
 
                     // skip if neighbor node is in the same basin or in an

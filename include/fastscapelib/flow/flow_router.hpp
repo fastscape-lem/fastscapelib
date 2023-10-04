@@ -79,20 +79,23 @@ namespace fastscapelib
                     dist2receivers(i, 0) = 0;
                     slope_max = std::numeric_limits<double>::min();
 
-                    if (graph_impl.is_base_level(i))
+                    if (graph_impl.is_masked(i) || graph_impl.is_base_level(i))
                     {
                         continue;
                     }
 
                     for (auto n : grid.neighbors(i, neighbors))
                     {
-                        slope = (elevation.flat(i) - elevation.flat(n.idx)) / n.distance;
-
-                        if (slope > slope_max)
+                        if (!graph_impl.is_masked(n.idx))
                         {
-                            slope_max = slope;
-                            receivers(i, 0) = n.idx;
-                            dist2receivers(i, 0) = n.distance;
+                            slope = (elevation.flat(i) - elevation.flat(n.idx)) / n.distance;
+
+                            if (slope > slope_max)
+                            {
+                                slope_max = slope;
+                                receivers(i, 0) = n.idx;
+                                dist2receivers(i, 0) = n.distance;
+                            }
                         }
                     }
 
@@ -197,7 +200,7 @@ namespace fastscapelib
 
                 for (auto i : grid.nodes_indices())
                 {
-                    if (graph_impl.is_base_level(i))
+                    if (graph_impl.is_masked(i) || graph_impl.is_base_level(i))
                     {
                         receivers_count(i) = 1;
                         receivers(i, 0) = i;
@@ -211,7 +214,8 @@ namespace fastscapelib
 
                     for (auto n : grid.neighbors(i, neighbors))
                     {
-                        if (elevation.flat(i) > elevation.flat(n.idx))
+                        if (!graph_impl.is_masked(n.idx)
+                            && elevation.flat(i) > elevation.flat(n.idx))
                         {
                             slope = (elevation.flat(i) - elevation.flat(n.idx)) / n.distance;
 

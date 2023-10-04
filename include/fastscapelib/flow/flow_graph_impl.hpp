@@ -201,17 +201,33 @@ namespace fastscapelib
                 return m_base_levels.count(idx);
             }
 
-            std::vector<size_type> base_levels() const
+            const std::unordered_set<size_type>& base_levels() const
             {
-                std::vector<size_type> indices(m_base_levels.begin(), m_base_levels.end());
-                return indices;
+                return m_base_levels;
             }
 
             template <class C>
-            void reset_base_levels(const C& levels)
+            void set_base_levels(const C& levels)
             {
                 m_base_levels.clear();
                 m_base_levels.insert(levels.begin(), levels.end());
+            }
+
+            inline bool is_masked(const size_type& idx) const
+            {
+                return m_mask_initialized && m_mask.flat(idx);
+            }
+
+            const xt::xarray<bool>& mask() const
+            {
+                return m_mask;
+            }
+
+            template <class C>
+            void set_mask(C&& mask)
+            {
+                m_mask = mask;
+                m_mask_initialized = true;
             }
 
         private:
@@ -233,6 +249,8 @@ namespace fastscapelib
             std::vector<size_type> m_pits;
 
             std::unordered_set<size_type> m_base_levels;
+            xt::xarray<bool> m_mask;
+            bool m_mask_initialized = false;
 
             template <class FG, class FR>
             friend class flow_router_impl;

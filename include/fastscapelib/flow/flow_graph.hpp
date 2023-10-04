@@ -71,7 +71,7 @@ namespace fastscapelib
             }
 
             // initialize default base levels at fixed value nodes
-            m_impl.reset_base_levels(m_grid.nodes_indices(node_status::fixed_value));
+            m_impl.set_base_levels(m_grid.nodes_indices(node_status::fixed_value));
 
             // pre-allocate graph and elevation snapshots
             for (const auto& key : m_operators.graph_snapshot_keys())
