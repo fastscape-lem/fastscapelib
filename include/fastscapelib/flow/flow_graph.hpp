@@ -232,6 +232,60 @@ namespace fastscapelib
         }
 
         /**
+         * Return the indices of the base level nodes.
+         */
+        std::vector<size_type> base_levels() const
+        {
+            const auto& impl_levels = m_impl.base_levels();
+            std::vector<size_type> indices(impl_levels.begin(), impl_levels.end());
+            return indices;
+        }
+
+        /**
+         * Clear all existing base level nodes and set new ones.
+         *
+         * @tparam C Any stl-compatible container type.
+         * @param levels The indices of the new base level nodes.
+         */
+        template <class C>
+        void set_base_levels(const C& levels)
+        {
+            if (!m_writeable)
+            {
+                throw std::runtime_error("cannot set base levels (graph is read-only)");
+            }
+
+            m_impl.set_base_levels(levels);
+        }
+
+        /**
+         * Return a mask of where elements with a value ``true`` correspond
+         * to grid nodes that are not included in the flow graph.
+         */
+        xt_array_t<xt_selector, bool> mask() const
+        {
+            return m_impl.mask();
+        }
+
+        /**
+         * Set a new grid mask.
+         *
+         * @tparam C Any xtensor-compatible container or expression type.
+         * @param mask The new mask where elements with a value ``true``
+         * correspond to grid nodes that are not included in the flow graph.
+         */
+        template <class C>
+        void set_mask(C&& mask)
+        {
+            if (!m_writeable)
+            {
+                throw std::runtime_error("cannot set mask (graph is read-only)");
+            }
+
+            m_impl.set_mask(std::forward<C>(mask));
+        }
+
+        /**
          * Traverse the flow graph in the top->down direction and accumulate
          * locally produced quantities or fluxes.
          *
