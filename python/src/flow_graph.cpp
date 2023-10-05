@@ -470,6 +470,17 @@ add_flow_graph_bindings(py::module& m)
 
         )doc");
 
+    pyfgraph.def_property("base_levels",
+                          &fs::py_flow_graph::base_levels,
+                          &fs::py_flow_graph::set_base_levels,
+                          "Indices of the base level nodes.");
+
+    pyfgraph.def_property("mask",
+                          &fs::py_flow_graph::mask,
+                          &fs::py_flow_graph::set_mask,
+                          "Mask where elements with value ``True`` correspond to "
+                          "grid nodes that are not included in the flow graph.");
+
     using data_array_type = fs::py_flow_graph::data_array_type;
     using data_type = fs::py_flow_graph::data_type;
 
