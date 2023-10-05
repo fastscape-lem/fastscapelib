@@ -49,7 +49,7 @@ class TestFlowGraph:
 
         flow_graph.mask = np.ones(raster_grid.shape, dtype=np.bool_)
         npt.assert_array_equal(
-            flow_graph.mask, np.ones(raster_grid.shape, dtype=np.bool8)
+            flow_graph.mask, np.ones(raster_grid.shape, dtype=np.bool_)
         )
 
     def test_operators(self) -> None:
