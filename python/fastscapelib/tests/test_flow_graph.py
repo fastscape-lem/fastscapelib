@@ -30,6 +30,28 @@ class TestFlowGraph:
         with pytest.raises(TypeError, match="invalid flow operator"):
             FlowGraph(raster_grid, ["not a flow operator"])  # type: ignore[list-item]
 
+    def test_base_levels(self) -> None:
+        raster_grid = RasterGrid([3, 3], [1.0, 1.0], NodeStatus.FIXED_VALUE)
+        flow_graph = FlowGraph(raster_grid, [SingleFlowRouter()])
+
+        actual = flow_graph.base_levels
+        assert set(actual) == {0, 1, 2, 3, 5, 6, 7, 8}
+
+        flow_graph.base_levels = [3]
+        assert flow_graph.base_levels == [3]
+
+    def test_mask(self) -> None:
+        raster_grid = RasterGrid([3, 3], [1.0, 1.0], NodeStatus.FIXED_VALUE)
+        flow_graph = FlowGraph(raster_grid, [SingleFlowRouter()])
+
+        # uninitialized mask
+        npt.assert_array_equal(flow_graph.mask, np.array([], dtype=np.bool8))
+
+        flow_graph.mask = np.ones(raster_grid.shape, dtype=np.bool8)
+        npt.assert_array_equal(
+            flow_graph.mask, np.ones(raster_grid.shape, dtype=np.bool8)
+        )
+
     def test_operators(self) -> None:
         grid = ProfileGrid(8, 2.2, NodeStatus.FIXED_VALUE)
 
