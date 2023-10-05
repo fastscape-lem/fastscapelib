@@ -65,12 +65,11 @@ fs::flow_graph<fs::raster_grid> graph(grid, { fs::single_flow_router() });
 
 ```{code-block} Python
 :linenos:
-:emphasize-lines: 6
+:emphasize-lines: 5
 
 import fastscapelib as fs
 
-boundaries = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
-grid = fs.RasterGrid([100, 100], [200.0, 200.0], boundaries, [])
+grid = fs.RasterGrid([100, 100], [200.0, 200.0], fs.NodeStatus.FIXED_VALUE)
 
 graph = fs.FlowGraph(grid, [fs.SingleFlowRouter()])
 ```
@@ -129,13 +128,12 @@ const auto new_elevation = graph.update_routes(elevation);
 
 ```{code-block} Python
 :linenos:
-:emphasize-lines: 11
+:emphasize-lines: 10
 
 import numpy as np
 import fastscapelib as fs
 
-boundaries = fs.RasterBoundaryStatus(fs.NodeStatus.FIXED_VALUE)
-grid = fs.RasterGrid([100, 100], [200.0, 200.0], boundaries, [])
+grid = fs.RasterGrid([100, 100], [200.0, 200.0], fs.NodeStatus.FIXED_VALUE)
 
 graph = fs.FlowGraph(grid, [fs.SingleFlowRouter()])
 
@@ -462,14 +460,15 @@ After {ref}`computing the flow paths <guide-compute-flow-paths>`, a
 {py:class}`~fastscapelib.FlowGraph` object is ready to accumulate some locally
 produced quantity or flux along the network via the
 {py:meth}`~fastscapelib.FlowGraph.accumulate` method. This is handy for
-computing a range of simulation internal variables, model outputs and/or
-diagnostics.
+computing a range of internal variables, model outputs and/or diagnostics during
+a simulation. Flow accumulation requires a source term, which may be spatially
+uniform or variable.
 
 :::{note}
 
 The input source term passed to {py:meth}`~fastscapelib.FlowGraph.accumulate`
 must expressed in units per-area. It will be integrated uniformly over the area
-surrounded by each grid node (cell).
+surrounded by each grid node given by ``nodes_areas()``.
 
 :::
 
@@ -487,7 +486,9 @@ drainage_area = graph.accumulate(1.0)
 ```
 ````
 
-Where ``drainage_area`` has dimensions {math}`[L^2]`.
+Where the source term is equal to 1 (unit-less) so that ``drainage_area`` has
+dimensions {math}`[L^2]` and only results from the accumulation of the node
+(cell) areas along the flow paths.
 
 - *water discharge computed from local surface runoff rate*
 

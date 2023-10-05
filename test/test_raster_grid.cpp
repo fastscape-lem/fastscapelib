@@ -52,11 +52,11 @@ namespace fastscapelib
 
         TEST_F(raster_grid, ctor)
         {
-            std::vector<fs::raster_node> nodes_vector2{ fs::raster_node({ 15, 15, co }) };
-            ASSERT_THROW(grid_type(shape, { 1.4, 1.8 }, fb, nodes_vector2), std::out_of_range);
+            grid_type::nodes_status_map_type nodes_status1{ { { 15, 15 }, co } };
+            ASSERT_THROW(grid_type(shape, { 1.4, 1.8 }, fb, nodes_status1), std::out_of_range);
 
-            std::vector<fs::raster_node> nodes_vector3{ fs::raster_node({ 0, 0, co }) };
-            ASSERT_THROW(grid_type(shape, { 1.4, 1.8 }, hvloop, nodes_vector3),
+            grid_type::nodes_status_map_type nodes_status2{ { { 0, 0 }, co } };
+            ASSERT_THROW(grid_type(shape, { 1.4, 1.8 }, hvloop, nodes_status2),
                          std::invalid_argument);
         }
 
@@ -97,12 +97,12 @@ namespace fastscapelib
             node_status lg = node_status::fixed_gradient;
 
             std::array<size_type, 2> shape{ { 3, 3 } };
-            std::vector<fs::raster_node> nodes_vector1{ fs::raster_node(
-                { 1, 1, fs::node_status::fixed_gradient }) };
-            auto g1 = grid_type(shape, { 1.4, 1.8 }, hloop, nodes_vector1);
+            grid_type::nodes_status_map_type nodes_status{ { { 1, 1 },
+                                                             fs::node_status::fixed_gradient } };
+            auto g1 = grid_type(shape, { 1.4, 1.8 }, hloop, nodes_status);
 
             auto expected_status
-                = grid_type::node_status_type{ { fb, fb, fb }, { lb, lg, lb }, { fb, fb, fb } };
+                = grid_type::nodes_status_type{ { fb, fb, fb }, { lb, lg, lb }, { fb, fb, fb } };
             EXPECT_EQ(g1.nodes_status(), expected_status);
             EXPECT_EQ(g1.nodes_status(0), fb);
             EXPECT_EQ(g1.nodes_status(4), lg);

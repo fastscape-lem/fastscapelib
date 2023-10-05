@@ -11,18 +11,13 @@ from fastscapelib.flow import (
     PFloodSinkResolver,
     SingleFlowRouter,
 )
-from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
+from fastscapelib.grid import NodeStatus, ProfileGrid, RasterGrid
 
 
 class TestFlowGraph:
     def test___init__(self) -> None:
-        profile_grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
-        raster_grid = RasterGrid(
-            [5, 10],
-            [2.2, 2.4],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
-            [],
-        )
+        profile_grid = ProfileGrid(8, 2.2, NodeStatus.FIXED_VALUE)
+        raster_grid = RasterGrid([5, 10], [2.2, 2.4], NodeStatus.FIXED_VALUE)
 
         FlowGraph(profile_grid, [SingleFlowRouter()])
         FlowGraph(raster_grid, [PFloodSinkResolver(), SingleFlowRouter()])
@@ -36,7 +31,7 @@ class TestFlowGraph:
             FlowGraph(raster_grid, ["not a flow operator"])  # type: ignore[list-item]
 
     def test_operators(self) -> None:
-        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
+        grid = ProfileGrid(8, 2.2, NodeStatus.FIXED_VALUE)
 
         resolver = PFloodSinkResolver()
         router = SingleFlowRouter()
@@ -46,7 +41,7 @@ class TestFlowGraph:
         assert flow_graph.operators == [resolver, router]
 
     def test_single_flow(self) -> None:
-        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
+        grid = ProfileGrid(8, 2.2, NodeStatus.FIXED_VALUE)
 
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
         assert flow_graph.single_flow is True
@@ -55,7 +50,7 @@ class TestFlowGraph:
         assert flow_graph.single_flow is False
 
     def test_repr(self) -> None:
-        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
+        grid = ProfileGrid(8, 2.2, NodeStatus.FIXED_VALUE)
         flow_graph = FlowGraph(grid, [SingleFlowRouter(), FlowSnapshot("test")])
 
         actual = repr(flow_graph)
@@ -76,7 +71,7 @@ class TestFlowGraph:
         assert actual == dedent(expected[1:])
 
     def test_update_routes(self) -> None:
-        grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
+        grid = ProfileGrid(8, 2.2, NodeStatus.FIXED_VALUE)
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         # pit at 3rd node
@@ -116,7 +111,7 @@ class TestFlowGraph:
 
     def test_accumulate_basins(self) -> None:
         # --- test profile grid
-        grid = ProfileGrid(8, 2.0, [NodeStatus.FIXED_VALUE] * 2, [])
+        grid = ProfileGrid(8, 2.0, NodeStatus.FIXED_VALUE)
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         # pit at 3rd node
@@ -148,12 +143,8 @@ class TestFlowGraph:
         ]
 
         # --- test raster grid
-        rgrid = RasterGrid(
-            [4, 4],
-            [1.0, 1.0],
-            RasterBoundaryStatus(bottom_base_level),
-            [],
-        )
+        rgrid = RasterGrid([4, 4], [1.0, 1.0], bottom_base_level)
+
         flow_graph = FlowGraph(rgrid, [SingleFlowRouter()])
 
         # planar surface tilted along the y-axis + small carved channel

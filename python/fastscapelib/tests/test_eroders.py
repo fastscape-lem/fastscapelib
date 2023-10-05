@@ -3,13 +3,12 @@ import pytest
 
 from fastscapelib.eroders import DiffusionADIEroder, SPLEroder
 from fastscapelib.flow import FlowGraph, MultiFlowRouter, SingleFlowRouter
-from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
+from fastscapelib.grid import NodeStatus, ProfileGrid, RasterGrid
 
 
 class TestSPLEroder:
     def test_constructor_properties(self) -> None:
-        bstatus = RasterBoundaryStatus(NodeStatus.FIXED_VALUE)
-        grid = RasterGrid([2, 2], [1.0, 1.0], bstatus, [])
+        grid = RasterGrid([2, 2], [1.0, 1.0], NodeStatus.FIXED_VALUE)
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
         eroder = SPLEroder(flow_graph, 1e-3, 0.4, 1, 1e-5)
@@ -44,7 +43,7 @@ class TestSPLEroder:
     @pytest.mark.parametrize("k_coef", [1e-3, np.full((4), 1e-3)])
     def test_profile_grid(self, k_coef) -> None:
         spacing = 300.0
-        grid = ProfileGrid(4, 300, [NodeStatus.FIXED_VALUE] * 2, [])
+        grid = ProfileGrid(4, 300, NodeStatus.FIXED_VALUE)
 
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
@@ -85,12 +84,7 @@ class TestSPLEroder:
             NodeStatus.CORE,
         ]
 
-        grid = RasterGrid(
-            [2, 2],
-            [spacing, spacing],
-            RasterBoundaryStatus(top_base_level),
-            [],
-        )
+        grid = RasterGrid([2, 2], [spacing, spacing], top_base_level)
 
         flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
@@ -129,8 +123,7 @@ def _compute_l2_norm(a1, a2):
 
 class TestDiffusionADIEroder:
     def test_constructor_properties(self) -> None:
-        bstatus = RasterBoundaryStatus(NodeStatus.FIXED_VALUE)
-        grid = RasterGrid([2, 2], [1.0, 1.0], bstatus, [])
+        grid = RasterGrid([2, 2], [1.0, 1.0], NodeStatus.FIXED_VALUE)
 
         eroder = DiffusionADIEroder(grid, 1e-3)
 
@@ -153,12 +146,7 @@ class TestDiffusionADIEroder:
         dy = 0.4
         dx = 0.8
 
-        grid = RasterGrid(
-            [101, 51],
-            [dy, dx],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
-            [],
-        )
+        grid = RasterGrid([101, 51], [dy, dx], NodeStatus.FIXED_VALUE)
 
         k_coef = 1e-3
         eroder = DiffusionADIEroder(grid, k_coef)

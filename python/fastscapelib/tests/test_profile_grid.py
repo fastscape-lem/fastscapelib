@@ -72,15 +72,15 @@ class TestNeighbor:
 class TestProfileGrid:
     def setup_method(self) -> None:
         self.bs = [NodeStatus.FIXED_VALUE] * 2
-        self.g = ProfileGrid(10, 2.2, self.bs, [(5, NodeStatus.FIXED_VALUE)])
+        self.g = ProfileGrid(10, 2.2, self.bs, nodes_status={5: NodeStatus.FIXED_VALUE})
 
     def test_static_props(self) -> None:
         assert ProfileGrid.is_structured is True
         assert ProfileGrid.is_uniform is True
         assert ProfileGrid.n_neighbors_max == 2
 
-    def test___init__(self) -> None:
-        g = ProfileGrid(10, 2, self.bs, [(5, NodeStatus.FIXED_VALUE)])
+    def test_constructor(self) -> None:
+        g = ProfileGrid(10, 2, self.bs, nodes_status={5: NodeStatus.FIXED_VALUE})
         assert g.size == 10
         assert g.spacing == 2.0
         assert g.length == 18.0
@@ -89,26 +89,50 @@ class TestProfileGrid:
             15,
             3.0,
             ProfileBoundaryStatus(self.bs),
-            [Node(5, NodeStatus.FIXED_VALUE)],
+            {5: NodeStatus.FIXED_VALUE},
         )
         assert g.size == 15
         assert g.spacing == 3.0
         assert g.length == 42.0
 
         with pytest.raises(IndexError):
-            ProfileGrid(10, 2, self.bs, [(15, NodeStatus.FIXED_VALUE)])
+            ProfileGrid(10, 2, self.bs, {15: NodeStatus.FIXED_VALUE})
+
+    @pytest.mark.parametrize(
+        "bounds_status",
+        [
+            NodeStatus.FIXED_VALUE,
+            [NodeStatus.FIXED_VALUE] * 2,
+            ProfileBoundaryStatus(NodeStatus.FIXED_VALUE),
+        ],
+    )
+    def test_constructor_bounds_status(self, bounds_status) -> None:
+        g = ProfileGrid(10, 2, bounds_status)
+        assert g.nodes_status(0) == g.nodes_status(9) == NodeStatus.FIXED_VALUE
 
     def test_from_length(self) -> None:
         g = ProfileGrid.from_length(
             11,
             20.0,
             ProfileBoundaryStatus(self.bs),
-            [Node(5, NodeStatus.FIXED_VALUE)],
+            {5: NodeStatus.FIXED_VALUE},
         )
         assert g.size == 11
         assert g.shape == [11]
         assert g.spacing == 2.0
         assert g.length == 20.0
+
+    @pytest.mark.parametrize(
+        "bounds_status",
+        [
+            NodeStatus.FIXED_VALUE,
+            [NodeStatus.FIXED_VALUE] * 2,
+            ProfileBoundaryStatus(NodeStatus.FIXED_VALUE),
+        ],
+    )
+    def test_from_length_bounds_status(self, bounds_status) -> None:
+        g = ProfileGrid.from_length(10, 20.0, bounds_status)
+        assert g.nodes_status(0) == g.nodes_status(9) == NodeStatus.FIXED_VALUE
 
     def test_size(self) -> None:
         assert self.g.size == 10

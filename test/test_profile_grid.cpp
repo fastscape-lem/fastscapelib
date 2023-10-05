@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <map>
 #include <vector>
 
 #include "fastscapelib/grid/profile_grid.hpp"
@@ -97,12 +98,12 @@ namespace fastscapelib
 
         TEST_F(profile_grid, ctor)
         {
-            std::vector<fs::node> nodes_vector2{ fs::node({ 15, fs::node_status::core }) };
-            ASSERT_THROW(grid_type(size, 1.3, fs::node_status::fixed_value, nodes_vector2),
+            std::map<size_type, fs::node_status> nodes_status1{ { 15, fs::node_status::core } };
+            ASSERT_THROW(grid_type(size, 1.3, fs::node_status::fixed_value, nodes_status1),
                          std::out_of_range);
 
-            std::vector<fs::node> nodes_vector3{ fs::node({ 0, fs::node_status::core }) };
-            ASSERT_THROW(grid_type(size, 1.3, fs::node_status::looped, nodes_vector3),
+            std::map<size_type, fs::node_status> nodes_status2{ { 0, fs::node_status::core } };
+            ASSERT_THROW(grid_type(size, 1.3, fs::node_status::looped, nodes_status2),
                          std::invalid_argument);
         }
 
@@ -204,14 +205,15 @@ namespace fastscapelib
 
         TEST_F(profile_grid, nodes_status)
         {
-            std::vector<fs::node> nodes_vector1{ fs::node({ 1, fs::node_status::fixed_value }) };
-            grid_type g1(size, 1.3, fs::node_status::looped, nodes_vector1);
+            std::map<size_type, fs::node_status> nodes_status{ { 1,
+                                                                 fs::node_status::fixed_value } };
+            grid_type g1(size, 1.3, fs::node_status::looped, nodes_status);
 
-            auto expected_status = grid_type::node_status_type{ fs::node_status::looped,
-                                                                fs::node_status::fixed_value,
-                                                                fs::node_status::core,
-                                                                fs::node_status::core,
-                                                                fs::node_status::looped };
+            auto expected_status = grid_type::nodes_status_type{ fs::node_status::looped,
+                                                                 fs::node_status::fixed_value,
+                                                                 fs::node_status::core,
+                                                                 fs::node_status::core,
+                                                                 fs::node_status::looped };
             ASSERT_EQ(g1.nodes_status(), expected_status);
             ASSERT_EQ(g1.nodes_status(0), fs::node_status::looped);
             ASSERT_EQ(g1.nodes_status(1), fs::node_status::fixed_value);

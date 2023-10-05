@@ -1,4 +1,4 @@
-from typing import ClassVar, List, Tuple, Type, overload
+from typing import ClassVar, Dict, List, Tuple, Type, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -48,29 +48,20 @@ class ProfileBoundaryStatus:
     def is_horizontal_looped(self) -> bool: ...
 
 class ProfileGrid:
-    @overload
     def __init__(
         self,
         size: int,
         spacing: float,
-        bounds_status: ProfileBoundaryStatus,
-        nodes_status: List[Node],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        size: int,
-        spacing: float,
-        bounds_status: List[NodeStatus],
-        nodes_status: List[Tuple[int, NodeStatus]],
+        bounds_status: NodeStatus | List[NodeStatus] | ProfileBoundaryStatus,
+        nodes_status: Dict[int, NodeStatus] | None = None,
     ) -> None: ...
     @classmethod
     def from_length(
         cls: Type[ProfileGrid],
         size: int,
         length: float,
-        bounds_status: ProfileBoundaryStatus,
-        nodes_status: List[Node],
+        bounds_status: NodeStatus | List[NodeStatus] | ProfileBoundaryStatus,
+        nodes_status: Dict[int, NodeStatus] | None = None,
     ) -> ProfileGrid: ...
     is_structured: ClassVar[bool]
     is_uniform: ClassVar[bool]
@@ -136,16 +127,16 @@ class RasterGrid:
         self,
         shape: List[int],
         spacing: npt.ArrayLike,
-        bounds_status: RasterBoundaryStatus,
-        nodes_status: List[RasterNode],
+        bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus,
+        nodes_status: Dict[Tuple[int, int], NodeStatus] | None = None,
     ) -> None: ...
     @classmethod
     def from_length(
         cls: Type[RasterGrid],
         shape: List[int],
         length: npt.ArrayLike,
-        bounds_status: RasterBoundaryStatus,
-        nodes_status: List[RasterNode],
+        bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus,
+        nodes_status: Dict[Tuple[int, int], NodeStatus] | None = None,
     ) -> RasterGrid: ...
     is_structured: ClassVar[bool]
     is_uniform: ClassVar[bool]
@@ -182,11 +173,19 @@ class RasterGrid:
     def neighbors(self, row: int, col: int) -> List[RasterNeighbor]: ...
 
 class TriMesh:
+    @overload
     def __init__(
         self,
         points: npt.NDArray[np.float64],
         triangles: npt.NDArray[np.uint64],
-        nodes_status: List[Node],
+        nodes_status: Dict[int, NodeStatus] | None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        points: npt.NDArray[np.float64],
+        triangles: npt.NDArray[np.uint64],
+        nodes_status: npt.ArrayLike,
     ) -> None: ...
     is_structured: ClassVar[bool]
     is_uniform: ClassVar[bool]

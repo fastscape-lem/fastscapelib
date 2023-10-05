@@ -10,7 +10,7 @@ from fastscapelib.flow import (
     PFloodSinkResolver,
     SingleFlowRouter,
 )
-from fastscapelib.grid import NodeStatus, ProfileGrid, RasterBoundaryStatus, RasterGrid
+from fastscapelib.grid import NodeStatus, ProfileGrid, RasterGrid
 
 
 class TestSingleFlowRouter:
@@ -23,7 +23,7 @@ class TestSingleFlowRouter:
 
     @classmethod
     def setup_class(cls) -> None:
-        profile_grid = ProfileGrid(8, 2.2, [NodeStatus.FIXED_VALUE] * 2, [])
+        profile_grid = ProfileGrid(8, 2.2, NodeStatus.FIXED_VALUE)
         cls.profile_flow_graph = FlowGraph(profile_grid, [SingleFlowRouter()])
         cls.profile_elevation = np.array([0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.3, 0.0])
         cls.result_profile_elevation = cls.profile_flow_graph.update_routes(
@@ -38,12 +38,8 @@ class TestSingleFlowRouter:
             NodeStatus.FIXED_VALUE,
         ]
 
-        raster_grid = RasterGrid(
-            [4, 4],
-            [1.0, 1.0],
-            RasterBoundaryStatus(bottom_base_level),
-            [],
-        )
+        raster_grid = RasterGrid([4, 4], [1.0, 1.0], bottom_base_level)
+
         cls.raster_flow_graph = FlowGraph(raster_grid, [SingleFlowRouter()])
 
         # planar surface tilted along the y-axis + small carved channel
@@ -217,12 +213,8 @@ class TestMultiFlowRouter:
 
     def test_graph_topology(self) -> None:
         # test on a 3x3 tiny grid with base levels at all border nodes
-        grid = RasterGrid(
-            [3, 3],
-            [1.0, 1.0],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
-            [],
-        )
+        grid = RasterGrid([3, 3], [1.0, 1.0], NodeStatus.FIXED_VALUE)
+
         diag = np.sqrt(2)
         elevation = np.array([[0.0, 1.0, 0.0], [1.0, 2.0, 1.0], [0.0, 1.0, 0.0]])
         router = MultiFlowRouter(0.0)
@@ -259,12 +251,8 @@ class TestMultiFlowRouter:
     )
     def test_flow_partitions(self, slope_exp, weights) -> None:
         # test on a 3x3 tiny grid with base levels at all border nodes
-        grid = RasterGrid(
-            [3, 3],
-            [1.0, 1.0],
-            RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
-            [],
-        )
+        grid = RasterGrid([3, 3], [1.0, 1.0], NodeStatus.FIXED_VALUE)
+
         sqrt2 = np.sqrt(2)
         elevation = np.array(
             [[0.0, sqrt2, 0.0], [sqrt2, sqrt2 * 2, sqrt2], [0.0, sqrt2, 0.0]]
@@ -294,12 +282,7 @@ def test_conservation_area(router) -> None:
         NodeStatus.CORE,
         NodeStatus.FIXED_VALUE,
     ]
-    grid = RasterGrid(
-        [nrows, ncols],
-        [1.0, 1.0],
-        RasterBoundaryStatus(bottom_base_level),
-        [],
-    )
+    grid = RasterGrid([nrows, ncols], [1.0, 1.0], bottom_base_level)
 
     # avoid closed depressions (all flow must reach bottom border nodes)
     flow_graph = FlowGraph(grid, [PFloodSinkResolver(), router])
@@ -322,12 +305,7 @@ def test_monotonic_dfs(router) -> None:
     nrows = 10
     ncols = 8
 
-    grid = RasterGrid(
-        [nrows, ncols],
-        [1.0, 1.0],
-        RasterBoundaryStatus(NodeStatus.FIXED_VALUE),
-        [],
-    )
+    grid = RasterGrid([nrows, ncols], [1.0, 1.0], NodeStatus.FIXED_VALUE)
 
     # this test requires no closed depressions (fill them with tiny slope)
     flow_graph = FlowGraph(grid, [PFloodSinkResolver(), router])

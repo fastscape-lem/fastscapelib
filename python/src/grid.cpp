@@ -1,3 +1,6 @@
+#include <optional>
+#include <variant>
+
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
@@ -101,16 +104,39 @@ add_grid_bindings(py::module& m)
     // ==== Binding of the TriMesh class ==== //
     py::class_<fs::py_trimesh> tmesh(m, "TriMesh", "A 2-dimensional, triangular (irregular) mesh.");
 
-    tmesh.def(
-        py::init<const fs::py_trimesh::points_type,
-                 const fs::py_trimesh::triangles_type,
-                 const std::vector<fs::node>&>(),
-        py::arg("points"),
-        py::arg("triangles"),
-        py::arg("nodes_status"),
-        R"doc(__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: List[Node]) -> None
+    using trimesh_nstatus_type = std::optional<fs::py_trimesh::nodes_status_map_type>;
+
+    tmesh.def(py::init(
+                  [](const fs::py_trimesh::points_type& points,
+                     const fs::py_trimesh::triangles_type& triangles,
+                     const trimesh_nstatus_type& nodes_status)
+                  {
+                      if (!nodes_status.has_value())
+                      {
+                          return fs::py_trimesh(points, triangles);
+                      }
+                      else
+                      {
+                          const auto& nstatus = nodes_status.value();
+                          return fs::py_trimesh(points, triangles, nstatus);
+                      }
+                  }),
+              py::arg("points"),
+              py::arg("triangles"),
+              py::arg("nodes_status") = py::none(),
+              R"doc(__init__(*args, **kwargs) -> None
 
         TriMesh initializer (from an existing triangulation).
+
+        Overloaded initializer.
+
+        1. ``__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: Dict[int, NodeStatus] | None = None) -> None``
+
+        Create a new mesh with a dictionary of node status (optional).
+
+        2. ``__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: np.ndarray) -> None``
+
+        Create a new mesh with an array of node status.
 
         Parameters
         ----------
@@ -118,13 +144,22 @@ add_grid_bindings(py::module& m)
             Mesh node x,y coordinates (array of shape [N, 2]).
         triangles : array-like
             Indices of triangle vertices (array of shape [K, 3]).
-        nodes_status : list
-            A list of :class:`Node` objects to manually define the status at
-            any node on the grid. If empty, "fixed value" is set for all
-            boundary nodes (i.e., end-points of all the edges that are not
-            shared by more than one triangle).
+        nodes_status : dict or array-like, optional
+            A dictionary where keys are node indices and values are
+            :class:`NodeStatus` values for setting the status at any
+            node on the mesh. If ``None`` (default), "fixed value" is set
+            for all boundary nodes (i.e., end-points of all the edges that
+            are not shared by more than one triangle). Alternatively, an
+            array of shape [N] can be given for setting the status of all
+            nodes at once.
 
         )doc");
+    tmesh.def(py::init<const fs::py_trimesh::points_type&,
+                       const fs::py_trimesh::triangles_type&,
+                       const fs::py_trimesh::nodes_status_array_type&>(),
+              py::arg("points"),
+              py::arg("triangles"),
+              py::arg("nodes_status"));
 
     fs::register_grid_static_properties(tmesh);
     fs::register_base_grid_properties(tmesh);
@@ -190,16 +225,35 @@ add_grid_bindings(py::module& m)
     // ==== Binding of the ProfileGrid class ==== //
     py::class_<fs::py_profile_grid> pgrid(m, "ProfileGrid", "A 1-dimensional profile grid.");
 
+    using profile_bstatus_type = std::
+        variant<fs::node_status, std::array<fs::node_status, 2>, fs::profile_boundary_status>;
+    using profile_nstatus_type = std::optional<fs::py_profile_grid::nodes_status_map_type>;
+
     pgrid.def(
-        py::init<fs::py_profile_grid::size_type,
-                 fs::py_profile_grid::spacing_type,
-                 const fs::profile_boundary_status&,
-                 const std::vector<fs::node>>(),
+        py::init(
+            [](fs::py_profile_grid::size_type size,
+               fs::py_profile_grid::spacing_type spacing,
+               const profile_bstatus_type& bounds_status,
+               const profile_nstatus_type& nodes_status)
+            {
+                auto bstatus = std::visit([](auto&& bs) { return fs::profile_boundary_status(bs); },
+                                          bounds_status);
+
+                if (!nodes_status.has_value())
+                {
+                    return fs::py_profile_grid(size, spacing, bstatus);
+                }
+                else
+                {
+                    const auto& nstatus = nodes_status.value();
+                    return fs::py_profile_grid(size, spacing, bstatus, nstatus);
+                }
+            }),
         py::arg("size"),
         py::arg("spacing"),
         py::arg("bounds_status"),
-        py::arg("nodes_status"),
-        R"doc(__init__(self, size: int, spacing: float, bounds_status: ProfileBoundaryStatus, nodes_status: List[Node]) -> None
+        py::arg("nodes_status") = py::none(),
+        R"doc(__init__(self, size: int, spacing: float, bounds_status: NodeStatus | List[NodeStatus] | ProfileBoundaryStatus, nodes_status: Dict[int, NodeStatus] | None) -> None
 
         Profile grid initializer (overloaded).
 
@@ -209,36 +263,40 @@ add_grid_bindings(py::module& m)
             Total number of grid nodes.
         spacing : float
             Distance between two adjacent grid nodes.
-        bounds_status : :class:`ProfileBoundaryStatus`
+        bounds_status : :class:`NodeStatus` or list or :class:`ProfileBoundaryStatus`
             Status at boundary nodes (left/right grid edges).
-        nodes_status : list
-            A list of :class:`Node` objects to manually define the status at
-            any node on the grid. An overloaded initializer also directly accepts
-            a list of ``(idx, status)`` tuples for convenience.
+        nodes_status : dict, optional
+            A dictionary where keys are node indices and values are
+            :class:`NodeStatus` values. If present (default is ``None``),
+            it is used  to manually define the status at any node on the grid.
 
         )doc");
-    pgrid.def(py::init(
-        [](std::size_t size,
-           fs::py_profile_grid::spacing_type spacing,
-           const std::array<fs::node_status, 2>& bs,
-           const std::vector<std::pair<std::size_t, fs::node_status>>& ns)
-        {
-            std::vector<fs::node> node_vec;
-            for (auto&& node : ns)
-            {
-                node_vec.push_back({ node.first, node.second });
-            }
-            return std::make_unique<fs::py_profile_grid>(size, spacing, bs, node_vec);
-        }));
 
     pgrid.def_static(
         "from_length",
-        &fs::py_profile_grid::from_length,
+        [](fs::py_profile_grid::size_type size,
+           fs::py_profile_grid::length_type length,
+           const profile_bstatus_type& bounds_status,
+           const profile_nstatus_type& nodes_status)
+        {
+            auto bstatus = std::visit([](auto&& bs) { return fs::profile_boundary_status(bs); },
+                                      bounds_status);
+
+            if (!nodes_status.has_value())
+            {
+                return fs::py_profile_grid::from_length(size, length, bstatus);
+            }
+            else
+            {
+                const auto& nstatus = nodes_status.value();
+                return fs::py_profile_grid::from_length(size, length, bstatus, nstatus);
+            }
+        },
         py::arg("size"),
         py::arg("length"),
         py::arg("bounds_status"),
-        py::arg("nodes_status"),
-        R"doc(from_length(self, size: int, length: float, bounds_status: ProfileBoundaryStatus, nodes_status: List[Node]) -> None
+        py::arg("nodes_status") = py::none(),
+        R"doc(from_length(self, size: int, length: float, bounds_status: NodeStatus | List[NodeStatus] | ProfileBoundaryStatus, nodes_status: Dict[int, NodeStatus] | None) -> None
 
         Profile grid initializer from a given total length.
 
@@ -248,11 +306,12 @@ add_grid_bindings(py::module& m)
             Total number of grid nodes.
         length : float
             Total physical length of the grid.
-        bounds_status : :class:`ProfileBoundaryStatus`
+        bounds_status : :class:`NodeStatus` or list or :class:`ProfileBoundaryStatus`
             Status at boundary nodes (left/right grid edges).
-        nodes_status : list
-            A list of :class:`Node` objects to manually define the status at
-            any node on the grid.
+        nodes_status : dict, optional
+            A dictionary where keys are node indices and values are
+            :class:`NodeStatus` values. If present (default is ``None``),
+            it is used  to manually define the status at any node on the grid.
 
         )doc");
 
@@ -388,16 +447,36 @@ add_grid_bindings(py::module& m)
 
         )doc");
 
+
+    using raster_bstatus_type
+        = std::variant<fs::node_status, std::array<fs::node_status, 4>, fs::raster_boundary_status>;
+    using raster_nstatus_type = std::optional<fs::py_raster_grid::nodes_status_map_type>;
+
     rgrid.def(
-        py::init<const fs::py_raster_grid::shape_type&,
-                 const xt::pytensor<double, 1>&,
-                 const fs::raster_boundary_status&,
-                 const std::vector<fs::raster_node>>(),
+        py::init(
+            [](const fs::py_raster_grid::shape_type& shape,
+               const xt::pytensor<double, 1>& spacing,
+               const raster_bstatus_type& bounds_status,
+               const raster_nstatus_type& nodes_status)
+            {
+                auto bstatus = std::visit([](auto&& bs) { return fs::raster_boundary_status(bs); },
+                                          bounds_status);
+
+                if (!nodes_status.has_value())
+                {
+                    return fs::py_raster_grid(shape, spacing, bstatus);
+                }
+                else
+                {
+                    const auto& nstatus = nodes_status.value();
+                    return fs::py_raster_grid(shape, spacing, bstatus, nstatus);
+                }
+            }),
         py::arg("shape"),
         py::arg("spacing"),
         py::arg("bounds_status"),
-        py::arg("nodes_status"),
-        R"doc(__init__(self, size: List[int], spacing: array_like, bounds_status: RasterBoundaryStatus, nodes_status: List[RasterNode]) -> None
+        py::arg("nodes_status") = py::none(),
+        R"doc(__init__(self, size: List[int], spacing: array_like, bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus, nodes_status: Dict[Tuple[int, int], NodeStatus] | None = None) -> None
 
         Raster grid initializer.
 
@@ -407,11 +486,12 @@ add_grid_bindings(py::module& m)
             Shape of the grid (number of rows and cols).
         spacing : array_like
             Distance between two adjacent grid nodes (row, cols).
-        bounds_status : :class:`RasterBoundaryStatus`
-            Status at boundary nodes (left/right grid edges).
-        nodes_status : list
-            A list of :class:`RasterNode` objects to manually define the status at
-            any node on the grid.
+        bounds_status : :class:`NodeStatus` or list or :class:`RasterBoundaryStatus`
+            Status at boundary borders (left/right/top/bottom grid borders).
+        nodes_status : dict, optional
+            A dictionary where keys are node (row, col) indices and values are
+            :class:`NodeStatus` values. If present (default is ``None``),
+            it is used to manually define the status at any node on the grid.
 
         )doc");
 
@@ -419,14 +499,27 @@ add_grid_bindings(py::module& m)
         "from_length",
         [](const fs::py_raster_grid::shape_type& shape,
            const xt::pytensor<double, 1>& length,
-           const fs::raster_boundary_status& boundary,
-           const std::vector<fs::raster_node> status)
-        { return fs::py_raster_grid::from_length(shape, length, boundary, status); },
+           const raster_bstatus_type& bounds_status,
+           const raster_nstatus_type& nodes_status)
+        {
+            auto bstatus = std::visit([](auto&& bs) { return fs::raster_boundary_status(bs); },
+                                      bounds_status);
+
+            if (!nodes_status.has_value())
+            {
+                return fs::py_raster_grid::from_length(shape, length, bstatus);
+            }
+            else
+            {
+                const auto& nstatus = nodes_status.value();
+                return fs::py_raster_grid::from_length(shape, length, bstatus, nstatus);
+            }
+        },
         py::arg("shape"),
         py::arg("length"),
         py::arg("bounds_status"),
-        py::arg("nodes_status"),
-        R"doc(from_length(self, shape: tuple, length: array_like, bounds_status: RasterBoundaryStatus, nodes_status: List[RasterNode]) -> None
+        py::arg("nodes_status") = py::none(),
+        R"doc(from_length(self, shape: tuple, length: array_like, bounds_status: NodeStatus | List[NodeStatus] | RasterBoundaryStatus, nodes_status: Dict[Tuple[int, int], NodeStatus] | None = None) -> None
 
         Raster grid initializer from given total lengths.
 
@@ -436,11 +529,12 @@ add_grid_bindings(py::module& m)
             Shape of the grid (number of rows and cols).
         length : array_like
             Total physical length of the grid in y (rows) and x (cols).
-        bounds_status : :class:`RasterBoundaryStatus`
-            Status at boundary nodes (left/right grid edges).
-        nodes_status : list
-            A list of :class:`RasterNode` objects to manually define the status at
-            any node on the grid.
+        bounds_status : :class:`NodeStatus` or list or :class:`RasterBoundaryStatus`
+            Status at boundary borders (left/right/top/bottom grid borders).
+        nodes_status : dict, optional
+            A dictionary where keys are node (row, col) indices and values are
+            :class:`NodeStatus` values. If present (default is ``None``),
+            it is used to manually define the status at any node on the grid.
 
         )doc");
 

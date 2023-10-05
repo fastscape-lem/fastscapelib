@@ -58,8 +58,8 @@ extensions = [
 ]
 
 extlinks = {
-    "issue": ("https://github.com/fastscape-lem/fastscapelib/issues/%s", "#"),
-    "pull": ("https://github.com/fastscape-lem/fastscapelib/pull/%s", "#"),
+    "issue": ("https://github.com/fastscape-lem/fastscapelib/issues/%s", "#%s"),
+    "pull": ("https://github.com/fastscape-lem/fastscapelib/pull/%s", "#%s"),
 }
 
 templates_path = ["_templates"]
