@@ -45,9 +45,9 @@ class TestFlowGraph:
         flow_graph = FlowGraph(raster_grid, [SingleFlowRouter()])
 
         # uninitialized mask
-        npt.assert_array_equal(flow_graph.mask, np.array([], dtype=np.bool8))
+        npt.assert_array_equal(flow_graph.mask, np.array([], dtype=np.bool_))
 
-        flow_graph.mask = np.ones(raster_grid.shape, dtype=np.bool8)
+        flow_graph.mask = np.ones(raster_grid.shape, dtype=np.bool_)
         npt.assert_array_equal(
             flow_graph.mask, np.ones(raster_grid.shape, dtype=np.bool8)
         )
