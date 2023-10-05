@@ -248,7 +248,7 @@ namespace fastscapelib
          * @param levels The indices of the new base level nodes.
          */
         template <class C>
-        void set_base_levels(const C& levels)
+        void set_base_levels(C&& levels)
         {
             if (!m_writeable)
             {
@@ -280,6 +280,10 @@ namespace fastscapelib
             if (!m_writeable)
             {
                 throw std::runtime_error("cannot set mask (graph is read-only)");
+            }
+            if (!xt::same_shape(mask.shape(), m_grid.shape()))
+            {
+                throw std::runtime_error("cannot set mask (shape mismatch with grid shape)");
             }
 
             m_impl.set_mask(std::forward<C>(mask));
