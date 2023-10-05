@@ -79,6 +79,42 @@ namespace fastscapelib
             }
         }
 
+        TEST_F(multi_flow_router, mask)
+        {
+            flow_graph_type graph(grid, { fs::multi_flow_router(0.0) });
+
+            {
+                SCOPED_TRACE("masked node");
+
+                // center node is masked, edge nodes are base levels
+                xt::xtensor<bool, 2> mask{ { false, false, false },
+                                           { false, true, false },
+                                           { false, false, false } };
+                graph.set_mask(mask);
+                graph.update_routes(elevation);
+
+                // no graph edge (each node has itself as receiver)
+                auto actual = graph.impl().receivers_count();
+                xt::xtensor<size_type, 1> expected{ 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+                EXPECT_EQ(actual, expected);
+            }
+            {
+                SCOPED_TRACE("masked neighbor");
+
+                // one masked edge node
+                xt::xtensor<bool, 2> mask{ { false, false, false },
+                                           { true, false, false },
+                                           { false, false, false } };
+                graph.set_mask(mask);
+                graph.update_routes(elevation);
+
+                // masked node not present in center node receivers
+                auto actual = xt::row(graph.impl().receivers(), 4);
+                xt::xtensor<size_type, 1> expected{ 0, 1, 2, 5, 6, 7, 8 };
+                EXPECT_EQ(xt::view(actual, xt::range(0, 7)), expected);
+            }
+        }
+
         TEST_F(multi_flow_router, flow_partition)
         {
             {

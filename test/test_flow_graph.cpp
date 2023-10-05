@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xstrided_view.hpp"
 
@@ -46,6 +48,48 @@ namespace fastscapelib
 
             // no operator updating the graph (flow router)
             EXPECT_THROW(flow_graph_type(grid, { fs::flow_snapshot("s") }), std::invalid_argument);
+        }
+
+        TEST_F(flow_graph, base_levels)
+        {
+            auto graph = flow_graph_type(grid, { fs::single_flow_router() });
+
+            {
+                SCOPED_TRACE("default base levels");
+
+                auto actual = graph.base_levels();
+                // base_levels are not ordered (implementation detail)
+                std::sort(actual.begin(), actual.end());
+                EXPECT_EQ(actual, std::vector<size_type>({ 12, 13, 14, 15 }));
+            }
+            {
+                SCOPED_TRACE("set base levels");
+
+                graph.set_base_levels(std::vector<size_type>({ 5 }));
+                EXPECT_EQ(graph.base_levels(), std::vector<size_type>({ 5 }));
+            }
+        }
+
+        TEST_F(flow_graph, mask)
+        {
+            auto graph = flow_graph_type(grid, { fs::single_flow_router() });
+
+            {
+                SCOPED_TRACE("uninitialized mask (default)");
+
+                EXPECT_EQ(graph.mask(), xt::xarray<bool>());
+            }
+            {
+                SCOPED_TRACE("set mask");
+
+                graph.set_mask(xt::ones<bool>(grid.shape()));
+                EXPECT_EQ(graph.mask(), xt::ones<bool>(grid.shape()));
+            }
+            {
+                SCOPED_TRACE("set mask error (shape mismatch)");
+
+                EXPECT_THROW(graph.set_mask(xt::ones<bool>({ 10. })), std::runtime_error);
+            }
         }
 
         TEST_F(flow_graph, operators)
