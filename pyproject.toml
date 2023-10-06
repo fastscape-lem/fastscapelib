@@ -31,6 +31,16 @@ test = ["pytest>=6.0"]
 [tool.scikit-build]
 wheel.packages = ["python/fastscapelib"]
 
+[tool.cibuildwheel]
+environment = "SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON'"
+test-extras = "test"
+test-command = "pytest python/fastscapelib/tests"
+build-verbosity = 1
+
+[tool.cibuildwheel.macos]
+archs = ["auto", "universal2"]
+test-skip = ["*universal2:arm64"]
+
 [tool.isort]
 profile = "black"
 skip_gitignore = true
