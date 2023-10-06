@@ -123,50 +123,45 @@ class TestSingleFlowRouter:
         )
 
     def test_donors(self) -> None:
-        m = np.iinfo(np.uint64).max
-        expected_donors = (
-            np.array(
-                [
-                    [1, m, m],
-                    [m, m, m],
-                    [2, 3, m],
-                    [4, m, m],
-                    [m, m, m],
-                    [m, m, m],
-                    [5, m, m],
-                    [6, m, m],
-                ]
-            ),
+        actual = self.profile_flow_graph.impl().donors
+        m = np.iinfo(actual.dtype).max
+        expected = np.array(
+            [
+                [1, m, m],
+                [m, m, m],
+                [2, 3, m],
+                [4, m, m],
+                [m, m, m],
+                [m, m, m],
+                [5, m, m],
+                [6, m, m],
+            ]
         )
-        npt.assert_equal(
-            self.profile_flow_graph.impl().donors, np.squeeze(expected_donors)
-        )
+        npt.assert_equal(actual, expected)
 
-        expected_donors = (
-            np.array(
-                [
-                    [m, m, m, m, m, m, m, m, m],
-                    [m, m, m, m, m, m, m, m, m],
-                    [m, m, m, m, m, m, m, m, m],
-                    [m, m, m, m, m, m, m, m, m],
-                    [0, m, m, m, m, m, m, m, m],
-                    [1, m, m, m, m, m, m, m, m],
-                    [2, m, m, m, m, m, m, m, m],
-                    [3, m, m, m, m, m, m, m, m],
-                    [4, m, m, m, m, m, m, m, m],
-                    [5, m, m, m, m, m, m, m, m],
-                    [6, m, m, m, m, m, m, m, m],
-                    [7, m, m, m, m, m, m, m, m],
-                    [m, m, m, m, m, m, m, m, m],
-                    [8, 9, 10, m, m, m, m, m, m],
-                    [m, m, m, m, m, m, m, m, m],
-                    [11, m, m, m, m, m, m, m, m],
-                ]
-            ),
+        actual = self.raster_flow_graph.impl().donors
+        m = np.iinfo(actual.dtype).max
+        expected = np.array(
+            [
+                [m, m, m, m, m, m, m, m, m],
+                [m, m, m, m, m, m, m, m, m],
+                [m, m, m, m, m, m, m, m, m],
+                [m, m, m, m, m, m, m, m, m],
+                [0, m, m, m, m, m, m, m, m],
+                [1, m, m, m, m, m, m, m, m],
+                [2, m, m, m, m, m, m, m, m],
+                [3, m, m, m, m, m, m, m, m],
+                [4, m, m, m, m, m, m, m, m],
+                [5, m, m, m, m, m, m, m, m],
+                [6, m, m, m, m, m, m, m, m],
+                [7, m, m, m, m, m, m, m, m],
+                [m, m, m, m, m, m, m, m, m],
+                [8, 9, 10, m, m, m, m, m, m],
+                [m, m, m, m, m, m, m, m, m],
+                [11, m, m, m, m, m, m, m, m],
+            ]
         )
-        npt.assert_equal(
-            self.raster_flow_graph.impl().donors, np.squeeze(expected_donors)
-        )
+        npt.assert_equal(actual, expected)
 
     def test_donors_count(self) -> None:
         npt.assert_equal(

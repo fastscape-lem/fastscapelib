@@ -5,6 +5,7 @@
 #include "xtensor/xarray.hpp"
 #include "xtensor/xmath.hpp"
 #include "xtensor/xoperation.hpp"
+#include "xtensor/xrandom.hpp"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"
 

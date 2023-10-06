@@ -1,5 +1,3 @@
-name: Python wheels
-
 on:
   # trigger action from GitHub GUI (testing, no publish)
   workflow_dispatch:
@@ -7,53 +5,65 @@ on:
     types:
       - published
 
-make_sdist:
-  name: Make Python SDist
-  runs-on: ubuntu-latest
-  steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+name: Python wheels
 
-    - name: Build SDist
-      run: pipx run build --sdist
+jobs:
+  make_sdist:
+    name: Make Python SDist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Upload SDist
-      uses: actions/upload-artifact@v3
-      with:
-        path: dist/*.tar.gz
+      - name: Build SDist
+        run: pipx run build --sdist
 
-build_wheels:
-  name: Build wheel (${{ matrix.os }})
-  runs-on: ${{ matrix.os }}
-  strategy:
-    fail-fast: false
-    matrix:
-      os: [ubuntu-latest, windows-latest, macos-latest]
-  steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - name: Upload SDist
+        uses: actions/upload-artifact@v3
+        with:
+          path: dist/*.tar.gz
 
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v2.16
+  build_wheels:
+    name: Build wheel (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Upload wheels
-      uses: actions/upload-artifact@v3
-      with:
-        path: wheelhouse/*.whl
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.16
+        env:
+          # skip PyPy and muslinux (for now)
+          CIBW_SKIP: "pp* *musllinux*"
+          # skip 32-bits platforms on linux and windows
+          CIBW_ARCHS_LINUX: "auto64"
+          CIBW_ARCHS_WINDOWS: "auto64"
+          # macos: opt-in cross-compile on arm64
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
 
-upload_all:
-  needs: [build_wheels, make_sdist]
-  environment: pypi
-  permissions:
-    id-token: write
-  runs-on: ubuntu-latest
-  if: github.event_name == 'release' && github.event.action == 'published'
-  steps:
-    - name: Get dist files
-      uses: actions/download-artifact@v3
-      with:
-        name: artifact
-        path: dist
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          path: wheelhouse/*.whl
 
-    - name: Publish on PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+  upload_all:
+    needs: [build_wheels, make_sdist]
+    environment: pypi
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - name: Get dist files
+        uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+
+      - name: Publish on PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

@@ -2,6 +2,9 @@
 requires = [
     "scikit-build-core",
     "pybind11",
+    # TODO: replace by "numpy>=1.25.0,<2" when dropping py3.8 support.
+    # https://github.com/scipy/oldest-supported-numpy/issues/76
+    "oldest-supported-numpy",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -32,14 +35,13 @@ test = ["pytest>=6.0"]
 wheel.packages = ["python/fastscapelib"]
 
 [tool.cibuildwheel]
-environment = "SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON'"
+environment = {SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON'}
 test-extras = "test"
-test-command = "pytest python/fastscapelib/tests"
+test-command = "pytest {project}/python/fastscapelib/tests"
 build-verbosity = 1
 
 [tool.cibuildwheel.macos]
-archs = ["auto", "universal2"]
-test-skip = ["*universal2:arm64"]
+environment = {SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON', MACOSX_DEPLOYMENT_TARGET=10.13}
 
 [tool.isort]
 profile = "black"

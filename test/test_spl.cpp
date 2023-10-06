@@ -7,6 +7,7 @@
 
 #include "gtest/gtest.h"
 #include "xtensor/xtensor.hpp"
+#include "xtensor/xrandom.hpp"
 #include "xtensor/xview.hpp"
 #include "xtensor/xmath.hpp"
 

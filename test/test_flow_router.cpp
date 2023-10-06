@@ -1,5 +1,6 @@
 #include "xtensor/xbuilder.hpp"
 #include "xtensor/xrandom.hpp"
+#include "xtensor/xset_operation.hpp"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xview.hpp"
 
@@ -11,6 +12,8 @@
 #include "fastscapelib/grid/raster_grid.hpp"
 
 namespace fs = fastscapelib;
+using namespace xt::placeholders;
+
 
 namespace fastscapelib
 {

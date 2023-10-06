@@ -111,9 +111,10 @@ class TestFlowGraph:
             flow_graph.impl().receivers_weight[:, 0], np.ones(elevation.size)
         )
 
-        m = np.iinfo(np.uint64).max
+        actual = flow_graph.impl().donors
+        m = np.iinfo(actual.dtype).max
         npt.assert_equal(
-            flow_graph.impl().donors,
+            actual,
             np.array(
                 [
                     [1, m, m],
