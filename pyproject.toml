@@ -38,7 +38,7 @@ wheel.packages = ["python/fastscapelib"]
 [tool.cibuildwheel]
 environment = "SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON'"
 test-extras = "test"
-test-command = "pytest {project}/tests"
+test-command = "pytest {project}/python/fastscapelib/tests"
 build-verbosity = 1
 
 [tool.cibuildwheel.macos]
