@@ -1,7 +1,6 @@
 [build-system]
 requires = [
     "scikit-build-core",
-    "numpy",
     "pybind11",
     # TODO: replace by "numpy>=1.25.0,<2" when dropping py3.8 support.
     # https://github.com/scipy/oldest-supported-numpy/issues/76
