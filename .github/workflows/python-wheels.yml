@@ -36,6 +36,9 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16
+        env:
+          # skip PyPy (all versions/platforms) and 32-bits platforms
+          CIBW_SKIP: "pp* *-win32 *-manylinux_i686"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v3
