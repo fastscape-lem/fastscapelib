@@ -10,6 +10,7 @@ message(STATUS "Building fastscapelib v${PROJECT_VERSION}")
 set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 OPTION(FS_DOWNLOAD_XTENSOR "Download and use xtensor development version" OFF)
+OPTION(FS_DOWNLOAD_XTENSOR_PYTHON "Download xtensor-python (python bindings)" OFF)
 OPTION(FS_BUILD_TESTS "Build fastscapelib test suite" OFF)
 OPTION(FS_DOWNLOAD_GTEST "Build gtest from downloaded sources" OFF)
 OPTION(FS_GTEST_SRC_DIR "Build gtest from local sources" OFF)
@@ -24,10 +25,37 @@ set(CMAKE_MODULE_PATH
 # Dependencies
 # ============
 
-# -- xtensor (optionally from source download)
-if(FS_DOWNLOAD_XTENSOR)
-    include(FetchContent)
+include(FetchContent)
 
+# -- get the whole xtensor stack (only when building python bindings)
+if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
+    message(STATUS "Downloading xtl, xtensor and xtensor-python libraries")
+
+    FetchContent_Declare(xtl
+        GIT_REPOSITORY https://github.com/xtensor-stack/xtl
+        GIT_TAG 0.7.5
+        GIT_SHALLOW TRUE)
+    FetchContent_MakeAvailable(xtl)
+
+    FetchContent_Declare(xtensor
+        GIT_REPOSITORY https://github.com/xtensor-stack/xtensor
+        GIT_TAG 0.24.6
+        GIT_SHALLOW TRUE)
+    set(CPP17 ON CACHE BOOL "Enable C++17 for xtensor" FORCE)
+    FetchContent_MakeAvailable(xtensor)
+
+    FetchContent_Declare(xtensor-python
+        GIT_REPOSITORY https://github.com/xtensor-stack/xtensor-python
+        GIT_TAG 0.26.1
+        GIT_SHALLOW TRUE)
+    FetchContent_MakeAvailable(xtensor-python)
+
+    set_property(DIRECTORY ${xtl_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
+    set_property(DIRECTORY ${xtensor_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
+    set_property(DIRECTORY ${xtensor-python_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
+
+# -- get xtensor development version (need xtl already installed)
+elseif(FS_DOWNLOAD_XTENSOR)
     message(STATUS "Downloading xtensor development version (master branch)")
 
     FetchContent_Declare(xtensor
