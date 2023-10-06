@@ -67,7 +67,6 @@ include(CMakePackageConfigHelpers)
 # -- fastscapelib
 set(FASTSCAPELIB_HEADERS
   # Algo
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/algo/flow_routing.hpp
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/algo/pflood.hpp
   # Eroders
   ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/diffusion_adi.hpp
