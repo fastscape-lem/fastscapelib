@@ -72,7 +72,6 @@ set(FASTSCAPELIB_TEST_SRC
     test_flow_router.cpp
     test_flow_snapshot.cpp
     test_single_flow_router.cpp
-    test_flow_routing.cpp
     test_multi_flow_router.cpp
     test_pflood.cpp
     test_profile_grid.cpp

@@ -26,7 +26,6 @@ message(STATUS "Found pybind11 v${pybind11_VERSION}: ${pybind11_INCLUDE_DIRS}")
 set(PY_FASTSCAPELIB _fastscapelib_py)
 
 pybind11_add_module(${PY_FASTSCAPELIB}
-    src/algo.cpp
     src/eroders.cpp
     src/flow_graph.cpp
     src/grid.cpp
