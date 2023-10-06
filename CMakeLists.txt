@@ -36,10 +36,11 @@ if(FS_DOWNLOAD_XTENSOR)
       GIT_SHALLOW TRUE)
 
     set(CPP17 ON CACHE BOOL "Enable C++17 for xtensor" FORCE)
-    set(FS_DOWNLOAD_GBENCHMARK OFF CACHE BOOL
+    set(DOWNLOAD_GBENCHMARK OFF CACHE BOOL
       "skip downloading google-benchmark via xtensor" FORCE)
 
     FetchContent_MakeAvailable(xtensor)
+
 else()
     find_package(xtensor REQUIRED)
     message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
