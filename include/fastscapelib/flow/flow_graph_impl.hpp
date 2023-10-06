@@ -3,6 +3,7 @@
 
 #include <array>
 #include <iterator>
+#include <limits>
 #include <unordered_set>
 #include <stack>
 #include <vector>
@@ -198,7 +199,7 @@ namespace fastscapelib
 
             inline bool is_base_level(const size_type& idx) const
             {
-                return m_base_levels.count(idx);
+                return bool(m_base_levels.count(idx));
             }
 
             const std::unordered_set<size_type>& base_levels() const
@@ -367,12 +368,19 @@ namespace fastscapelib
         template <class G, class S>
         void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_basins()
         {
-            size_type current_basin = 0;
+            size_type current_basin = static_cast<size_type>(-1);
+            size_type no_basin = std::numeric_limits<size_type>::max();
 
             m_outlets.clear();
 
             for (const auto& inode : nodes_indices_bottomup())
             {
+                if (is_masked(inode))
+                {
+                    m_basins(inode) = no_basin;
+                    continue;
+                }
+
                 // outlet node has only one receiver: itself
                 if (inode == m_receivers(inode, 0))
                 {
@@ -380,10 +388,10 @@ namespace fastscapelib
                     current_basin++;
                 }
 
-                m_basins(inode) = current_basin - 1;
+                m_basins(inode) = current_basin;
             }
 
-            assert(m_outlets.size() == current_basin);
+            assert(m_outlets.size() == current_basin + 1);
         }
 
         template <class G, class S>

@@ -550,13 +550,19 @@ add_flow_graph_bindings(py::module& m)
         A basin is defined by all adjacent nodes that flow towards the
         same outlet (or pit) graph node.
 
-        Results may be cached so the same computation is not run multiple times.
-
         Returns
         -------
         basins : numpy.ndarray
             Basin ids. The shape of the array is the same than the shape
             of the arrays of the grid used to build the flow graph.
+
+        Notes
+        -----
+        Results may be cached so the same computation is not run multiple times.
+
+        All masked grid nodes have the same assigned catchment id set by the maximum
+        limit of the integer value range. It is therefore preferable to mask the
+        results prior to, e.g., plotting it.
 
         )doc");
 

@@ -364,7 +364,11 @@ namespace fastscapelib
          *
          * @return Catchment ids (array of same shape than ``grid_shape``).
          *
-         * Note: results may be cached.
+         * @note
+         * Results may be cached.
+         * All masked grid nodes have the same assigned catchment id set by the maximum
+         * limit of the integer value range. It is therefore preferable to mask the
+         * results prior to, e.g., plotting it.
          */
         data_array_size_type basins()
         {

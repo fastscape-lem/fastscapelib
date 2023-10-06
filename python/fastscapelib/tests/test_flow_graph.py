@@ -212,3 +212,27 @@ class TestFlowGraph:
         )
         npt.assert_array_equal(flow_graph.basins(), expected)
         npt.assert_array_equal(flow_graph.basins().flatten(), flow_graph.impl().basins)
+
+        # test basins mask
+        mask = np.array(
+            [
+                [False, False, False, True],
+                [False, False, False, True],
+                [False, False, False, True],
+                [False, False, False, True],
+            ]
+        )
+
+        flow_graph.mask = mask
+        flow_graph.update_routes(elevation)
+        actual = flow_graph.basins()
+        no_basin = np.iinfo(actual.dtype).max
+        expected = np.array(
+            [
+                [1, 1, 1, no_basin],
+                [1, 1, 1, no_basin],
+                [1, 1, 1, no_basin],
+                [0, 1, 2, no_basin],
+            ]
+        )
+        npt.assert_array_equal(actual, expected)
