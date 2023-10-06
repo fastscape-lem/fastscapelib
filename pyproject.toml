@@ -42,6 +42,7 @@ test-command = "pytest {project}/tests"
 build-verbosity = 1
 
 [tool.cibuildwheel.macos]
+environment = "MACOSX_DEPLOYMENT_TARGET=10.13"
 archs = ["auto", "universal2"]
 test-skip = ["*universal2:arm64"]
 
