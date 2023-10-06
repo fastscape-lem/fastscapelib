@@ -36,6 +36,7 @@ test = ["pytest>=6.0"]
 wheel.packages = ["python/fastscapelib"]
 
 [tool.cibuildwheel]
+skip = "pp*"
 environment = {SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON'}
 test-extras = "test"
 test-command = "pytest {project}/python/fastscapelib/tests"
