@@ -36,12 +36,6 @@ pybind11_add_module(${PY_FASTSCAPELIB}
 target_link_libraries(${PY_FASTSCAPELIB}
                       PRIVATE fastscapelib xtensor-python Python::NumPy)
 
-if(FS_DOWNLOAD_XTENSOR_PYTHON)
-  # upstream xtensor dependencies not automatically included when
-  # downloading it cmake (fetch content)
-  target_link_libraries(${PY_FASTSCAPELIB} PRIVATE xtensor xtl)
-endif()
-
 target_compile_features(${PY_FASTSCAPELIB} PUBLIC cxx_std_17)
 
 target_compile_definitions(${PY_FASTSCAPELIB} PRIVATE VERSION_INFO=${PROJECT_VERSION})
