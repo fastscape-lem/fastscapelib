@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xstrided_view.hpp"
 
@@ -48,6 +50,48 @@ namespace fastscapelib
             EXPECT_THROW(flow_graph_type(grid, { fs::flow_snapshot("s") }), std::invalid_argument);
         }
 
+        TEST_F(flow_graph, base_levels)
+        {
+            auto graph = flow_graph_type(grid, { fs::single_flow_router() });
+
+            {
+                SCOPED_TRACE("default base levels");
+
+                auto actual = graph.base_levels();
+                // base_levels are not ordered (implementation detail)
+                std::sort(actual.begin(), actual.end());
+                EXPECT_EQ(actual, std::vector<size_type>({ 12, 13, 14, 15 }));
+            }
+            {
+                SCOPED_TRACE("set base levels");
+
+                graph.set_base_levels(std::vector<size_type>({ 5 }));
+                EXPECT_EQ(graph.base_levels(), std::vector<size_type>({ 5 }));
+            }
+        }
+
+        TEST_F(flow_graph, mask)
+        {
+            auto graph = flow_graph_type(grid, { fs::single_flow_router() });
+
+            {
+                SCOPED_TRACE("uninitialized mask (default)");
+
+                EXPECT_EQ(graph.mask(), xt::xarray<bool>());
+            }
+            {
+                SCOPED_TRACE("set mask");
+
+                graph.set_mask(xt::ones<bool>(grid.shape()));
+                EXPECT_EQ(graph.mask(), xt::ones<bool>(grid.shape()));
+            }
+            {
+                SCOPED_TRACE("set mask error (shape mismatch)");
+
+                EXPECT_THROW(graph.set_mask(xt::ones<bool>({ 10. })), std::runtime_error);
+            }
+        }
+
         TEST_F(flow_graph, operators)
         {
             auto graph
@@ -96,7 +140,7 @@ namespace fastscapelib
             xt::xtensor<size_type, 1> expected{ 4,  5,  6,  7,  8,  9,  10, 11,
                                                 13, 13, 13, 15, 12, 13, 14, 15 };
 
-            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+            EXPECT_EQ(actual, expected);
         }
 
         TEST_F(flow_graph, accumulate)
@@ -129,13 +173,36 @@ namespace fastscapelib
 
             auto actual = graph.basins();
 
-            xt::xtensor<size_t, 2> expected{
+            xt::xtensor<size_type, 2> expected{
                 { 1, 1, 1, 3 }, { 1, 1, 1, 3 }, { 1, 1, 1, 3 }, { 0, 1, 2, 3 }
             };
 
-            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+            EXPECT_EQ(actual, expected);
 
             EXPECT_TRUE(xt::all(xt::equal(xt::flatten(actual), graph.impl().basins())));
+
+            {
+                SCOPED_TRACE("with mask");
+
+                xt::xtensor<bool, 2> mask{ { false, false, false, true },
+                                           { false, false, false, true },
+                                           { false, false, false, true },
+                                           { false, false, false, true } };
+
+                graph.set_mask(mask);
+                graph.update_routes(elevation);
+
+                auto actual = graph.basins();
+
+                size_type no_basin = std::numeric_limits<size_type>::max();
+
+                xt::xtensor<size_type, 2> expected{ { 1, 1, 1, no_basin },
+                                                    { 1, 1, 1, no_basin },
+                                                    { 1, 1, 1, no_basin },
+                                                    { 0, 1, 2, no_basin } };
+
+                EXPECT_EQ(actual, expected);
+            }
         }
     }
 }

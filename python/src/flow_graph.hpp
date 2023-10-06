@@ -308,6 +308,12 @@ namespace fastscapelib
 
             virtual const data_array_type& update_routes(const data_array_type& elevation) = 0;
 
+            virtual std::vector<size_type> base_levels() const = 0;
+            virtual void set_base_levels(const std::vector<size_type>& levels) = 0;
+
+            virtual xt_array_t<py_selector, bool> mask() const = 0;
+            virtual void set_mask(const xt_array_t<py_selector, bool>& mask) = 0;
+
             virtual void accumulate(data_array_type& acc, const data_array_type& src) const = 0;
             virtual void accumulate(data_array_type& acc, data_type src) const = 0;
             virtual data_array_type accumulate(const data_array_type& src) const = 0;
@@ -383,13 +389,33 @@ namespace fastscapelib
                 return graph().update_routes(elevation);
             }
 
+            std::vector<size_type> base_levels() const
+            {
+                return graph().base_levels();
+            }
+
+            void set_base_levels(const std::vector<size_type>& levels)
+            {
+                graph().set_base_levels(levels);
+            }
+
+            xt_array_t<py_selector, bool> mask() const
+            {
+                return graph().mask();
+            }
+
+            void set_mask(const xt_array_t<py_selector, bool>& mask)
+            {
+                graph().set_mask(mask);
+            }
+
             void accumulate(data_array_type& acc, const data_array_type& src) const
             {
-                return graph().accumulate(acc, src);
+                graph().accumulate(acc, src);
             }
             void accumulate(data_array_type& acc, data_type src) const
             {
-                return graph().accumulate(acc, src);
+                graph().accumulate(acc, src);
             }
             data_array_type accumulate(const data_array_type& src) const
             {
@@ -508,13 +534,33 @@ namespace fastscapelib
             return m_wrapper_ptr->update_routes(elevation);
         }
 
+        std::vector<size_type> base_levels()
+        {
+            return m_wrapper_ptr->base_levels();
+        }
+
+        void set_base_levels(const std::vector<size_type>& levels)
+        {
+            m_wrapper_ptr->set_base_levels(levels);
+        }
+
+        xt_array_t<py_selector, bool> mask() const
+        {
+            return m_wrapper_ptr->mask();
+        }
+
+        void set_mask(const xt_array_t<py_selector, bool>& mask)
+        {
+            m_wrapper_ptr->set_mask(mask);
+        }
+
         void accumulate(data_array_type& acc, const data_array_type& src) const
         {
-            return m_wrapper_ptr->accumulate(acc, src);
+            m_wrapper_ptr->accumulate(acc, src);
         }
         void accumulate(data_array_type& acc, data_type src) const
         {
-            return m_wrapper_ptr->accumulate(acc, src);
+            m_wrapper_ptr->accumulate(acc, src);
         }
         data_array_type accumulate(const data_array_type& src) const
         {

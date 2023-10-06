@@ -146,6 +146,42 @@ namespace fastscapelib
             expect_edges_equal(actual, expected);
         }
 
+        TEST_F(basin_graph, connect_basins_mask)
+        {
+            // masking all nodes of basin 5
+            xt::xtensor<bool, 2> mask{ { false, false, false, false, false },
+                                       { false, false, false, false, false },
+                                       { false, false, false, false, true },
+                                       { false, false, false, false, true },
+                                       { false, false, false, false, true } };
+
+            setup();
+            fgraph.set_mask(mask);
+            fgraph.update_routes(elevation);
+
+            basin_graph_type bgraph = basin_graph_type(fgraph.impl(), fs::mst_method::kruskal);
+            bgraph.update_routes(elevation);
+
+            // copied from connect_basins test, removed edges with basin 5
+            data_type diag = std::sqrt(2);
+            size_type init_idx = static_cast<size_type>(-1);
+            data_type init_elev = std::numeric_limits<data_type>::lowest();
+            auto actual = bgraph.edges();
+            edges_type expected = { // all edges from inner basin 0 to outer basins
+                                    { { 2, 0 }, { 16, 12 }, 0.19, diag },
+                                    { { 0, 3 }, { 12, 17 }, 0.20, 1.0 },
+                                    { { 0, 4 }, { 12, 18 }, 0.20, diag },
+                                    { { 0, 1 }, { 11, 10 }, 0.50, 1.0 },
+                                    // all outer basins connected to the virtual
+                                    // root basin (assigned to basin 1 as it is
+                                    // the 1st parsed outer basin)
+                                    { { 1, 2 }, { init_idx, init_idx }, init_elev, 0.0 },
+                                    { { 1, 3 }, { init_idx, init_idx }, init_elev, 0.0 },
+                                    { { 1, 4 }, { init_idx, init_idx }, init_elev, 0.0 }
+            };
+
+            expect_edges_equal(actual, expected);
+        }
 
         TEST_P(basin_graph, compute_mst)
         {

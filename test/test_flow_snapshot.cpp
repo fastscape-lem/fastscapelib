@@ -100,6 +100,9 @@ namespace fastscapelib
 
             // test snapshot graphs are read-only
             ASSERT_THROW(snapshot_a.update_routes(elevation), std::runtime_error);
+            ASSERT_THROW(snapshot_a.set_base_levels(std::vector<size_type>({ 0 })),
+                         std::runtime_error);
+            ASSERT_THROW(snapshot_a.set_mask(xt::zeros<bool>(grid.shape())), std::runtime_error);
         }
 
         TEST_F(flow_snapshot, elevation)

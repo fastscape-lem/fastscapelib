@@ -30,6 +30,28 @@ class TestFlowGraph:
         with pytest.raises(TypeError, match="invalid flow operator"):
             FlowGraph(raster_grid, ["not a flow operator"])  # type: ignore[list-item]
 
+    def test_base_levels(self) -> None:
+        raster_grid = RasterGrid([3, 3], [1.0, 1.0], NodeStatus.FIXED_VALUE)
+        flow_graph = FlowGraph(raster_grid, [SingleFlowRouter()])
+
+        actual = flow_graph.base_levels
+        assert set(actual) == {0, 1, 2, 3, 5, 6, 7, 8}
+
+        flow_graph.base_levels = [3]
+        assert flow_graph.base_levels == [3]
+
+    def test_mask(self) -> None:
+        raster_grid = RasterGrid([3, 3], [1.0, 1.0], NodeStatus.FIXED_VALUE)
+        flow_graph = FlowGraph(raster_grid, [SingleFlowRouter()])
+
+        # uninitialized mask
+        npt.assert_array_equal(flow_graph.mask, np.array([], dtype=np.bool_))
+
+        flow_graph.mask = np.ones(raster_grid.shape, dtype=np.bool_)
+        npt.assert_array_equal(
+            flow_graph.mask, np.ones(raster_grid.shape, dtype=np.bool_)
+        )
+
     def test_operators(self) -> None:
         grid = ProfileGrid(8, 2.2, NodeStatus.FIXED_VALUE)
 
@@ -190,3 +212,27 @@ class TestFlowGraph:
         )
         npt.assert_array_equal(flow_graph.basins(), expected)
         npt.assert_array_equal(flow_graph.basins().flatten(), flow_graph.impl().basins)
+
+        # test basins mask
+        mask = np.array(
+            [
+                [False, False, False, True],
+                [False, False, False, True],
+                [False, False, False, True],
+                [False, False, False, True],
+            ]
+        )
+
+        flow_graph.mask = mask
+        flow_graph.update_routes(elevation)
+        actual = flow_graph.basins()
+        no_basin = np.iinfo(actual.dtype).max
+        expected = np.array(
+            [
+                [1, 1, 1, no_basin],
+                [1, 1, 1, no_basin],
+                [1, 1, 1, no_basin],
+                [0, 1, 2, no_basin],
+            ]
+        )
+        npt.assert_array_equal(actual, expected)

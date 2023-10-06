@@ -90,9 +90,32 @@ These specific nodes may collect input flow but cannot release any output flow
 (it could also mean that the flow is leaving the modeled domain or sub-domain,
 e.g., surface land water entering the sea).
 
-By default, all grid nodes with status
+When creating a new flow graph, all grid nodes with status
 {py:attr}`~fastscapelib.NodeStatus.FIXED_VALUE` are set as base
-level nodes when creating a flow graph.
+level nodes by default.
+
+It is possible to set alternative base level nodes via the
+{cpp:func}`~fastscapelib::flow_graph::set_base_levels` method (C++) or the
+{py:attr}`~fastscapelib.FlowGraph.base_levels` property (Python). This can be
+done each time prior to {ref}`updating the flow paths
+<guide-compute-flow-paths>` in the cases where the base levels are evolving over
+time (e.g., inner lake, sea or ocean dynamics, planet craters).
+
+### Mask
+
+A binary mask can be set via the {cpp:func}`~fastscapelib::flow_graph::set_mask`
+method (C++) or the {py:attr}`~fastscapelib.FlowGraph.mask` property (Python) to
+exclude grid nodes from the computation of the flow graph. By default, all grid
+nodes are included in the flow graph (no mask).
+
+Setting a mask is useful if the modeled domain encompass multiple sub-domains
+such as land vs. ocean. Those sub-domains may each have their own flow graph
+with different {ref}`flow routing strategies <guide-flow-routing-strategies>`,
+{ref}`base level nodes <guide-base-level-nodes>` and masks.
+
+Like for the base level nodes, a flow graph's mask can be set or updated each
+time prior to {ref}`updating the flow paths <guide-compute-flow-paths>`, e.g.,
+according to sea level change over time.
 
 (guide-compute-flow-paths)=
 ### Initializing / Updating the Flow Paths

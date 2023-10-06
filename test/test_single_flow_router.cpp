@@ -59,7 +59,7 @@ namespace fastscapelib
             auto actual = xt::col(graph.impl().receivers(), 0);
             xt::xtensor<size_type, 1> expected{ 0, 0, 2, 2, 3, 6, 7, 7 };
 
-            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+            EXPECT_EQ(actual, expected);
         }
 
         TEST_F(single_flow_router__profile, receivers_distance)
@@ -71,7 +71,7 @@ namespace fastscapelib
             auto actual = xt::col(graph.impl().receivers_distance(), 0);
             xt::xtensor<double, 1> expected{ 0., 1., 0., 1., 1., 1., 1., 0. };
 
-            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+            EXPECT_EQ(actual, expected);
         }
 
         TEST_F(single_flow_router__profile, receivers_count)
@@ -81,7 +81,7 @@ namespace fastscapelib
             auto actual = graph.impl().receivers_count();
             auto expected = xt::ones<std::uint8_t>({ grid.size() });
 
-            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+            EXPECT_EQ(actual, expected);
         }
 
         TEST_F(single_flow_router__profile, receivers_weight)
@@ -93,7 +93,7 @@ namespace fastscapelib
             auto actual = xt::col(graph.impl().receivers_weight(), 0);
             auto expected = xt::ones<double>({ grid.size() });
 
-            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+            EXPECT_EQ(actual, expected);
         }
 
         TEST_F(single_flow_router__profile, donors)
@@ -106,7 +106,7 @@ namespace fastscapelib
                 { -1, -1, -1 }, { -1, -1, -1 }, { 5, -1, -1 }, { 6, -1, -1 }
             };
 
-            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+            EXPECT_EQ(actual, expected);
         }
 
         TEST_F(single_flow_router__profile, donors_count)
@@ -116,7 +116,7 @@ namespace fastscapelib
             auto actual = graph.impl().donors_count();
             xt::xtensor<std::uint8_t, 1> expected{ 1, 0, 2, 1, 0, 0, 1, 1 };
 
-            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+            EXPECT_EQ(actual, expected);
         }
 
         TEST_F(single_flow_router__profile, dfs_indices)
@@ -126,7 +126,20 @@ namespace fastscapelib
             auto actual = graph.impl().dfs_indices();
             xt::xtensor<std::uint8_t, 1> expected{ 0, 1, 2, 3, 4, 7, 6, 5 };
 
-            EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+            EXPECT_EQ(actual, expected);
+        }
+
+        TEST_F(single_flow_router__profile, mask)
+        {
+            // mask 4th node only
+            xt::xtensor<bool, 1> mask{ false, false, false, true, false, false, false, false };
+            graph.set_mask(mask);
+            update();
+
+            // masked node has itself as receiver (ignored) and 5th node becomes a pit
+            auto actual = xt::col(graph.impl().receivers(), 0);
+            xt::xtensor<size_type, 1> expected{ 0, 0, 2, 3, 4, 6, 7, 7 };
+            EXPECT_EQ(actual, expected);
         }
 
         /*
@@ -202,7 +215,7 @@ namespace fastscapelib
                 xt::xtensor<size_type, 1> expected{ 4,  5,  6,  7,  8,  8,  10, 11,
                                                     13, 13, 13, 15, 12, 13, 14, 15 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -215,7 +228,7 @@ namespace fastscapelib
                 xt::xtensor<size_type, 1> expected{ 4,  5,  6,  7, 8,  8,  10, 8,
                                                     13, 13, 13, 8, 12, 13, 14, 15 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -260,7 +273,7 @@ namespace fastscapelib
                 auto actual = fixed_graph.impl().receivers_count();
                 auto expected = xt::ones<std::uint8_t>({ fixed_grid.size() });
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -269,7 +282,7 @@ namespace fastscapelib
                 auto actual = looped_graph.impl().receivers_count();
                 auto expected = xt::ones<std::uint8_t>({ looped_grid.size() });
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -321,7 +334,7 @@ namespace fastscapelib
                     { -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 11, -1, -1, -1, -1, -1, -1, -1, -1 }
                 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -339,7 +352,7 @@ namespace fastscapelib
                     { -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1, -1 }
                 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -354,7 +367,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 0, 0, 0, 0, 1, 1, 1, 1,
                                                        2, 0, 1, 1, 0, 3, 0, 1 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -364,7 +377,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 0, 0, 0, 0, 1, 1, 1, 1,
                                                        4, 0, 1, 0, 0, 3, 0, 0 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -379,7 +392,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 13, 8, 9,  10, 6,  2, 4,
                                                        5,  1,  0, 14, 15, 11, 7, 3 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -389,7 +402,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 13, 8,  9, 10, 6, 2,  4,
                                                        5,  7,  11, 3, 1,  0, 14, 15 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -417,7 +430,7 @@ namespace fastscapelib
                 xt::xtensor<size_type, 1> expected{ 4,  5,  6,  7,  8,  9,  10, 11,
                                                     12, 13, 14, 15, 12, 13, 14, 15 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -430,7 +443,7 @@ namespace fastscapelib
                 xt::xtensor<size_type, 1> expected{ 4,  5,  6,  7, 8,  9,  10, 11,
                                                     12, 13, 14, 8, 12, 13, 14, 15 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -474,7 +487,7 @@ namespace fastscapelib
                 auto actual = fixed_graph.impl().receivers_count();
                 auto expected = xt::ones<std::uint8_t>({ fixed_grid.size() });
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -483,7 +496,7 @@ namespace fastscapelib
                 auto actual = looped_graph.impl().receivers_count();
                 auto expected = xt::ones<std::uint8_t>({ looped_grid.size() });
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -533,7 +546,7 @@ namespace fastscapelib
                                               { 8, -1, -1, -1, -1 },  { 9, -1, -1, -1, -1 },
                                               { 10, -1, -1, -1, -1 }, { 11, -1, -1, -1, -1 } };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -549,7 +562,7 @@ namespace fastscapelib
                                               { 8, -1, -1, -1, -1 },  { 9, -1, -1, -1, -1 },
                                               { 10, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1 } };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -564,7 +577,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 0, 0, 0, 0, 1, 1, 1, 1,
                                                        1, 1, 1, 1, 1, 1, 1, 1 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -574,7 +587,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 0, 0, 0, 0, 1, 1, 1, 1,
                                                        2, 1, 1, 1, 1, 1, 1, 0 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -589,7 +602,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 8,  4, 0, 13, 9,  5, 1,
                                                        14, 10, 6, 2, 15, 11, 7, 3 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -599,7 +612,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 8, 4, 11, 7,  3, 0, 13,
                                                        9,  5, 1, 14, 10, 6, 2, 15 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -627,7 +640,7 @@ namespace fastscapelib
                 xt::xtensor<size_type, 1> expected{ 5,  4,  5,  6,  9,  8,  9,  10,
                                                     13, 12, 13, 14, 12, 13, 14, 15 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -640,7 +653,7 @@ namespace fastscapelib
                 xt::xtensor<size_type, 1> expected{ 5,  4,  5,  4,  9,  8,  9,  8,
                                                     13, 12, 13, 12, 12, 13, 14, 15 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -685,7 +698,7 @@ namespace fastscapelib
                 auto actual = fixed_graph.impl().receivers_count();
                 auto expected = xt::ones<std::uint8_t>({ fixed_grid.size() });
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -694,7 +707,7 @@ namespace fastscapelib
                 auto actual = looped_graph.impl().receivers_count();
                 auto expected = xt::ones<std::uint8_t>({ looped_grid.size() });
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -744,7 +757,7 @@ namespace fastscapelib
                                               { 9, -1, -1, -1, -1 },  { 8, 10, -1, -1, -1 },
                                               { 11, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1 } };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -760,7 +773,7 @@ namespace fastscapelib
                                               { 9, 11, -1, -1, -1 },  { 8, 10, -1, -1, -1 },
                                               { -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1 } };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -775,7 +788,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 0, 0, 0, 0, 1, 2, 1, 0,
                                                        1, 2, 1, 0, 1, 2, 1, 0 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -785,7 +798,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 0, 0, 0, 0, 2, 2, 0, 0,
                                                        2, 2, 0, 0, 2, 2, 0, 0 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
 
@@ -800,7 +813,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 9, 4, 6, 3, 1,  13, 8,
                                                        10, 7, 5, 0, 2, 14, 11, 15 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
 
             {
@@ -810,7 +823,7 @@ namespace fastscapelib
                 xt::xtensor<std::uint8_t, 1> expected{ 12, 9,  11, 4, 6, 1, 3,  13,
                                                        8,  10, 5,  7, 0, 2, 14, 15 };
 
-                EXPECT_TRUE(xt::all(xt::equal(actual, expected)));
+                EXPECT_EQ(actual, expected);
             }
         }
     }

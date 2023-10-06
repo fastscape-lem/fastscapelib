@@ -470,6 +470,17 @@ add_flow_graph_bindings(py::module& m)
 
         )doc");
 
+    pyfgraph.def_property("base_levels",
+                          &fs::py_flow_graph::base_levels,
+                          &fs::py_flow_graph::set_base_levels,
+                          "Indices of the base level nodes.");
+
+    pyfgraph.def_property("mask",
+                          &fs::py_flow_graph::mask,
+                          &fs::py_flow_graph::set_mask,
+                          "Mask where elements with value ``True`` correspond to "
+                          "grid nodes that are not included in the flow graph.");
+
     using data_array_type = fs::py_flow_graph::data_array_type;
     using data_type = fs::py_flow_graph::data_type;
 
@@ -539,13 +550,19 @@ add_flow_graph_bindings(py::module& m)
         A basin is defined by all adjacent nodes that flow towards the
         same outlet (or pit) graph node.
 
-        Results may be cached so the same computation is not run multiple times.
-
         Returns
         -------
         basins : numpy.ndarray
             Basin ids. The shape of the array is the same than the shape
             of the arrays of the grid used to build the flow graph.
+
+        Notes
+        -----
+        Results may be cached so the same computation is not run multiple times.
+
+        All masked grid nodes have the same assigned catchment id set by the maximum
+        limit of the integer value range. It is therefore preferable to mask the
+        results prior to, e.g., plotting it.
 
         )doc");
 

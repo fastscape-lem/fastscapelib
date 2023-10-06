@@ -3,7 +3,10 @@
 
 #include <array>
 #include <iterator>
+#include <limits>
+#include <unordered_set>
 #include <stack>
+#include <vector>
 
 #include "xtensor/xbroadcast.hpp"
 #include "xtensor/xstrided_view.hpp"
@@ -194,6 +197,40 @@ namespace fastscapelib
             template <class T>
             data_array_type accumulate(T&& src) const;
 
+            inline bool is_base_level(const size_type& idx) const
+            {
+                return bool(m_base_levels.count(idx));
+            }
+
+            const std::unordered_set<size_type>& base_levels() const
+            {
+                return m_base_levels;
+            }
+
+            template <class C>
+            void set_base_levels(const C& levels)
+            {
+                m_base_levels.clear();
+                m_base_levels.insert(levels.begin(), levels.end());
+            }
+
+            inline bool is_masked(const size_type& idx) const
+            {
+                return m_mask_initialized && m_mask.flat(idx);
+            }
+
+            const xt::xarray<bool>& mask() const
+            {
+                return m_mask;
+            }
+
+            template <class C>
+            void set_mask(C&& mask)
+            {
+                m_mask = mask;
+                m_mask_initialized = true;
+            }
+
         private:
             bool m_single_flow;
             grid_type& m_grid;
@@ -211,6 +248,10 @@ namespace fastscapelib
             basins_type m_basins;
             std::vector<size_type> m_outlets;
             std::vector<size_type> m_pits;
+
+            std::unordered_set<size_type> m_base_levels;
+            xt::xarray<bool> m_mask;
+            bool m_mask_initialized = false;
 
             template <class FG, class FR>
             friend class flow_router_impl;
@@ -327,12 +368,19 @@ namespace fastscapelib
         template <class G, class S>
         void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_basins()
         {
-            size_type current_basin = 0;
+            size_type current_basin = static_cast<size_type>(-1);
+            size_type no_basin = std::numeric_limits<size_type>::max();
 
             m_outlets.clear();
 
             for (const auto& inode : nodes_indices_bottomup())
             {
+                if (is_masked(inode))
+                {
+                    m_basins(inode) = no_basin;
+                    continue;
+                }
+
                 // outlet node has only one receiver: itself
                 if (inode == m_receivers(inode, 0))
                 {
@@ -340,22 +388,21 @@ namespace fastscapelib
                     current_basin++;
                 }
 
-                m_basins(inode) = current_basin - 1;
+                m_basins(inode) = current_basin;
             }
 
-            assert(m_outlets.size() == current_basin);
+            assert(m_outlets.size() == current_basin + 1);
         }
 
         template <class G, class S>
         auto flow_graph_impl<G, S, flow_graph_fixed_array_tag>::pits()
             -> const std::vector<size_type>&
         {
-            const auto& nodes_status = grid().nodes_status();
             m_pits.clear();
 
             for (const auto outlet : m_outlets)
             {
-                if (nodes_status.flat(outlet) != node_status::fixed_value)
+                if (!is_base_level(outlet))
                 {
                     m_pits.push_back(outlet);
                 }

@@ -242,6 +242,34 @@ class TestMultiFlowRouter:
             [4, 4, 4, 4, 4, 4, 4, 4],
         )
 
+    def test_mask(self) -> None:
+        # see test_graph_topology for test setup
+        grid = RasterGrid([3, 3], [1.0, 1.0], NodeStatus.FIXED_VALUE)
+
+        elevation = np.array([[0.0, 1.0, 0.0], [1.0, 2.0, 1.0], [0.0, 1.0, 0.0]])
+
+        router = MultiFlowRouter(0.0)
+        flow_graph = FlowGraph(grid, [router])
+
+        # masked center node -> no graph edge (each node has itself as receiver)
+        mask = np.array(
+            [[False, False, False], [False, True, False], [False, False, False]]
+        )
+        flow_graph.mask = mask
+        flow_graph.update_routes(elevation)
+        npt.assert_array_equal(flow_graph.impl().receivers_count, np.ones(9, dtype=int))
+
+        # one masked edge node -> this masked node not in center node receivers
+        mask = np.array(
+            [[False, False, False], [True, False, False], [False, False, False]]
+        )
+        flow_graph.mask = mask
+        flow_graph.update_routes(elevation)
+        npt.assert_array_equal(
+            flow_graph.impl().receivers[4][:-1],
+            [0, 1, 2, 5, 6, 7, 8],
+        )
+
     @pytest.mark.parametrize(
         "slope_exp, weights",
         [
