@@ -14,8 +14,10 @@ find_package(
 message(STATUS "Found python v${Python_VERSION}: ${Python_EXECUTABLE}")
 message(STATUS "Found numpy v${Python_NumPy_VERSION}: ${Python_NumPy_INCLUDE_DIRS}")
 
-find_package(xtensor-python REQUIRED)
-message(STATUS "Found xtensor-python: ${xtensor-python_INCLUDE_DIRS}")
+if(NOT FS_DOWNLOAD_XTENSOR_PYTHON)
+  find_package(xtensor-python REQUIRED)
+  message(STATUS "Found xtensor-python: ${xtensor-python_INCLUDE_DIRS}")
+endif()
 
 find_package(pybind11 CONFIG REQUIRED)
 message(STATUS "Found pybind11 v${pybind11_VERSION}: ${pybind11_INCLUDE_DIRS}")
