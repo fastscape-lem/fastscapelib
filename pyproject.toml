@@ -36,7 +36,6 @@ test = ["pytest>=6.0"]
 wheel.packages = ["python/fastscapelib"]
 
 [tool.cibuildwheel]
-skip = "pp*"
 environment = {SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON'}
 test-extras = "test"
 test-command = "pytest {project}/python/fastscapelib/tests"
@@ -44,8 +43,6 @@ build-verbosity = 1
 
 [tool.cibuildwheel.macos]
 environment = {SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON', MACOSX_DEPLOYMENT_TARGET=10.13}
-archs = ["auto", "universal2"]
-test-skip = ["*universal2:arm64"]
 
 [tool.isort]
 profile = "black"
