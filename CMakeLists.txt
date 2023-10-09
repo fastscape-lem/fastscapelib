@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(
   fastscapelib
-  VERSION "0.1.3"
+  VERSION "0.2.0"
   LANGUAGES CXX)
 
 message(STATUS "Building fastscapelib v${PROJECT_VERSION}")

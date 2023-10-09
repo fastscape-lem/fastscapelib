@@ -33,7 +33,7 @@ project = "Fastscapelib"
 copyright = "since 2018, Fastscapelib developers"
 author = "Benoit Bovy"
 # The short X.Y version
-version = "0.1.3"
+version = "0.2.0"
 # The full version, including alpha/beta/rc tags
 release = version
 
