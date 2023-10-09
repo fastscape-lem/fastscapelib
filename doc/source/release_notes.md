@@ -2,6 +2,8 @@
 
 # Release Notes
 
+## v0.3.0 (Unreleased)
+
 ## v0.2.0 (9 October 2023)
 
 A complete re-write of Fastscapelib with brand new features and API (note: the

@@ -38,5 +38,5 @@ Some instructions on how to make a new release of Fastscapelib
    create new packages on conda-forge. You can also create a new pull-request
    manually.
 
-10. Run ``tbump`` again with the next version number (development) and push the
-    changes.
+10. Run ``tbump u.v.w --only-patch`` with the next version number (development)
+    and push the changes.
