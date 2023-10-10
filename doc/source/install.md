@@ -39,13 +39,13 @@ Download and install the C++ (header-only) library with [cmake]
 
 (stable & development versions)
 :::
-:::{grid-item-card} Python / {{ condalogo }}
+:::{grid-item-card} Python / {{ condalogo }} & Pip
 :img-top: _static/python_logo.svg
-:link: install-python-conda
+:link: install-python-binary
 :link-type: ref
 :text-align: center
 
-Install the pre-compiled Python library with [conda]
+Install the pre-compiled Python library with [conda] or [pip]
 
 (stable versions)
 :::
@@ -132,9 +132,11 @@ options.
 
 Fastscapelib's Python package requires Python (3.9+) and [numpy].
 
-(install-python-conda)=
+(install-python-binary)=
 
-### Using Conda
+### Pre-compiled packages (recommended)
+
+#### Conda
 
 All stable versions of Fastscapelib-Python are available as pre-compiled binary
 [conda] packages for Linux, MacOS and Windows via the conda-forge channel. You
@@ -144,13 +146,24 @@ can install it using the following command (alternatively you can use [mamba]):
 $ conda install fastscapelib-python -c conda-forge
 ```
 
+#### Pip
+
+All stable versions of Fastscapelib-Python are also available on
+https://pypi.org/ as binary wheels for Linux, MacOS and Windows. You can install
+it using [pip]:
+
+```bash
+$ python -m pip install fastscapelib
+```
+
 (install-python-source)=
 
 ### From Source Using Pip
 
 In addition to Python and Numpy, building and installing Fastscapelib-Python
-from source requires [pip], [pybind11], [xtensor-python] and
-[scikit-build-core]. All these dependencies are all available on conda-forge:
+from source requires [pip], [pybind11], [xtensor-python] and [scikit-build-core]
+(a C++ compiler supporting C++17 is also required). All these dependencies are
+all available on conda-forge:
 
 ```bash
 $ conda install python numpy pybind11 xtensor-python scikit-build-core pip -c conda-forge
