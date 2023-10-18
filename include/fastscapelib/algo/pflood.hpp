@@ -92,51 +92,26 @@ namespace fastscapelib
             }
         }
 
-
         /**
-         * fill_sinks_flat implementation.
+         * Fill all pits and remove all digital dams from a digital
+         * elevation model (rectangular grid).
+         *
+         * Elevation values may be updated so that no depression (sinks or
+         * local minima) remains.
+         *
+         * The algorithm is based on priority queues and is detailed in Barnes
+         * (2014). This variant fills sinks with nearly flat areas
+         * (i.e. elevation is increased by small amount) so that there is no
+         * drainage singularities.
+         *
+         * @tparam FG The flow graph implementation type.
+         * @tparam E The elevation xtensor container or expression type.
+         *
+         * @param graph_impl The graph implementation object.
+         * @param elevation The elevation values at grid nodes.
          */
         template <class FG, class E>
-        void fill_sinks_flat_impl(FG& graph_impl, E&& elevation)
-        {
-            using neighbors_indices_type = typename FG::grid_type::neighbors_indices_type;
-            using elev_t = typename std::decay_t<E>::value_type;
-
-            auto elevation_flat = xt::flatten(elevation);
-            neighbors_indices_type neighbors_indices;
-
-            pflood_pr_queue<FG, elev_t> open;
-            xt::xtensor<bool, 1> closed = xt::zeros<bool>({ graph_impl.size() });
-
-            auto& grid = graph_impl.grid();
-
-            init_pflood(graph_impl, elevation, closed, open);
-
-            while (open.size() > 0)
-            {
-                pflood_node<FG, elev_t> inode = open.top();
-                open.pop();
-
-                for (auto n_idx : grid.neighbors_indices(inode.m_idx, neighbors_indices))
-                {
-                    if (graph_impl.is_masked(n_idx) || closed(n_idx))
-                    {
-                        continue;
-                    }
-
-                    elevation_flat(n_idx) = std::max(elevation_flat(n_idx), inode.m_elevation);
-                    open.emplace(pflood_node<FG, elev_t>(n_idx, elevation_flat(n_idx)));
-                    closed(n_idx) = true;
-                }
-            }
-        }
-
-
-        /**
-         * fill_sinks_sloped implementation.
-         */
-        template <class FG, class E>
-        void fill_sinks_sloped_impl(FG& graph_impl, E&& elevation)
+        void fill_sinks_sloped(FG& graph_impl, E&& elevation)
         {
             using neighbors_indices_type = typename FG::grid_type::neighbors_indices_type;
             using elev_t = typename std::decay_t<E>::value_type;
@@ -201,49 +176,6 @@ namespace fastscapelib
 
     }  // namespace detail
 
-
-    /**
-     * Fill all pits and remove all digital dams from a digital
-     * elevation model (rectangular grid).
-     *
-     * Elevation values may be updated so that no depression (sinks or
-     * local minima) remains.
-     *
-     * The algorithm is based on priority queues and is detailed
-     * in Barnes (2014). It fills sinks with flat areas.
-     *
-     * @param graph_impl Graph implementation object
-     * @param elevation Elevation values at grid nodes
-     */
-    template <class FG, class E>
-    void fill_sinks_flat(FG& graph_impl, xtensor_t<E>& elevation)
-    {
-        detail::fill_sinks_flat_impl(graph_impl, elevation.derived_cast());
-    }
-
-
-    /**
-     * Fill all pits and remove all digital dams from a digital
-     * elevation model (rectangular grid).
-     *
-     * Elevation values may be updated so that no depression (sinks or
-     * local minima) remains.
-     *
-     * The algorithm is based on priority queues and is detailed in Barnes
-     * (2014). This variant fills sinks with nearly flat areas
-     * (i.e. elevation is increased by small amount) so that there is no
-     * drainage singularities.
-     *
-     * @param graph_impl Graph implementation object
-     * @param elevation Elevation values at grid nodes
-     *
-     * @sa fill_sinks_flat
-     */
-    template <class FG, class E>
-    void fill_sinks_sloped(FG& graph_impl, xtensor_t<E>& elevation)
-    {
-        detail::fill_sinks_sloped_impl(graph_impl, elevation.derived_cast());
-    }
 }  // namespace fastscapelib
 
 #endif
