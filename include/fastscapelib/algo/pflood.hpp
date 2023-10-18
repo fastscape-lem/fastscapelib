@@ -155,8 +155,13 @@ namespace fastscapelib
             {
                 pflood_node<FG, elev_t> inode, knode;
 
-                if (!pit.empty()
-                    && (open.empty() || open.top().m_elevation == pit.front().m_elevation))
+                if (!pit.empty() && !open.empty()
+                    && open.top().m_elevation == pit.front().m_elevation)
+                {
+                    inode = open.top();
+                    open.pop();
+                }
+                else if (!pit.empty())
                 {
                     inode = pit.front();
                     pit.pop();
