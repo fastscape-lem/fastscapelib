@@ -372,7 +372,7 @@ namespace fastscapelib
          */
         data_array_size_type basins()
         {
-            data_array_size_type basins = data_array_type::from_shape(m_grid.shape());
+            data_array_size_type basins = data_array_size_type::from_shape(m_grid.shape());
             auto basins_flat = xt::flatten(basins);
 
             m_impl.compute_basins();
