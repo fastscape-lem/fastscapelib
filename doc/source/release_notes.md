@@ -8,6 +8,8 @@
 
 - Fixed ``pflood_sink_resolver`` that was "flooding too much" ({issue}`145`,
   {pull}`146`).
+- Fixed ``RuntimeWarning`` (invalid value in cast) issued when calling
+  ``FlowGraph.basins()`` in Python ({pull}`147`).
 
 ## v0.2.0 (9 October 2023)
 
