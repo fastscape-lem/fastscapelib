@@ -411,7 +411,7 @@ add_flow_graph_bindings(py::module& m)
 
     pyfgraph.def("impl",
                  &fs::py_flow_graph::impl,
-                 py::return_value_policy::reference,
+                 py::return_value_policy::reference_internal,
                  R"doc(impl(self) -> FlowGraphImpl
 
         Graph implementation getter.
