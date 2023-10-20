@@ -10,6 +10,9 @@
   {pull}`146`).
 - Fixed ``RuntimeWarning`` (invalid value in cast) issued when calling
   ``FlowGraph.basins()`` in Python ({pull}`147`).
+- Python bindings: fixed Python interpreter crash (segfault) when accessing data
+  members of the implementation of a graph snapshot via ``FlowGraph.impl()``
+  ({pull}`148`).
 
 ## v0.2.0 (9 October 2023)
 
