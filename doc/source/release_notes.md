@@ -4,6 +4,8 @@
 
 ## v0.3.0 (Unreleased)
 
+## v0.2.1 (20 October 2023)
+
 ### Bug fixes
 
 - Fixed ``pflood_sink_resolver`` that was "flooding too much" ({issue}`145`,
