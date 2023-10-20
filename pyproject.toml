@@ -10,7 +10,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fastscapelib"
-version = "0.2.1"
+version = "0.3.0"
 description = "A C++/Python library of efficient algorithms for landscape evolution modeling"
 keywords = ["modeling", "topography", "geomorphology", "landscape-evolution"]
 readme = "README.rst"
