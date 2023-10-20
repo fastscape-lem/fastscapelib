@@ -118,7 +118,7 @@ namespace fastscapelib
         public:
             using graph_impl_type = FG;
             using data_array_type = typename graph_impl_type::data_array_type;
-            using graph_impl_map = std::map<std::string, FG&>;
+            using graph_impl_map = std::map<std::string, std::shared_ptr<FG>>;
             using elevation_map = std::map<std::string, std::unique_ptr<data_array_type>>;
 
             void apply(FG& /*graph_impl*/, data_array_type& /*elevation*/)
@@ -180,7 +180,7 @@ namespace fastscapelib
         {
         public:
             using data_array_type = typename FG::data_array_type;
-            using graph_impl_map = std::map<std::string, FG&>;
+            using graph_impl_map = std::map<std::string, std::shared_ptr<FG>>;
             using elevation_map = std::map<std::string, std::unique_ptr<data_array_type>>;
 
             template <class OP>

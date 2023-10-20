@@ -93,61 +93,63 @@ namespace fastscapelib
         public:
             virtual ~flow_graph_impl_wrapper(){};
 
-            flow_graph_impl_wrapper(FG& graph_impl)
-                : m_graph_impl(graph_impl){};
+            flow_graph_impl_wrapper(const std::shared_ptr<FG>& graph_impl_ptr)
+                : m_graph_impl_ptr(graph_impl_ptr)
+            {
+            }
 
             bool single_flow() const
             {
-                return m_graph_impl.single_flow();
+                return m_graph_impl_ptr->single_flow();
             }
 
             const receivers_type& receivers() const
             {
-                return m_graph_impl.receivers();
+                return m_graph_impl_ptr->receivers();
             };
 
             const receivers_count_type& receivers_count() const
             {
-                return m_graph_impl.receivers_count();
+                return m_graph_impl_ptr->receivers_count();
             };
 
             const receivers_distance_type& receivers_distance() const
             {
-                return m_graph_impl.receivers_distance();
+                return m_graph_impl_ptr->receivers_distance();
             };
 
             const receivers_weight_type& receivers_weight() const
             {
-                return m_graph_impl.receivers_weight();
+                return m_graph_impl_ptr->receivers_weight();
             };
 
             const donors_type& donors() const
             {
-                return m_graph_impl.donors();
+                return m_graph_impl_ptr->donors();
             };
 
             const donors_count_type& donors_count() const
             {
-                return m_graph_impl.donors_count();
+                return m_graph_impl_ptr->donors_count();
             };
 
             const dfs_indices_type& dfs_indices() const
             {
-                return m_graph_impl.dfs_indices();
+                return m_graph_impl_ptr->dfs_indices();
             };
 
             nodes_indices_iterator_type nodes_indices_bottomup() const
             {
-                return m_graph_impl.nodes_indices_bottomup();
+                return m_graph_impl_ptr->nodes_indices_bottomup();
             }
 
             const basins_type& basins() const
             {
-                return m_graph_impl.basins();
+                return m_graph_impl_ptr->basins();
             };
 
         private:
-            FG& m_graph_impl;
+            std::shared_ptr<FG> m_graph_impl_ptr;
         };
     }
 
@@ -172,8 +174,9 @@ namespace fastscapelib
         using basins_type = xt_tensor_t<py_selector, size_type, 1>;
 
         template <class FG>
-        py_flow_graph_impl(FG& graph_impl)
-            : m_wrapper_ptr(std::make_unique<detail::flow_graph_impl_wrapper<FG>>(graph_impl)){};
+        py_flow_graph_impl(const std::shared_ptr<FG>& graph_impl_ptr)
+            : m_wrapper_ptr(
+                std::make_unique<detail::flow_graph_impl_wrapper<FG>>(graph_impl_ptr)){};
 
         bool single_flow() const
         {
@@ -332,14 +335,15 @@ namespace fastscapelib
             flow_graph_wrapper(G& grid, operators_type operators)
             {
                 m_graph_ptr = std::make_unique<flow_graph_type>(grid, std::move(operators));
-                m_graph_impl_ptr = std::make_unique<py_flow_graph_impl>(m_graph_ptr->impl());
+                m_graph_impl_ptr = std::make_unique<py_flow_graph_impl>(m_graph_ptr->impl_ptr());
             }
 
             // used for returning graph snapshots
             flow_graph_wrapper(flow_graph_type* snapshot_graph_ptr)
             {
                 m_snapshot_graph_ptr = snapshot_graph_ptr;
-                m_graph_impl_ptr = std::make_unique<py_flow_graph_impl>(snapshot_graph_ptr->impl());
+                m_graph_impl_ptr
+                    = std::make_unique<py_flow_graph_impl>(m_snapshot_graph_ptr->impl_ptr());
             }
 
             virtual ~flow_graph_wrapper(){};

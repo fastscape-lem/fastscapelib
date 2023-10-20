@@ -44,7 +44,7 @@ namespace fastscapelib
         using data_array_size_type = xt_array_t<xt_selector, size_type>;
 
         using graph_map = std::map<std::string, std::unique_ptr<self_type>>;
-        using graph_impl_map = std::map<std::string, impl_type&>;
+        using graph_impl_map = std::map<std::string, std::shared_ptr<impl_type>>;
         using elevation_map = std::map<std::string, std::unique_ptr<data_array_type>>;
 
         /**
@@ -55,9 +55,10 @@ namespace fastscapelib
          */
         flow_graph(G& grid, operators_type operators)
             : m_grid(grid)
-            , m_impl(grid, operators.all_single_flow())
             , m_operators(std::move(operators))
         {
+            m_impl_ptr = std::make_shared<impl_type>(grid, m_operators.all_single_flow());
+
             // sanity checks
             if (!m_operators.graph_updated())
             {
@@ -71,7 +72,7 @@ namespace fastscapelib
             }
 
             // initialize default base levels at fixed value nodes
-            m_impl.set_base_levels(m_grid.nodes_indices(node_status::fixed_value));
+            m_impl_ptr->set_base_levels(m_grid.nodes_indices(node_status::fixed_value));
 
             // pre-allocate graph and elevation snapshots
             for (const auto& key : m_operators.graph_snapshot_keys())
@@ -80,7 +81,7 @@ namespace fastscapelib
                 auto graph = new self_type(grid, single_flow);
 
                 m_graph_snapshots.insert({ key, std::unique_ptr<self_type>(std::move(graph)) });
-                m_graph_impl_snapshots.insert({ key, (*m_graph_snapshots.at(key)).m_impl });
+                m_graph_impl_snapshots.insert({ key, (*m_graph_snapshots.at(key)).m_impl_ptr });
             }
             for (const auto& key : m_operators.elevation_snapshot_keys())
             {
@@ -188,8 +189,9 @@ namespace fastscapelib
             // loop over flow operator implementations
             for (auto op = m_operators.impl_begin(); op != m_operators.impl_end(); ++op)
             {
-                op->apply(m_impl, *elevation_ptr);
-                op->save(m_impl, m_graph_impl_snapshots, *elevation_ptr, m_elevation_snapshots);
+                op->apply(*m_impl_ptr, *elevation_ptr);
+                op->save(
+                    *m_impl_ptr, m_graph_impl_snapshots, *elevation_ptr, m_elevation_snapshots);
             }
 
             return *elevation_ptr;
@@ -228,7 +230,19 @@ namespace fastscapelib
          */
         const impl_type& impl() const
         {
-            return m_impl;
+            return *m_impl_ptr;
+        }
+
+        /**
+         * Returns a shared pointer to the flow graph implementation.
+         *
+         * While this might be useful in some cases (e.g., Python bindings), in
+         * general accessing the implementation through ``impl()`` (const
+         * reference) should be preferred.
+         */
+        std::shared_ptr<impl_type> impl_ptr() const
+        {
+            return m_impl_ptr;
         }
 
         /**
@@ -236,7 +250,7 @@ namespace fastscapelib
          */
         std::vector<size_type> base_levels() const
         {
-            const auto& impl_levels = m_impl.base_levels();
+            const auto& impl_levels = m_impl_ptr->base_levels();
             std::vector<size_type> indices(impl_levels.begin(), impl_levels.end());
             return indices;
         }
@@ -255,7 +269,7 @@ namespace fastscapelib
                 throw std::runtime_error("cannot set base levels (graph is read-only)");
             }
 
-            m_impl.set_base_levels(levels);
+            m_impl_ptr->set_base_levels(levels);
         }
 
         /**
@@ -264,7 +278,7 @@ namespace fastscapelib
          */
         xt_array_t<xt_selector, bool> mask() const
         {
-            return m_impl.mask();
+            return m_impl_ptr->mask();
         }
 
         /**
@@ -286,7 +300,7 @@ namespace fastscapelib
                 throw std::runtime_error("cannot set mask (shape mismatch with grid shape)");
             }
 
-            m_impl.set_mask(std::forward<C>(mask));
+            m_impl_ptr->set_mask(std::forward<C>(mask));
         }
 
         /**
@@ -310,7 +324,7 @@ namespace fastscapelib
          */
         data_array_type accumulate(const data_array_type& src) const
         {
-            return m_impl.accumulate(src);
+            return m_impl_ptr->accumulate(src);
         }
 
         /**
@@ -326,7 +340,7 @@ namespace fastscapelib
          */
         void accumulate(data_array_type& acc, const data_array_type& src) const
         {
-            return m_impl.accumulate(acc, src);
+            return m_impl_ptr->accumulate(acc, src);
         }
 
         /**
@@ -339,7 +353,7 @@ namespace fastscapelib
          */
         data_array_type accumulate(data_type src) const
         {
-            return m_impl.accumulate(src);
+            return m_impl_ptr->accumulate(src);
         }
 
         /**
@@ -353,7 +367,7 @@ namespace fastscapelib
          */
         void accumulate(data_array_type& acc, data_type src) const
         {
-            return m_impl.accumulate(acc, src);
+            return m_impl_ptr->accumulate(acc, src);
         }
 
         /**
@@ -375,8 +389,8 @@ namespace fastscapelib
             data_array_size_type basins = data_array_size_type::from_shape(m_grid.shape());
             auto basins_flat = xt::flatten(basins);
 
-            m_impl.compute_basins();
-            basins_flat = m_impl.basins();
+            m_impl_ptr->compute_basins();
+            basins_flat = m_impl_ptr->basins();
 
             return basins;
         }
@@ -384,7 +398,7 @@ namespace fastscapelib
     private:
         bool m_writeable = true;
         grid_type& m_grid;
-        impl_type m_impl;
+        std::shared_ptr<impl_type> m_impl_ptr;
         data_array_type m_elevation_copy;
 
         graph_map m_graph_snapshots;
@@ -397,8 +411,8 @@ namespace fastscapelib
         explicit flow_graph(grid_type& grid, bool single_flow)
             : m_writeable(false)
             , m_grid(grid)
-            , m_impl(grid, single_flow)
         {
+            m_impl_ptr = std::make_shared<impl_type>(grid, single_flow);
         }
     };
 }
