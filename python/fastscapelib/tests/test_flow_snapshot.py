@@ -103,6 +103,27 @@ def test_snapshot_graph(grid) -> None:
         snapshot_a.update_routes(elevation)
 
 
+def test_snapshot_graph_impl(grid) -> None:
+    # Ensure that this will not crash Python (segfault). The correct pybind11
+    # return value policy for accessing the implementation from a snapshot graph
+    # is "reference_internal" (we need the keep_alive call policy to prevent the
+    # parent Python graph / snapshot / impl wrappers getting garbage collected
+    # when accessing the final graph implementation data members).
+    graph = FlowGraph(
+        grid,
+        [SingleFlowRouter(), FlowSnapshot("a"), MSTSinkResolver(), FlowSnapshot("b")],
+    )
+
+    elevation = np.random.uniform(size=grid.shape)
+    graph.update_routes(elevation)
+
+    graph.graph_snapshot("a").impl().receivers
+    s = graph.graph_snapshot("a")
+    s.impl().receivers
+    simpl = s.impl()
+    simpl.receivers
+
+
 def test_snapshot_elevation(grid) -> None:
     graph = FlowGraph(
         grid,
