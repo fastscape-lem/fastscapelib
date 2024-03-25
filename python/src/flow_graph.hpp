@@ -176,7 +176,7 @@ namespace fastscapelib
         template <class FG>
         py_flow_graph_impl(const std::shared_ptr<FG>& graph_impl_ptr)
             : m_wrapper_ptr(
-                std::make_unique<detail::flow_graph_impl_wrapper<FG>>(graph_impl_ptr)){};
+                  std::make_unique<detail::flow_graph_impl_wrapper<FG>>(graph_impl_ptr)){};
 
         bool single_flow() const
         {

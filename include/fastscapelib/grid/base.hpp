@@ -581,9 +581,8 @@ namespace fastscapelib
      * @param neighbors_indices Reference to the container to be updated with the neighbors indices.
      */
     template <class G>
-    inline auto grid<G>::neighbors_indices(const size_type& idx,
-                                           neighbors_indices_type& neighbors_indices)
-        -> neighbors_indices_type&
+    inline auto grid<G>::neighbors_indices(
+        const size_type& idx, neighbors_indices_type& neighbors_indices) -> neighbors_indices_type&
     {
         const auto& n_count = neighbors_count(idx);
         const auto& n_indices = get_nb_indices_from_cache(idx);
@@ -645,8 +644,8 @@ namespace fastscapelib
      * @param neighbors Reference to the vector to be updated with the neighbor objects.
      */
     template <class G>
-    inline auto grid<G>::neighbors(const size_type& idx, neighbors_type& neighbors)
-        -> neighbors_type&
+    inline auto grid<G>::neighbors(const size_type& idx,
+                                   neighbors_type& neighbors) -> neighbors_type&
     {
         size_type n_idx;
         const auto& n_count = neighbors_count(idx);
