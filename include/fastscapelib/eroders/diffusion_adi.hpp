@@ -334,8 +334,8 @@ namespace fastscapelib
 
 
     template <class G, class S>
-    auto diffusion_adi_eroder<G, S>::erode(const data_array_type& elevation, double dt)
-        -> const data_array_type&
+    auto diffusion_adi_eroder<G, S>::erode(const data_array_type& elevation,
+                                           double dt) -> const data_array_type&
     {
         // solve for rows
         resize_tridiagonal(m_ncols);
