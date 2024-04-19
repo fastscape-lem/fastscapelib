@@ -1,18 +1,18 @@
-#include <optional>
-#include <variant>
-
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
-
-#include "xtensor-python/pytensor.hpp"
-#include "xtensor-python/pyarray.hpp"
+#include "pytensor_containers.hpp"
+#include "grid.hpp"
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 
-#include "grid.hpp"
-#include "pytensor_utils.hpp"
+#include "xtensor-python/pytensor.hpp"
+#include "xtensor-python/pyarray.hpp"
+
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+
+#include <optional>
+#include <variant>
 
 
 namespace py = pybind11;
@@ -455,7 +455,7 @@ add_grid_bindings(py::module& m)
     rgrid.def(
         py::init(
             [](const fs::py_raster_grid::shape_type& shape,
-               const xt::pytensor<double, 1>& spacing,
+               const std::array<fs::py_raster_grid::grid_data_type, 2>& spacing,
                const raster_bstatus_type& bounds_status,
                const raster_nstatus_type& nodes_status)
             {
@@ -498,7 +498,7 @@ add_grid_bindings(py::module& m)
     rgrid.def_static(
         "from_length",
         [](const fs::py_raster_grid::shape_type& shape,
-           const xt::pytensor<double, 1>& length,
+           const std::array<fs::py_raster_grid::grid_data_type, 2>& length,
            const raster_bstatus_type& bounds_status,
            const raster_nstatus_type& nodes_status)
         {

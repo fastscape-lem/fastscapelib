@@ -24,7 +24,7 @@ namespace fastscapelib
         class basin_graph : public ::testing::TestWithParam<fs::mst_method>
         {
         protected:
-            using grid_type = fs::raster_grid;
+            using grid_type = fs::raster_grid_xt;
             using flow_graph_type = fs::flow_graph<grid_type>;
             using flow_graph_impl_type = flow_graph_type::impl_type;
             using basin_graph_type = fs::basin_graph<flow_graph_impl_type>;

@@ -18,7 +18,7 @@
 
 #include "fastscapelib/grid/structured_grid.hpp"
 #include "fastscapelib/utils/utils.hpp"
-#include "fastscapelib/utils/xtensor_utils.hpp"
+#include "fastscapelib/utils/containers.hpp"
 
 
 namespace fastscapelib
@@ -26,7 +26,8 @@ namespace fastscapelib
     template <class G>
     struct is_raster_grid
     {
-        static constexpr bool value = G::is_structured() && G::is_uniform() && G::xt_ndims() == 2;
+        static constexpr bool value
+            = G::is_structured() && G::is_uniform() && G::container_ndims() == 2;
     };
 
 
@@ -71,7 +72,7 @@ namespace fastscapelib
         using data_type = typename grid_type::grid_data_type;
         using data_array_type = dynamic_shape_container_t<container_selector, data_type>;
         using data_tensor_type
-            = fixed_shape_container_t<container_selector, data_type, grid_type::xt_ndims()>;
+            = fixed_shape_container_t<container_selector, data_type, grid_type::container_ndims()>;
 
         /**
          * Create a new diffusion ADI eroder.

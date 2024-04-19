@@ -245,8 +245,8 @@ shape of the array containers at runtime.
 
 Additionally, the {cpp:class}`~fastscapelib::grid_inner_types` C++ class
 specialized for each grid exposes some properties like ``grid_data_type``,
-``xt_selector`` and ``xt_ndims`` (for convenience, those are also exposed as
-static data members of the grid classes). This is particularly useful for
+``container_selector`` and ``container_ndims`` (for convenience, those are also
+exposed as static data members of the grid classes). This is particularly useful for
 maximizing code reusability in C++ (via type aliases) when creating new grid
 data variables.
 
@@ -284,7 +284,7 @@ xt::xarray<double> elevation = xt::random::rand<double>(grid.shape());
 // setting a xt::xtensor with dimensions and data type from grid inner types
 //
 using dtype = fs::raster_grid::grid_data_type;
-using ndims = fs::grid_inner_types<fs::raster_grid>::xt_ndims;
+using ndims = fs::grid_inner_types<fs::raster_grid>::container_ndims;
 xt::xtensor<dtype, ndims> elevation_alt = xt::random::rand<dtype>(grid.shape());
 
 //

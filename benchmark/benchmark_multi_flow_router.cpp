@@ -21,7 +21,7 @@ namespace fastscapelib
 
         void multi_flow_router__raster(benchmark::State& state)
         {
-            using grid_type = fs::raster_grid;
+            using grid_type = fs::raster_grid_xt;
             using size_type = typename grid_type::size_type;
 
             auto n = static_cast<size_type>(state.range(0));

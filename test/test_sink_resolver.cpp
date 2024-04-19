@@ -28,7 +28,7 @@ namespace fastscapelib
         class sink_resolver : public ::testing::Test
         {
         protected:
-            using grid_type = fs::raster_grid;
+            using grid_type = fs::raster_grid_xt;
             using flow_graph_type = fs::flow_graph<grid_type>;
             using size_type = typename grid_type::size_type;
 
@@ -225,7 +225,7 @@ namespace fastscapelib
         class sink_resolver_extra : public ::testing::Test
         {
         public:
-            using grid_type = fs::raster_grid;
+            using grid_type = fs::raster_grid_xt;
             using flow_graph_type = fs::flow_graph<grid_type>;
             using size_type = typename grid_type::size_type;
 

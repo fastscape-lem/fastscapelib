@@ -15,7 +15,7 @@
 #include "xtensor/xhistogram.hpp"
 
 #include "fastscapelib/grid/base.hpp"
-#include "fastscapelib/utils/xtensor_utils.hpp"
+#include "fastscapelib/utils/containers.hpp"
 
 
 namespace fastscapelib
@@ -92,7 +92,7 @@ namespace fastscapelib
         using grid_data_type = double;
 
         using container_selector = S;
-        static constexpr std::size_t xt_ndims = 1;
+        static constexpr std::size_t container_ndims = 1;
 
         static constexpr uint8_t n_neighbors_max = N;
         using neighbors_cache_type = neighbors_no_cache<0>;
@@ -172,6 +172,8 @@ namespace fastscapelib
 
         inline const neighbors_distances_impl_type& neighbors_distances_impl(
             const size_type& idx) const;
+
+        static constexpr std::size_t dimension_impl() noexcept;
 
         friend class grid<self_type>;
     };
@@ -455,6 +457,12 @@ namespace fastscapelib
         return m_neighbors_distances[idx];
     }
 
+
+    template <class S, unsigned int N>
+    constexpr std::size_t trimesh_xt<S, N>::dimension_impl() noexcept
+    {
+        return 2;
+    }
 
     /**
      * @typedef trimesh

@@ -43,7 +43,7 @@ namespace fastscapelib
             EXPECT_EQ(fs::trimesh::is_structured(), false);
             EXPECT_EQ(fs::trimesh::is_uniform(), false);
             EXPECT_EQ(fs::trimesh::n_neighbors_max(), 20u);
-            EXPECT_EQ(fs::trimesh::xt_ndims(), 1);
+            EXPECT_EQ(fs::trimesh::container_ndims(), 1);
         }
 
 

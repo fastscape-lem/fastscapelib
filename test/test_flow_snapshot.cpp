@@ -20,8 +20,8 @@ namespace fastscapelib
         class flow_snapshot : public ::testing::Test
         {
         protected:
-            using flow_graph_type = fs::flow_graph<fs::raster_grid>;
-            using grid_type = fs::raster_grid;
+            using flow_graph_type = fs::flow_graph<fs::raster_grid_xt>;
+            using grid_type = fs::raster_grid_xt;
             using size_type = typename grid_type::size_type;
 
             // bottom border base-level

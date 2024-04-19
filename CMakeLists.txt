@@ -9,6 +9,7 @@ message(STATUS "Building fastscapelib v${PROJECT_VERSION}")
 
 set(FASTSCAPELIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+OPTION(FS_USE_XTENSOR_CONTAINERS "Configure fastscapelib to allow xtensor containers" ON)
 OPTION(FS_DOWNLOAD_XTENSOR "Download and use xtensor development version" OFF)
 OPTION(FS_DOWNLOAD_XTENSOR_PYTHON "Download xtensor-python (python bindings)" OFF)
 OPTION(FS_BUILD_TESTS "Build fastscapelib test suite" OFF)
@@ -28,7 +29,7 @@ set(CMAKE_MODULE_PATH
 include(FetchContent)
 
 # -- get the whole xtensor stack (only when building python bindings)
-if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
+if(SKBUILD AND FS_USE_XTENSOR_CONTAINERS AND FS_DOWNLOAD_XTENSOR_PYTHON)
     message(STATUS "Downloading xtl, xtensor and xtensor-python libraries")
 
     FetchContent_Declare(xtl
@@ -55,7 +56,7 @@ if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
     set_property(DIRECTORY ${xtensor-python_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
 
 # -- get xtensor development version (need xtl already installed)
-elseif(FS_DOWNLOAD_XTENSOR)
+elseif(FS_USE_XTENSOR_CONTAINERS AND FS_DOWNLOAD_XTENSOR)
     message(STATUS "Downloading xtensor development version (master branch)")
 
     FetchContent_Declare(xtensor
@@ -69,7 +70,7 @@ elseif(FS_DOWNLOAD_XTENSOR)
 
     FetchContent_MakeAvailable(xtensor)
 
-else()
+elseif(FS_USE_XTENSOR_CONTAINERS)
     find_package(xtensor REQUIRED)
     message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 endif()
@@ -119,7 +120,9 @@ set(FASTSCAPELIB_HEADERS
   utils/iterators.hpp
   utils/union_find.hpp
   utils/utils.hpp
-  utils/xtensor_utils.hpp
+  utils/containers.hpp
+  utils/eigen_containers.hpp
+  utils/xtensor_containers.hpp
   # Version
   version.hpp
 )
@@ -133,8 +136,6 @@ target_include_directories(${FASTSCAPELIB_TARGET}
     $<BUILD_INTERFACE:${FASTSCAPELIB_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
-
-target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor)
 
 target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_17)
 

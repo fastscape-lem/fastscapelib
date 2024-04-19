@@ -14,7 +14,7 @@
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/iterators.hpp"
-#include "fastscapelib/utils/xtensor_utils.hpp"
+#include "fastscapelib/utils/containers.hpp"
 
 
 namespace fastscapelib

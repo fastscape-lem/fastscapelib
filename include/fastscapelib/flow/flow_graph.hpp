@@ -12,7 +12,7 @@
 
 #include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/flow/flow_operator.hpp"
-#include "fastscapelib/utils/xtensor_utils.hpp"
+#include "fastscapelib/utils/containers.hpp"
 
 
 namespace fastscapelib
