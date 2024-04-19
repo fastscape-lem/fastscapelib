@@ -78,9 +78,7 @@ set(FASTSCAPELIB_BENCHMARK_HEADERS benchmark_setup.hpp)
 set(FASTSCAPELIB_BENCHMARK_SRC
   benchmark_basin_graph.cpp
   benchmark_diffusion_adi.cpp
-  benchmark_flow_routing.cpp
   benchmark_multi_flow_router.cpp
-  benchmark_pflood.cpp
   benchmark_profile_grid.cpp
   benchmark_raster_grid.cpp
   benchmark_single_flow_router.cpp
