@@ -50,18 +50,18 @@ namespace fastscapelib
             using size_type = std::size_t;
             using grid_data_type = double;
 
-            using donors_type = xt_tensor_t<py_selector, size_type, 2>;
-            using donors_count_type = xt_tensor_t<py_selector, size_type, 1>;
+            using donors_type = fixed_shape_container_t<py_selector, size_type, 2>;
+            using donors_count_type = fixed_shape_container_t<py_selector, size_type, 1>;
 
             using receivers_type = donors_type;
             using receivers_count_type = donors_count_type;
-            using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
-            using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
+            using receivers_weight_type = fixed_shape_container_t<py_selector, double, 2>;
+            using receivers_distance_type = fixed_shape_container_t<py_selector, grid_data_type, 2>;
 
-            using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
+            using dfs_indices_type = fixed_shape_container_t<py_selector, size_type, 1>;
             using nodes_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
 
-            using basins_type = xt_tensor_t<py_selector, size_type, 1>;
+            using basins_type = fixed_shape_container_t<py_selector, size_type, 1>;
 
             virtual ~flow_graph_impl_wrapper_base(){};
 
@@ -160,18 +160,18 @@ namespace fastscapelib
         using size_type = std::size_t;
         using grid_data_type = double;
 
-        using donors_type = xt_tensor_t<py_selector, size_type, 2>;
-        using donors_count_type = xt_tensor_t<py_selector, size_type, 1>;
+        using donors_type = fixed_shape_container_t<py_selector, size_type, 2>;
+        using donors_count_type = fixed_shape_container_t<py_selector, size_type, 1>;
 
         using receivers_type = donors_type;
         using receivers_count_type = donors_count_type;
-        using receivers_weight_type = xt_tensor_t<py_selector, double, 2>;
-        using receivers_distance_type = xt_tensor_t<py_selector, grid_data_type, 2>;
+        using receivers_weight_type = fixed_shape_container_t<py_selector, double, 2>;
+        using receivers_distance_type = fixed_shape_container_t<py_selector, grid_data_type, 2>;
 
-        using dfs_indices_type = xt_tensor_t<py_selector, size_type, 1>;
+        using dfs_indices_type = fixed_shape_container_t<py_selector, size_type, 1>;
         using nodes_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
 
-        using basins_type = xt_tensor_t<py_selector, size_type, 1>;
+        using basins_type = fixed_shape_container_t<py_selector, size_type, 1>;
 
         template <class FG>
         py_flow_graph_impl(const std::shared_ptr<FG>& graph_impl_ptr)
@@ -291,9 +291,9 @@ namespace fastscapelib
         public:
             using size_type = std::size_t;
             using data_type = double;
-            using data_array_type = xt_array_t<py_selector, data_type>;
+            using data_array_type = dynamic_shape_container_t<py_selector, data_type>;
             using shape_type = data_array_type::shape_type;
-            using data_array_size_type = xt_array_t<py_selector, size_type>;
+            using data_array_size_type = dynamic_shape_container_t<py_selector, size_type>;
 
             virtual ~flow_graph_wrapper_base(){};
 
@@ -314,8 +314,8 @@ namespace fastscapelib
             virtual std::vector<size_type> base_levels() const = 0;
             virtual void set_base_levels(const std::vector<size_type>& levels) = 0;
 
-            virtual xt_array_t<py_selector, bool> mask() const = 0;
-            virtual void set_mask(const xt_array_t<py_selector, bool>& mask) = 0;
+            virtual dynamic_shape_container_t<py_selector, bool> mask() const = 0;
+            virtual void set_mask(const dynamic_shape_container_t<py_selector, bool>& mask) = 0;
 
             virtual void accumulate(data_array_type& acc, const data_array_type& src) const = 0;
             virtual void accumulate(data_array_type& acc, data_type src) const = 0;
@@ -403,12 +403,12 @@ namespace fastscapelib
                 graph().set_base_levels(levels);
             }
 
-            xt_array_t<py_selector, bool> mask() const
+            dynamic_shape_container_t<py_selector, bool> mask() const
             {
                 return graph().mask();
             }
 
-            void set_mask(const xt_array_t<py_selector, bool>& mask)
+            void set_mask(const dynamic_shape_container_t<py_selector, bool>& mask)
             {
                 graph().set_mask(mask);
             }
@@ -466,9 +466,9 @@ namespace fastscapelib
     public:
         using size_type = std::size_t;
         using data_type = double;
-        using data_array_type = xt_array_t<py_selector, data_type>;
+        using data_array_type = dynamic_shape_container_t<py_selector, data_type>;
         using shape_type = data_array_type::shape_type;
-        using data_array_size_type = xt_array_t<py_selector, size_type>;
+        using data_array_size_type = dynamic_shape_container_t<py_selector, size_type>;
 
         template <class G>
         py_flow_graph(G& grid, const py::list& operators)
@@ -548,12 +548,12 @@ namespace fastscapelib
             m_wrapper_ptr->set_base_levels(levels);
         }
 
-        xt_array_t<py_selector, bool> mask() const
+        dynamic_shape_container_t<py_selector, bool> mask() const
         {
             return m_wrapper_ptr->mask();
         }
 
-        void set_mask(const xt_array_t<py_selector, bool>& mask)
+        void set_mask(const dynamic_shape_container_t<py_selector, bool>& mask)
         {
             m_wrapper_ptr->set_mask(mask);
         }

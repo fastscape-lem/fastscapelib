@@ -112,7 +112,7 @@ namespace fastscapelib
 
         using grid_data_type = double;
 
-        using xt_selector = S;
+        using container_selector = S;
         static constexpr std::size_t xt_ndims = 1;
 
         static constexpr uint8_t n_neighbors_max = 2u;
@@ -141,8 +141,9 @@ namespace fastscapelib
 
         using grid_data_type = typename base_type::grid_data_type;
 
-        using xt_selector = typename base_type::xt_selector;
-        using xt_type = xt_tensor_t<xt_selector, grid_data_type, inner_types::xt_ndims>;
+        using container_selector = typename base_type::container_selector;
+        using container_type
+            = fixed_shape_container_t<container_selector, grid_data_type, inner_types::xt_ndims>;
 
         using size_type = typename base_type::size_type;
         using shape_type = typename base_type::shape_type;
@@ -199,7 +200,7 @@ namespace fastscapelib
         std::array<size_type, 3> m_neighbors_count;
         void build_neighbors_count();
 
-        inline xt_type nodes_areas_impl() const;
+        inline container_type nodes_areas_impl() const;
         inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
 
         inline size_type neighbors_count_impl(const size_type& idx) const noexcept;
@@ -337,7 +338,7 @@ namespace fastscapelib
     }
 
     template <class S, class C>
-    inline auto profile_grid_xt<S, C>::nodes_areas_impl() const -> xt_type
+    inline auto profile_grid_xt<S, C>::nodes_areas_impl() const -> container_type
     {
         return xt::broadcast(m_node_area, m_shape);
     }

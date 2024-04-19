@@ -23,11 +23,11 @@ contexts, e.g.,
 
 .. doxygenstruct:: fastscapelib::xt_selector
 
-.. doxygenstruct:: fastscapelib::xt_container
+.. doxygenstruct:: fastscapelib::container_selection
 
-.. doxygentypedef:: fastscapelib::xt_tensor_t
+.. doxygentypedef:: fastscapelib::fixed_shape_container_t
 
-.. doxygentypedef:: fastscapelib::xt_array_t
+.. doxygentypedef:: fastscapelib::dynamic_shape_container_t
 
 |
 

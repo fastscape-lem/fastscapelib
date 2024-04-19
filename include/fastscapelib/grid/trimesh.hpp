@@ -91,7 +91,7 @@ namespace fastscapelib
 
         using grid_data_type = double;
 
-        using xt_selector = S;
+        using container_selector = S;
         static constexpr std::size_t xt_ndims = 1;
 
         static constexpr uint8_t n_neighbors_max = N;
@@ -116,14 +116,14 @@ namespace fastscapelib
 
         using grid_data_type = typename base_type::grid_data_type;
 
-        using xt_selector = typename base_type::xt_selector;
+        using container_selector = typename base_type::container_selector;
         using size_type = typename base_type::size_type;
         using shape_type = typename base_type::shape_type;
 
-        using points_type = xt_tensor_t<xt_selector, grid_data_type, 2>;
-        using triangles_type = xt_tensor_t<xt_selector, size_type, 2>;
-        using indices_type = xt_tensor_t<xt_selector, size_type, 1>;
-        using areas_type = xt_tensor_t<xt_selector, grid_data_type, 1>;
+        using points_type = fixed_shape_container_t<container_selector, grid_data_type, 2>;
+        using triangles_type = fixed_shape_container_t<container_selector, size_type, 2>;
+        using indices_type = fixed_shape_container_t<container_selector, size_type, 1>;
+        using areas_type = fixed_shape_container_t<container_selector, grid_data_type, 1>;
 
         using neighbors_type = typename base_type::neighbors_type;
         using neighbors_indices_type = typename base_type::neighbors_indices_type;
@@ -131,7 +131,7 @@ namespace fastscapelib
 
         using nodes_status_type = typename base_type::nodes_status_type;
         using nodes_status_map_type = typename std::map<size_type, node_status>;
-        using nodes_status_array_type = xt_tensor_t<xt_selector, node_status, 1>;
+        using nodes_status_array_type = fixed_shape_container_t<container_selector, node_status, 1>;
 
         trimesh_xt(const points_type& points,
                    const triangles_type& triangles,

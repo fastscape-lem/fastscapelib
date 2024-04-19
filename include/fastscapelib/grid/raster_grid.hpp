@@ -402,7 +402,7 @@ namespace fastscapelib
 
         using grid_data_type = double;
 
-        using xt_selector = S;
+        using container_selector = S;
         static constexpr std::size_t xt_ndims = 2;
 
         static constexpr uint8_t n_neighbors_max = raster_neighbors<RC>::_n_neighbors_max;
@@ -434,8 +434,9 @@ namespace fastscapelib
 
         using grid_data_type = typename base_type::grid_data_type;
 
-        using xt_selector = typename base_type::xt_selector;
-        using xt_type = xt_tensor_t<xt_selector, grid_data_type, inner_types::xt_ndims>;
+        using container_selector = typename base_type::container_selector;
+        using container_type
+            = fixed_shape_container_t<container_selector, grid_data_type, inner_types::xt_ndims>;
 
         using size_type = typename base_type::size_type;
         using shape_type = typename base_type::shape_type;
@@ -535,7 +536,7 @@ namespace fastscapelib
 
         inline const neighbors_offsets_type& neighbor_offsets(code_type code) const noexcept;
 
-        inline xt_type nodes_areas_impl() const;
+        inline container_type nodes_areas_impl() const;
         inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
 
         inline size_type neighbors_count_impl(const size_type& idx) const noexcept;
@@ -969,7 +970,7 @@ namespace fastscapelib
     //@}
 
     template <class S, raster_connect RC, class C>
-    inline auto raster_grid_xt<S, RC, C>::nodes_areas_impl() const -> xt_type
+    inline auto raster_grid_xt<S, RC, C>::nodes_areas_impl() const -> container_type
     {
         return xt::broadcast(m_node_area, m_shape);
     }

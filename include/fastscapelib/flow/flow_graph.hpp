@@ -26,22 +26,24 @@ namespace fastscapelib
      * @tparam S The xtensor container selector for data array members.
      * @tparam Tag The flow graph implementation tag.
      */
-    template <class G, class S = typename G::xt_selector, class Tag = flow_graph_fixed_array_tag>
+    template <class G,
+              class S = typename G::container_selector,
+              class Tag = flow_graph_fixed_array_tag>
     class flow_graph
     {
     public:
         using self_type = flow_graph<G, S, Tag>;
         using grid_type = G;
-        using xt_selector = S;
+        using container_selector = S;
         using impl_type = detail::flow_graph_impl<G, S, Tag>;
         using operators_type = flow_operator_sequence<impl_type>;
 
         using size_type = typename grid_type::size_type;
 
         using data_type = typename grid_type::grid_data_type;
-        using data_array_type = xt_array_t<xt_selector, data_type>;
+        using data_array_type = dynamic_shape_container_t<container_selector, data_type>;
         using shape_type = typename data_array_type::shape_type;
-        using data_array_size_type = xt_array_t<xt_selector, size_type>;
+        using data_array_size_type = dynamic_shape_container_t<container_selector, size_type>;
 
         using graph_map = std::map<std::string, std::unique_ptr<self_type>>;
         using graph_impl_map = std::map<std::string, std::shared_ptr<impl_type>>;
@@ -276,7 +278,7 @@ namespace fastscapelib
          * Return a mask of where elements with a value ``true`` correspond
          * to grid nodes that are not included in the flow graph.
          */
-        xt_array_t<xt_selector, bool> mask() const
+        dynamic_shape_container_t<container_selector, bool> mask() const
         {
             return m_impl_ptr->mask();
         }

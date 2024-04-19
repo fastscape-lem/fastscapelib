@@ -4,12 +4,12 @@
 #ifndef FASTSCAPELIB_UTILS_XTENSOR_UTILS_H
 #define FASTSCAPELIB_UTILS_XTENSOR_UTILS_H
 
-
 #include <cstddef>
 
 #include "xtensor/xarray.hpp"
 #include "xtensor/xtensor.hpp"
-
+#include "xtensor/xadapt.hpp"
+#include "xtensor/xview.hpp"
 
 namespace fastscapelib
 {
@@ -38,26 +38,26 @@ namespace fastscapelib
      * @tparam N The number of dimensions (only for static dimension containers)
      */
     template <class S, class T, std::size_t N = 0>
-    struct xt_container
+    struct container_selection
     {
     };
 
     template <class T, std::size_t N>
-    struct xt_container<xt_selector, T, N>
+    struct container_selection<xt_selector, T, N>
     {
-        using tensor_type = xt::xtensor<T, N>;
-        using array_type = xt::xarray<T>;
+        using fixed_shape_type = xt::xtensor<T, N>;
+        using dynamic_shape_type = xt::xarray<T>;
     };
 
     /**
      * Alias for the selected (static dimension) xtensor container type.
      *
-     * @tparam S The xtensor selector type.
+     * @tparam S The container selector type.
      * @tparam T The container value type.
      * @tparam N The fixed number of dimensions.
      */
     template <class S, class T, std::size_t N>
-    using xt_tensor_t = typename xt_container<S, T, N>::tensor_type;
+    using fixed_shape_container_t = typename container_selection<S, T, N>::fixed_shape_type;
 
     /**
      * Alias for the selected (dynamic dimension) xtensor container type.
@@ -66,8 +66,13 @@ namespace fastscapelib
      * @tparam T The container value type.
      */
     template <class S, class T>
-    using xt_array_t = typename xt_container<S, T>::array_type;
+    using dynamic_shape_container_t = typename container_selection<S, T>::dynamic_shape_type;
 
+    template <class T, class I>
+    auto get_xt_view(T&& data, I&& max_idx)
+    {
+        return xt::view(xt::adapt(std::forward<T>(data)), xt::range(0, std::forward<I>(max_idx)));
+    }
 }  // namespace fastscapelib
 
 #endif

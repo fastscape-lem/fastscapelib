@@ -61,16 +61,17 @@ namespace fastscapelib
      * @tparam S The xtensor container selector for data array members.
      *
      */
-    template <class G, class S = typename G::xt_selector>
+    template <class G, class S = typename G::container_selector>
     class diffusion_adi_eroder
     {
     public:
         using grid_type = G;
-        using xt_selector = S;
+        using container_selector = S;
 
         using data_type = typename grid_type::grid_data_type;
-        using data_array_type = xt_array_t<xt_selector, data_type>;
-        using data_tensor_type = xt_tensor_t<xt_selector, data_type, grid_type::xt_ndims()>;
+        using data_array_type = dynamic_shape_container_t<container_selector, data_type>;
+        using data_tensor_type
+            = fixed_shape_container_t<container_selector, data_type, grid_type::xt_ndims()>;
 
         /**
          * Create a new diffusion ADI eroder.

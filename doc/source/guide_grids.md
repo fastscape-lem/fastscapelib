@@ -290,8 +290,8 @@ xt::xtensor<dtype, ndims> elevation_alt = xt::random::rand<dtype>(grid.shape());
 //
 // use the xtensor container selector set for the grid
 //
-using selector = fs::raster_grid::xt_selector;
-using ctype = fs::xt_container<selector, dtype, ndims>::tensor_type;
+using selector = fs::raster_grid::container_selector;
+using ctype = fs::container_selection<selector, dtype, ndims>::tensor_type;
 ctype elevation_alt2 = xt::random::rand<dtype>(grid.shape());
 ```
 
