@@ -584,4 +584,7 @@ add_flow_graph_bindings(py::module& m)
 
                      return repr;
                  });
+
+    pyfgraph.def_property_readonly("size", &fs::py_flow_graph::size);
+    pyfgraph.def_property_readonly("grid_shape", &fs::py_flow_graph::grid_shape);
 }

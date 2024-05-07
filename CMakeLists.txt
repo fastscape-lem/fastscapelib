@@ -171,10 +171,13 @@ configure_package_config_file(cmake/${PROJECT_NAME}Config.cmake.in
 
 if(NOT SKBUILD)
   # -- fastscapelib header files
-  install(DIRECTORY "${FASTSCAPELIB_INCLUDE_DIR}/"
-          DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-          FILES_MATCHING PATTERN "*.hpp")
-
+  foreach (file ${FASTSCAPELIB_HEADERS})
+      get_filename_component(dir ${file} DIRECTORY)
+      install(
+          FILES ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/${file}
+          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fastscapelib/${dir}
+      )
+  endforeach()
   # -- CMake configuration
   #    o create/install targets
   install(TARGETS ${FASTSCAPELIB_TARGET}
