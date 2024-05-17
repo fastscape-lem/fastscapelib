@@ -79,9 +79,11 @@ namespace fastscapelib
             using donors_count_type = xt_tensor_t<xt_selector, size_type, 1>;
             using receivers_type = donors_type;
             using receivers_count_type = donors_count_type;
+
             using receivers_distance_type = xt_tensor_t<xt_selector, data_type, 2>;
             using receivers_weight_type = xt_tensor_t<xt_selector, data_type, 2>;
             using dfs_indices_type = xt_tensor_t<xt_selector, size_type, 1>;
+            using bfs_indices_type = dfs_indices_type;
 
             using basins_type = xt_tensor_t<xt_selector, size_type, 1>;
 
@@ -109,6 +111,8 @@ namespace fastscapelib
                 m_donors_count = xt::zeros<size_type>({ grid.size() });
 
                 m_dfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
+                m_bfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
+                m_bfs_levels = xt::ones<size_type>({ grid.size() }) * -1;
 
                 // TODO: basins are not always needed (only init on-demand)
                 m_basins = xt::empty<size_type>({ grid.size() });
@@ -166,8 +170,19 @@ namespace fastscapelib
                 return m_dfs_indices;
             };
 
+            const bfs_indices_type& bfs_indices() const
+            {
+                return m_bfs_indices;
+            };
+
+            const bfs_indices_type& bfs_levels() const
+            {
+                return m_bfs_levels;
+            };
+
             void compute_dfs_indices_bottomup();
             void compute_dfs_indices_topdown();
+            void compute_bfs_indices_bottomup();
 
             /*
              * Should be used for graph traversal in an explicit direction.
@@ -244,6 +259,7 @@ namespace fastscapelib
             receivers_weight_type m_receivers_weight;
 
             dfs_indices_type m_dfs_indices;
+            bfs_indices_type m_bfs_indices, m_bfs_levels;
 
             basins_type m_basins;
             std::vector<size_type> m_outlets;
@@ -316,6 +332,49 @@ namespace fastscapelib
             }
 
             assert(nstack == size());
+        }
+
+        /*
+         * Perform breadth-first search on the flow graph.
+         */
+        template <class G, class S>
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_bfs_indices_bottomup()
+        {
+            fixed_shape_container_t<container_selector, bool, 1> visited({ m_grid.size() }, false);
+            std::vector<size_type> levels(m_grid.size());
+            size_type nstack = 0;
+            size_type level = 0;
+
+            for (size_type i = 0; i < size(); ++i)
+                if (m_receivers(i, 0) == i)
+                {
+                    visited(i) = true;
+                    m_bfs_indices(nstack++) = i;
+                }
+
+            levels[level++] = 0;
+            levels[level++] = nstack;
+
+            while (nstack < size())
+            {
+                for (size_type i = levels[level - 2]; i < levels[level - 1]; ++i)
+                {
+                    auto node_idx = m_bfs_indices(i);
+                    for (size_type k = 0; k < m_donors_count(node_idx); ++k)
+                    {
+                        auto donor_idx = m_donors(node_idx, k);
+                        if (!visited(donor_idx))
+                        {
+                            visited(donor_idx) = true;
+                            m_bfs_indices(nstack++) = donor_idx;
+                        }
+                    }
+                }
+
+                levels[level++] = nstack;
+            }
+
+            m_bfs_levels = xt::adapt(levels, { level });
         }
 
         /*

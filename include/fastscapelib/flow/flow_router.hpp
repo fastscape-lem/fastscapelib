@@ -105,6 +105,7 @@ namespace fastscapelib
                 }
 
                 graph_impl.compute_dfs_indices_bottomup();
+                graph_impl.compute_bfs_indices_bottomup();
             }
         };
     }
