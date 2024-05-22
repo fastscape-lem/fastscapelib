@@ -3,7 +3,7 @@ from textwrap import dedent, indent
 import numba as nb
 import numpy as np
 
-from testpy import Kernel
+from fastscapelib.flow import Kernel
 import time
 
 from contextlib import contextmanager

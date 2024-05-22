@@ -108,6 +108,7 @@ set(FASTSCAPELIB_HEADERS
   flow/flow_router.hpp
   flow/flow_snapshot.hpp
   flow/sink_resolver.hpp
+  flow/impl/flow_graph_inl.hpp
   # Grid
   grid/base.hpp
   grid/profile_grid.hpp
@@ -117,6 +118,7 @@ set(FASTSCAPELIB_HEADERS
   # Utils
   utils/consts.hpp
   utils/iterators.hpp
+  utils/thread_pool.hpp
   utils/union_find.hpp
   utils/utils.hpp
   utils/xtensor_utils.hpp

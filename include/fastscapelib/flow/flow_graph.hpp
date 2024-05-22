@@ -1,5 +1,13 @@
-#ifndef FASTSCAPELIB_FLOW_FLOW_GRAPH_H
-#define FASTSCAPELIB_FLOW_FLOW_GRAPH_H
+#ifndef FASTSCAPELIB_FLOW_FLOW_GRAPH_HPP
+#define FASTSCAPELIB_FLOW_FLOW_GRAPH_HPP
+
+#include "fastscapelib/flow/flow_graph_impl.hpp"
+#include "fastscapelib/flow/flow_kernel.hpp"
+#include "fastscapelib/flow/flow_operator.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
+#include "fastscapelib/utils/thread_pool.hpp"
+
+#include "xtensor/xstrided_view.hpp"
 
 #include <map>
 #include <memory>
@@ -7,12 +15,6 @@
 #include <type_traits>
 #include <string>
 #include <vector>
-
-#include "xtensor/xstrided_view.hpp"
-
-#include "fastscapelib/flow/flow_graph_impl.hpp"
-#include "fastscapelib/flow/flow_operator.hpp"
-#include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib
@@ -53,49 +55,7 @@ namespace fastscapelib
          * @param grid The grid object.
          * @param operators The sequence of flow operators to use for updating the graph.
          */
-        flow_graph(G& grid, operators_type operators)
-            : m_grid(grid)
-            , m_operators(std::move(operators))
-        {
-            m_impl_ptr = std::make_shared<impl_type>(grid, m_operators.all_single_flow());
-
-            // sanity checks
-            if (!m_operators.graph_updated())
-            {
-                throw std::invalid_argument(
-                    "must have at least one operator that updates the flow graph");
-            }
-            if (m_operators.out_flowdir() == flow_direction::undefined)
-            {
-                throw std::invalid_argument(
-                    "must have at least one operator that defines the output flow direction type");
-            }
-
-            // initialize default base levels at fixed value nodes
-            m_impl_ptr->set_base_levels(m_grid.nodes_indices(node_status::fixed_value));
-
-            // pre-allocate graph and elevation snapshots
-            for (const auto& key : m_operators.graph_snapshot_keys())
-            {
-                bool single_flow = m_operators.snapshot_single_flow(key);
-                auto graph = new self_type(grid, single_flow);
-
-                m_graph_snapshots.insert({ key, std::unique_ptr<self_type>(std::move(graph)) });
-                m_graph_impl_snapshots.insert({ key, (*m_graph_snapshots.at(key)).m_impl_ptr });
-            }
-            for (const auto& key : m_operators.elevation_snapshot_keys())
-            {
-                auto snapshot = data_array_type::from_shape(grid.shape());
-                m_elevation_snapshots.insert(
-                    { key, std::make_unique<data_array_type>(std::move(snapshot)) });
-            }
-
-            // pre-allocate hydrologically corrected elevation
-            if (m_operators.elevation_updated())
-            {
-                m_elevation_copy = xt::empty<data_type>(grid.shape());
-            }
-        }
+        flow_graph(G& grid, operators_type operators);
 
         /**
          * Returns a vector of pointers to the flow operators objects used in
@@ -105,54 +65,36 @@ namespace fastscapelib
          * (i.e., only its ``name`` method is virtual). It is still possible to
          * downcast the returned pointers (e.g., using the visitor pattern).
          */
-        const std::vector<const flow_operator*>& operators() const
-        {
-            return m_operators.m_op_vec;
-        }
+        const std::vector<const flow_operator*>& operators() const;
 
         /**
          * Returns ``true`` if the graph has single flow directions.
          */
-        bool single_flow() const
-        {
-            return m_operators.out_flowdir() == flow_direction::single;
-        }
+        bool single_flow() const;
 
         /*
          * Returns the names of the graph snapshots (if any).
          */
-        const std::vector<std::string>& graph_snapshot_keys() const
-        {
-            return m_operators.graph_snapshot_keys();
-        }
+        const std::vector<std::string>& graph_snapshot_keys() const;
 
         /**
          * Graph snapshot getter.
          *
          * @param name Name of the snapshot.
          */
-        self_type& graph_snapshot(std::string name) const
-        {
-            return *(m_graph_snapshots.at(name));
-        }
+        self_type& graph_snapshot(std::string name) const;
 
         /**
          * Returns the names of the elevation snapshots.
          */
-        const std::vector<std::string>& elevation_snapshot_keys() const
-        {
-            return m_operators.elevation_snapshot_keys();
-        }
+        const std::vector<std::string>& elevation_snapshot_keys() const;
 
         /**
          * Elevation snapshot getter.
          *
          * @param name Name of the snapshot.
          */
-        const data_array_type& elevation_snapshot(std::string name) const
-        {
-            return *(m_elevation_snapshots.at(name));
-        }
+        const data_array_type& elevation_snapshot(std::string name) const;
 
         /**
          * Update flow routes from the input topographic surface.
@@ -165,73 +107,28 @@ namespace fastscapelib
          * has been updated in order to route flow accross closed depressions.
          *
          */
-        const data_array_type& update_routes(const data_array_type& elevation)
-        {
-            if (!m_writeable)
-            {
-                throw std::runtime_error("cannot update routes (graph is read-only)");
-            }
-
-            data_array_type* elevation_ptr;
-
-            if (m_operators.elevation_updated())
-            {
-                // reset and use hydrologically corrected elevation
-                m_elevation_copy = elevation;
-                elevation_ptr = &m_elevation_copy;
-            }
-            else
-            {
-                // pretty safe to remove the const qualifier (shouldn't be updated)
-                elevation_ptr = const_cast<data_array_type*>(&elevation);
-            }
-
-            // loop over flow operator implementations
-            for (auto op = m_operators.impl_begin(); op != m_operators.impl_end(); ++op)
-            {
-                op->apply(*m_impl_ptr, *elevation_ptr);
-                op->save(
-                    *m_impl_ptr, m_graph_impl_snapshots, *elevation_ptr, m_elevation_snapshots);
-            }
-
-            return *elevation_ptr;
-        }
+        const data_array_type& update_routes(const data_array_type& elevation);
 
         /**
          * Returns a reference to the corresponding grid object.
          */
-        grid_type& grid() const
-        {
-            return m_grid;
-        }
+        grid_type& grid() const;
 
         /**
          * Returns the total number of nodes in the graph (equals to the size of
          * the grid).
          */
-        size_type size() const
-        {
-            return m_grid.size();
-        }
+        size_type size() const;
 
         /**
          * Returns the shape of the grid node arrays.
          */
-        shape_type grid_shape() const
-        {
-            // grid shape may have a different type (e.g., from xtensor containers)
-            auto shape = m_grid.shape();
-            shape_type data_array_shape(shape.begin(), shape.end());
-            return data_array_shape;
-        }
+        shape_type grid_shape() const;
 
         /**
          * Returns a reference to the flow graph implementation.
          */
-        const impl_type& impl() const
-        {
-            return *m_impl_ptr;
-        }
+        const impl_type& impl() const;
 
         /**
          * Returns a shared pointer to the flow graph implementation.
@@ -240,20 +137,12 @@ namespace fastscapelib
          * general accessing the implementation through ``impl()`` (const
          * reference) should be preferred.
          */
-        std::shared_ptr<impl_type> impl_ptr() const
-        {
-            return m_impl_ptr;
-        }
+        std::shared_ptr<impl_type> impl_ptr() const;
 
         /**
          * Return the indices of the base level nodes.
          */
-        std::vector<size_type> base_levels() const
-        {
-            const auto& impl_levels = m_impl_ptr->base_levels();
-            std::vector<size_type> indices(impl_levels.begin(), impl_levels.end());
-            return indices;
-        }
+        std::vector<size_type> base_levels() const;
 
         /**
          * Clear all existing base level nodes and set new ones.
@@ -262,24 +151,13 @@ namespace fastscapelib
          * @param levels The indices of the new base level nodes.
          */
         template <class C>
-        void set_base_levels(C&& levels)
-        {
-            if (!m_writeable)
-            {
-                throw std::runtime_error("cannot set base levels (graph is read-only)");
-            }
-
-            m_impl_ptr->set_base_levels(levels);
-        }
+        void set_base_levels(C&& levels);
 
         /**
          * Return a mask of where elements with a value ``true`` correspond
          * to grid nodes that are not included in the flow graph.
          */
-        xt_array_t<xt_selector, bool> mask() const
-        {
-            return m_impl_ptr->mask();
-        }
+        xt_array_t<xt_selector, bool> mask() const;
 
         /**
          * Set a new grid mask.
@@ -289,19 +167,7 @@ namespace fastscapelib
          * correspond to grid nodes that are not included in the flow graph.
          */
         template <class C>
-        void set_mask(C&& mask)
-        {
-            if (!m_writeable)
-            {
-                throw std::runtime_error("cannot set mask (graph is read-only)");
-            }
-            if (!xt::same_shape(mask.shape(), m_grid.shape()))
-            {
-                throw std::runtime_error("cannot set mask (shape mismatch with grid shape)");
-            }
-
-            m_impl_ptr->set_mask(std::forward<C>(mask));
-        }
+        void set_mask(C&& mask);
 
         /**
          * Traverse the flow graph in the top->down direction and accumulate
@@ -322,10 +188,7 @@ namespace fastscapelib
          *
          * @return The output accumulated values (array of same shape than ``grid_shape``).
          */
-        data_array_type accumulate(const data_array_type& src) const
-        {
-            return m_impl_ptr->accumulate(src);
-        }
+        data_array_type accumulate(const data_array_type& src) const;
 
         /**
          * Traverse the flow graph in the top->down direction and accumulate
@@ -338,10 +201,7 @@ namespace fastscapelib
          *
          * Both `acc` and `src` must of the same shape then ``grid_shape``.
          */
-        void accumulate(data_array_type& acc, const data_array_type& src) const
-        {
-            return m_impl_ptr->accumulate(acc, src);
-        }
+        void accumulate(data_array_type& acc, const data_array_type& src) const;
 
         /**
          * Traverse the flow graph in the top->down direction and accumulate
@@ -351,10 +211,7 @@ namespace fastscapelib
          *
          * @return The output accumulated values (array of same shape than ``grid_shape``).
          */
-        data_array_type accumulate(data_type src) const
-        {
-            return m_impl_ptr->accumulate(src);
-        }
+        data_array_type accumulate(data_type src) const;
 
         /**
          * Traverse the flow graph in the top->down direction and accumulate
@@ -365,10 +222,7 @@ namespace fastscapelib
          *
          * Both `acc` and `src` must of the same shape then ``grid_shape``.
          */
-        void accumulate(data_array_type& acc, data_type src) const
-        {
-            return m_impl_ptr->accumulate(acc, src);
-        }
+        void accumulate(data_array_type& acc, data_type src) const;
 
         /**
          * Delineate catchments (or basins).
@@ -384,16 +238,20 @@ namespace fastscapelib
          * limit of the integer value range. It is therefore preferable to mask the
          * results prior to, e.g., plotting it.
          */
-        data_array_size_type basins()
-        {
-            data_array_size_type basins = data_array_size_type::from_shape(m_grid.shape());
-            auto basins_flat = xt::flatten(basins);
+        data_array_size_type basins();
 
-            m_impl_ptr->compute_basins();
-            basins_flat = m_impl_ptr->basins();
+        int apply_kernel(NumbaFlowKernel& kernel, double dt);
 
-            return basins;
-        }
+        int apply_kernel_seq(const FSFlowKernel& kernel, double dt);
+
+        int apply_kernel_seq2(NumbaFlowKernel& kernel, double dt);
+
+        // int
+        // apply_kernel_par(std::vector<std::size_t>& indices, const FSFlowKernel& kernel, double
+        // dt);
+
+
+        int apply_kernel_par2(NumbaFlowKernel& kernel, double dt);
 
     private:
         bool m_writeable = true;
@@ -407,14 +265,18 @@ namespace fastscapelib
 
         operators_type m_operators;
 
+        thread_pool m_thread_pool;
+
         // used internally for creating graph snapshots
-        explicit flow_graph(grid_type& grid, bool single_flow)
-            : m_writeable(false)
-            , m_grid(grid)
-        {
-            m_impl_ptr = std::make_shared<impl_type>(grid, single_flow);
-        }
+        explicit flow_graph(grid_type& grid, bool single_flow);
+
+        template <typename T,
+                  typename F,
+                  typename R = std::invoke_result_t<std::decay_t<F>, T, T, T>>
+        void run_blocks(const T first_index, const T index_after_last, F&& func);
     };
 }
 
-#endif
+#include "./impl/flow_graph_inl.hpp"
+
+#endif  // FASTSCAPELIB_FLOW_FLOW_GRAPH_HPP

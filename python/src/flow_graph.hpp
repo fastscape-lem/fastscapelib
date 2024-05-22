@@ -202,47 +202,47 @@ namespace fastscapelib
         const receivers_type& receivers() const
         {
             return m_wrapper_ptr->receivers();
-        };
+        }
 
         const receivers_count_type& receivers_count() const
         {
             return m_wrapper_ptr->receivers_count();
-        };
+        }
 
         const receivers_distance_type& receivers_distance() const
         {
             return m_wrapper_ptr->receivers_distance();
-        };
+        }
 
         const receivers_weight_type& receivers_weight() const
         {
             return m_wrapper_ptr->receivers_weight();
-        };
+        }
 
         const donors_type& donors() const
         {
             return m_wrapper_ptr->donors();
-        };
+        }
 
         const donors_count_type& donors_count() const
         {
             return m_wrapper_ptr->donors_count();
-        };
+        }
 
         const dfs_indices_type& dfs_indices() const
         {
             return m_wrapper_ptr->dfs_indices();
-        };
+        }
 
         const bfs_indices_type& bfs_indices() const
         {
             return m_wrapper_ptr->bfs_indices();
-        };
+        }
 
         const bfs_indices_type& bfs_levels() const
         {
             return m_wrapper_ptr->bfs_levels();
-        };
+        }
 
         nodes_indices_iterator_type nodes_indices_bottomup() const
         {
@@ -252,7 +252,7 @@ namespace fastscapelib
         const basins_type& basins() const
         {
             return m_wrapper_ptr->basins();
-        };
+        }
 
     private:
         std::unique_ptr<detail::flow_graph_impl_wrapper_base> m_wrapper_ptr;
@@ -349,6 +349,8 @@ namespace fastscapelib
             virtual data_array_type accumulate(data_type src) const = 0;
 
             virtual data_array_size_type basins() = 0;
+
+            virtual int apply_kernel(NumbaFlowKernel& kernel, double dt) = 0;
         };
 
         template <class G>
@@ -459,6 +461,11 @@ namespace fastscapelib
             data_array_size_type basins()
             {
                 return graph().basins();
+            }
+
+            int apply_kernel(NumbaFlowKernel& kernel, double dt)
+            {
+                return graph().apply_kernel(kernel, dt);
             }
 
         private:
@@ -606,6 +613,11 @@ namespace fastscapelib
             return m_wrapper_ptr->basins();
         }
 
+        int apply_kernel(NumbaFlowKernel& kernel, double dt)
+        {
+            return m_wrapper_ptr->apply_kernel(kernel, dt);
+        }
+
     private:
         std::unique_ptr<detail::flow_graph_wrapper_base> m_wrapper_ptr;
         py::list m_operators;
@@ -656,6 +668,23 @@ namespace fastscapelib
             .def_readonly_static(
                 "out_flowdir", &OP::out_flowdir, ":class:`FlowDirection` of the output graph");
     }
+
+    struct PyNumbaJitClass
+    {
+        std::uintptr_t meminfoptr;
+        std::uintptr_t dataptr;
+    };
+
+    struct PyNumbaFlowKernel
+    {
+        std::uintptr_t func_ptr;
+        std::uintptr_t node_data_getter_ptr;
+        std::uintptr_t node_data_setter_ptr;
+        std::uintptr_t node_data_create_ptr;
+        std::uintptr_t node_data_free_ptr;
+        PyNumbaJitClass data_ptr;
+        int n_threads;
+    };
 }
 
 #endif

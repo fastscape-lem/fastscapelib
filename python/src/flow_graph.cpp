@@ -593,4 +593,26 @@ add_flow_graph_bindings(py::module& m)
 
     pyfgraph.def_property_readonly("size", &fs::py_flow_graph::size);
     pyfgraph.def_property_readonly("grid_shape", &fs::py_flow_graph::grid_shape);
+    pyfgraph.def(
+        "apply_kernel",
+        [](fs::py_flow_graph& flow_graph, fs::PyNumbaFlowKernel py_kernel, double dt) -> int
+        {
+            py::gil_scoped_release release;
+            return flow_graph.apply_kernel((fs::NumbaFlowKernel&) py_kernel, dt);
+        });
+
+    py::class_<fs::PyNumbaFlowKernel>(m, "Kernel")
+        .def(py::init<>())
+        .def_readwrite("func", &fs::PyNumbaFlowKernel::func_ptr)
+        .def_readwrite("node_data_getter", &fs::PyNumbaFlowKernel::node_data_getter_ptr)
+        .def_readwrite("node_data_setter", &fs::PyNumbaFlowKernel::node_data_setter_ptr)
+        .def_readwrite("node_data_create", &fs::PyNumbaFlowKernel::node_data_create_ptr)
+        .def_readwrite("node_data_free", &fs::PyNumbaFlowKernel::node_data_free_ptr)
+        .def_readwrite("data", &fs::PyNumbaFlowKernel::data_ptr)
+        .def_readwrite("n_threads", &fs::PyNumbaFlowKernel::n_threads);
+
+    py::class_<fs::PyNumbaJitClass>(m, "JitClass")
+        .def(py::init<>())
+        .def_readwrite("meminfo", &fs::PyNumbaJitClass::meminfoptr)
+        .def_readwrite("data", &fs::PyNumbaJitClass::dataptr);
 }

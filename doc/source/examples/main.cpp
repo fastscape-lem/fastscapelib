@@ -57,28 +57,6 @@ PYBIND11_MODULE(testpy, m)
         .def_readwrite("meminfo", &PyNumbaJitClass::meminfoptr)
         .def_readwrite("data", &PyNumbaJitClass::dataptr);
 
-
-    py::class_<GraphRunner>(m, "GraphRunner")
-        .def(py::init<std::size_t>())
-        .def("apply_kernel",
-             [](GraphRunner& runner,
-                xt::pyarray<std::size_t>& indices,
-                xt::pyarray<std::size_t>& levels,
-                PyNumbaFlowKernel py_kernel,
-                double dt) -> int
-             {
-                 py::gil_scoped_release release;
-
-                 auto kernel = (NumbaFlowKernel&) py_kernel;
-
-                 if (kernel.n_threads > 1)
-                     runner.apply_kernel_par2(indices, levels, kernel, dt);
-                 else
-                     runner.apply_kernel_seq2(indices, levels, kernel, dt);
-
-                 return 0;
-             });
-
     m.def("test_leak",
           [](PyNumbaFlowKernel py_kernel) -> int
           {
