@@ -122,6 +122,7 @@ set(FASTSCAPELIB_HEADERS
   utils/union_find.hpp
   utils/utils.hpp
   utils/xtensor_utils.hpp
+  utils/impl/thread_pool_inl.hpp
   # Version
   version.hpp
 )

@@ -481,21 +481,22 @@ namespace fastscapelib
     void flow_graph<G, S, Tag>::run_blocks(const T first_index, const T index_after_last, F&& func)
     {
         auto thread_pool_size = m_thread_pool.size();
-        std::vector<Job> jobs(thread_pool_size);
+        std::vector<std::function<void()>> jobs(thread_pool_size);
 
         if (index_after_last > first_index)
         {
-            const thread_pool::blocks blks(first_index, index_after_last, thread_pool_size);
+            const typename thread_pool_type::blocks blks(
+                first_index, index_after_last, thread_pool_size);
 
             for (auto i = 0; i < thread_pool_size; ++i)
             {
                 if (i < blks.num_blocks())
-                    jobs[i] = Job([i,
-                                   func = std::forward<F>(func),
-                                   start = blks.start(i),
-                                   end = blks.end(i)]() { func(i, start, end); });
+                    jobs[i] = [i,
+                               func = std::forward<F>(func),
+                               start = blks.start(i),
+                               end = blks.end(i)]() { func(i, start, end); };
                 else
-                    jobs[i] = Job();
+                    jobs[i] = nullptr;
             }
             m_thread_pool.set_tasks(jobs);
             m_thread_pool.run_tasks();

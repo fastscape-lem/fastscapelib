@@ -254,6 +254,8 @@ namespace fastscapelib
         int apply_kernel_par2(NumbaFlowKernel& kernel, double dt);
 
     private:
+        using thread_pool_type = thread_pool<size_type>;
+
         bool m_writeable = true;
         grid_type& m_grid;
         std::shared_ptr<impl_type> m_impl_ptr;
@@ -265,7 +267,7 @@ namespace fastscapelib
 
         operators_type m_operators;
 
-        thread_pool m_thread_pool;
+        thread_pool_type m_thread_pool;
 
         // used internally for creating graph snapshots
         explicit flow_graph(grid_type& grid, bool single_flow);
