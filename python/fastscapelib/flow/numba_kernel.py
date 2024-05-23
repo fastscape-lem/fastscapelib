@@ -583,7 +583,7 @@ def py_apply_kernel_impl(
         node_data_setter(i, node_data, data)
 
 
-def py_apply_kernel(indices, levels, nb_kernel, dt):
+def py_apply_kernel(nb_kernel, dt):
     """Applies a kernel on a grid.
 
     This wrapper function calls the Python jitted implementation
@@ -592,6 +592,7 @@ def py_apply_kernel(indices, levels, nb_kernel, dt):
 
     kernel = nb_kernel.kernel
     node_data = nb_kernel.node_data_create()
+    indices = nb_kernel._flow_graph.impl().dfs_indices
 
     py_apply_kernel_impl(
         indices,
@@ -602,3 +603,5 @@ def py_apply_kernel(indices, levels, nb_kernel, dt):
         nb_kernel.node_data_setter,
         dt,
     )
+
+    return 0

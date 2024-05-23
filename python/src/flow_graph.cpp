@@ -595,10 +595,21 @@ add_flow_graph_bindings(py::module& m)
     pyfgraph.def_property_readonly("grid_shape", &fs::py_flow_graph::grid_shape);
     pyfgraph.def(
         "apply_kernel",
-        [](fs::py_flow_graph& flow_graph, fs::PyNumbaFlowKernel py_kernel, double dt) -> int
+        [](fs::py_flow_graph& flow_graph, py::object flow_kernel, double dt) -> int
         {
-            py::gil_scoped_release release;
-            return flow_graph.apply_kernel((fs::NumbaFlowKernel&) py_kernel, dt);
+            auto kernel = flow_kernel.attr("kernel").cast<fs::PyNumbaFlowKernel>();
+
+            if (kernel.n_threads == 1)
+            {
+                auto py_apply_kernel
+                    = py::module::import("fastscapelib").attr("flow").attr("py_apply_kernel");
+                return py_apply_kernel(flow_kernel, dt).cast<int>();
+            }
+            else
+            {
+                py::gil_scoped_release release;
+                return flow_graph.apply_kernel((fs::NumbaFlowKernel&) kernel, dt);
+            }
         });
 
     py::class_<fs::PyNumbaFlowKernel>(m, "Kernel")
