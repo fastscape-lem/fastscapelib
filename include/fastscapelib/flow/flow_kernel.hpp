@@ -29,14 +29,13 @@ namespace fastscapelib
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    struct FSFlowKernel
+    struct flow_kernel
     {
-        std::function<int(void*, double)> func;
+        std::function<int(void*)> func;
         std::function<int(std::size_t, void*, void*)> node_data_getter;
         std::function<int(std::size_t, void*, void*)> node_data_setter;
         std::function<void*()> node_data_create;
         std::function<void(void*)> node_data_free;
-        void* data;
         int n_threads;
         kernel_application_order application_order
             = kernel_application_order::ANY;  ///< order for kernel application
@@ -44,7 +43,14 @@ namespace fastscapelib
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    // struct FSFlowKernel
+    struct flow_kernel_data
+    {
+        void* data;
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    // struct flow_kernel
     // {
     //     int (*func)(void*, double);
     //     int (*node_data_getter)(std::size_t, void*, void*);
@@ -59,54 +65,65 @@ namespace fastscapelib
 
     struct NumbaFlowKernel
     {
-        int (*func)(NumbaJitClass, double);                                  ///< flow kernel
+        int (*func)(NumbaJitClass);                                          ///< flow kernel
         int (*node_data_getter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data getter
         int (*node_data_setter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data setter
         NumbaJitClass (*node_data_create)();         ///< node data allocator
         void (*node_data_free)(void*);               ///< node data destructor
-        NumbaJitClass data;                          ///< data
         int n_threads;                               ///< threads count
         kernel_application_order application_order;  ///< traversal order for kernel application
 
-        operator FSFlowKernel()
+        operator flow_kernel()
         {
-            FSFlowKernel flow_kernel;
+            flow_kernel kernel;
 
-            flow_kernel.func = [this](void* node, double dt) -> int
-            { return func(*reinterpret_cast<NumbaJitClass*>(node), dt); };
+            kernel.func = [this](void* node) -> int
+            { return func(*reinterpret_cast<NumbaJitClass*>(node)); };
 
-            flow_kernel.node_data_getter
-                = [this](std::size_t index, void* data, void* node_data) -> int
+            kernel.node_data_getter = [this](std::size_t index, void* data, void* node_data) -> int
             {
                 return node_data_getter(index,
                                         *reinterpret_cast<NumbaJitClass*>(data),
                                         *reinterpret_cast<NumbaJitClass*>(node_data));
             };
 
-            flow_kernel.node_data_setter
-                = [this](std::size_t index, void* node_data, void* data) -> int
+            kernel.node_data_setter = [this](std::size_t index, void* node_data, void* data) -> int
             {
                 return node_data_setter(index,
                                         *reinterpret_cast<NumbaJitClass*>(node_data),
                                         *reinterpret_cast<NumbaJitClass*>(data));
             };
 
-            flow_kernel.node_data_create = [this]() -> void*
+            kernel.node_data_create = [this]() -> void*
             {
                 auto* ptr = new NumbaJitClass;
                 *ptr = node_data_create();
                 return ptr;
             };
 
-            flow_kernel.node_data_free = [this](void* data) -> void
+            kernel.node_data_free = [this](void* data) -> void
             { node_data_free(reinterpret_cast<NumbaJitClass*>(data)->meminfoptr); };
 
-            flow_kernel.data = &data;
+            kernel.n_threads = n_threads;
+            kernel.application_order = application_order;
 
-            flow_kernel.n_threads = n_threads;
-            flow_kernel.application_order = application_order;
+            return kernel;
+        }
+    };
 
-            return flow_kernel;
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct NumbaFlowKernelData
+    {
+        NumbaJitClass data;  ///< data
+
+        operator flow_kernel_data()
+        {
+            flow_kernel_data kernel_data;
+
+            kernel_data.data = &data;
+
+            return kernel_data;
         }
     };
 }  // namespace fastscapelib

@@ -11,6 +11,7 @@ from _fastscapelib_py.flow import (  # type: ignore[import]
     PFloodSinkResolver,
     SingleFlowRouter,
     Kernel,
+    KernelData,
     KernelApplicationOrder,
 )
 from .numba_kernel import NumbaFlowKernel, py_apply_kernel
@@ -29,6 +30,7 @@ __all__ = [
     "PFloodSinkResolver",
     "SingleFlowRouter",
     "Kernel",
+    "KernelData",
     "KernelApplicationOrder",
     "NumbaFlowKernel",
     "py_apply_kernel",

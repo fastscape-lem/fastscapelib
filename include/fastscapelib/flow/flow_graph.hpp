@@ -240,18 +240,18 @@ namespace fastscapelib
          */
         data_array_size_type basins();
 
-        int apply_kernel(NumbaFlowKernel& kernel, double dt);
+        int apply_kernel(NumbaFlowKernel& kernel, NumbaFlowKernelData& data);
 
-        int apply_kernel_seq(const FSFlowKernel& kernel, double dt);
+        int apply_kernel_seq(const flow_kernel& kernel, NumbaFlowKernelData& data);
 
-        int apply_kernel_seq2(NumbaFlowKernel& kernel, double dt);
+        int apply_kernel_seq2(NumbaFlowKernel& kernel, NumbaFlowKernelData& data);
 
         // int
-        // apply_kernel_par(std::vector<std::size_t>& indices, const FSFlowKernel& kernel, double
+        // apply_kernel_par(std::vector<std::size_t>& indices, const flow_kernel& kernel, double
         // dt);
 
 
-        int apply_kernel_par2(NumbaFlowKernel& kernel, double dt);
+        int apply_kernel_par2(NumbaFlowKernel& kernel, NumbaFlowKernelData& data);
 
     private:
         using thread_pool_type = thread_pool<size_type>;

@@ -350,7 +350,7 @@ namespace fastscapelib
 
             virtual data_array_size_type basins() = 0;
 
-            virtual int apply_kernel(NumbaFlowKernel& kernel, double dt) = 0;
+            virtual int apply_kernel(NumbaFlowKernel& kernel, NumbaFlowKernelData& data) = 0;
         };
 
         template <class G>
@@ -463,9 +463,9 @@ namespace fastscapelib
                 return graph().basins();
             }
 
-            int apply_kernel(NumbaFlowKernel& kernel, double dt)
+            int apply_kernel(NumbaFlowKernel& kernel, NumbaFlowKernelData& data)
             {
-                return graph().apply_kernel(kernel, dt);
+                return graph().apply_kernel(kernel, data);
             }
 
         private:
@@ -613,9 +613,9 @@ namespace fastscapelib
             return m_wrapper_ptr->basins();
         }
 
-        int apply_kernel(NumbaFlowKernel& kernel, double dt)
+        int apply_kernel(NumbaFlowKernel& kernel, NumbaFlowKernelData& data)
         {
-            return m_wrapper_ptr->apply_kernel(kernel, dt);
+            return m_wrapper_ptr->apply_kernel(kernel, data);
         }
 
     private:
@@ -682,9 +682,13 @@ namespace fastscapelib
         std::uintptr_t node_data_setter_ptr;
         std::uintptr_t node_data_create_ptr;
         std::uintptr_t node_data_free_ptr;
-        PyNumbaJitClass data_ptr;
         int n_threads;
         kernel_application_order application_order;
+    };
+
+    struct PyNumbaFlowKernelData
+    {
+        PyNumbaJitClass data_ptr;
     };
 }
 

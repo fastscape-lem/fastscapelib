@@ -595,7 +595,9 @@ add_flow_graph_bindings(py::module& m)
     pyfgraph.def_property_readonly("grid_shape", &fs::py_flow_graph::grid_shape);
     pyfgraph.def(
         "apply_kernel",
-        [](fs::py_flow_graph& flow_graph, py::object flow_kernel, double dt) -> int
+        [](fs::py_flow_graph& flow_graph,
+           py::object flow_kernel,
+           fs::PyNumbaFlowKernelData& flow_kernel_data) -> int
         {
             auto kernel = flow_kernel.attr("kernel").cast<fs::PyNumbaFlowKernel>();
 
@@ -603,12 +605,13 @@ add_flow_graph_bindings(py::module& m)
             {
                 auto py_apply_kernel
                     = py::module::import("fastscapelib").attr("flow").attr("py_apply_kernel");
-                return py_apply_kernel(flow_kernel, dt).cast<int>();
+                return py_apply_kernel(flow_kernel, flow_kernel_data).cast<int>();
             }
             else
             {
                 py::gil_scoped_release release;
-                return flow_graph.apply_kernel((fs::NumbaFlowKernel&) kernel, dt);
+                return flow_graph.apply_kernel((fs::NumbaFlowKernel&) kernel,
+                                               (fs::NumbaFlowKernelData&) flow_kernel_data);
             }
         });
 
@@ -627,10 +630,12 @@ add_flow_graph_bindings(py::module& m)
         .def_readwrite("node_data_setter", &fs::PyNumbaFlowKernel::node_data_setter_ptr)
         .def_readwrite("node_data_create", &fs::PyNumbaFlowKernel::node_data_create_ptr)
         .def_readwrite("node_data_free", &fs::PyNumbaFlowKernel::node_data_free_ptr)
-        .def_readwrite("data", &fs::PyNumbaFlowKernel::data_ptr)
         .def_readwrite("n_threads", &fs::PyNumbaFlowKernel::n_threads)
         .def_readwrite("application_order", &fs::PyNumbaFlowKernel::application_order);
 
+    py::class_<fs::PyNumbaFlowKernelData>(m, "KernelData")
+        .def(py::init<>())
+        .def_readwrite("data", &fs::PyNumbaFlowKernelData::data_ptr);
 
     py::class_<fs::PyNumbaJitClass>(m, "JitClass")
         .def(py::init<>())

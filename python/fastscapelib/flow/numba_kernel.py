@@ -3,7 +3,7 @@ from textwrap import dedent, indent
 import numba as nb
 import numpy as np
 
-from fastscapelib.flow import Kernel, KernelApplicationOrder
+from fastscapelib.flow import Kernel, KernelData, KernelApplicationOrder
 import time
 
 from contextlib import contextmanager
@@ -26,8 +26,7 @@ class NumbaFlowKernel:
         self,
         flow_graph,
         kernel_func,
-        grid_data,
-        constants,
+        spec,
         application_order,
         outputs=(),
         max_receivers: int = -1,
@@ -40,8 +39,7 @@ class NumbaFlowKernel:
             self._py_flow_kernel = kernel_func
             self._outputs = outputs
             self._max_receivers = max_receivers
-            self._constants = constants
-            self._grid_data = grid_data
+            self._spec = spec
             self._print_generated_code = print_generated_code
             self._print_stats = print_stats
             self._n_threads = n_threads
@@ -61,6 +59,7 @@ class NumbaFlowKernel:
         """
 
         self.kernel = kernel = Kernel()
+        self.kernel_data = KernelData()
 
         with timer("build data classes", self._print_stats):
             self._build_and_set_data_classes()
@@ -87,7 +86,7 @@ class NumbaFlowKernel:
         compiled_func = jitted_func.get_compile_result(
             nb.core.typing.Signature(
                 nb.none,
-                (self._node_data_jitclass.class_type.instance_type, nb.float64),
+                (self._node_data_jitclass.class_type.instance_type,),
                 None,
             )
         )
@@ -204,11 +203,15 @@ class NumbaFlowKernel:
 
         flow_graph = self._flow_graph
 
-        for name, value in self._grid_data.items():
-            if value.size != flow_graph.size:
-                raise ValueError("Invalid size")
-            if value.shape != (flow_graph.size,):
-                raise ValueError("Invalid shape")
+        # FIXME
+        self._grid_data = {name: ty for name, ty in self._spec if ty == nb.float64[::1]}
+        self._constants = {name: ty for name, ty in self._spec if ty != nb.float64[::1]}
+
+        # for name, value in self._grid_data.items():
+        #     if value.size != flow_graph.size:
+        #         raise ValueError("Invalid size")
+        #     if value.shape != (flow_graph.size,):
+        #         raise ValueError("Invalid shape")
 
         self._build_node_data_jitclass()
         self._build_data_jitclass()
@@ -224,9 +227,9 @@ class NumbaFlowKernel:
 
         from numba.experimental.jitclass import _box
 
-        self._data = self._data_jitclass(**self._grid_data, **flow_graph_data)
-        self.kernel.data.meminfo = _box.box_get_meminfoptr(self._data)
-        self.kernel.data.data = _box.box_get_dataptr(self._data)
+        self._data = self._data_jitclass(**flow_graph_data)
+        self.kernel_data.data.meminfo = _box.box_get_meminfoptr(self._data)
+        self.kernel_data.data.data = _box.box_get_dataptr(self._data)
 
     @staticmethod
     def _generate_jitclass(name, spec, init_source, glbls={}):
@@ -256,9 +259,7 @@ class NumbaFlowKernel:
             ("distance", nb.float64[::1]),
             ("weight", nb.float64[::1]),
         ]
-        receivers_grid_data_spec = [
-            (name, nb.typeof(value)) for name, value in grid_data.items()
-        ]
+        receivers_grid_data_spec = [(name, ty) for name, ty in grid_data.items()]
         receivers_internal_spec = [
             ("count", nb.uint64),
         ]
@@ -268,8 +269,8 @@ class NumbaFlowKernel:
             + receivers_grid_data_spec
             + receivers_internal_spec
             + [
-                ("_" + name, dtype)
-                for name, dtype in receivers_flow_graph_spec + receivers_grid_data_spec
+                ("_" + name, ty)
+                for name, ty in receivers_flow_graph_spec + receivers_grid_data_spec
             ]
         )
 
@@ -278,11 +279,14 @@ class NumbaFlowKernel:
             def __init__(self):
                 pass
 
+        def get_type(value):
+            if issubclass(value.__class__, nb.core.types.Type):
+                return value
+            return nb.typeof(value)
+
         base_spec = [("receivers", ReceiversData.class_type.instance_type)]
-        grid_data_spec = [
-            (name, nb.from_dtype(value.dtype)) for name, value in grid_data.items()
-        ]
-        constants_spec = [(name, nb.typeof(value)) for name, value in constants.items()]
+        grid_data_spec = [(name, ty.dtype) for name, ty in grid_data.items()]
+        constants_spec = [(name, get_type(ty)) for name, ty in constants.items()]
 
         __init___template = dedent(
             """
@@ -304,7 +308,11 @@ class NumbaFlowKernel:
 
         default_size = max_receivers if max_receivers > 0 else 0
         constants_content = "\n    ".join(
-            [f"self.{name} = {value}" for name, value in constants.items()]
+            [
+                f"self.{name} = {ty}"
+                for name, ty in constants.items()
+                if not issubclass(ty.__class__, nb.core.types.Type)
+            ]
         )
         receivers_content_init = "\n    ".join(
             [
@@ -321,6 +329,11 @@ class NumbaFlowKernel:
             receivers_content_view=receivers_content_view,
             default_size=default_size,
         )
+
+        spec = base_spec + grid_data_spec + constants_spec
+
+        if self._print_generated_code:
+            print(init_source)
 
         self._node_data_jitclass = NumbaFlowKernel._generate_jitclass(
             "FlowKernelNodeData",
@@ -341,6 +354,7 @@ class NumbaFlowKernel:
         """
 
         grid_data = self._grid_data
+        scalars = self._constants
 
         base_spec = [
             ("donors_idx", nb.uint64[:, ::1]),
@@ -350,8 +364,13 @@ class NumbaFlowKernel:
             ("receivers_distance", nb.float64[:, ::1]),
             ("receivers_weight", nb.float64[:, ::1]),
         ]
-        grid_data_spec = [(name, nb.typeof(value)) for name, value in grid_data.items()]
-        spec = base_spec + grid_data_spec
+        grid_data_spec = [(name, ty) for name, ty in grid_data.items()]
+        scalars_spec = [
+            (name, ty)
+            for name, ty in scalars.items()
+            if issubclass(ty.__class__, nb.core.types.Type)
+        ]
+        spec = base_spec + grid_data_spec + scalars_spec
 
         __init___template = dedent(
             """
@@ -360,9 +379,12 @@ class NumbaFlowKernel:
         """
         )
 
-        content = "\n    ".join([f"self.{name} = {name}" for name, _ in spec])
-        args = ", ".join([name for name, _ in spec])
+        content = "\n    ".join([f"self.{name} = {name}" for name, _ in base_spec])
+        args = ", ".join([name for name, _ in base_spec])
         init_source = __init___template.format(content=content, args=args)
+
+        if self._print_generated_code:
+            print(init_source)
 
         self._data_jitclass = NumbaFlowKernel._generate_jitclass(
             "FlowKernelData",
@@ -449,6 +471,11 @@ class NumbaFlowKernel:
 
         node_content = "\n".join(
             [f"node_data.{name} = data.{name}[index]" for name in self._grid_data]
+            + [
+                f"node_data.{name} = data.{name}"
+                for name, ty in self._constants.items()
+                if issubclass(ty.__class__, nb.core.types.Type)
+            ]
         )
 
         receivers_view_data = [
@@ -558,6 +585,10 @@ class NumbaFlowKernel:
         setter_fun = glbls["node_data_setter"]
         return nb.njit(inline="always", boundscheck=False)(setter_fun)
 
+    def bind_data(self, **kwargs):
+        for name, value in kwargs.items():
+            setattr(self._data, name, value)
+
 
 @nb.njit
 def py_apply_kernel_impl(
@@ -567,7 +598,6 @@ def py_apply_kernel_impl(
     node_data,
     node_data_getter,
     node_data_setter,
-    dt,
 ):
     """Applies a kernel on a grid.
 
@@ -582,11 +612,11 @@ def py_apply_kernel_impl(
 
     for i in indices:
         node_data_getter(i, data, node_data)
-        func(node_data, dt)
+        func(node_data)
         node_data_setter(i, node_data, data)
 
 
-def py_apply_kernel(nb_kernel, dt):
+def py_apply_kernel(nb_kernel, data):
     """Applies a kernel on a grid.
 
     This wrapper function calls the Python jitted implementation
@@ -610,7 +640,6 @@ def py_apply_kernel(nb_kernel, dt):
         node_data,
         nb_kernel.node_data_getter,
         nb_kernel.node_data_setter,
-        dt,
     )
 
     return 0
