@@ -1,12 +1,11 @@
+import time
+from contextlib import contextmanager
 from textwrap import dedent, indent
 
 import numba as nb
 import numpy as np
 
-from fastscapelib.flow import Kernel, KernelData, KernelApplicationOrder
-import time
-
-from contextlib import contextmanager
+from fastscapelib.flow import Kernel, KernelApplicationOrder, KernelData
 
 
 @contextmanager
@@ -417,7 +416,7 @@ class NumbaFlowKernel:
         """
         if {max_receivers} < receivers_count:
             return 1
-            
+
         if receivers_count != receivers.count:
         {set_views}
         """
