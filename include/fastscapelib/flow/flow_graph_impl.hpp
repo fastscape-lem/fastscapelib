@@ -84,6 +84,7 @@ namespace fastscapelib
             using receivers_weight_type = xt_tensor_t<xt_selector, data_type, 2>;
             using dfs_indices_type = xt_tensor_t<xt_selector, size_type, 1>;
             using bfs_indices_type = dfs_indices_type;
+            using indices_type = dfs_indices_type;
 
             using basins_type = xt_tensor_t<xt_selector, size_type, 1>;
 
@@ -109,6 +110,9 @@ namespace fastscapelib
 
                 m_donors = xt::ones<size_type>(donors_shape) * -1;
                 m_donors_count = xt::zeros<size_type>({ grid.size() });
+
+                m_storage_indices = xt::arange<size_type>(0, grid.size(), 1);
+                m_random_levels = indices_type({ 0, size() });
 
                 m_dfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
                 m_bfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
@@ -164,6 +168,16 @@ namespace fastscapelib
             };
 
             void compute_donors();
+
+            const indices_type& storage_indices() const
+            {
+                return m_storage_indices;
+            };
+
+            const indices_type& random_levels() const
+            {
+                return m_random_levels;
+            };
 
             const dfs_indices_type& dfs_indices() const
             {
@@ -260,6 +274,7 @@ namespace fastscapelib
 
             dfs_indices_type m_dfs_indices;
             bfs_indices_type m_bfs_indices, m_bfs_levels;
+            indices_type m_storage_indices, m_random_levels;
 
             basins_type m_basins;
             std::vector<size_type> m_outlets;

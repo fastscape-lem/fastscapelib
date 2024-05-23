@@ -10,11 +10,24 @@
 
 namespace fastscapelib
 {
+    enum class kernel_application_order
+    {
+        ANY,
+        DEPTH_DOWNSTREAM,
+        DEPTH_UPSTREAM,
+        BREADTH_DOWNSTREAM,
+        BREADTH_UPSTREAM
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
     struct NumbaJitClass
     {
         void* meminfoptr;  ///< meminfoptr
         void* dataptr;     ///< dataptr
     };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
 
     struct FSFlowKernel
     {
@@ -25,7 +38,11 @@ namespace fastscapelib
         std::function<void(void*)> node_data_free;
         void* data;
         int n_threads;
+        kernel_application_order application_order
+            = kernel_application_order::ANY;  ///< order for kernel application
     };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
 
     // struct FSFlowKernel
     // {
@@ -38,15 +55,18 @@ namespace fastscapelib
     //     int n_threads;
     // };
 
+    /////////////////////////////////////////////////////////////////////////////////////////
+
     struct NumbaFlowKernel
     {
         int (*func)(NumbaJitClass, double);                                  ///< flow kernel
         int (*node_data_getter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data getter
         int (*node_data_setter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data setter
-        NumbaJitClass (*node_data_create)();  ///< node data allocator
-        void (*node_data_free)(void*);        ///< node data destructor
-        NumbaJitClass data;                   ///< data
-        int n_threads;                        ///< threads count
+        NumbaJitClass (*node_data_create)();         ///< node data allocator
+        void (*node_data_free)(void*);               ///< node data destructor
+        NumbaJitClass data;                          ///< data
+        int n_threads;                               ///< threads count
+        kernel_application_order application_order;  ///< traversal order for kernel application
 
         operator FSFlowKernel()
         {
@@ -84,6 +104,7 @@ namespace fastscapelib
             flow_kernel.data = &data;
 
             flow_kernel.n_threads = n_threads;
+            flow_kernel.application_order = application_order;
 
             return flow_kernel;
         }

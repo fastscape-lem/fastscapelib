@@ -381,8 +381,24 @@ namespace fastscapelib
     template <class G, class S, class Tag>
     int flow_graph<G, S, Tag>::apply_kernel_par2(NumbaFlowKernel& kernel, double dt)
     {
-        auto& indices = impl().bfs_indices();
-        auto& levels = impl().bfs_levels();
+        using bfs_indices_type = typename impl_type::bfs_indices_type;
+        const bfs_indices_type *indices, *levels;
+
+        switch (kernel.application_order)
+        {
+            case kernel_application_order::ANY:
+                indices = &impl().storage_indices();
+                levels = &impl().random_levels();
+                break;
+            case kernel_application_order::BREADTH_UPSTREAM:
+                indices = &impl().bfs_indices();
+                levels = &impl().bfs_levels();
+                break;
+            default:
+                throw std::runtime_error("Unsupported kernel application order");
+                break;
+        }
+
         auto n_threads = kernel.n_threads;
 
         m_thread_pool.resume();
@@ -392,12 +408,12 @@ namespace fastscapelib
         for (auto i = 0; i < n_threads; ++i)
             node_data[i] = kernel.node_data_create();
 
-        auto run = [&kernel, &dt, &indices, node_data](
+        auto run = [&kernel, &dt, indices, node_data](
                        std::size_t runner, std::size_t start, std::size_t end)
         {
             for (auto i = start; i < end; ++i)
             {
-                auto node_idx = indices[i];
+                auto node_idx = (*indices)[i];
                 NumbaJitClass n_data = node_data[runner];
                 if (kernel.node_data_getter(node_idx, kernel.data, n_data))
                 {
@@ -414,9 +430,9 @@ namespace fastscapelib
             }
         };
 
-        for (auto i = 1; i < levels.size(); ++i)
+        for (auto i = 1; i < levels->size(); ++i)
         {
-            run_blocks(levels[i - 1], levels[i], run);
+            run_blocks((*levels)[i - 1], (*levels)[i], run);
         }
 
         for (auto i = 0; i < n_threads; ++i)

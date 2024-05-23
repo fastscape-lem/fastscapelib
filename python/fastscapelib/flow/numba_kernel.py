@@ -3,7 +3,7 @@ from textwrap import dedent, indent
 import numba as nb
 import numpy as np
 
-from fastscapelib.flow import Kernel
+from fastscapelib.flow import Kernel, KernelApplicationOrder
 import time
 
 from contextlib import contextmanager
@@ -28,6 +28,7 @@ class NumbaFlowKernel:
         kernel_func,
         grid_data,
         constants,
+        application_order,
         outputs=(),
         max_receivers: int = -1,
         n_threads: int = 1,
@@ -44,6 +45,7 @@ class NumbaFlowKernel:
             self._print_generated_code = print_generated_code
             self._print_stats = print_stats
             self._n_threads = n_threads
+            self._application_order = application_order
 
             self._build_fs_kernel()
 
@@ -70,6 +72,7 @@ class NumbaFlowKernel:
         with timer("build flow kernel", self._print_stats):
             self._build_and_set_flow_kernel_ptr()
         self.kernel.n_threads = self._n_threads
+        self.kernel.application_order = self._application_order
 
     def _build_and_set_flow_kernel_ptr(self):
         """Builds and sets the flow kernel jitted function.
@@ -592,7 +595,13 @@ def py_apply_kernel(nb_kernel, dt):
 
     kernel = nb_kernel.kernel
     node_data = nb_kernel.node_data_create()
-    indices = nb_kernel._flow_graph.impl().dfs_indices
+
+    if kernel.application_order == KernelApplicationOrder.ANY:
+        indices = np.arange(0, nb_kernel._flow_graph.size, 1)
+    elif kernel.application_order == KernelApplicationOrder.BREADTH_UPSTREAM:
+        indices = nb_kernel._flow_graph.impl().bfs_indices
+    else:
+        raise RuntimeError("Unsupported kernel application order")
 
     py_apply_kernel_impl(
         indices,

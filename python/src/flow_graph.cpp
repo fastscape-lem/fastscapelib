@@ -612,6 +612,14 @@ add_flow_graph_bindings(py::module& m)
             }
         });
 
+    py::enum_<fs::kernel_application_order>(
+        m, "KernelApplicationOrder", py::arithmetic(), "Order to satisfy to apply a kernel.")
+        .value("ANY", fs::kernel_application_order::ANY, "")
+        .value("DEPTH_DOWNSTREAM", fs::kernel_application_order::DEPTH_DOWNSTREAM, "")
+        .value("DEPTH_UPSTREAM", fs::kernel_application_order::DEPTH_UPSTREAM, "")
+        .value("BREADTH_DOWNSTREAM", fs::kernel_application_order::BREADTH_DOWNSTREAM, "")
+        .value("BREADTH_UPSTREAM", fs::kernel_application_order::BREADTH_UPSTREAM, "");
+
     py::class_<fs::PyNumbaFlowKernel>(m, "Kernel")
         .def(py::init<>())
         .def_readwrite("func", &fs::PyNumbaFlowKernel::func_ptr)
@@ -620,7 +628,9 @@ add_flow_graph_bindings(py::module& m)
         .def_readwrite("node_data_create", &fs::PyNumbaFlowKernel::node_data_create_ptr)
         .def_readwrite("node_data_free", &fs::PyNumbaFlowKernel::node_data_free_ptr)
         .def_readwrite("data", &fs::PyNumbaFlowKernel::data_ptr)
-        .def_readwrite("n_threads", &fs::PyNumbaFlowKernel::n_threads);
+        .def_readwrite("n_threads", &fs::PyNumbaFlowKernel::n_threads)
+        .def_readwrite("application_order", &fs::PyNumbaFlowKernel::application_order);
+
 
     py::class_<fs::PyNumbaJitClass>(m, "JitClass")
         .def(py::init<>())

@@ -684,6 +684,7 @@ namespace fastscapelib
         std::uintptr_t node_data_free_ptr;
         PyNumbaJitClass data_ptr;
         int n_threads;
+        kernel_application_order application_order;
     };
 }
 
