@@ -355,7 +355,7 @@ namespace fastscapelib
         template <class G, class S>
         void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_bfs_indices_bottomup()
         {
-            fixed_shape_container_t<container_selector, bool, 1> visited({ m_grid.size() }, false);
+            xt_tensor_t<xt_selector, bool, 1> visited({ m_grid.size() }, false);
             std::vector<size_type> levels(m_grid.size());
             size_type nstack = 0;
             size_type level = 0;
