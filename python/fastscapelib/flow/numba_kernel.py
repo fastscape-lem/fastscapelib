@@ -535,7 +535,9 @@ class NumbaFlowKernel:
                 data_dtypes[value.dtype] = [name]
 
         node_content = "\n".join(
-            [f"node_data.{name} = data.{name}[index]" for name in self._grid_data]
+            [f"node_data.{name} = data.{name}[index]" for name in self._grid_data] +
+            [f"node_data.{name} = data.{name}" for name, ty in self._constants.items() if issubclass(ty.__class__, nb.core.types.Type)] +
+            [f"node_data.{name} = {value}" for name, value in self._constants.items() if not issubclass(value.__class__, nb.core.types.Type)] 
         )
 
         receivers_view_data = [
