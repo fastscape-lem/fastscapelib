@@ -116,14 +116,14 @@ class NumbaFlowKernel:
 
         The node data init function is called after instantiation/creation
         to set scalar variables. Scalar variables are shared by all the nodes
-        and as such are considered immutable. They can be set once before 
+        and as such are considered immutable. They can be set once before
         applying the kernel on each node.
 
         This function pointer may be set to a null pointer if there is no
         scalar variable to be set:
           - in case there is no scalar variable at all
           - if the scalar variable value is given in the kernel specification
-            (in which case the constant scalar value is intialized inline in the 
+            (in which case the constant scalar value is intialized inline in the
             node data constructor)
         """
 
@@ -166,9 +166,7 @@ class NumbaFlowKernel:
             )
         )
         if self._print_stats:
-            print(
-                "Node data init compilation stats", compiled_func.metadata["timers"]
-            )
+            print("Node data init compilation stats", compiled_func.metadata["timers"])
 
         self.kernel.node_data_init = compiled_func.library.get_pointer_to_function(
             compiled_func.fndesc.llvm_cfunc_wrapper_name
@@ -398,7 +396,9 @@ class NumbaFlowKernel:
         spec = base_spec + grid_data_spec + constants_spec
 
         if self._print_generated_code:
-            print(f"Node data jitclass constructor source code:\n{indent(init_source, self._indent4)}")
+            print(
+                f"Node data jitclass constructor source code:\n{indent(init_source, self._indent4)}"
+            )
 
         self._node_data_jitclass = NumbaFlowKernel._generate_jitclass(
             "FlowKernelNodeData",
@@ -449,7 +449,9 @@ class NumbaFlowKernel:
         init_source = __init___template.format(content=content, args=args)
 
         if self._print_generated_code:
-            print(f"Data jitclass constructor source code:\n{indent(init_source, self._indent4)}")
+            print(
+                f"Data jitclass constructor source code:\n{indent(init_source, self._indent4)}"
+            )
 
         self._data_jitclass = NumbaFlowKernel._generate_jitclass(
             "FlowKernelData",
@@ -535,9 +537,17 @@ class NumbaFlowKernel:
                 data_dtypes[value.dtype] = [name]
 
         node_content = "\n".join(
-            [f"node_data.{name} = data.{name}[index]" for name in self._grid_data] +
-            [f"node_data.{name} = data.{name}" for name, ty in self._constants.items() if issubclass(ty.__class__, nb.core.types.Type)] +
-            [f"node_data.{name} = {value}" for name, value in self._constants.items() if not issubclass(value.__class__, nb.core.types.Type)] 
+            [f"node_data.{name} = data.{name}[index]" for name in self._grid_data]
+            + [
+                f"node_data.{name} = data.{name}"
+                for name, ty in self._constants.items()
+                if issubclass(ty.__class__, nb.core.types.Type)
+            ]
+            + [
+                f"node_data.{name} = {value}"
+                for name, value in self._constants.items()
+                if not issubclass(value.__class__, nb.core.types.Type)
+            ]
         )
 
         receivers_view_data = [
@@ -640,7 +650,9 @@ class NumbaFlowKernel:
             content=indent(content, self._indent4)
         )
         if self._print_generated_code:
-            print(f"Node data setter source code:\n{indent(setter_source, self._indent4)}")
+            print(
+                f"Node data setter source code:\n{indent(setter_source, self._indent4)}"
+            )
 
         glbls = {}
         exec(setter_source, glbls)

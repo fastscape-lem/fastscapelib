@@ -410,9 +410,10 @@ namespace fastscapelib
         m_thread_pool.resize(n_threads);
 
         std::vector<NumbaJitClass> node_data(n_threads);
-        for (auto i = 0; i < n_threads; ++i){
+        for (auto i = 0; i < n_threads; ++i)
+        {
             node_data[i] = kernel.node_data_create();
-        
+
             if (kernel.node_data_init)
                 kernel.node_data_init(node_data[i], data.data);
         }

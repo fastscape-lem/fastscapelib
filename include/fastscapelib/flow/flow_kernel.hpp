@@ -69,10 +69,10 @@ namespace fastscapelib
         int (*func)(NumbaJitClass);                                          ///< flow kernel
         int (*node_data_getter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data getter
         int (*node_data_setter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data setter
-        NumbaJitClass (*node_data_create)();         ///< node data allocator
-        void(*node_data_init)(NumbaJitClass, NumbaJitClass);        ///< node data init
-        void (*node_data_free)(void*);               ///< node data destructor
-        int n_threads;                               ///< threads count
+        NumbaJitClass (*node_data_create)();                   ///< node data allocator
+        void (*node_data_init)(NumbaJitClass, NumbaJitClass);  ///< node data init
+        void (*node_data_free)(void*);                         ///< node data destructor
+        int n_threads;                                         ///< threads count
         kernel_application_order application_order;  ///< traversal order for kernel application
 
         operator flow_kernel()
@@ -103,10 +103,10 @@ namespace fastscapelib
                 return ptr;
             };
 
-            kernel.node_data_init = [this](void * node_data, void* data) -> void
+            kernel.node_data_init = [this](void* node_data, void* data) -> void
             {
                 node_data_init(*reinterpret_cast<NumbaJitClass*>(node_data),
-                                    *reinterpret_cast<NumbaJitClass*>(data));
+                               *reinterpret_cast<NumbaJitClass*>(data));
             };
 
             kernel.node_data_free = [this](void* data) -> void
