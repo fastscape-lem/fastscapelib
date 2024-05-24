@@ -681,6 +681,7 @@ namespace fastscapelib
         std::uintptr_t node_data_getter_ptr;
         std::uintptr_t node_data_setter_ptr;
         std::uintptr_t node_data_create_ptr;
+        std::uintptr_t node_data_init_ptr;
         std::uintptr_t node_data_free_ptr;
         int n_threads;
         kernel_application_order application_order;

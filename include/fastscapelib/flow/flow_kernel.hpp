@@ -35,6 +35,7 @@ namespace fastscapelib
         std::function<int(std::size_t, void*, void*)> node_data_getter;
         std::function<int(std::size_t, void*, void*)> node_data_setter;
         std::function<void*()> node_data_create;
+        std::function<void(void*, void*)> node_data_init;
         std::function<void(void*)> node_data_free;
         int n_threads;
         kernel_application_order application_order
@@ -69,6 +70,7 @@ namespace fastscapelib
         int (*node_data_getter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data getter
         int (*node_data_setter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data setter
         NumbaJitClass (*node_data_create)();         ///< node data allocator
+        void(*node_data_init)(NumbaJitClass, NumbaJitClass);        ///< node data init
         void (*node_data_free)(void*);               ///< node data destructor
         int n_threads;                               ///< threads count
         kernel_application_order application_order;  ///< traversal order for kernel application
@@ -99,6 +101,12 @@ namespace fastscapelib
                 auto* ptr = new NumbaJitClass;
                 *ptr = node_data_create();
                 return ptr;
+            };
+
+            kernel.node_data_init = [this](void * node_data, void* data) -> void
+            {
+                node_data_init(*reinterpret_cast<NumbaJitClass*>(node_data),
+                                    *reinterpret_cast<NumbaJitClass*>(data));
             };
 
             kernel.node_data_free = [this](void* data) -> void

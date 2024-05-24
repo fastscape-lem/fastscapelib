@@ -12,7 +12,7 @@
 
 #include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/flow/flow_operator.hpp"
-#include "fastscapelib/utils/containers.hpp"
+#include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib
@@ -290,6 +290,8 @@ namespace fastscapelib
                                                 NumbaFlowKernelData& data)
     {
         void* new_node_data = kernel.node_data_create();
+        if (kernel.node_data_init)
+            kernel.node_data_init(new_node_data, data.data);
 
         for (std::size_t i : impl().dfs_indices())
         {
@@ -316,6 +318,8 @@ namespace fastscapelib
     int flow_graph<G, S, Tag>::apply_kernel_seq2(NumbaFlowKernel& kernel, NumbaFlowKernelData& data)
     {
         NumbaJitClass new_node_data = kernel.node_data_create();
+        if (kernel.node_data_init)
+            kernel.node_data_init(new_node_data, data.data);
 
         for (std::size_t i : impl().dfs_indices())
         {
@@ -406,8 +410,12 @@ namespace fastscapelib
         m_thread_pool.resize(n_threads);
 
         std::vector<NumbaJitClass> node_data(n_threads);
-        for (auto i = 0; i < n_threads; ++i)
+        for (auto i = 0; i < n_threads; ++i){
             node_data[i] = kernel.node_data_create();
+        
+            if (kernel.node_data_init)
+                kernel.node_data_init(node_data[i], data.data);
+        }
 
         auto run = [&kernel, &data, indices, node_data](
                        std::size_t runner, std::size_t start, std::size_t end)

@@ -629,6 +629,7 @@ add_flow_graph_bindings(py::module& m)
         .def_readwrite("node_data_getter", &fs::PyNumbaFlowKernel::node_data_getter_ptr)
         .def_readwrite("node_data_setter", &fs::PyNumbaFlowKernel::node_data_setter_ptr)
         .def_readwrite("node_data_create", &fs::PyNumbaFlowKernel::node_data_create_ptr)
+        .def_readwrite("node_data_init", &fs::PyNumbaFlowKernel::node_data_init_ptr)
         .def_readwrite("node_data_free", &fs::PyNumbaFlowKernel::node_data_free_ptr)
         .def_readwrite("n_threads", &fs::PyNumbaFlowKernel::n_threads)
         .def_readwrite("application_order", &fs::PyNumbaFlowKernel::application_order);
