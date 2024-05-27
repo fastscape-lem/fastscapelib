@@ -101,6 +101,26 @@ class NumbaFlowKernel:
 
             self._build_fs_kernel()
 
+    def bind_data(self, **kwargs):
+        for name, value in kwargs.items():
+            if name in self._grid_data_ty:
+                if value.shape != (self._flow_graph.size,):
+                    raise ValueError(
+                        f"Invalid shape {value.shape} for data '{name}' (must be {(self._flow_graph.size,)})"
+                    )
+            setattr(self._data, name, value)
+            self._bound_data.add(name)
+
+    def check_data_bindings(self):
+        spec_names = set(self._spec.keys())
+        unbound_data = spec_names.difference(self._bound_data)
+        if unbound_data:
+            raise ValueError(f"Some data are unbound: {unbound_data}")
+
+    @property
+    def data(self):
+        return self._kernel_data
+
     def _build_fs_kernel(self):
         """Builds the fastscapelib flow kernel.
 
@@ -113,7 +133,7 @@ class NumbaFlowKernel:
         """
 
         self.kernel = kernel = Kernel()
-        self.kernel_data = KernelData()
+        self._kernel_data = KernelData()
 
         with timer("build data classes", self._print_stats):
             self._build_and_set_data_classes()
@@ -253,7 +273,7 @@ class NumbaFlowKernel:
     @staticmethod
     def _is_variable_assigned_in_function(function, variable_name):
         source_code = inspect.getsource(function)
-        tree = ast.parse(source_code)
+        tree = ast.parse(dedent(source_code))
         visitor = ConstantAssignmentVisitor(
             [*inspect.signature(function).parameters.keys()][0], variable_name
         )
@@ -370,8 +390,8 @@ class NumbaFlowKernel:
         from numba.experimental.jitclass import _box
 
         self._data = self._data_jitclass(**flow_graph_data)
-        self.kernel_data.data.meminfo = _box.box_get_meminfoptr(self._data)
-        self.kernel_data.data.data = _box.box_get_dataptr(self._data)
+        self._kernel_data.data.meminfo = _box.box_get_meminfoptr(self._data)
+        self._kernel_data.data.data = _box.box_get_dataptr(self._data)
 
         self.bind_data(**self._init_values)
 
@@ -713,22 +733,6 @@ class NumbaFlowKernel:
         exec(setter_source, glbls)
         setter_fun = glbls["node_data_setter"]
         return nb.njit(inline="always", boundscheck=False)(setter_fun)
-
-    def bind_data(self, **kwargs):
-        for name, value in kwargs.items():
-            if name in self._grid_data_ty:
-                if value.shape != (self._flow_graph.size,):
-                    raise ValueError(
-                        f"Invalid shape {value.shape} for data '{name}' (must be {(self._flow_graph.size,)})"
-                    )
-            setattr(self._data, name, value)
-            self._bound_data.add(name)
-
-    def check_data_bindings(self):
-        spec_names = set(self._spec.keys())
-        unbound_data = spec_names.difference(self._bound_data)
-        if unbound_data:
-            raise ValueError(f"Some data are unbound: {unbound_data}")
 
 
 @nb.njit
