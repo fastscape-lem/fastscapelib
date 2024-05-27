@@ -79,3 +79,41 @@ class TestFlowKernel:
 
         with pytest.raises(ValueError):
             flow_graph.apply_kernel(kernel1, kernel1.data)
+
+    def test_inline_bindings(self, flow_graph, kernel_func1):
+
+        kernel = NumbaFlowKernel(
+            flow_graph,
+            kernel_func1,
+            spec=dict(
+                a=np.ones(flow_graph.size, dtype=np.float32) * 1.15,
+            ),
+            outputs=["a"],
+            application_order=KernelApplicationOrder.ANY,
+        )
+
+        np.testing.assert_almost_equal(
+            kernel._data.a, np.ones(flow_graph.size, dtype=np.float32) * 1.15
+        )
+
+    def test_ref_bindings(self, flow_graph, kernel_func1):
+        a = np.ones(flow_graph.size, dtype=np.float32) * 1.15
+
+        kernel = NumbaFlowKernel(
+            flow_graph,
+            kernel_func1,
+            spec=dict(
+                a=a,
+            ),
+            outputs=["a"],
+            application_order=KernelApplicationOrder.ANY,
+        )
+
+        np.testing.assert_almost_equal(
+            kernel._data.a, np.ones(flow_graph.size, dtype=np.float32) * 1.15
+        )
+
+        a *= 2.0
+        np.testing.assert_almost_equal(
+            kernel._data.a, np.ones(flow_graph.size, dtype=np.float32) * 2.3
+        )
