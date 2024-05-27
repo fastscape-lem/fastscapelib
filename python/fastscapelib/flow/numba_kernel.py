@@ -1,11 +1,46 @@
 import time
 from contextlib import contextmanager
 from textwrap import dedent, indent
-
+import inspect
+import ast
 import numba as nb
 import numpy as np
 
 from fastscapelib.flow import Kernel, KernelApplicationOrder, KernelData
+
+
+class ConstantAssignmentVisitor(ast.NodeVisitor):
+    def __init__(self, obj_name, member_name):
+        self.obj_name = obj_name
+        self.member_name = member_name
+        self.assigned = False
+        self.aliases = {obj_name}
+
+    def visit_Assign(self, node):
+        """Visits a assignment nodes to search for invalid scalar variable.
+
+        A scalar variable is passed to all node data
+        """
+        for target in node.targets:
+            if isinstance(target, ast.Attribute) and target.attr == self.member_name:
+                if (
+                    isinstance(target.value, ast.Name)
+                    and target.value.id in self.aliases
+                ):
+                    self.assigned = True
+            elif isinstance(target, ast.Name):
+                # Track alias assignments
+                if isinstance(node.value, ast.Name) and node.value.id in self.aliases:
+                    self.aliases.add(target.id)
+        self.generic_visit(node)
+
+    def visit_AugAssign(self, node):
+        # Check if the augmented assignment target is an attribute of the object or its aliases
+        target = node.target
+        if isinstance(target, ast.Attribute) and target.attr == self.member_name:
+            if isinstance(target.value, ast.Name) and target.value.id in self.aliases:
+                self.assigned = True
+        self.generic_visit(node)
 
 
 @contextmanager
@@ -44,6 +79,26 @@ class NumbaFlowKernel:
             self._n_threads = n_threads
             self._application_order = application_order
 
+            spec_ty = {name: self._get_type(ty) for name, ty in spec.items()}
+            self._grid_data_ty = {
+                name: ty
+                for name, ty in spec_ty.items()
+                if issubclass(ty.__class__, nb.core.types.Array)
+            }
+            self._scalar_data_ty = {
+                name: ty
+                for name, ty in spec_ty.items()
+                if name not in self._grid_data_ty
+            }
+            self._init_values = {
+                name: value
+                for name, value in spec.items()
+                if not issubclass(value.__class__, nb.core.types.Type)
+            }
+            self._bound_data = set()
+
+            self._validate_spec()
+
             self._build_fs_kernel()
 
     def _build_fs_kernel(self):
@@ -62,8 +117,8 @@ class NumbaFlowKernel:
 
         with timer("build data classes", self._print_stats):
             self._build_and_set_data_classes()
-        with timer("build node data create/free", self._print_stats):
-            self._build_and_set_node_data_create_free()
+        with timer("build node data create/init/free", self._print_stats):
+            self._build_and_set_node_data_create_init_free()
         with timer("build node data getter/setter", self._print_stats):
             self._build_and_set_node_data_getter()
             self._build_and_set_node_data_setter()
@@ -71,6 +126,33 @@ class NumbaFlowKernel:
             self._build_and_set_flow_kernel_ptr()
         self.kernel.n_threads = self._n_threads
         self.kernel.application_order = self._application_order
+
+    def _validate_spec(self):
+        invalid_outputs = [name for name in self._outputs if name not in self._spec]
+        if invalid_outputs:
+            raise KeyError(
+                f"Output name{'s' if len(invalid_outputs)>1 else ''} {invalid_outputs} not defined in kernel specification"
+            )
+
+        invalid_outputs = [
+            name for name in self._outputs if name in self._scalar_data_ty
+        ]
+        if invalid_outputs:
+            raise KeyError(f"Output scalar data are not supported: {invalid_outputs}")
+
+        invalid_grid_data = [
+            name for name, ty in self._grid_data_ty.items() if ty.ndim != 1
+        ]
+        if invalid_grid_data:
+            raise KeyError(
+                f"Invalid shape for grid data {invalid_grid_data} (must be a flat array)"
+            )
+
+        for var in self._spec:
+            if var not in self._outputs and self._is_variable_assigned_in_function(
+                self._py_flow_kernel, var
+            ):
+                raise AttributeError(f"Invalid assignment of input variable '{var}'")
 
     def _build_and_set_flow_kernel_ptr(self):
         """Builds and sets the flow kernel jitted function.
@@ -96,8 +178,8 @@ class NumbaFlowKernel:
             compiled_func.fndesc.llvm_cfunc_wrapper_name
         )
 
-    def _build_and_set_node_data_create_free(self):
-        """Builds the node data create and free functions."""
+    def _build_and_set_node_data_create_init_free(self):
+        """Builds the node data create, init, and free functions."""
 
         node_data_cls = self._node_data_jitclass
 
@@ -135,11 +217,7 @@ class NumbaFlowKernel:
         )
 
         content = "\n".join(
-            [
-                f"node_data.{name} = data.{name}"
-                for name, ty in self._constants.items()
-                if issubclass(ty.__class__, nb.core.types.Type)
-            ]
+            [f"node_data.{name} = data.{name}" for name in self._scalar_data_ty]
         )
         if content == "":
             self.node_data_init = None
@@ -171,6 +249,17 @@ class NumbaFlowKernel:
         self.kernel.node_data_init = compiled_func.library.get_pointer_to_function(
             compiled_func.fndesc.llvm_cfunc_wrapper_name
         )
+
+    @staticmethod
+    def _is_variable_assigned_in_function(function, variable_name):
+        source_code = inspect.getsource(function)
+        tree = ast.parse(source_code)
+        visitor = ConstantAssignmentVisitor(
+            [*inspect.signature(function).parameters.keys()][0], variable_name
+        )
+        visitor.visit(tree)
+
+        return visitor.assigned
 
     def _build_and_set_node_data_getter(self):
         """Builds the jitted node data getter function.
@@ -266,16 +355,6 @@ class NumbaFlowKernel:
 
         flow_graph = self._flow_graph
 
-        # FIXME
-        self._grid_data = {name: ty for name, ty in self._spec if ty == nb.float64[::1]}
-        self._constants = {name: ty for name, ty in self._spec if ty != nb.float64[::1]}
-
-        # for name, value in self._grid_data.items():
-        #     if value.size != flow_graph.size:
-        #         raise ValueError("Invalid size")
-        #     if value.shape != (flow_graph.size,):
-        #         raise ValueError("Invalid shape")
-
         self._build_node_data_jitclass()
         self._build_data_jitclass()
 
@@ -294,11 +373,19 @@ class NumbaFlowKernel:
         self.kernel_data.data.meminfo = _box.box_get_meminfoptr(self._data)
         self.kernel_data.data.data = _box.box_get_dataptr(self._data)
 
+        self.bind_data(**self._init_values)
+
     @staticmethod
     def _generate_jitclass(name, spec, init_source, glbls={}):
         exec(init_source, glbls)
         ctor = glbls["generated_init"]
         return nb.experimental.jitclass(spec)(type(name, (), {"__init__": ctor}))
+
+    @staticmethod
+    def _get_type(value):
+        if issubclass(value.__class__, nb.core.types.Type):
+            return value
+        return nb.typeof(value)
 
     def _build_node_data_jitclass(self):
         """Builds a node data jitclass.
@@ -314,26 +401,26 @@ class NumbaFlowKernel:
         - `setattr` is not implemented -> use a template source code to be executed
         """
 
-        grid_data = self._grid_data
-        constants = self._constants
+        grid_data = self._grid_data_ty
+        scalar_data = self._scalar_data_ty
         max_receivers = self._max_receivers
 
         receivers_flow_graph_spec = [
             ("distance", nb.float64[::1]),
             ("weight", nb.float64[::1]),
         ]
-        receivers_grid_data_spec = [(name, ty) for name, ty in grid_data.items()]
+        receivers_grid_data_ty_spec = [(name, ty) for name, ty in grid_data.items()]
         receivers_internal_spec = [
             ("count", nb.uint64),
         ]
 
         receivers_spec = (
             receivers_flow_graph_spec
-            + receivers_grid_data_spec
+            + receivers_grid_data_ty_spec
             + receivers_internal_spec
             + [
                 ("_" + name, ty)
-                for name, ty in receivers_flow_graph_spec + receivers_grid_data_spec
+                for name, ty in receivers_flow_graph_spec + receivers_grid_data_ty_spec
             ]
         )
 
@@ -342,20 +429,13 @@ class NumbaFlowKernel:
             def __init__(self):
                 pass
 
-        def get_type(value):
-            if issubclass(value.__class__, nb.core.types.Type):
-                return value
-            return nb.typeof(value)
-
         base_spec = [("receivers", ReceiversData.class_type.instance_type)]
         grid_data_spec = [(name, ty.dtype) for name, ty in grid_data.items()]
-        constants_spec = [(name, get_type(ty)) for name, ty in constants.items()]
+        scalar_data_spec = [(name, ty) for name, ty in scalar_data.items()]
 
         __init___template = dedent(
             """
         def generated_init(self):
-            {constants_content}
-
             self.receivers = ReceiversData()
             self.receivers._distance = np.ones({default_size})
             self.receivers._weight = np.ones({default_size})
@@ -370,13 +450,6 @@ class NumbaFlowKernel:
         )
 
         default_size = max_receivers if max_receivers > 0 else 0
-        constants_content = "\n    ".join(
-            [
-                f"self.{name} = {ty}"
-                for name, ty in constants.items()
-                if not issubclass(ty.__class__, nb.core.types.Type)
-            ]
-        )
         receivers_content_init = "\n    ".join(
             [
                 f"self.receivers._{name} = np.ones({default_size}, dtype=np.{value.dtype})"
@@ -387,22 +460,22 @@ class NumbaFlowKernel:
             [f"self.receivers.{name} = self.receivers._{name}[:]" for name in grid_data]
         )
         init_source = __init___template.format(
-            constants_content=constants_content,
             receivers_content_init=receivers_content_init,
             receivers_content_view=receivers_content_view,
             default_size=default_size,
         )
 
-        spec = base_spec + grid_data_spec + constants_spec
+        spec = base_spec + grid_data_spec + scalar_data_spec
 
         if self._print_generated_code:
+            print(f"Node data jitclass spec:\n{spec}")
             print(
                 f"Node data jitclass constructor source code:\n{indent(init_source, self._indent4)}"
             )
 
         self._node_data_jitclass = NumbaFlowKernel._generate_jitclass(
             "FlowKernelNodeData",
-            base_spec + grid_data_spec + constants_spec,
+            base_spec + grid_data_spec + scalar_data_spec,
             init_source,
             {"ReceiversData": ReceiversData, "np": np},
         )
@@ -418,24 +491,24 @@ class NumbaFlowKernel:
         The flow graph donors are also exposed but currently not used.
         """
 
-        grid_data = self._grid_data
-        scalars = self._constants
+        grid_data_ty = self._grid_data_ty
+        scalar_data_ty = self._scalar_data_ty
 
-        base_spec = [
-            ("donors_idx", nb.uint64[:, ::1]),
-            ("donors_count", nb.uint64[::1]),
-            ("receivers_idx", nb.uint64[:, ::1]),
-            ("receivers_count", nb.uint64[::1]),
-            ("receivers_distance", nb.float64[:, ::1]),
-            ("receivers_weight", nb.float64[:, ::1]),
-        ]
-        grid_data_spec = [(name, ty) for name, ty in grid_data.items()]
-        scalars_spec = [
-            (name, ty)
-            for name, ty in scalars.items()
-            if issubclass(ty.__class__, nb.core.types.Type)
-        ]
-        spec = base_spec + grid_data_spec + scalars_spec
+        base_spec = dict(
+            donors_idx=nb.uint64[:, ::1],
+            donors_count=nb.uint64[::1],
+            receivers_idx=nb.uint64[:, ::1],
+            receivers_count=nb.uint64[::1],
+            receivers_distance=nb.float64[:, ::1],
+            receivers_weight=nb.float64[:, ::1],
+        )
+        grid_data_spec = [(name, ty) for name, ty in grid_data_ty.items()]
+        scalar_data_spec = [(name, ty) for name, ty in scalar_data_ty.items()]
+        spec = (
+            [(name, ty) for name, ty in base_spec.items()]
+            + grid_data_spec
+            + scalar_data_spec
+        )
 
         __init___template = dedent(
             """
@@ -444,8 +517,8 @@ class NumbaFlowKernel:
         """
         )
 
-        content = "\n    ".join([f"self.{name} = {name}" for name, _ in base_spec])
-        args = ", ".join([name for name, _ in base_spec])
+        content = "\n    ".join([f"self.{name} = {name}" for name in base_spec])
+        args = ", ".join([name for name in base_spec])
         init_source = __init___template.format(content=content, args=args)
 
         if self._print_generated_code:
@@ -530,24 +603,14 @@ class NumbaFlowKernel:
         """
 
         data_dtypes = {}
-        for name, value in self._grid_data.items():
+        for name, value in self._grid_data_ty.items():
             if value.dtype in data_dtypes:
                 data_dtypes[value.dtype].append(name)
             else:
                 data_dtypes[value.dtype] = [name]
 
         node_content = "\n".join(
-            [f"node_data.{name} = data.{name}[index]" for name in self._grid_data]
-            + [
-                f"node_data.{name} = data.{name}"
-                for name, ty in self._constants.items()
-                if issubclass(ty.__class__, nb.core.types.Type)
-            ]
-            + [
-                f"node_data.{name} = {value}"
-                for name, value in self._constants.items()
-                if not issubclass(value.__class__, nb.core.types.Type)
-            ]
+            [f"node_data.{name} = data.{name}[index]" for name in self._grid_data_ty]
         )
 
         receivers_view_data = [
@@ -558,13 +621,13 @@ class NumbaFlowKernel:
         receivers_resize_source = "\n".join(
             [
                 f"receivers._{name} = np.empty(receivers_count, dtype=np.{value.dtype})"
-                for name, value in self._grid_data.items()
+                for name, value in self._grid_data_ty.items()
             ]
         )
         receivers_set_content = "\n".join(
             [
                 f"receivers._{name}[i] = data.{name}[receiver_idx]"
-                for name in self._grid_data
+                for name in self._grid_data_ty
             ]
         )
 
@@ -630,18 +693,10 @@ class NumbaFlowKernel:
         - `setattr` is not implemented -> use a template source code to be executed
         """
 
-        invalid_outputs = [
-            name for name in self._outputs if name not in self._grid_data
-        ]
-        if invalid_outputs:
-            raise KeyError(
-                f"Output name{'s' if len(invalid_outputs)>1 else ''} {invalid_outputs} not defined as 'grid_data'"
-            )
-
         content = "\n".join(
             [
                 f"data.{name}[index] = node_data.{name}"
-                for name in self._grid_data
+                for name in self._grid_data_ty
                 if name in self._outputs
             ]
         )
@@ -661,7 +716,19 @@ class NumbaFlowKernel:
 
     def bind_data(self, **kwargs):
         for name, value in kwargs.items():
+            if name in self._grid_data_ty:
+                if value.shape != (self._flow_graph.size,):
+                    raise ValueError(
+                        f"Invalid shape {value.shape} for data '{name}' (must be {(self._flow_graph.size,)})"
+                    )
             setattr(self._data, name, value)
+            self._bound_data.add(name)
+
+    def check_data_bindings(self):
+        spec_names = set(self._spec.keys())
+        unbound_data = spec_names.difference(self._bound_data)
+        if unbound_data:
+            raise ValueError(f"Some data are unbound: {unbound_data}")
 
 
 @nb.njit

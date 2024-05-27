@@ -599,6 +599,7 @@ add_flow_graph_bindings(py::module& m)
            py::object flow_kernel,
            fs::PyNumbaFlowKernelData& flow_kernel_data) -> int
         {
+            flow_kernel.attr("check_data_bindings")();
             auto kernel = flow_kernel.attr("kernel").cast<fs::PyNumbaFlowKernel>();
 
             if (kernel.n_threads == 1)
