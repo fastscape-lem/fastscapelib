@@ -1,8 +1,9 @@
+import ast
+import inspect
 import time
 from contextlib import contextmanager
 from textwrap import dedent, indent
-import inspect
-import ast
+
 import numba as nb
 import numpy as np
 
@@ -158,13 +159,13 @@ class NumbaFlowKernel:
             name for name in self._outputs if name in self._scalar_data_ty
         ]
         if invalid_outputs:
-            raise KeyError(f"Output scalar data are not supported: {invalid_outputs}")
+            raise TypeError(f"Output scalar data are not supported: {invalid_outputs}")
 
         invalid_grid_data = [
             name for name, ty in self._grid_data_ty.items() if ty.ndim != 1
         ]
         if invalid_grid_data:
-            raise KeyError(
+            raise ValueError(
                 f"Invalid shape for grid data {invalid_grid_data} (must be a flat array)"
             )
 
@@ -622,8 +623,13 @@ class NumbaFlowKernel:
         been tested but generates very poor performances (not understood in details)
         """
 
+        receivers_grid_data_ty = self._grid_data_ty.copy()
+        receivers_grid_data_ty.update(
+            {"distance": nb.float64[::1], "weight": nb.float64[::1]}
+        )
+
         data_dtypes = {}
-        for name, value in self._grid_data_ty.items():
+        for name, value in receivers_grid_data_ty.items():
             if value.dtype in data_dtypes:
                 data_dtypes[value.dtype].append(name)
             else:
@@ -641,7 +647,7 @@ class NumbaFlowKernel:
         receivers_resize_source = "\n".join(
             [
                 f"receivers._{name} = np.empty(receivers_count, dtype=np.{value.dtype})"
-                for name, value in self._grid_data_ty.items()
+                for name, value in receivers_grid_data_ty.items()
             ]
         )
         receivers_set_content = "\n".join(
@@ -756,9 +762,17 @@ def py_apply_kernel_impl(
     """
 
     for i in indices:
-        node_data_getter(i, data, node_data)
+        if node_data_getter(i, data, node_data):
+            raise RuntimeError(
+                "Invalid index encountered in node_data getter function\n"
+                "Please check if you are using dynamic receivers count "
+                "('max_receivers=-1') or adjust this setting in the "
+                "'Kernel' specification"
+            )
         func(node_data)
         node_data_setter(i, node_data, data)
+
+    return 0
 
 
 def py_apply_kernel(nb_kernel, data):
@@ -780,7 +794,7 @@ def py_apply_kernel(nb_kernel, data):
     else:
         raise RuntimeError("Unsupported kernel application order")
 
-    py_apply_kernel_impl(
+    return py_apply_kernel_impl(
         indices,
         nb_kernel._jitted_flow_kernel,
         nb_kernel._data,
@@ -788,5 +802,3 @@ def py_apply_kernel(nb_kernel, data):
         nb_kernel.node_data_getter,
         nb_kernel.node_data_setter,
     )
-
-    return 0
