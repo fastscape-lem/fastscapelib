@@ -6,7 +6,7 @@ from textwrap import dedent, indent
 
 import numba as nb
 import numpy as np
-
+from dataclasses import dataclass
 from fastscapelib.flow import Kernel, KernelApplicationOrder, KernelData
 
 
@@ -56,7 +56,68 @@ def timer(msg: str, do_print: bool):
         print(f"Time spent in {msg}: {elapsed_time:.1f} seconds")
 
 
-class NumbaFlowKernel:
+def create_flow_kernel(*args, **kwargs):
+    factory = NumbaFlowKernelFactory(*args, **kwargs)
+    return factory.kernel, factory.data
+
+
+class NumbaKernelData:
+    def __init__(self, grid_size, spec_keys, grid_data_ty, data):
+        super().__setattr__("_data", data)
+        self._grid_size = grid_size
+        self._spec_keys = spec_keys
+        self._grid_data_ty = grid_data_ty
+        self._bound_data = set()
+
+        from numba.experimental.jitclass import _box
+
+        data_ptr = KernelData()
+        data_ptr.data.meminfo = _box.box_get_meminfoptr(data)
+        data_ptr.data.data = _box.box_get_dataptr(data)
+        self._data_ptr = data_ptr
+
+    def __getattr__(self, name):
+        return getattr(self._data, name)
+
+    def __setattr__(self, name, value):
+        if name in self._data._numba_type_.struct:
+            setattr(self._data, name, value)
+        else:
+            super().__setattr__(name, value)
+
+    @property
+    def get_c_ptr(self):
+        return self._data_ptr
+
+    def bind(self, **kwargs):
+        for name, value in kwargs.items():
+            if name in self._grid_data_ty:
+                if value.shape != (self._grid_size,):
+                    raise ValueError(
+                        f"Invalid shape {value.shape} for data '{name}' (must be {(self._grid_size,)})"
+                    )
+            setattr(self._data, name, value)
+            self._bound_data.add(name)
+
+    def check_bindings(self):
+        spec_names = set(self._spec_keys)
+        unbound_data = spec_names.difference(self._bound_data)
+        if unbound_data:
+            raise ValueError(f"Some data are unbound: {unbound_data}")
+
+
+@dataclass
+class NumbaKernel:
+    kernel: Kernel
+    node_data_create: None
+    node_data_init: None
+    node_data_getter: None
+    node_data_setter: None
+    node_data_setter: None
+    func: None
+
+
+class NumbaFlowKernelFactory:
     def __init__(
         self,
         flow_graph,
@@ -102,25 +163,36 @@ class NumbaFlowKernel:
 
             self._build_fs_kernel()
 
-    def bind_data(self, **kwargs):
-        for name, value in kwargs.items():
-            if name in self._grid_data_ty:
-                if value.shape != (self._flow_graph.size,):
-                    raise ValueError(
-                        f"Invalid shape {value.shape} for data '{name}' (must be {(self._flow_graph.size,)})"
-                    )
-            setattr(self._data, name, value)
-            self._bound_data.add(name)
-
-    def check_data_bindings(self):
-        spec_names = set(self._spec.keys())
-        unbound_data = spec_names.difference(self._bound_data)
-        if unbound_data:
-            raise ValueError(f"Some data are unbound: {unbound_data}")
+    @property
+    def kernel(self):
+        return NumbaKernel(
+            kernel=self._kernel,
+            node_data_create=self.node_data_create,
+            node_data_init=self.node_data_init,
+            node_data_getter=self.node_data_getter,
+            node_data_setter=self.node_data_setter,
+            func=self.flow_kernel_func,
+        )
 
     @property
     def data(self):
-        return self._kernel_data
+        flow_graph = self._flow_graph
+        flow_graph_data = {
+            "donors_idx": flow_graph.impl().donors.view(),
+            "donors_count": flow_graph.impl().donors_count.view(),
+            "receivers_idx": flow_graph.impl().receivers.view(),
+            "receivers_count": flow_graph.impl().receivers_count.view(),
+            "receivers_distance": flow_graph.impl().receivers_distance.view(),
+            "receivers_weight": flow_graph.impl().receivers_weight.view(),
+        }
+
+        data = self._data_jitclass(**flow_graph_data)
+        data_wrapper = NumbaKernelData(
+            self._flow_graph.size, self._spec.keys(), self._grid_data_ty, data
+        )
+        data_wrapper.bind(**self._init_values)
+
+        return data_wrapper
 
     def _build_fs_kernel(self):
         """Builds the fastscapelib flow kernel.
@@ -133,8 +205,7 @@ class NumbaFlowKernel:
         or in parallel depending on the caller implementation.
         """
 
-        self.kernel = kernel = Kernel()
-        self._kernel_data = KernelData()
+        self._kernel = kernel = Kernel()
 
         with timer("build data classes", self._print_stats):
             self._build_and_set_data_classes()
@@ -145,8 +216,8 @@ class NumbaFlowKernel:
             self._build_and_set_node_data_setter()
         with timer("build flow kernel", self._print_stats):
             self._build_and_set_flow_kernel_ptr()
-        self.kernel.n_threads = self._n_threads
-        self.kernel.application_order = self._application_order
+        self._kernel.n_threads = self._n_threads
+        self._kernel.application_order = self._application_order
 
     def _validate_spec(self):
         invalid_outputs = [name for name in self._outputs if name not in self._spec]
@@ -181,7 +252,7 @@ class NumbaFlowKernel:
         The flow kernel function is called by the computation thread with
         a node data and the integration time step.
         """
-        self._jitted_flow_kernel = jitted_func = nb.njit(inline="always")(
+        self.flow_kernel_func = jitted_func = nb.njit(inline="always")(
             self._py_flow_kernel
         )
 
@@ -195,7 +266,7 @@ class NumbaFlowKernel:
         if self._print_stats:
             print("flow kernel compilation stats", compiled_func.metadata["timers"])
 
-        self.kernel.func = compiled_func.library.get_pointer_to_function(
+        self._kernel.func = compiled_func.library.get_pointer_to_function(
             compiled_func.fndesc.llvm_cfunc_wrapper_name
         )
 
@@ -267,7 +338,7 @@ class NumbaFlowKernel:
         if self._print_stats:
             print("Node data init compilation stats", compiled_func.metadata["timers"])
 
-        self.kernel.node_data_init = compiled_func.library.get_pointer_to_function(
+        self._kernel.node_data_init = compiled_func.library.get_pointer_to_function(
             compiled_func.fndesc.llvm_cfunc_wrapper_name
         )
 
@@ -307,7 +378,7 @@ class NumbaFlowKernel:
                 "Node data getter compilation stats", compiled_func.metadata["timers"]
             )
 
-        self.kernel.node_data_getter = compiled_func.library.get_pointer_to_function(
+        self._kernel.node_data_getter = compiled_func.library.get_pointer_to_function(
             compiled_func.fndesc.llvm_cfunc_wrapper_name
         )
 
@@ -335,7 +406,7 @@ class NumbaFlowKernel:
                 "Node data setter compilation stats", compiled_func.metadata["timers"]
             )
 
-        self.kernel.node_data_setter = compiled_func.library.get_pointer_to_function(
+        self._kernel.node_data_setter = compiled_func.library.get_pointer_to_function(
             compiled_func.fndesc.llvm_cfunc_wrapper_name
         )
 
@@ -355,7 +426,7 @@ class NumbaFlowKernel:
             )
         )
 
-        self.kernel.node_data_create = compiled_func.library.get_pointer_to_function(
+        self._kernel.node_data_create = compiled_func.library.get_pointer_to_function(
             compiled_func.fndesc.llvm_cfunc_wrapper_name
         )
 
@@ -367,7 +438,7 @@ class NumbaFlowKernel:
         deallocates related NRT meminfo and data pointers).
         """
 
-        self.kernel.node_data_free = (
+        self._kernel.node_data_free = (
             nb.core.runtime.nrt.rtsys.library.get_pointer_to_function("NRT_decref")
         )
 
@@ -378,23 +449,6 @@ class NumbaFlowKernel:
 
         self._build_node_data_jitclass()
         self._build_data_jitclass()
-
-        flow_graph_data = {
-            "donors_idx": flow_graph.impl().donors.view(),
-            "donors_count": flow_graph.impl().donors_count.view(),
-            "receivers_idx": flow_graph.impl().receivers.view(),
-            "receivers_count": flow_graph.impl().receivers_count.view(),
-            "receivers_distance": flow_graph.impl().receivers_distance.view(),
-            "receivers_weight": flow_graph.impl().receivers_weight.view(),
-        }
-
-        from numba.experimental.jitclass import _box
-
-        self._data = self._data_jitclass(**flow_graph_data)
-        self._kernel_data.data.meminfo = _box.box_get_meminfoptr(self._data)
-        self._kernel_data.data.data = _box.box_get_dataptr(self._data)
-
-        self.bind_data(**self._init_values)
 
     @staticmethod
     def _generate_jitclass(name, spec, init_source, glbls={}):
@@ -494,7 +548,7 @@ class NumbaFlowKernel:
                 f"Node data jitclass constructor source code:\n{indent(init_source, self._indent4)}"
             )
 
-        self._node_data_jitclass = NumbaFlowKernel._generate_jitclass(
+        self._node_data_jitclass = NumbaFlowKernelFactory._generate_jitclass(
             "FlowKernelNodeData",
             base_spec + grid_data_spec + scalar_data_spec,
             init_source,
@@ -547,7 +601,7 @@ class NumbaFlowKernel:
                 f"Data jitclass constructor source code:\n{indent(init_source, self._indent4)}"
             )
 
-        self._data_jitclass = NumbaFlowKernel._generate_jitclass(
+        self._data_jitclass = NumbaFlowKernelFactory._generate_jitclass(
             "FlowKernelData",
             spec,
             init_source,
@@ -775,7 +829,7 @@ def py_apply_kernel_impl(
     return 0
 
 
-def py_apply_kernel(nb_kernel, data):
+def py_apply_kernel(flow_graph, nb_kernel, data):
     """Applies a kernel on a grid.
 
     This wrapper function calls the Python jitted implementation
@@ -785,19 +839,19 @@ def py_apply_kernel(nb_kernel, data):
     kernel = nb_kernel.kernel
     node_data = nb_kernel.node_data_create()
     if nb_kernel.node_data_init:
-        nb_kernel.node_data_init(node_data, nb_kernel._data)
+        nb_kernel.node_data_init(node_data, data._data)
 
     if kernel.application_order == KernelApplicationOrder.ANY:
-        indices = np.arange(0, nb_kernel._flow_graph.size, 1)
+        indices = np.arange(0, flow_graph.size, 1)
     elif kernel.application_order == KernelApplicationOrder.BREADTH_UPSTREAM:
-        indices = nb_kernel._flow_graph.impl().bfs_indices
+        indices = flow_graph.impl().bfs_indices
     else:
         raise RuntimeError("Unsupported kernel application order")
 
     return py_apply_kernel_impl(
         indices,
-        nb_kernel._jitted_flow_kernel,
-        nb_kernel._data,
+        nb_kernel.func,
+        data._data,
         node_data,
         nb_kernel.node_data_getter,
         nb_kernel.node_data_setter,

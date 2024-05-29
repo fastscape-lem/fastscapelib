@@ -10,7 +10,7 @@ from fastscapelib.flow import (
     FlowSnapshot,
     KernelApplicationOrder,
     MultiFlowRouter,
-    NumbaFlowKernel,
+    create_flow_kernel,
     PFloodSinkResolver,
     SingleFlowRouter,
 )
@@ -42,7 +42,7 @@ def kernel_func2():
 
 @pytest.fixture(scope="module")
 def compiled_kernel1(kernel_func1, flow_graph):
-    kernel = NumbaFlowKernel(
+    kernel, data = create_flow_kernel(
         flow_graph,
         kernel_func1,
         spec=dict(
@@ -51,7 +51,7 @@ def compiled_kernel1(kernel_func1, flow_graph):
         outputs=["a"],
         application_order=KernelApplicationOrder.ANY,
     )
-    yield kernel
+    yield kernel, data
 
 
 @pytest.fixture(scope="function")
@@ -63,7 +63,7 @@ def kernel1(compiled_kernel1):
 
 @pytest.fixture(scope="module")
 def compiled_kernel2(kernel_func1, flow_graph):
-    kernel = NumbaFlowKernel(
+    kernel, data = create_flow_kernel(
         flow_graph,
         kernel_func1,
         spec=dict(
@@ -82,7 +82,7 @@ def compiled_kernel2(kernel_func1, flow_graph):
         outputs=["a"],
         application_order=KernelApplicationOrder.ANY,
     )
-    yield kernel
+    yield kernel, data
 
 
 @pytest.fixture(scope="function")
@@ -94,7 +94,7 @@ def kernel2(compiled_kernel2):
 
 @pytest.fixture(scope="module")
 def compiled_kernel3(kernel_func2, flow_graph):
-    kernel = NumbaFlowKernel(
+    kernel, data = create_flow_kernel(
         flow_graph,
         kernel_func2,
         spec=dict(
@@ -103,7 +103,7 @@ def compiled_kernel3(kernel_func2, flow_graph):
         application_order=KernelApplicationOrder.ANY,
         print_generated_code=True,
     )
-    yield kernel
+    yield kernel, data
 
 
 @pytest.fixture(scope="function")
@@ -117,7 +117,7 @@ class TestFlowKernel:
 
     def test_input_assignment(self, flow_graph, kernel_func1):
         with pytest.raises(AttributeError):
-            NumbaFlowKernel(
+            create_flow_kernel(
                 flow_graph,
                 kernel_func1,
                 spec=dict(
@@ -127,7 +127,8 @@ class TestFlowKernel:
             )
 
     def test_output_assignment(self, flow_graph, kernel1):
-        assert "a" in kernel1._grid_data_ty
+        kernel, data = kernel1
+        assert "a" in kernel._grid_data_ty
         assert len(kernel1._scalar_data_ty) == 0
 
         kernel1.bind_data(a=np.zeros(flow_graph.size))
@@ -165,7 +166,7 @@ class TestFlowKernel:
 
     def test_inline_bindings(self, flow_graph, kernel_func1):
 
-        kernel = NumbaFlowKernel(
+        kernel, data = create_flow_kernel(
             flow_graph,
             kernel_func1,
             spec=dict(
@@ -176,13 +177,13 @@ class TestFlowKernel:
         )
 
         np.testing.assert_almost_equal(
-            kernel._data.a, np.ones(flow_graph.size, dtype=np.float32) * 1.15
+            data.a, np.ones(flow_graph.size, dtype=np.float32) * 1.15
         )
 
     def test_ref_bindings(self, flow_graph, kernel_func1):
         a = np.ones(flow_graph.size, dtype=np.float32) * 1.15
 
-        kernel = NumbaFlowKernel(
+        kernel, data = create_flow_kernel(
             flow_graph,
             kernel_func1,
             spec=dict(
@@ -193,17 +194,17 @@ class TestFlowKernel:
         )
 
         np.testing.assert_almost_equal(
-            kernel._data.a, np.ones(flow_graph.size, dtype=np.float32) * 1.15
+            data.a, np.ones(flow_graph.size, dtype=np.float32) * 1.15
         )
 
         a *= 2.0
         np.testing.assert_almost_equal(
-            kernel._data.a, np.ones(flow_graph.size, dtype=np.float32) * 2.3
+            data.a, np.ones(flow_graph.size, dtype=np.float32) * 2.3
         )
 
     def test_scalar_output(self, flow_graph, kernel_func1):
         with pytest.raises(TypeError):
-            NumbaFlowKernel(
+            create_flow_kernel(
                 flow_graph,
                 kernel_func1,
                 spec=dict(
@@ -215,7 +216,7 @@ class TestFlowKernel:
 
     def test_invalid_output(self, flow_graph, kernel_func1):
         with pytest.raises(KeyError):
-            NumbaFlowKernel(
+            create_flow_kernel(
                 flow_graph,
                 kernel_func1,
                 spec=dict(
@@ -327,7 +328,7 @@ class TestFlowKernel:
             kernel1.node_data_getter(i, kernel1._data, node_data)
             assert node_data.receivers.count == flow_graph.impl().receivers_count[i]
 
-        kernel = NumbaFlowKernel(
+        kernel, data = create_flow_kernel(
             flow_graph,
             kernel_func1,
             spec=dict(

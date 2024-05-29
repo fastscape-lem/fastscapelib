@@ -597,22 +597,23 @@ add_flow_graph_bindings(py::module& m)
         "apply_kernel",
         [](fs::py_flow_graph& flow_graph,
            py::object flow_kernel,
-           fs::PyNumbaFlowKernelData& flow_kernel_data) -> int
+           py::object flow_kernel_data) -> int
         {
-            flow_kernel.attr("check_data_bindings")();
+            flow_kernel_data.attr("check_bindings")();
             auto kernel = flow_kernel.attr("kernel").cast<fs::PyNumbaFlowKernel>();
+            auto kernel_data = flow_kernel_data.attr("get_c_ptr").cast<fs::PyNumbaFlowKernelData>();
 
             if (kernel.n_threads == 1)
             {
                 auto py_apply_kernel
                     = py::module::import("fastscapelib").attr("flow").attr("py_apply_kernel");
-                return py_apply_kernel(flow_kernel, flow_kernel_data).cast<int>();
+                return py_apply_kernel(flow_graph, flow_kernel, flow_kernel_data).cast<int>();
             }
             else
             {
                 py::gil_scoped_release release;
                 return flow_graph.apply_kernel((fs::NumbaFlowKernel&) kernel,
-                                               (fs::NumbaFlowKernelData&) flow_kernel_data);
+                                               (fs::NumbaFlowKernelData&) kernel_data);
             }
         });
 
