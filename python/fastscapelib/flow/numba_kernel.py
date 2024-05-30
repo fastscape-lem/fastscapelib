@@ -9,6 +9,8 @@ import numpy as np
 from dataclasses import dataclass
 from fastscapelib.flow import Kernel, KernelApplicationOrder, KernelData
 
+from typing import Tuple
+
 
 class ConstantAssignmentVisitor(ast.NodeVisitor):
     def __init__(self, obj_name, member_name):
@@ -56,11 +58,6 @@ def timer(msg: str, do_print: bool):
         print(f"Time spent in {msg}: {elapsed_time:.1f} seconds")
 
 
-def create_flow_kernel(*args, **kwargs):
-    factory = NumbaFlowKernelFactory(*args, **kwargs)
-    return factory.kernel, factory.data
-
-
 class NumbaKernelData:
     def __init__(self, grid_size, spec_keys, grid_data_ty, data):
         super().__setattr__("_data", data)
@@ -81,12 +78,16 @@ class NumbaKernelData:
 
     def __setattr__(self, name, value):
         if name in self._data._numba_type_.struct:
-            setattr(self._data, name, value)
+            self.bind(**{name: value})
         else:
             super().__setattr__(name, value)
 
     @property
-    def get_c_ptr(self):
+    def jitclass(self):
+        return self._data
+
+    @property
+    def jitclass_ptr(self):
         return self._data_ptr
 
     def bind(self, **kwargs):
@@ -99,11 +100,17 @@ class NumbaKernelData:
             setattr(self._data, name, value)
             self._bound_data.add(name)
 
+    @property
+    def bound(self):
+        return self._bound_data
+
     def check_bindings(self):
         spec_names = set(self._spec_keys)
         unbound_data = spec_names.difference(self._bound_data)
         if unbound_data:
-            raise ValueError(f"Some data are unbound: {unbound_data}")
+            raise ValueError(
+                f"The following kernel data must be set prior any kernel call: {unbound_data}"
+            )
 
 
 @dataclass
@@ -115,6 +122,11 @@ class NumbaKernel:
     node_data_setter: None
     node_data_setter: None
     func: None
+
+
+def create_flow_kernel(*args, **kwargs) -> Tuple[NumbaKernel, NumbaKernelData]:
+    factory = NumbaFlowKernelFactory(*args, **kwargs)
+    return factory.kernel, factory.data
 
 
 class NumbaFlowKernelFactory:
@@ -856,3 +868,14 @@ def py_apply_kernel(flow_graph, nb_kernel, data):
         nb_kernel.node_data_getter,
         nb_kernel.node_data_setter,
     )
+
+
+class NumbaEroderBase:
+
+    spec: dict
+
+    def __init__(self):
+        pass
+
+    def erode(self):
+        pass

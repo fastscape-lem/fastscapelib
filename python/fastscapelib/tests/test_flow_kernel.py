@@ -42,7 +42,7 @@ def kernel_func2():
 
 @pytest.fixture(scope="module")
 def compiled_kernel1(kernel_func1, flow_graph):
-    kernel, data = create_flow_kernel(
+    kernel = create_flow_kernel(
         flow_graph,
         kernel_func1,
         spec=dict(
@@ -51,14 +51,18 @@ def compiled_kernel1(kernel_func1, flow_graph):
         outputs=["a"],
         application_order=KernelApplicationOrder.ANY,
     )
-    yield kernel, data
+    yield kernel
 
 
 @pytest.fixture(scope="function")
 def kernel1(compiled_kernel1):
-    yield compiled_kernel1
+    yield compiled_kernel1[0]
 
-    compiled_kernel1._bound_data.clear()
+
+@pytest.fixture(scope="function")
+def kernel1_data(compiled_kernel1):
+    yield compiled_kernel1[1]
+    compiled_kernel1[1]._bound_data.clear()
 
 
 @pytest.fixture(scope="module")
@@ -87,9 +91,13 @@ def compiled_kernel2(kernel_func1, flow_graph):
 
 @pytest.fixture(scope="function")
 def kernel2(compiled_kernel2):
-    yield compiled_kernel2
+    yield compiled_kernel2[0]
 
-    compiled_kernel2._bound_data.clear()
+
+@pytest.fixture(scope="function")
+def kernel2_data(compiled_kernel2):
+    yield compiled_kernel2[1]
+    compiled_kernel2[1]._bound_data.clear()
 
 
 @pytest.fixture(scope="module")
@@ -108,61 +116,56 @@ def compiled_kernel3(kernel_func2, flow_graph):
 
 @pytest.fixture(scope="function")
 def kernel3(compiled_kernel3):
-    yield compiled_kernel3
-
-    compiled_kernel3._bound_data.clear()
+    yield compiled_kernel3[0]
 
 
-class TestFlowKernel:
+@pytest.fixture(scope="function")
+def kernel3_data(compiled_kernel3):
+    yield compiled_kernel3[1]
+    compiled_kernel3[1]._bound_data.clear()
 
-    def test_input_assignment(self, flow_graph, kernel_func1):
-        with pytest.raises(AttributeError):
-            create_flow_kernel(
-                flow_graph,
-                kernel_func1,
-                spec=dict(
-                    a=nb.float64[::1],
-                ),
-                application_order=KernelApplicationOrder.ANY,
-            )
 
-    def test_output_assignment(self, flow_graph, kernel1):
-        kernel, data = kernel1
-        assert "a" in kernel._grid_data_ty
-        assert len(kernel1._scalar_data_ty) == 0
+class TestFlowKernelData:
 
-        kernel1.bind_data(a=np.zeros(flow_graph.size))
-        flow_graph.apply_kernel(kernel1, kernel1.data)
+    def test_bind(self, flow_graph, kernel1, kernel1_data):
+        kernel, data = kernel1, kernel1_data
 
-        np.testing.assert_almost_equal(
-            kernel1._data.a, np.ones(flow_graph.size, dtype=np.float64) * 10.0
-        )
+        data.a = np.zeros(flow_graph.size)
+        assert data.bound == {"a"}
 
-    def test_multiple_bindings(self, flow_graph, kernel1):
+    def test_setattr_bindings(self, flow_graph, kernel1, kernel1_data):
+        kernel, data = kernel1, kernel1_data
+
+        data.a = np.zeros(flow_graph.size)
+        assert data.bound == {"a"}
+
+    def test_multiple_bindings(self, flow_graph, kernel1_data):
+        data = kernel1_data
 
         a1 = np.ones(flow_graph.size, dtype=np.float64)
         ref1_id = id(a1)
-        kernel1.bind_data(a=a1)
-        assert ref1_id == id(kernel1._data.a)
+        data.bind(a=a1)
+        assert ref1_id == id(data.a)
         np.testing.assert_almost_equal(
-            kernel1._data.a, np.ones(flow_graph.size, dtype=np.float64)
+            data.a, np.ones(flow_graph.size, dtype=np.float64)
         )
 
         a2 = np.zeros(flow_graph.size, dtype=np.float64)
         ref2_id = id(a2)
-        kernel1.bind_data(a=a2)
-        assert ref2_id == id(kernel1._data.a)
-        assert ref1_id != id(kernel1._data.a)
+        data.bind(a=a2)
+        assert ref2_id == id(data.a)
+        assert ref1_id != id(data.a)
         np.testing.assert_almost_equal(
-            kernel1._data.a, np.zeros(flow_graph.size, dtype=np.float64)
+            data.a, np.zeros(flow_graph.size, dtype=np.float64)
         )
 
-    def test_check_data_bindings(self, flow_graph, kernel1):
-        with pytest.raises(ValueError):
-            kernel1.check_data_bindings()
+    def test_check_data_bindings(self, flow_graph, kernel1, kernel1_data):
 
         with pytest.raises(ValueError):
-            flow_graph.apply_kernel(kernel1, kernel1.data)
+            kernel1_data.check_bindings()
+
+        with pytest.raises(ValueError):
+            flow_graph.apply_kernel(kernel1, kernel1_data)
 
     def test_inline_bindings(self, flow_graph, kernel_func1):
 
@@ -202,6 +205,30 @@ class TestFlowKernel:
             data.a, np.ones(flow_graph.size, dtype=np.float32) * 2.3
         )
 
+
+class TestFlowKernel:
+
+    def test_input_assignment(self, flow_graph, kernel_func1):
+        with pytest.raises(AttributeError):
+            create_flow_kernel(
+                flow_graph,
+                kernel_func1,
+                spec=dict(
+                    a=nb.float64[::1],
+                ),
+                application_order=KernelApplicationOrder.ANY,
+            )
+
+    def test_output_assignment(self, flow_graph, kernel1, kernel1_data):
+        kernel, data = kernel1, kernel1_data
+
+        data.bind(a=np.zeros(flow_graph.size))
+        flow_graph.apply_kernel(kernel, data)
+
+        np.testing.assert_almost_equal(
+            data.a, np.ones(flow_graph.size, dtype=np.float64) * 10.0
+        )
+
     def test_scalar_output(self, flow_graph, kernel_func1):
         with pytest.raises(TypeError):
             create_flow_kernel(
@@ -230,32 +257,34 @@ class TestFlowKernel:
         with pytest.raises(AttributeError):
             kernel1.bind_data(a=np.zeros(flow_graph.size - 1))
 
-    def test_multiple_types(self, kernel2):
+    def test_multiple_types(self, kernel2, kernel2_data):
+        kernel, data = kernel2, kernel2_data
 
-        assert kernel2._data._numba_type_.struct["f64"] == nb.float64
-        assert kernel2._data._numba_type_.struct["f32"] == nb.float32
-        assert kernel2._data._numba_type_.struct["int32"] == nb.int32
-        assert kernel2._data._numba_type_.struct["int64"] == nb.int64
-        assert kernel2._data._numba_type_.struct["uint64"] == nb.uint64
+        assert data._data._numba_type_.struct["f64"] == nb.float64
+        assert data._data._numba_type_.struct["f32"] == nb.float32
+        assert data._data._numba_type_.struct["int32"] == nb.int32
+        assert data._data._numba_type_.struct["int64"] == nb.int64
+        assert data._data._numba_type_.struct["uint64"] == nb.uint64
 
-        assert kernel2._data._numba_type_.struct["f64_arr"] == nb.float64[::1]
-        assert kernel2._data._numba_type_.struct["f32_arr"] == nb.float32[::1]
-        assert kernel2._data._numba_type_.struct["int32_arr"] == nb.int32[::1]
-        assert kernel2._data._numba_type_.struct["int64_arr"] == nb.int64[::1]
-        assert kernel2._data._numba_type_.struct["uint64_arr"] == nb.uint64[::1]
+        assert data._data._numba_type_.struct["f64_arr"] == nb.float64[::1]
+        assert data._data._numba_type_.struct["f32_arr"] == nb.float32[::1]
+        assert data._data._numba_type_.struct["int32_arr"] == nb.int32[::1]
+        assert data._data._numba_type_.struct["int64_arr"] == nb.int64[::1]
+        assert data._data._numba_type_.struct["uint64_arr"] == nb.uint64[::1]
 
-        assert type(kernel2._data.f64_arr) == np.ndarray
-        assert kernel2._data.f64_arr.dtype == np.float64
-        assert type(kernel2._data.f32_arr) == np.ndarray
-        assert kernel2._data.f32_arr.dtype == np.float32
-        assert type(kernel2._data.int32_arr) == np.ndarray
-        assert kernel2._data.int32_arr.dtype == np.int32
-        assert type(kernel2._data.int64_arr) == np.ndarray
-        assert kernel2._data.int64_arr.dtype == np.int64
-        assert type(kernel2._data.uint64_arr) == np.ndarray
-        assert kernel2._data.uint64_arr.dtype == np.uint64
+        assert type(data._data.f64_arr) == np.ndarray
+        assert data._data.f64_arr.dtype == np.float64
+        assert type(data._data.f32_arr) == np.ndarray
+        assert data._data.f32_arr.dtype == np.float32
+        assert type(data._data.int32_arr) == np.ndarray
+        assert data._data.int32_arr.dtype == np.int32
+        assert type(data._data.int64_arr) == np.ndarray
+        assert data._data.int64_arr.dtype == np.int64
+        assert type(data._data.uint64_arr) == np.ndarray
+        assert data._data.uint64_arr.dtype == np.uint64
 
-        node_data_struct = kernel2._node_data_jitclass.class_type.struct
+        node_data = kernel.node_data_create()
+        node_data_struct = node_data.__class__._numba_type_.class_type.struct
         assert node_data_struct["f64_arr"] == nb.float64
         assert node_data_struct["f32_arr"] == nb.float32
         assert node_data_struct["int32_arr"] == nb.int32
@@ -275,8 +304,8 @@ class TestFlowKernel:
         assert node_data_receivers_struct["count"] == nb.uint64
 
     def test_node_data(self, kernel1):
-
-        node_data_struct = kernel1._node_data_jitclass.class_type.struct
+        node_data = kernel1.node_data_create()
+        node_data_struct = node_data.__class__._numba_type_.class_type.struct
         assert len(node_data_struct) == 2
         assert "receivers" in node_data_struct
         assert node_data_struct["a"] == nb.float64
@@ -292,40 +321,38 @@ class TestFlowKernel:
         assert node_data_receivers_struct["count"] == nb.uint64
 
     def test_node_data_create(self, kernel1):
-
         node_data = kernel1.node_data_create()
-        assert (
-            node_data._numba_type_
-            is kernel1._node_data_jitclass.class_type.instance_type
-        )
+        assert node_data.__class__.__name__ == "FlowKernelNodeData"
+        assert hasattr(node_data, "_numba_type_")
+        assert hasattr(node_data, "a")
 
-    def test_node_data_init(self, kernel1, kernel3):
+    def test_node_data_init(self, kernel1, kernel1_data, kernel3, kernel3_data):
 
         assert kernel1.node_data_init is None
         assert kernel3.node_data_init is not None
 
         node_data = kernel3.node_data_create()
-        kernel3._data.a = 12.0
-        kernel3.node_data_init(node_data, kernel3._data)
+        kernel3_data.a = 12.0
+        kernel3.node_data_init(node_data, kernel3_data._data)
         assert node_data.a == 12.0
 
-        kernel3._data.a = 1.0
-        kernel3.node_data_init(node_data, kernel3._data)
+        kernel3_data.a = 1.0
+        kernel3.node_data_init(node_data, kernel3_data._data)
         assert node_data.a == 1.0
 
-    def test_max_receivers(self, flow_graph, kernel1, kernel_func1):
+    def test_max_receivers(self, flow_graph, kernel1, kernel1_data, kernel_func1):
         rng = np.random.Generator(np.random.PCG64(1234))
         init_elevation = rng.uniform(0, 5, size=flow_graph.grid_shape)
 
         flow_graph.update_routes(init_elevation)
         assert np.any(flow_graph.impl().receivers_count > 1)
 
-        kernel1.bind_data(a=np.ones(flow_graph.size, dtype=np.float64))
-        flow_graph.apply_kernel(kernel1, kernel1.data)
+        kernel1_data.bind(a=np.ones(flow_graph.size, dtype=np.float64))
+        flow_graph.apply_kernel(kernel1, kernel1_data)
 
         node_data = kernel1.node_data_create()
         for i in range(flow_graph.size):
-            kernel1.node_data_getter(i, kernel1._data, node_data)
+            kernel1.node_data_getter(i, kernel1_data.jitclass, node_data)
             assert node_data.receivers.count == flow_graph.impl().receivers_count[i]
 
         kernel, data = create_flow_kernel(
@@ -338,6 +365,6 @@ class TestFlowKernel:
             application_order=KernelApplicationOrder.ANY,
             max_receivers=1,
         )
-        kernel.bind_data(a=np.ones(flow_graph.size, dtype=np.float64))
+        data.bind(a=np.ones(flow_graph.size, dtype=np.float64))
         with pytest.raises(RuntimeError):
-            flow_graph.apply_kernel(kernel, kernel.data)
+            flow_graph.apply_kernel(kernel, data)
