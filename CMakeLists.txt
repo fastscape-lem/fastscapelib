@@ -74,6 +74,8 @@ else()
     message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 endif()
 
+find_package(Threads REQUIRED)
+
 # Installation directories
 # ========================
 
@@ -137,7 +139,7 @@ target_include_directories(${FASTSCAPELIB_TARGET}
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor)
+target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor Threads::Threads)
 
 target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_17)
 

@@ -60,13 +60,16 @@ namespace fastscapelib
         public:
             using graph_impl_type = FG;
             using base_type = flow_operator_impl_base<graph_impl_type, pflood_sink_resolver>;
-
             using data_array_type = typename graph_impl_type::data_array_type;
+            using size_type = typename FG::size_type;
+            using thread_pool_type = thread_pool<size_type>;
 
             flow_operator_impl(std::shared_ptr<pflood_sink_resolver> ptr)
                 : base_type(std::move(ptr)){};
 
-            void apply(graph_impl_type& graph_impl, data_array_type& elevation)
+            void apply(graph_impl_type& graph_impl,
+                       data_array_type& elevation,
+                       thread_pool_type& /*pool*/)
             {
                 detail::fill_sinks_sloped(graph_impl, elevation);
             }
@@ -176,11 +179,14 @@ namespace fastscapelib
             using data_array_type = typename graph_impl_type::data_array_type;
 
             using basin_graph_type = basin_graph<graph_impl_type>;
+            using thread_pool_type = thread_pool<size_type>;
 
             flow_operator_impl(std::shared_ptr<mst_sink_resolver> ptr)
                 : base_type(std::move(ptr)){};
 
-            void apply(graph_impl_type& graph_impl, data_array_type& elevation)
+            void apply(graph_impl_type& graph_impl,
+                       data_array_type& elevation,
+                       thread_pool_type& /*pool*/)
             {
                 // make sure the basins are up-to-date
                 graph_impl.compute_basins();

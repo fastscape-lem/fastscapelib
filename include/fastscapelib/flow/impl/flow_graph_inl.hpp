@@ -139,7 +139,7 @@ namespace fastscapelib
         // loop over flow operator implementations
         for (auto op = m_operators.impl_begin(); op != m_operators.impl_end(); ++op)
         {
-            op->apply(*m_impl_ptr, *elevation_ptr);
+            op->apply(*m_impl_ptr, *elevation_ptr, m_thread_pool);
             op->save(*m_impl_ptr, m_graph_impl_snapshots, *elevation_ptr, m_elevation_snapshots);
         }
 
@@ -442,19 +442,13 @@ namespace fastscapelib
 
         for (auto i = 1; i < levels->size(); ++i)
         {
-            run_blocks((*levels)[i - 1], (*levels)[i], run);
+            m_thread_pool.run_blocks((*levels)[i - 1], (*levels)[i], run);
         }
 
         for (auto i = 0; i < n_threads; ++i)
             kernel.node_data_free(node_data[i].meminfoptr);
 
-        // std::cout << m_thread_pool.was_empty() << std::endl;
-        // std::cout << m_thread_pool.started() << std::endl;
-        // std::cout << m_thread_pool.stopped() << std::endl;
-
         m_thread_pool.pause();
-
-        // std::cout << m_thread_pool.paused() << std::endl;
 
         return 0;
     }
@@ -482,37 +476,6 @@ namespace fastscapelib
         , m_thread_pool(10)
     {
         m_impl_ptr = std::make_shared<impl_type>(grid, single_flow);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////
-
-    template <class G, class S, class Tag>
-    template <typename T, typename F, typename R>
-    void flow_graph<G, S, Tag>::run_blocks(const T first_index, const T index_after_last, F&& func)
-    {
-        auto thread_pool_size = m_thread_pool.size();
-        std::vector<std::function<void()>> jobs(thread_pool_size);
-
-        if (index_after_last > first_index)
-        {
-            const typename thread_pool_type::blocks blks(
-                first_index, index_after_last, thread_pool_size);
-
-            for (auto i = 0; i < thread_pool_size; ++i)
-            {
-                if (i < blks.num_blocks())
-                    jobs[i] = [i,
-                               func = std::forward<F>(func),
-                               start = blks.start(i),
-                               end = blks.end(i)]() { func(i, start, end); };
-                else
-                    jobs[i] = nullptr;
-            }
-            m_thread_pool.set_tasks(jobs);
-            m_thread_pool.run_tasks();
-
-            m_thread_pool.wait();
-        };
     }
 }  // namespace fastscapelib
 

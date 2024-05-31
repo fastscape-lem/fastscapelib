@@ -98,6 +98,9 @@ namespace fastscapelib
 
         };  // class blocks
 
+        template <typename F>
+        void run_blocks(const T first_index, const T index_after_last, F&& func);
+
     private:
         std::vector<std::thread> workers;
         std::vector<job_type>* jobs;

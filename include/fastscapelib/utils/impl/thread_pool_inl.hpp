@@ -209,6 +209,35 @@ namespace fastscapelib
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
+
+    template <class T>
+    template <typename F>
+    void thread_pool<T>::run_blocks(const T first_index, const T index_after_last, F&& func)
+    {
+        std::vector<std::function<void()>> jobs(m_size);
+
+        if (index_after_last > first_index)
+        {
+            const blocks blks(first_index, index_after_last, m_size);
+
+            for (T i = 0; i < m_size; ++i)
+            {
+                if (i < blks.num_blocks())
+                    jobs[i] = [i,
+                               func = std::forward<F>(func),
+                               start = blks.start(i),
+                               end = blks.end(i)]() { func(i, start, end); };
+                else
+                    jobs[i] = nullptr;
+            }
+            set_tasks(jobs);
+            run_tasks();
+
+            wait();
+        };
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////
 
     template <class T>

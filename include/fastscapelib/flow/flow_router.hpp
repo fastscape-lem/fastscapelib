@@ -49,11 +49,15 @@ namespace fastscapelib
             using graph_impl_type = FG;
             using base_type = flow_operator_impl_base<FG, single_flow_router>;
             using data_array_type = typename graph_impl_type::data_array_type;
+            using size_type = typename FG::size_type;
+            using thread_pool_type = thread_pool<size_type>;
 
             flow_operator_impl(std::shared_ptr<single_flow_router> ptr)
                 : base_type(std::move(ptr)){};
 
-            void apply(graph_impl_type& graph_impl, data_array_type& elevation)
+            void apply(graph_impl_type& graph_impl,
+                       data_array_type& elevation,
+                       thread_pool_type& pool)
             {
                 // single flow optimization
                 graph_impl.m_receivers_count.fill(1);
@@ -61,9 +65,6 @@ namespace fastscapelib
                 weights.fill(1.);
 
                 using neighbors_type = typename graph_impl_type::grid_type::neighbors_type;
-
-                double slope, slope_max;
-                neighbors_type neighbors;
 
                 auto& grid = graph_impl.grid();
                 auto& donors = graph_impl.m_donors;
@@ -73,33 +74,52 @@ namespace fastscapelib
 
                 donors_count.fill(0);
 
-                for (auto i : grid.nodes_indices())
+                auto run
+                    = [&receivers,
+                       &dist2receivers,
+                       &donors,
+                       &donors_count,
+                       &graph_impl,
+                       &grid,
+                       &elevation](std::size_t /*runner_id*/, std::size_t start, std::size_t end)
                 {
-                    receivers(i, 0) = i;
-                    dist2receivers(i, 0) = 0;
-                    slope_max = std::numeric_limits<double>::min();
+                    double slope, slope_max;
+                    neighbors_type neighbors;
 
-                    if (graph_impl.is_masked(i) || graph_impl.is_base_level(i))
+                    for (auto i = start; i < end; ++i)
                     {
-                        continue;
-                    }
+                        receivers(i, 0) = i;
+                        dist2receivers(i, 0) = 0;
+                        slope_max = std::numeric_limits<double>::min();
 
-                    for (auto n : grid.neighbors(i, neighbors))
-                    {
-                        if (!graph_impl.is_masked(n.idx))
+                        if (graph_impl.is_masked(i) || graph_impl.is_base_level(i))
                         {
-                            slope = (elevation.flat(i) - elevation.flat(n.idx)) / n.distance;
+                            continue;
+                        }
 
-                            if (slope > slope_max)
+                        for (auto n : grid.neighbors(i, neighbors))
+                        {
+                            if (!graph_impl.is_masked(n.idx))
                             {
-                                slope_max = slope;
-                                receivers(i, 0) = n.idx;
-                                dist2receivers(i, 0) = n.distance;
+                                slope = (elevation.flat(i) - elevation.flat(n.idx)) / n.distance;
+
+                                if (slope > slope_max)
+                                {
+                                    slope_max = slope;
+                                    receivers(i, 0) = n.idx;
+                                    dist2receivers(i, 0) = n.distance;
+                                }
                             }
                         }
                     }
+                };
 
-                    // fastpath for single flow
+                pool.resume();
+                pool.run_blocks(0, grid.size(), run);
+                pool.pause();
+
+                for (auto i : grid.nodes_indices())
+                {
                     auto irec = receivers(i, 0);
                     donors(irec, donors_count(irec)++) = i;
                 }
@@ -176,11 +196,14 @@ namespace fastscapelib
             using base_type = flow_operator_impl_base<FG, multi_flow_router>;
             using data_array_type = typename graph_impl_type::data_array_type;
             using size_type = typename graph_impl_type::grid_type::size_type;
+            using thread_pool_type = thread_pool<size_type>;
 
             flow_operator_impl(std::shared_ptr<multi_flow_router> ptr)
                 : base_type(std::move(ptr)){};
 
-            void apply(graph_impl_type& graph_impl, data_array_type& elevation)
+            void apply(graph_impl_type& graph_impl,
+                       data_array_type& elevation,
+                       thread_pool_type& /*pool*/)
             {
                 using neighbors_type = typename graph_impl_type::grid_type::neighbors_type;
 
