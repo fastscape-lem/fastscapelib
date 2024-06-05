@@ -2,6 +2,8 @@
 
 # Release Notes
 
+## v0.3.0 (Unreleased)
+
 ## v0.2.2 (5 June 2024)
 
 ### Bug fixes
