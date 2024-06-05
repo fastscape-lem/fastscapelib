@@ -96,32 +96,32 @@ include(CMakePackageConfigHelpers)
 # -- fastscapelib
 set(FASTSCAPELIB_HEADERS
   # Algo
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/algo/pflood.hpp
+  algo/pflood.hpp
   # Eroders
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/diffusion_adi.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/eroders/spl.hpp
+  eroders/diffusion_adi.hpp
+  eroders/spl.hpp
   # Flow
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/basin_graph.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_graph_impl.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_graph.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_operator.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_router.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/flow_snapshot.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/flow/sink_resolver.hpp
+  flow/basin_graph.hpp
+  flow/flow_graph_impl.hpp
+  flow/flow_graph.hpp
+  flow/flow_operator.hpp
+  flow/flow_router.hpp
+  flow/flow_snapshot.hpp
+  flow/sink_resolver.hpp
   # Grid
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/base.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/profile_grid.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/raster_grid.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/structured_grid.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/grid/trimesh.hpp
+  grid/base.hpp
+  grid/profile_grid.hpp
+  grid/raster_grid.hpp
+  grid/structured_grid.hpp
+  grid/trimesh.hpp
   # Utils
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/consts.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/iterators.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/union_find.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/utils.hpp
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/utils/xtensor_utils.hpp
+  utils/consts.hpp
+  utils/iterators.hpp
+  utils/union_find.hpp
+  utils/utils.hpp
+  utils/xtensor_utils.hpp
   # Version
-  ${FASTSCAPELIB_INCLUDE_DIR}/fastscapelib/version.hpp
+  version.hpp
 )
 
 set(FASTSCAPELIB_TARGET fastscapelib)
@@ -171,8 +171,9 @@ configure_package_config_file(cmake/${PROJECT_NAME}Config.cmake.in
 
 if(NOT SKBUILD)
   # -- fastscapelib header files
-  install(FILES ${FASTSCAPELIB_HEADERS}
-          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fastscapelib)
+  install(DIRECTORY "${FASTSCAPELIB_INCLUDE_DIR}/"
+          DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+          FILES_MATCHING PATTERN "*.hpp")
 
   # -- CMake configuration
   #    o create/install targets
