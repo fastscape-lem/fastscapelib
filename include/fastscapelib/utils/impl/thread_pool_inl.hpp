@@ -55,6 +55,9 @@ namespace fastscapelib
         if (!m_started)
             start();
 
+        if (m_paused)
+            resume();
+
         for (std::size_t i = 0; i < m_size; ++i)
             if ((*jobs)[i] != nullptr)
                 todos[i].push(1);
@@ -197,7 +200,6 @@ namespace fastscapelib
     {
         if (size != m_size)
         {
-            // std::cout << "resizing" << std::endl;
             m_size = size;
             stop();
             m_stopped = false;

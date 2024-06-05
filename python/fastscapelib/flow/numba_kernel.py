@@ -830,7 +830,7 @@ def py_apply_kernel_impl(
     for i in indices:
         if node_data_getter(i, data, node_data):
             raise RuntimeError(
-                "Invalid index encountered in node_data getter function\n"
+                f"Invalid index {i} encountered in node_data getter function\n"
                 "Please check if you are using dynamic receivers count "
                 "('max_receivers=-1') or adjust this setting in the "
                 "'Kernel' specification"

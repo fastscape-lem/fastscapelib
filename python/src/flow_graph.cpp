@@ -177,6 +177,14 @@ add_flow_graph_bindings(py::module& m)
         SingleFlowRouter initializer.
 
         )doc");
+    srouter_op.def(py::init<int>(),
+                   R"doc(__init__(self, n_threads: int) -> None
+
+        SingleFlowRouter initializer.
+
+        )doc",
+                   py::kw_only(),
+                   py::arg("n_threads"));
     srouter_op.def("__repr__", [](const fs::single_flow_router& op) { return "SingleFlowRouter"; });
 
     py::class_<fs::multi_flow_router, fs::flow_operator, std::shared_ptr<fs::multi_flow_router>>

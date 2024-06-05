@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <stack>
 #include <vector>
+#include <set>
 
 #include "xtensor/xbroadcast.hpp"
 #include "xtensor/xstrided_view.hpp"
@@ -356,7 +357,8 @@ namespace fastscapelib
         void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_bfs_indices_bottomup()
         {
             xt_tensor_t<xt_selector, bool, 1> visited({ m_grid.size() }, false);
-            std::vector<size_type> levels(m_grid.size());
+            std::vector<size_type> levels(m_grid.size(), 0);
+            std::set<size_type> level_skip;
             size_type nstack = 0;
             size_type level = 0;
 
@@ -372,13 +374,28 @@ namespace fastscapelib
 
             while (nstack < size())
             {
+                level_skip.clear();
+
                 for (size_type i = levels[level - 2]; i < levels[level - 1]; ++i)
                 {
                     auto node_idx = m_bfs_indices(i);
                     for (size_type k = 0; k < m_donors_count(node_idx); ++k)
                     {
                         auto donor_idx = m_donors(node_idx, k);
-                        if (!visited(donor_idx))
+
+                        bool skip = level_skip.find(donor_idx) != level_skip.end();
+                        for (std::size_t rcv_idx = 0; rcv_idx < m_receivers_count(donor_idx);
+                             ++rcv_idx)
+                        {
+                            if (!visited(m_receivers(donor_idx, rcv_idx)))
+                            {
+                                level_skip.insert(donor_idx);
+                                skip = true;
+                                break;
+                            }
+                        }
+
+                        if (!skip && !visited(donor_idx))
                         {
                             visited(donor_idx) = true;
                             m_bfs_indices(nstack++) = donor_idx;
