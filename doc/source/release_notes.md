@@ -2,7 +2,12 @@
 
 # Release Notes
 
-## v0.3.0 (Unreleased)
+## v0.2.2 (5 June 2024)
+
+### Bug fixes
+
+- Fixed and refactored some benchmarks ({pull}`152`).
+- Fixed CMake installed C++ header files ({issue}`158`, {pull}`159`).
 
 ## v0.2.1 (20 October 2023)
 
