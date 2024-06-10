@@ -117,7 +117,7 @@ namespace fastscapelib
 
                 m_dfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
                 m_bfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
-                m_bfs_levels = xt::ones<size_type>({ grid.size() }) * -1;
+                m_bfs_levels = xt::ones<size_type>({ grid.size() + 1 }) * -1;
 
                 // TODO: basins are not always needed (only init on-demand)
                 m_basins = xt::empty<size_type>({ grid.size() });
@@ -357,7 +357,7 @@ namespace fastscapelib
         void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_bfs_indices_bottomup()
         {
             xt_tensor_t<xt_selector, std::int8_t, 1> visited({ m_grid.size() }, 0);
-            std::vector<size_type> levels(m_grid.size(), 0);
+            std::vector<size_type> levels(m_grid.size() + 1, 0);
             size_type nstack = 0;
             size_type level = 0;
             bool skip;
