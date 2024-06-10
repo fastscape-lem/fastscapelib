@@ -356,10 +356,7 @@ namespace fastscapelib
         template <class G, class S>
         void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_bfs_indices_bottomup()
         {
-            using visitor_type = xt_tensor_t<xt_selector, std::uint8_t, 1>;
-            using visitor_shape_type = typename visitor_type::shape_type;
-
-            visitor_type visited(visitor_shape_type({ m_grid.size() }), std::uint8_t(0));
+            std::vector<std::uint8_t> visited(m_grid.size(), std::uint8_t(0));
             std::vector<size_type> levels(m_grid.size() + 1, 0);
             size_type nstack = 0;
             size_type level = 0;
@@ -379,36 +376,36 @@ namespace fastscapelib
                 for (size_type i = levels[level - 2]; i < levels[level - 1]; ++i)
                 {
                     auto node_idx = m_bfs_indices(i);
-                    visited(node_idx) = 1;
+                    visited[node_idx] = 1;
 
                     for (size_type k = 0; k < m_donors_count(node_idx); ++k)
                     {
                         auto donor_idx = m_donors(node_idx, k);
 
-                        skip = visited(donor_idx) > 0;
+                        skip = visited[donor_idx] > 0;
                         if (skip)
                             continue;
 
                         for (std::size_t rcv_idx = 0; rcv_idx < m_receivers_count(donor_idx);
                              ++rcv_idx)
                         {
-                            if (visited(m_receivers(donor_idx, rcv_idx)) != 1)
+                            if (visited[m_receivers(donor_idx, rcv_idx)] != 1)
                             {
                                 skip = true;
                                 break;
                             }
                         }
 
-                        if (!skip && visited(donor_idx) == 0)
+                        if (!skip && visited[donor_idx] == 0)
                         {
                             m_bfs_indices(nstack++) = donor_idx;
-                            visited(donor_idx) = 2;
+                            visited[donor_idx] = 2;
                         }
                     }
                 }
 
                 for (size_type i = levels[level - 2]; i < levels[level - 1]; ++i)
-                    visited(m_bfs_indices(i)) = 1;
+                    visited[m_bfs_indices(i)] = 1;
 
                 levels[level++] = nstack;
             }
