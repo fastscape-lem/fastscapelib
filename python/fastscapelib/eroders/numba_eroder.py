@@ -32,9 +32,8 @@ class NumbaEroderType(type):
         if bases:
             errs = cls.check_errs(dct)
             if errs:
-                raise TypeError(
-                    f"Can't instantiate class {name}:\n  - {'\n  - '.join(errs)}"
-                )
+                err_msg = "\n  - ".join(errs)
+                raise TypeError(f"Can't instantiate class {name}:\n  - {err_msg}")
 
         instance = super().__new__(cls, name, bases, dct)
         return instance
