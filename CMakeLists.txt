@@ -74,6 +74,12 @@ else()
     message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 endif()
 
+FetchContent_Declare(atomic_queue
+  GIT_REPOSITORY https://github.com/adriendelsalle/atomic_queue
+  GIT_TAG export-targets
+  GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(atomic_queue)
+
 find_package(Threads REQUIRED)
 
 # Installation directories
@@ -139,7 +145,7 @@ target_include_directories(${FASTSCAPELIB_TARGET}
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor Threads::Threads)
+target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor max0x7ba::atomic_queue Threads::Threads)
 
 target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_17)
 
