@@ -10,9 +10,9 @@ from fastscapelib.flow import (
     FlowSnapshot,
     KernelApplicationOrder,
     MultiFlowRouter,
-    create_flow_kernel,
     PFloodSinkResolver,
     SingleFlowRouter,
+    create_flow_kernel,
 )
 from fastscapelib.grid import NodeStatus, ProfileGrid, RasterGrid
 
@@ -126,7 +126,6 @@ def kernel3_data(compiled_kernel3):
 
 
 class TestFlowKernelData:
-
     def test_bind(self, flow_graph, kernel1, kernel1_data):
         kernel, data = kernel1, kernel1_data
 
@@ -160,7 +159,6 @@ class TestFlowKernelData:
         )
 
     def test_check_data_bindings(self, flow_graph, kernel1, kernel1_data):
-
         with pytest.raises(ValueError):
             kernel1_data.check_bindings()
 
@@ -168,7 +166,6 @@ class TestFlowKernelData:
             flow_graph.apply_kernel(kernel1, kernel1_data)
 
     def test_inline_bindings(self, flow_graph, kernel_func1):
-
         kernel, data = create_flow_kernel(
             flow_graph,
             kernel_func1,
@@ -207,7 +204,6 @@ class TestFlowKernelData:
 
 
 class TestFlowKernel:
-
     def test_input_assignment(self, flow_graph, kernel_func1):
         with pytest.raises(AttributeError):
             create_flow_kernel(
@@ -327,7 +323,6 @@ class TestFlowKernel:
         assert hasattr(node_data, "a")
 
     def test_node_data_init(self, kernel1, kernel1_data, kernel3, kernel3_data):
-
         assert kernel1.node_data_init is None
         assert kernel3.node_data_init is not None
 

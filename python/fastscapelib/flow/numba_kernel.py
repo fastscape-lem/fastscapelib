@@ -2,14 +2,14 @@ import ast
 import inspect
 import time
 from contextlib import contextmanager
+from dataclasses import dataclass
 from textwrap import dedent, indent
+from typing import Tuple
 
 import numba as nb
 import numpy as np
-from dataclasses import dataclass
-from fastscapelib.flow import Kernel, KernelApplicationOrder, KernelData
 
-from typing import Tuple
+from fastscapelib.flow import Kernel, KernelApplicationOrder, KernelData
 
 
 class ConstantAssignmentVisitor(ast.NodeVisitor):
@@ -871,7 +871,6 @@ def py_apply_kernel(flow_graph, nb_kernel, data):
 
 
 class NumbaEroderBase:
-
     spec: dict
 
     def __init__(self):

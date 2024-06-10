@@ -195,5 +195,3 @@ namespace fastscapelib
         }
     }
 }
-
-#include <vector>
