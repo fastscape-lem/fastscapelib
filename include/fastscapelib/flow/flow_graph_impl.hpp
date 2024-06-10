@@ -359,7 +359,7 @@ namespace fastscapelib
             using visitor_type = xt_tensor_t<xt_selector, std::uint8_t, 1>;
             using visitor_shape_type = typename visitor_type::shape_type;
 
-            visitor_type visited(visitor_shape_type{ m_grid.size() }, std::uint8_t(0));
+            visitor_type visited(visitor_shape_type({ m_grid.size() }), std::uint8_t(0));
             std::vector<size_type> levels(m_grid.size() + 1, 0);
             size_type nstack = 0;
             size_type level = 0;
