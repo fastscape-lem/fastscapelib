@@ -285,32 +285,32 @@ namespace fastscapelib
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    template <class G, class S, class Tag>
-    int flow_graph<G, S, Tag>::apply_kernel_seq(const flow_kernel& kernel,
-                                                NumbaFlowKernelData& data)
-    {
-        void* new_node_data = kernel.node_data_create();
-        if (kernel.node_data_init)
-            kernel.node_data_init(new_node_data, data.data);
+    // template <class G, class S, class Tag>
+    // int flow_graph<G, S, Tag>::apply_kernel_seq(const flow_kernel& kernel,
+    //                                             NumbaFlowKernelData& data)
+    // {
+    //     void* new_node_data = kernel.node_data_create();
+    //     if (kernel.node_data_init)
+    //         kernel.node_data_init(new_node_data, reinterpret_cast<void*>(&data.data));
 
-        for (std::size_t i : impl().dfs_indices())
-        {
-            if (kernel.node_data_getter(i, data.data, new_node_data))
-            {
-                throw std::runtime_error("Invalid index encountered in node_data getter "
-                                         "function\n"
-                                         "Please check if you are using dynamic receivers count "
-                                         "('max_receivers=-1') or adjust this setting in the "
-                                         "'Kernel' "
-                                         "specification");
-            };
-            kernel.func(new_node_data);
-            kernel.node_data_setter(i, new_node_data, data.data);
-        }
+    //     for (std::size_t i : impl().dfs_indices())
+    //     {
+    //         if (kernel.node_data_getter(i, reinterpret_cast<void*>(&data.data), new_node_data))
+    //         {
+    //             throw std::runtime_error("Invalid index encountered in node_data getter "
+    //                                      "function\n"
+    //                                      "Please check if you are using dynamic receivers count "
+    //                                      "('max_receivers=-1') or adjust this setting in the "
+    //                                      "'Kernel' "
+    //                                      "specification");
+    //         };
+    //         kernel.func(new_node_data);
+    //         kernel.node_data_setter(i, new_node_data, reinterpret_cast<void*>(&data.data));
+    //     }
 
-        kernel.node_data_free(new_node_data);
-        return 0;
-    }
+    //     kernel.node_data_free(new_node_data);
+    //     return 0;
+    // }
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
