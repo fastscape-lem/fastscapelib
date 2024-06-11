@@ -304,7 +304,8 @@ namespace fastscapelib
                 indices = &impl().dfs_indices();
                 break;
             default:
-                throw std::runtime_error("Unsupported kernel application order");
+                throw std::runtime_error(
+                    "Unsupported kernel application order for sequential execution");
                 break;
         }
 
@@ -350,12 +351,9 @@ namespace fastscapelib
                 indices = &impl().bfs_indices();
                 levels = &impl().bfs_levels();
                 break;
-            case kernel_application_order::DEPTH_UPSTREAM:
-                indices = &impl().dfs_indices();
-                levels = &impl().random_levels();
-                break;
             default:
-                throw std::runtime_error("Unsupported kernel application order");
+                throw std::runtime_error(
+                    "Unsupported kernel application order for parallel execution");
                 break;
         }
 
