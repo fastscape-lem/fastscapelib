@@ -298,6 +298,43 @@ namespace fastscapelib
         return std::move(op_sequence);
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct NumbaJitClass
+    {
+        void* meminfoptr;  ///< meminfoptr
+        void* dataptr;     ///< dataptr
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct NumbaFlowKernel
+    {
+        int (*func)(NumbaJitClass);                                          ///< flow kernel
+        int (*node_data_getter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data getter
+        int (*node_data_setter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data setter
+        NumbaJitClass (*node_data_create)();                   ///< node data allocator
+        void (*node_data_init)(NumbaJitClass, NumbaJitClass);  ///< node data init
+        void (*node_data_free)(NumbaJitClass);                 ///< node data destructor
+        int n_threads;                                         ///< threads count
+        kernel_application_order application_order;  ///< traversal order for kernel application
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct NumbaFlowKernelData
+    {
+        NumbaJitClass data;  ///< data
+
+        operator flow_kernel_data()
+        {
+            flow_kernel_data kernel_data;
+
+            kernel_data.data = &data;
+
+            return kernel_data;
+        }
+    };
 
     /**
      * Flow graph facade class for Python bindings.
@@ -669,11 +706,15 @@ namespace fastscapelib
                 "out_flowdir", &OP::out_flowdir, ":class:`FlowDirection` of the output graph");
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////
+
     struct PyNumbaJitClass
     {
         std::uintptr_t meminfoptr;
         std::uintptr_t dataptr;
     };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
 
     struct PyNumbaFlowKernel
     {
@@ -686,6 +727,8 @@ namespace fastscapelib
         int n_threads;
         kernel_application_order application_order;
     };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
 
     struct PyNumbaFlowKernelData
     {

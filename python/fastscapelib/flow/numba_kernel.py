@@ -857,6 +857,8 @@ def py_apply_kernel(flow_graph, nb_kernel, data):
         indices = np.arange(0, flow_graph.size, 1)
     elif kernel.application_order == KernelApplicationOrder.BREADTH_UPSTREAM:
         indices = flow_graph.impl().bfs_indices
+    elif kernel.application_order == KernelApplicationOrder.DEPTH_UPSTREAM:
+        indices = flow_graph.impl().dfs_indices
     else:
         raise RuntimeError("Unsupported kernel application order")
 

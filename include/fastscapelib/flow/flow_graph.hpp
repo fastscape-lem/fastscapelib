@@ -240,7 +240,8 @@ namespace fastscapelib
          */
         data_array_size_type basins();
 
-        int apply_kernel(NumbaFlowKernel& kernel, NumbaFlowKernelData& data);
+        template <class FK, class FKD>
+        int apply_kernel(FK& kernel, FKD& data);
 
     private:
         using thread_pool_type = thread_pool<size_type>;
@@ -266,11 +267,11 @@ namespace fastscapelib
                   typename R = std::invoke_result_t<std::decay_t<F>, T, T, T>>
         void run_blocks(const T first_index, const T index_after_last, F&& func);
 
-        int apply_kernel_seq(const flow_kernel& kernel, NumbaFlowKernelData& data);
+        template <class FK, class FKD>
+        int apply_kernel_seq(FK& kernel, FKD& data);
 
-        int apply_kernel_seq2(NumbaFlowKernel& kernel, NumbaFlowKernelData& data);
-
-        int apply_kernel_par2(NumbaFlowKernel& kernel, NumbaFlowKernelData& data);
+        template <class FK, class FKD>
+        int apply_kernel_par(FK& kernel, FKD& data);
     };
 }
 

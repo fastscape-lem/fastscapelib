@@ -285,43 +285,34 @@ namespace fastscapelib
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    // template <class G, class S, class Tag>
-    // int flow_graph<G, S, Tag>::apply_kernel_seq(const flow_kernel& kernel,
-    //                                             NumbaFlowKernelData& data)
-    // {
-    //     void* new_node_data = kernel.node_data_create();
-    //     if (kernel.node_data_init)
-    //         kernel.node_data_init(new_node_data, reinterpret_cast<void*>(&data.data));
-
-    //     for (std::size_t i : impl().dfs_indices())
-    //     {
-    //         if (kernel.node_data_getter(i, reinterpret_cast<void*>(&data.data), new_node_data))
-    //         {
-    //             throw std::runtime_error("Invalid index encountered in node_data getter "
-    //                                      "function\n"
-    //                                      "Please check if you are using dynamic receivers count "
-    //                                      "('max_receivers=-1') or adjust this setting in the "
-    //                                      "'Kernel' "
-    //                                      "specification");
-    //         };
-    //         kernel.func(new_node_data);
-    //         kernel.node_data_setter(i, new_node_data, reinterpret_cast<void*>(&data.data));
-    //     }
-
-    //     kernel.node_data_free(new_node_data);
-    //     return 0;
-    // }
-
-    /////////////////////////////////////////////////////////////////////////////////////////
-
     template <class G, class S, class Tag>
-    int flow_graph<G, S, Tag>::apply_kernel_seq2(NumbaFlowKernel& kernel, NumbaFlowKernelData& data)
+    template <class FK, class FKD>
+    int flow_graph<G, S, Tag>::apply_kernel_seq(FK& kernel, FKD& data)
     {
-        NumbaJitClass new_node_data = kernel.node_data_create();
+        using bfs_indices_type = typename impl_type::bfs_indices_type;
+        const bfs_indices_type* indices;
+
+        switch (kernel.application_order)
+        {
+            case kernel_application_order::ANY:
+                indices = &impl().storage_indices();
+                break;
+            case kernel_application_order::BREADTH_UPSTREAM:
+                indices = &impl().bfs_indices();
+                break;
+            case kernel_application_order::DEPTH_UPSTREAM:
+                indices = &impl().dfs_indices();
+                break;
+            default:
+                throw std::runtime_error("Unsupported kernel application order");
+                break;
+        }
+
+        auto new_node_data = kernel.node_data_create();
         if (kernel.node_data_init)
             kernel.node_data_init(new_node_data, data.data);
 
-        for (std::size_t i : impl().dfs_indices())
+        for (std::size_t i : *indices)
         {
             if (kernel.node_data_getter(i, data.data, new_node_data))
             {
@@ -336,55 +327,15 @@ namespace fastscapelib
             kernel.node_data_setter(i, new_node_data, data.data);
         }
 
-        kernel.node_data_free(new_node_data.meminfoptr);
+        kernel.node_data_free(new_node_data);
         return 0;
     }
-
-    // int
-    // apply_kernel_par(std::vector<std::size_t>& indices, const flow_kernel& kernel, double
-    // dt)
-    // {
-    //     std::vector<std::thread> threads;
-    //     const blocks<std::size_t> blks(0, indices.size(), kernel.n_threads);
-
-    //     for (std::size_t blk = 0; blk < blks.get_num_blocks(); ++blk)
-    //     {
-    //         auto run_block = [&kernel, &dt, start = blks.start(blk), end = blks.end(blk)]()
-    //         {
-    //             void* new_node_data = kernel.node_data_create();
-
-    //             for (std::size_t i = start; i < end; ++i)
-    //             {
-    //                 if (kernel.node_data_getter(i, kernel.data, new_node_data))
-    //                 {
-    //                     throw std::runtime_error(
-    //                         "Invalid index encountered in node_data getter "
-    //                         "function\n"
-    //                         "Please check if you are using dynamic receivers count "
-    //                         "('max_receivers=-1') or adjust this setting in the "
-    //                         "'Kernel' "
-    //                         "specification");
-    //                 };
-    //                 kernel.func(new_node_data, dt);
-    //                 kernel.node_data_setter(i, new_node_data, kernel.data);
-    //             }
-
-    //             kernel.node_data_free(new_node_data);
-    //         };
-
-    //         threads.emplace_back(std::thread(run_block));
-    //     }
-
-    //     for (auto& thread : threads)
-    //         thread.join();
-
-    //     return 0;
-    // }
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     template <class G, class S, class Tag>
-    int flow_graph<G, S, Tag>::apply_kernel_par2(NumbaFlowKernel& kernel, NumbaFlowKernelData& data)
+    template <class FK, class FKD>
+    int flow_graph<G, S, Tag>::apply_kernel_par(FK& kernel, FKD& data)
     {
         using bfs_indices_type = typename impl_type::bfs_indices_type;
         const bfs_indices_type *indices, *levels;
@@ -399,6 +350,10 @@ namespace fastscapelib
                 indices = &impl().bfs_indices();
                 levels = &impl().bfs_levels();
                 break;
+            case kernel_application_order::DEPTH_UPSTREAM:
+                indices = &impl().dfs_indices();
+                levels = &impl().random_levels();
+                break;
             default:
                 throw std::runtime_error("Unsupported kernel application order");
                 break;
@@ -409,7 +364,7 @@ namespace fastscapelib
         m_thread_pool.resume();
         m_thread_pool.resize(n_threads);
 
-        std::vector<NumbaJitClass> node_data(n_threads);
+        std::vector<decltype(kernel.node_data_create())> node_data(n_threads);
         for (auto i = 0; i < n_threads; ++i)
         {
             node_data[i] = kernel.node_data_create();
@@ -424,7 +379,7 @@ namespace fastscapelib
             for (auto i = start; i < end; ++i)
             {
                 auto node_idx = (*indices)[i];
-                NumbaJitClass n_data = node_data[runner];
+                auto n_data = node_data[runner];
                 if (kernel.node_data_getter(node_idx, data.data, n_data))
                 {
                     throw std::runtime_error(
@@ -440,13 +395,13 @@ namespace fastscapelib
             }
         };
 
-        for (auto i = 1; i < levels->size(); ++i)
+        for (std::size_t i = 1; i < levels->size(); ++i)
         {
             m_thread_pool.run_blocks((*levels)[i - 1], (*levels)[i], run);
         }
 
-        for (auto i = 0; i < n_threads; ++i)
-            kernel.node_data_free(node_data[i].meminfoptr);
+        for (std::size_t i = 0; i < n_threads; ++i)
+            kernel.node_data_free(node_data[i]);
 
         m_thread_pool.pause();
 
@@ -456,13 +411,14 @@ namespace fastscapelib
     /////////////////////////////////////////////////////////////////////////////////////////
 
     template <class G, class S, class Tag>
-    int flow_graph<G, S, Tag>::apply_kernel(NumbaFlowKernel& kernel, NumbaFlowKernelData& data)
+    template <class FK, class FKD>
+    int flow_graph<G, S, Tag>::apply_kernel(FK& kernel, FKD& data)
     {
         int ret;
         if (kernel.n_threads > 1)
-            ret = apply_kernel_par2(kernel, data);
+            ret = apply_kernel_par(kernel, data);
         else
-            ret = apply_kernel_seq2(kernel, data);
+            ret = apply_kernel_seq(kernel, data);
 
         return ret;
     }

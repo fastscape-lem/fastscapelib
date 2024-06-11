@@ -621,8 +621,10 @@ add_flow_graph_bindings(py::module& m)
             else
             {
                 py::gil_scoped_release release;
-                return flow_graph.apply_kernel((fs::NumbaFlowKernel&) kernel,
-                                               (fs::NumbaFlowKernelData&) kernel_data);
+                auto fs_kernel = (fs::NumbaFlowKernel&) kernel;
+                auto fs_kernel_data = (fs::NumbaFlowKernelData&) kernel_data;
+
+                return flow_graph.apply_kernel(fs_kernel, fs_kernel_data);
             }
         });
 
