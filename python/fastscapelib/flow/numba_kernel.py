@@ -4,12 +4,12 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Callable, Any, Iterable, Union, ClassVar
 
 import numba as nb
 import numpy as np
 
-from fastscapelib.flow import Kernel, KernelApplicationOrder, KernelData
+from fastscapelib.flow import Kernel, KernelApplicationOrder, KernelData, FlowGraph
 
 
 class ConstantAssignmentVisitor(ast.NodeVisitor):
@@ -135,6 +135,8 @@ class NumbaKernelData:
 
 @dataclass
 class NumbaKernel:
+    """Stores a kernel"""
+
     kernel: Kernel
     node_data_create: None
     node_data_init: None
@@ -145,18 +147,32 @@ class NumbaKernel:
 
 
 def create_flow_kernel(*args, **kwargs) -> Tuple[NumbaKernel, NumbaKernelData]:
+    """Creates a numba flow kernel.
+
+    Conveniance function to call a `NumbaFlowKernelFactory` and return
+    the kernel and associated data.
+    """
     factory = NumbaFlowKernelFactory(*args, **kwargs)
     return factory.kernel, factory.data
 
 
 class NumbaFlowKernelFactory:
+    """Creates a numba flow kernel.
+
+    This factory is in charge of the heavy duty of creating a numba
+    flow kernel from a kernel function and associated specs and options.
+
+    It successively creates and compiles required jitclasses and functions
+    to be used as a kernel (functions) and data.
+    """
+
     def __init__(
         self,
-        flow_graph,
-        kernel_func,
-        spec,
-        application_order,
-        outputs=(),
+        flow_graph: FlowGraph,
+        kernel_func: Callable[["FlowKernelNodeData"], int],
+        spec: Dict[str, Union[nb.core.types.Type, Tuple[nb.core.types.Type, Any]]],
+        application_order: KernelApplicationOrder,
+        outputs: Iterable[str] = (),
         max_receivers: int = -1,
         n_threads: int = 1,
         print_generated_code: bool = False,
@@ -385,7 +401,9 @@ class NumbaFlowKernelFactory:
         )
 
     @staticmethod
-    def _is_variable_assigned_in_function(function, variable_name):
+    def _is_variable_assigned_in_function(
+        function: Callable, variable_name: str
+    ) -> bool:
         source_code = inspect.getsource(function)
         tree = ast.parse(dedent(source_code))
         visitor = ConstantAssignmentVisitor(
@@ -452,7 +470,7 @@ class NumbaFlowKernelFactory:
             compiled_func.fndesc.llvm_cfunc_wrapper_name
         )
 
-    def _set_node_data_create(self, cls, func):
+    def _set_node_data_create(self, cls: ClassVar, func: Callable):
         """Sets the pointer to the node data create function.
 
         The node data create function is called by a compute thread
@@ -493,20 +511,29 @@ class NumbaFlowKernelFactory:
         self._build_data_jitclass()
 
     @staticmethod
-    def _generate_jitclass(name, spec, init_source, glbls={}):
+    def _generate_jitclass(
+        name,
+        spec: Tuple[Tuple[str, nb.core.types.Type]],
+        init_source: str,
+        glbls: dict = {},
+    ):
         exec(init_source, glbls)
         ctor = glbls["generated_init"]
         return nb.experimental.jitclass(spec)(type(name, (), {"__init__": ctor}))
 
     @staticmethod
-    def _get_spec_type(item):
+    def _get_spec_type(
+        item: Union[nb.core.types.Type, Tuple[nb.core.types.Type, Any]]
+    ) -> nb.core.types.Type:
         if issubclass(item.__class__, nb.core.types.Type):
             return item
 
         return item[0]
 
     @staticmethod
-    def _get_spec_value(item):
+    def _get_spec_value(
+        item: Union[nb.core.types.Type, Tuple[nb.core.types.Type, Any]]
+    ) -> Any:
         if issubclass(item.__class__, nb.core.types.Type):
             return
 
@@ -715,7 +742,7 @@ class NumbaFlowKernelFactory:
     _indent8 = _indent4 * 2
     _indent12 = _indent4 * 3
 
-    def _build_node_data_getter(self, max_receivers):
+    def _build_node_data_getter(self, max_receivers: int):
         """Builds a node data getter from the global data
 
         The node data getter is called prior to the flow kernel to
@@ -851,12 +878,12 @@ class NumbaFlowKernelFactory:
 
 @nb.njit
 def py_apply_kernel_impl(
-    indices,
-    func,
-    data,
-    node_data,
-    node_data_getter,
-    node_data_setter,
+    indices: np.ndarray,
+    func: Callable[["FlowKernelNodeData"], int],
+    data: "FlowKernelData",
+    node_data: "FlowKernelNodeData",
+    node_data_getter: Callable[[int, "FlowKernelData", "FlowKernelNodeData"], int],
+    node_data_setter: Callable[[int, "FlowKernelNodeData", "FlowKernelData"], int],
 ):
     """Applies a kernel on a grid.
 
@@ -883,7 +910,9 @@ def py_apply_kernel_impl(
     return 0
 
 
-def py_apply_kernel(flow_graph, nb_kernel, data):
+def py_apply_kernel(
+    flow_graph: FlowGraph, nb_kernel: NumbaKernel, data: NumbaKernelData
+):
     """Applies a kernel on a grid.
 
     This wrapper function calls the Python jitted implementation
@@ -912,13 +941,3 @@ def py_apply_kernel(flow_graph, nb_kernel, data):
         nb_kernel.node_data_getter,
         nb_kernel.node_data_setter,
     )
-
-
-class NumbaEroderBase:
-    spec: dict
-
-    def __init__(self):
-        pass
-
-    def erode(self):
-        pass
