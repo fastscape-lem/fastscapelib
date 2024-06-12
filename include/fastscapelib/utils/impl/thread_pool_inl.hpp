@@ -261,7 +261,7 @@ namespace fastscapelib
                 m_num_blocks = total_size;
 
             if (total_size / m_num_blocks < min_size_)
-                m_num_blocks = std::max(1UL, total_size / min_size_);
+                m_num_blocks = std::max(std::size_t{ 1 }, total_size / min_size_);
 
             m_block_size = total_size / m_num_blocks;
             m_remainder = total_size % m_num_blocks;
