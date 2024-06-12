@@ -480,7 +480,6 @@ class NumbaFlowKernelFactory:
 
     @staticmethod
     def _get_spec_type(item):
-
         if issubclass(item.__class__, nb.core.types.Type):
             return item
 
