@@ -113,6 +113,9 @@ class NumbaKernelData:
     def bind(self, **kwargs):
         for name, value in kwargs.items():
             if name in self._grid_data_ty:
+                if type(value) in (float, int):
+                    value = np.full((self._grid_size,), value)
+
                 if value.shape != (self._grid_size,):
                     raise ValueError(
                         f"Invalid shape {value.shape} for data '{name}' (must be {(self._grid_size,)})"
