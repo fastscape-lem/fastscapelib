@@ -153,26 +153,9 @@ class NumbaFlowKernelFactory:
             self._n_threads = n_threads
             self._application_order = application_order
 
-            spec_ty = {name: self._get_type(ty) for name, ty in spec.items()}
-            self._grid_data_ty = {
-                name: ty
-                for name, ty in spec_ty.items()
-                if issubclass(ty.__class__, nb.core.types.Array)
-            }
-            self._scalar_data_ty = {
-                name: ty
-                for name, ty in spec_ty.items()
-                if name not in self._grid_data_ty
-            }
-            self._init_values = {
-                name: value
-                for name, value in spec.items()
-                if not issubclass(value.__class__, nb.core.types.Type)
-            }
             self._bound_data = set()
 
-            self._validate_spec()
-
+            self._set_interfaces()
             self._build_fs_kernel()
 
     @property
@@ -231,7 +214,34 @@ class NumbaFlowKernelFactory:
         self._kernel.n_threads = self._n_threads
         self._kernel.application_order = self._application_order
 
-    def _validate_spec(self):
+    def _set_interfaces(self):
+        for name, item in self._spec.items():
+            if issubclass(item.__class__, nb.core.types.Type):
+                continue
+
+            try:
+                ty, value = item
+            except ValueError:
+                raise ValueError(
+                    f"'{name}' specification must be either a type or (type, default_value) iterable"
+                )
+
+        spec_ty = {name: self._get_spec_type(ty) for name, ty in self._spec.items()}
+        self._grid_data_ty = {
+            name: ty
+            for name, ty in spec_ty.items()
+            if issubclass(ty.__class__, nb.core.types.Array)
+        }
+        self._scalar_data_ty = {
+            name: ty for name, ty in spec_ty.items() if name not in self._grid_data_ty
+        }
+
+        self._init_values = {}
+        for name, item in self._spec.items():
+            value = self._get_spec_value(item)
+            if value is not None:
+                self._init_values[name] = value
+
         invalid_outputs = [name for name in self._outputs if name not in self._spec]
         if invalid_outputs:
             raise KeyError(
@@ -469,10 +479,23 @@ class NumbaFlowKernelFactory:
         return nb.experimental.jitclass(spec)(type(name, (), {"__init__": ctor}))
 
     @staticmethod
-    def _get_type(value):
-        if issubclass(value.__class__, nb.core.types.Type):
+    def _get_spec_type(item):
+
+        if issubclass(item.__class__, nb.core.types.Type):
+            return item
+
+        return item[0]
+
+    @staticmethod
+    def _get_spec_value(item):
+        if issubclass(item.__class__, nb.core.types.Type):
+            return
+
+        try:
+            _, value = item
             return value
-        return nb.typeof(value)
+        except TypeError:
+            pass
 
     def _build_node_data_jitclass(self):
         """Builds a node data jitclass.

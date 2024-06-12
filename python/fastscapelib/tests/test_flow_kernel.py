@@ -170,7 +170,7 @@ class TestFlowKernelData:
             flow_graph,
             kernel_func1,
             spec=dict(
-                a=np.ones(flow_graph.size, dtype=np.float32) * 1.15,
+                a=(nb.float32[::1], np.ones(flow_graph.size, dtype=np.float32) * 1.15),
             ),
             outputs=["a"],
             application_order=KernelApplicationOrder.ANY,
@@ -187,7 +187,7 @@ class TestFlowKernelData:
             flow_graph,
             kernel_func1,
             spec=dict(
-                a=a,
+                a=(nb.float32[::1], a),
             ),
             outputs=["a"],
             application_order=KernelApplicationOrder.ANY,
@@ -231,7 +231,7 @@ class TestFlowKernel:
                 flow_graph,
                 kernel_func1,
                 spec=dict(
-                    a=10.0,
+                    a=(nb.float64, 10.0),
                 ),
                 outputs=["a"],
                 application_order=KernelApplicationOrder.ANY,
@@ -243,7 +243,7 @@ class TestFlowKernel:
                 flow_graph,
                 kernel_func1,
                 spec=dict(
-                    a=10.0,
+                    a=(nb.float64, 10.0),
                 ),
                 outputs=["b"],
                 application_order=KernelApplicationOrder.ANY,
