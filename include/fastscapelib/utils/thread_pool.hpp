@@ -62,7 +62,8 @@ namespace fastscapelib
              */
             blocks(const T& first_index_,
                    const T& index_after_last_,
-                   const std::size_t num_blocks_);
+                   const std::size_t num_blocks_,
+                   const std::size_t min_size_ = 0);
 
             /**
              * @brief Get the first index of a block.
@@ -99,7 +100,10 @@ namespace fastscapelib
         };  // class blocks
 
         template <typename F>
-        void run_blocks(const T first_index, const T index_after_last, F&& func);
+        void run_blocks(const T first_index,
+                        const T index_after_last,
+                        F&& func,
+                        const std::size_t min_size = 0);
 
     private:
         std::vector<std::thread> workers;

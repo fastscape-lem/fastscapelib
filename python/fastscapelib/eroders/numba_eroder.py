@@ -67,5 +67,21 @@ class NumbaEroderBase(metaclass=NumbaEroderType):
     def n_threads(self, value):
         self._kernel.kernel.n_threads = value
 
+    @property
+    def min_block_size(self):
+        return self._kernel.kernel.min_block_size
+
+    @min_block_size.setter
+    def min_block_size(self, value):
+        self._kernel.kernel.min_block_size = value
+
+    @property
+    def min_level_size(self):
+        return self._kernel.kernel.min_level_size
+
+    @min_level_size.setter
+    def min_level_size(self, value):
+        self._kernel.kernel.min_level_size = value
+
     def apply_kernel(self):
         self._flow_graph.apply_kernel(self._kernel, self._data)

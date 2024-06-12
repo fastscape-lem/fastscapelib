@@ -214,13 +214,16 @@ namespace fastscapelib
 
     template <class T>
     template <typename F>
-    void thread_pool<T>::run_blocks(const T first_index, const T index_after_last, F&& func)
+    void thread_pool<T>::run_blocks(const T first_index,
+                                    const T index_after_last,
+                                    F&& func,
+                                    const std::size_t min_size)
     {
         std::vector<std::function<void()>> jobs(m_size);
 
         if (index_after_last > first_index)
         {
-            const blocks blks(first_index, index_after_last, m_size);
+            const blocks blks(first_index, index_after_last, m_size, min_size);
 
             for (T i = 0; i < m_size; ++i)
             {
@@ -245,7 +248,8 @@ namespace fastscapelib
     template <class T>
     thread_pool<T>::blocks::blocks(const T& first_index_,
                                    const T& index_after_last_,
-                                   const std::size_t num_blocks_)
+                                   const std::size_t num_blocks_,
+                                   const std::size_t min_size_)
         : m_first_index(first_index_)
         , m_index_after_last(index_after_last_)
         , m_num_blocks(num_blocks_)
@@ -255,6 +259,10 @@ namespace fastscapelib
             const std::size_t total_size = static_cast<size_t>(m_index_after_last - m_first_index);
             if (m_num_blocks > total_size)
                 m_num_blocks = total_size;
+
+            if (total_size / m_num_blocks < min_size_)
+                m_num_blocks = std::max(1UL, total_size / min_size_);
+
             m_block_size = total_size / m_num_blocks;
             m_remainder = total_size % m_num_blocks;
             if (m_block_size == 0)

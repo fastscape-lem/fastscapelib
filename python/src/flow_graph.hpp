@@ -317,6 +317,8 @@ namespace fastscapelib
         void (*node_data_init)(NumbaJitClass, NumbaJitClass);  ///< node data init
         void (*node_data_free)(NumbaJitClass);                 ///< node data destructor
         int n_threads;                                         ///< threads count
+        int min_block_size;                          ///< minimum block size per execution thread
+        int min_level_size;                          ///< minimum level size for parallel execution
         kernel_application_order application_order;  ///< traversal order for kernel application
     };
 
@@ -725,6 +727,8 @@ namespace fastscapelib
         std::uintptr_t node_data_init_ptr;
         std::uintptr_t node_data_free_ptr;
         int n_threads;
+        int min_block_size;
+        int min_level_size;
         kernel_application_order application_order;
     };
 

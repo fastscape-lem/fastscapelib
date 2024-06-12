@@ -30,6 +30,8 @@ namespace fastscapelib
         std::function<void(void*, void*)> node_data_init;
         std::function<void(void*)> node_data_free;
         int n_threads;
+        int min_block_size;
+        int min_level_size;
         kernel_application_order application_order
             = kernel_application_order::ANY;  ///< order for kernel application
     };

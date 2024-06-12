@@ -395,7 +395,14 @@ namespace fastscapelib
 
         for (std::size_t i = 1; i < levels->size(); ++i)
         {
-            m_thread_pool.run_blocks((*levels)[i - 1], (*levels)[i], run);
+            const size_type first_idx = (*levels)[i - 1];
+            const size_type after_last_idx = (*levels)[i];
+            const size_type level_size = after_last_idx - first_idx;
+
+            if (level_size < kernel.min_level_size)
+                run(0, first_idx, after_last_idx);
+            else
+                m_thread_pool.run_blocks(first_idx, after_last_idx, run, kernel.min_block_size);
         }
 
         for (std::size_t i = 0; i < n_threads; ++i)
