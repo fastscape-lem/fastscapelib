@@ -39,7 +39,7 @@ class NumbaEroderType(type):
         return instance
 
 
-class NumbaEroderBase(metaclass=NumbaEroderType):
+class NumbaEroderFlowKernel(metaclass=NumbaEroderType):
     def __init__(self, flow_graph, max_receivers=1, n_threads=1):
         self._flow_graph = flow_graph
         self._kernel, self._data = create_flow_kernel(
@@ -52,11 +52,11 @@ class NumbaEroderBase(metaclass=NumbaEroderType):
             application_order=self.application_order,
         )
 
-    def set_data(self, **kwargs):
+    def set_kernel_data(self, **kwargs):
         self._data.bind(**kwargs)
 
     @property
-    def data(self):
+    def kernel_data(self):
         return self._data
 
     @property
