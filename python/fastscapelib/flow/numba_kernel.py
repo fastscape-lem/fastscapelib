@@ -4,12 +4,12 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
-from typing import Dict, List, Tuple, Callable, Any, Iterable, Union, ClassVar
+from typing import Any, Callable, ClassVar, Dict, Iterable, List, Tuple, Union
 
 import numba as nb
 import numpy as np
 
-from fastscapelib.flow import Kernel, KernelApplicationOrder, KernelData, FlowGraph
+from fastscapelib.flow import FlowGraph, Kernel, KernelApplicationOrder, KernelData
 
 
 class ConstantAssignmentVisitor(ast.NodeVisitor):
