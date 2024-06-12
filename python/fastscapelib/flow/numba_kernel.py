@@ -4,7 +4,7 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
-from typing import Tuple
+from typing import Dict, List, Tuple
 
 import numba as nb
 import numpy as np
@@ -19,10 +19,11 @@ class ConstantAssignmentVisitor(ast.NodeVisitor):
         self.assigned = False
         self.aliases = {obj_name}
 
-    def visit_Assign(self, node):
+    def visit_Assign(self, node: ast.Assign) -> None:
         """Visits a assignment nodes to search for invalid scalar variable.
 
-        A scalar variable is passed to all node data
+        A scalar variable is passed to all node data and should not be mutated by
+        a kernel.
         """
         for target in node.targets:
             if isinstance(target, ast.Attribute) and target.attr == self.member_name:
@@ -37,7 +38,7 @@ class ConstantAssignmentVisitor(ast.NodeVisitor):
                     self.aliases.add(target.id)
         self.generic_visit(node)
 
-    def visit_AugAssign(self, node):
+    def visit_AugAssign(self, node: ast.AugAssign) -> None:
         # Check if the augmented assignment target is an attribute of the object or its aliases
         target = node.target
         if isinstance(target, ast.Attribute) and target.attr == self.member_name:
@@ -47,7 +48,7 @@ class ConstantAssignmentVisitor(ast.NodeVisitor):
 
 
 @contextmanager
-def timer(msg: str, do_print: bool):
+def timer(msg: str, do_print: bool) -> None:
     """Times and prints a code block."""
 
     start_time = time.time()
@@ -59,7 +60,20 @@ def timer(msg: str, do_print: bool):
 
 
 class NumbaKernelData:
-    def __init__(self, grid_size, spec_keys, grid_data_ty, data):
+    """Proxy class to expose kernel data.
+
+    This class implements getters and setters to access and update
+    kernel data, but also convenient properties and methods to
+    access numba jitclass and data validation.
+    """
+
+    def __init__(
+        self,
+        grid_size: int,
+        spec_keys: List[str],
+        grid_data_ty: Dict[str, nb.core.types.Type],
+        data: "FlowKernelData",
+    ):
         super().__setattr__("_data", data)
         self._grid_size = grid_size
         self._spec_keys = spec_keys
@@ -76,11 +90,17 @@ class NumbaKernelData:
     def __getattr__(self, name):
         return getattr(self._data, name)
 
+    def __getitem__(self, name):
+        return getattr(self._data, name)
+
     def __setattr__(self, name, value):
         if name in self._data._numba_type_.struct:
             self.bind(**{name: value})
         else:
             super().__setattr__(name, value)
+
+    def __setitem__(self, name, value):
+        setattr(self, name, value)
 
     @property
     def jitclass(self):

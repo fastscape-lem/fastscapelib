@@ -138,6 +138,22 @@ class TestFlowKernelData:
         data.a = np.zeros(flow_graph.size)
         assert data.bound == {"a"}
 
+    def test_getattr_setattr(self, kernel2_data):
+        data = kernel2_data
+
+        data.int64 = 10
+        assert data["int64"] == 10
+        assert data.int64 == 10
+        assert data._data.int64 == 10
+
+    def test_getitem_setitem(self, kernel2_data):
+        data = kernel2_data
+
+        data["int64"] = 11
+        assert data["int64"] == 11
+        assert data.int64 == 11
+        assert data._data.int64 == 11
+
     def test_multiple_bindings(self, flow_graph, kernel1_data):
         data = kernel1_data
 
