@@ -1,20 +1,11 @@
 import ast
 import inspect
+import sys
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    ParamSpec,
-    Protocol,
-    Type,
-    TypeVar,
-    cast,
-)
+from typing import Any, Callable, Iterable, Iterator, Protocol, Type, TypeVar, cast
 
 import numba as nb
 import numpy as np
@@ -22,6 +13,11 @@ from numba.core.types import Array as NumbaArray  # type: ignore[missing-imports
 from numba.core.types import Type as NumbaType  # type: ignore[missing-imports]
 
 from fastscapelib.flow import FlowGraph, Kernel, KernelApplicationOrder, KernelData
+
+if sys.version_info < (3, 10):
+    from typing_extensions import ParamSpec
+else:
+    from typing import ParamSpec
 
 
 class ConstantAssignmentVisitor(ast.NodeVisitor):
