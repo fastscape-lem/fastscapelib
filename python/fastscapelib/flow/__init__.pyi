@@ -1,11 +1,7 @@
-import ast
-from dataclasses import dataclass
-from typing import Any, Callable, ClassVar, Iterable, List, Union, overload
+from typing import Any, ClassVar, List, Union, overload
 
-import numba as nb
 import numpy as np
 import numpy.typing as npt
-from _typeshed import Incomplete
 
 from fastscapelib.grid import ProfileGrid, RasterGrid, TriMesh
 
@@ -212,6 +208,10 @@ class KernelApplicationOrder:
 
 class Kernel:
     def __init__(self) -> None: ...
+    @property
+    def func(self) -> int: ...
+    @func.setter
+    def func(self, value: int) -> None: ...
     @property
     def node_data_getter(self) -> int: ...
     @node_data_getter.setter

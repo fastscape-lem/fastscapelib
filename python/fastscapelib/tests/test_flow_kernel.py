@@ -1,24 +1,19 @@
-from textwrap import dedent
-
 import numba as nb
 import numpy as np
-import numpy.testing as npt
 import pytest
 
 from fastscapelib.flow import (
     FlowGraph,
-    FlowSnapshot,
     KernelApplicationOrder,
     MultiFlowRouter,
     PFloodSinkResolver,
-    SingleFlowRouter,
-    create_flow_kernel,
 )
-from fastscapelib.grid import NodeStatus, ProfileGrid, RasterGrid
+from fastscapelib.flow.numba_kernel import create_flow_kernel
+from fastscapelib.grid import NodeStatus, RasterGrid
 
 
 @pytest.fixture(scope="module")
-def flow_graph() -> None:
+def flow_graph():
     raster_grid = RasterGrid([5, 5], [2.2, 2.4], NodeStatus.FIXED_VALUE)
     flow_graph = FlowGraph(raster_grid, [PFloodSinkResolver(), MultiFlowRouter()])
     yield flow_graph
@@ -34,7 +29,7 @@ def kernel_func1():
 
 @pytest.fixture(scope="module")
 def kernel_func2():
-    def kernel_func(node):
+    def kernel_func(_):
         pass
 
     yield kernel_func
@@ -127,13 +122,13 @@ def kernel3_data(compiled_kernel3):
 
 class TestFlowKernelData:
     def test_bind(self, flow_graph, kernel1, kernel1_data):
-        kernel, data = kernel1, kernel1_data
+        _, data = kernel1, kernel1_data
 
         data.a = np.zeros(flow_graph.size)
         assert data.bound == {"a"}
 
     def test_setattr_bindings(self, flow_graph, kernel1, kernel1_data):
-        kernel, data = kernel1, kernel1_data
+        _, data = kernel1, kernel1_data
 
         data.a = np.zeros(flow_graph.size)
         assert data.bound == {"a"}
@@ -182,7 +177,7 @@ class TestFlowKernelData:
             flow_graph.apply_kernel(kernel1, kernel1_data)
 
     def test_inline_bindings(self, flow_graph, kernel_func1):
-        kernel, data = create_flow_kernel(
+        _, data = create_flow_kernel(
             flow_graph,
             kernel_func1,
             spec=dict(
@@ -199,7 +194,7 @@ class TestFlowKernelData:
     def test_ref_bindings(self, flow_graph, kernel_func1):
         a = np.ones(flow_graph.size, dtype=np.float32) * 1.15
 
-        kernel, data = create_flow_kernel(
+        _, data = create_flow_kernel(
             flow_graph,
             kernel_func1,
             spec=dict(
@@ -265,7 +260,7 @@ class TestFlowKernel:
                 application_order=KernelApplicationOrder.ANY,
             )
 
-    def test_invalid_grid_data_shape(self, flow_graph, kernel_func1):
+    def test_invalid_grid_data_shape(self, flow_graph):
         with pytest.raises(AttributeError):
             kernel1.bind_data(a=np.zeros(flow_graph.size - 1))
 
@@ -338,7 +333,7 @@ class TestFlowKernel:
         assert hasattr(node_data, "_numba_type_")
         assert hasattr(node_data, "a")
 
-    def test_node_data_init(self, kernel1, kernel1_data, kernel3, kernel3_data):
+    def test_node_data_init(self, kernel1, kernel3, kernel3_data):
         assert kernel1.node_data_init is None
         assert kernel3.node_data_init is not None
 
