@@ -19,7 +19,7 @@ Fastscapelib (also illustrated in {ref}`Figure 1 <fig_grid_types>`).
 * - C++ / Python Class
   - Properties
   - Usage Examples
-* - {cpp:class}`~fastscapelib::profile_grid_xt` {py:class}`~fastscapelib.ProfileGrid`
+* - {cpp:class}`~fastscapelib::profile_grid` {py:class}`~fastscapelib.ProfileGrid`
   - 1-dimensional, uniform, static
   - Evolution of a river longitudinal profile, hillslope or escarpment cross-section.
 
