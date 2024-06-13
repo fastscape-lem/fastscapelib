@@ -398,7 +398,7 @@ namespace fastscapelib
     }
 
     /**
-     * @typedef profile_grid
+     * @typedef profile_grid_xt
      *
      * \rst
      * Alias template on ``profile_grid`` with :cpp:type:`xt::xtensor`

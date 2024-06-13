@@ -1028,7 +1028,7 @@ namespace fastscapelib
     }
 
     /**
-     * @typedef raster_grid
+     * @typedef raster_grid_xt
      *
      * \rst
      * Alias template on ``raster_grid`` with :cpp:type:`xt::xtensor`
