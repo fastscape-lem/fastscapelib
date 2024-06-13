@@ -26,7 +26,9 @@ namespace fastscapelib
      * \endrst
      *
      */
-    struct xt_selector;
+    struct xt_selector
+    {
+    };
 
     /**
      * Defines the container types for the `xt_selector` container selector.

@@ -6,7 +6,7 @@ Utilities
 Xtensor container selectors
 ---------------------------
 
-Defined in ``fastscapelib/utils/xtensor_utils.hpp``
+Defined in ``fastscapelib/utils/xtensor_containers.hpp``
 
 Most Fastscapelib data structures (i.e., grids, flow graph, etc.) expose a
 template parameter that allows setting the type of xtensor container to use for

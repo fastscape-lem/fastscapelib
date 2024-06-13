@@ -26,7 +26,7 @@ Fastscapelib (also illustrated in {ref}`Figure 1 <fig_grid_types>`).
     Solving flow routing or differential equations in this special case is often
     trivial, but this grid is still is useful for quickly switching between
     the 1D and 2D cases without the need to re-implement anything.
-* - {cpp:class}`~fastscapelib::raster_grid_xt` {py:class}`~fastscapelib.RasterGrid`
+* - {cpp:class}`~fastscapelib::raster_grid` {py:class}`~fastscapelib.RasterGrid`
   - 2-dimensional, rectangular, uniform, static
   - Evolution of an hillslope, escarpment, drainage basin, orogenic belt, etc.
 * - {cpp:class}`~fastscapelib::trimesh_xt`
@@ -450,12 +450,12 @@ given grid node or only the neighbor (flat) indices or the distances from one
 node to its neighbors, you can use the alternative methods
 ``neighbors_count()``, ``neighbors_indices()`` and ``neighbors_distances()``.
 
-{cpp:class}`~fastscapelib::raster_grid_xt` (C++) also provides some method
+{cpp:class}`~fastscapelib::raster_grid` (C++) also provides some method
 overloads to use row and column indices instead of grid flat indices.
 
 ### Raster Grid Connectivity
 
-{cpp:class}`~fastscapelib::raster_grid_xt` (C++) exposes a template parameter
+{cpp:class}`~fastscapelib::raster_grid` (C++) exposes a template parameter
 that allows choosing the grid connectivity among three modes (see
 {cpp:enum}`~fastscapelib::raster_connect` and {ref}`Figure 2
 <fig_raster_connect>`):
@@ -488,7 +488,7 @@ boundaries. Caveat: this speed-up is achieved at the expense of memory
 consumption.
 
 The cache is exposed as a template parameter for
-{cpp:class}`~fastscapelib::raster_grid_xt` so that this behavior may be
+{cpp:class}`~fastscapelib::raster_grid` so that this behavior may be
 customized (cache may be disabled). For other grid types like
 {cpp:class}`~fastscapelib::trimesh_xt` with explicit topology, the
 cache is not needed and not used.

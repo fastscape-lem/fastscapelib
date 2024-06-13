@@ -13,7 +13,9 @@
 
 namespace fastscapelib
 {
-    struct eigen_selector;
+    struct eigen_selector
+    {
+    };
 
     template <class T, std::size_t N>
     struct container_selection<eigen_selector, T, N>
