@@ -1,7 +1,11 @@
-from typing import ClassVar, List, Union, overload
+import ast
+from dataclasses import dataclass
+from typing import Any, Callable, ClassVar, Iterable, List, Union, overload
 
+import numba as nb
 import numpy as np
 import numpy.typing as npt
+from _typeshed import Incomplete
 
 from fastscapelib.grid import ProfileGrid, RasterGrid, TriMesh
 
@@ -181,18 +185,9 @@ class FlowGraph:
     def accumulate(self, src: float) -> npt.NDArray[np.float64]: ...
     def basins(self) -> npt.NDArray[np.uint64]:
         ... @ property
-
     @property
     def size(self) -> int: ...
     def __repr__(self) -> str: ...
-
-import ast
-import numba as nb
-import numpy as np
-from _typeshed import Incomplete
-from dataclasses import dataclass
-
-from typing import Any, Callable, Iterable
 
 class KernelApplicationOrder:
     ANY: ClassVar[KernelApplicationOrder] = ...

@@ -10,11 +10,11 @@ from typing import (
     ClassVar,
     Dict,
     Iterable,
+    Iterator,
     List,
+    Never,
     Tuple,
     Union,
-    Iterator,
-    Never,
 )
 
 import numba as nb
@@ -60,7 +60,8 @@ class ConstantAssignmentVisitor(ast.NodeVisitor):
 
 class FlowKernelData:
     @property
-    def data(self) -> Any: ...
+    def data(self) -> Any:
+        ...
 
 
 class FlowKernelNodeData:
