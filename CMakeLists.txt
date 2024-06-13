@@ -69,7 +69,7 @@ elseif(FS_DOWNLOAD_XTENSOR)
 
     FetchContent_MakeAvailable(xtensor)
 
-else
+else()
     find_package(xtensor REQUIRED)
     message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 endif()
