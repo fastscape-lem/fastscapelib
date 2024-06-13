@@ -24,7 +24,7 @@ namespace fastscapelib
         class single_flow_router__profile : public ::testing::Test
         {
         protected:
-            using grid_type = fs::profile_grid_xt;
+            using grid_type = fs::profile_grid<>;
             using size_type = typename grid_type::size_type;
             using flow_graph_type = fs::flow_graph<grid_type>;
 
@@ -149,7 +149,7 @@ namespace fastscapelib
         class single_flow_router__raster_base : public ::testing::Test
         {
         protected:
-            using size_type = typename fs::raster_grid_xt::size_type;
+            using size_type = typename fs::raster_grid<>::size_type;
 
             size_type n = static_cast<size_type>(4);
             std::array<size_type, 2> shape{ { n, n } };

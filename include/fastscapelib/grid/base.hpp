@@ -272,8 +272,8 @@ namespace fastscapelib
      *
      * \rst
      * .. seealso::
-     *   :cpp:class:`~template\<class S, class C> fastscapelib::grid_inner_types\<profile_grid_xt\<S, C>>`,
-     *   :cpp:class:`~template\<class S, raster_connect RC, class C> fastscapelib::grid_inner_types\<raster_grid_xt\<S, RC, C>>`,
+     *   :cpp:class:`~template\<class S, class C> fastscapelib::grid_inner_types\<profile_grid\<S, C>>`,
+     *   :cpp:class:`~template\<class S, raster_connect RC, class C> fastscapelib::grid_inner_types\<raster_grid\<S, RC, C>>`,
      *   :cpp:class:`~template\<class S, unsigned int N> fastscapelib::grid_inner_types\<trimesh_xt\<S, N>>`
      * \endrst
      */

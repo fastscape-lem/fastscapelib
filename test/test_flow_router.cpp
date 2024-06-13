@@ -66,7 +66,7 @@ namespace fastscapelib
         class flow_router_base : public ::testing::Test
         {
         protected:
-            using grid_type = fs::raster_grid_xt;
+            using grid_type = fs::raster_grid<>;
             using flow_graph_type = fs::flow_graph<grid_type>;
             using size_type = typename grid_type::size_type;
 

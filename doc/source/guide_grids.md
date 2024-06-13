@@ -143,7 +143,7 @@ the grid or on the grid boundaries. See also the {doc}`examples/index`.
 namespace fs = fastscapelib;
 
 fs::profile_boundary_status bs(fs::node_status::fixed_value);
-auto grid = fs::profile_grid::from_length(501, 500.0, bs);
+auto grid = fs::profile_grid<>::from_length(501, 500.0, bs);
 ```
 
 ```{code-block} Python
@@ -283,14 +283,14 @@ xt::xarray<double> elevation = xt::random::rand<double>(grid.shape());
 //
 // setting a xt::xtensor with dimensions and data type from grid inner types
 //
-using dtype = fs::raster_grid::grid_data_type;
-using ndims = fs::grid_inner_types<fs::raster_grid>::container_ndims;
+using dtype = fs::raster_grid<>::grid_data_type;
+using ndims = fs::grid_inner_types<fs::raster_grid<>>::container_ndims;
 xt::xtensor<dtype, ndims> elevation_alt = xt::random::rand<dtype>(grid.shape());
 
 //
 // use the xtensor container selector set for the grid
 //
-using selector = fs::raster_grid::container_selector;
+using selector = fs::raster_grid<>::container_selector;
 using ctype = fs::container_selection<selector, dtype, ndims>::tensor_type;
 ctype elevation_alt2 = xt::random::rand<dtype>(grid.shape());
 ```
@@ -415,7 +415,7 @@ fs::raster_grid grid({ 101, 101 }, { 200.0, 200.0 }, bs);
 //
 // optimization: initialize the neighbors container out of the loops
 //
-fs::raster_grid::neighbors_type neighbors;
+fs::raster_grid<>::neighbors_type neighbors;
 
 for (auto& idx_flat : grid.nodes_indices())
 {

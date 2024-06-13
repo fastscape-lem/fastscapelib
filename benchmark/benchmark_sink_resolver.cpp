@@ -36,7 +36,7 @@ namespace fastscapelib
 
             // note: this is not the right operator order for pflood_sink_resolver
             // but for the benchmark we don't care
-            auto fgraph = fs::flow_graph<fs::raster_grid_xt>(
+            auto fgraph = fs::flow_graph<fs::raster_grid<>>(
                 grid, { fs::single_flow_router(), resolver_ptr });
 
             auto elevation = topo.elevation();
@@ -56,7 +56,7 @@ namespace fastscapelib
         {
             auto topo = bms::synthetic_topography_2d<surf_type::cone, double>(state.range(0));
             auto grid = topo.grid();
-            auto fgraph = fs::flow_graph<fs::raster_grid_xt>(
+            auto fgraph = fs::flow_graph<fs::raster_grid<>>(
                 grid, { fs::single_flow_router(), resolver_ptr });
 
             auto elevation = topo.elevation();
@@ -77,7 +77,7 @@ namespace fastscapelib
         {
             auto topo = bms::synthetic_topography_2d<surf_type::cone_inv, double>(state.range(0));
             auto grid = topo.grid();
-            auto fgraph = fs::flow_graph<fs::raster_grid_xt>(
+            auto fgraph = fs::flow_graph<fs::raster_grid<>>(
                 grid, { fs::single_flow_router(), resolver_ptr });
 
             auto elevation = topo.elevation();

@@ -40,10 +40,10 @@ namespace fastscapelib
         class raster_grid_base : public raster_boundary_status
         {
         protected:
-            using size_type = typename fs::raster_grid_xt::size_type;
-            using length_type = typename fs::raster_grid_xt::length_type;
-            using spacing_type = typename fs::raster_grid_xt::spacing_type;
-            using shape_type = typename fs::raster_grid_xt::shape_type;
+            using size_type = typename fs::raster_grid<>::size_type;
+            using length_type = typename fs::raster_grid<>::length_type;
+            using spacing_type = typename fs::raster_grid<>::spacing_type;
+            using shape_type = typename fs::raster_grid<>::shape_type;
 
             shape_type shape{ { 5, 10 } };
         };
@@ -51,7 +51,7 @@ namespace fastscapelib
         class raster_grid : public raster_grid_base
         {
         protected:
-            using grid_type = fs::raster_grid_xt;
+            using grid_type = fs::raster_grid<>;
 
             grid_type fixed_grid = grid_type(shape, { 1.3, 1.2 }, fixed_value_status);
             grid_type hlooped_grid = grid_type(shape, { 1.3, 1.2 }, hlooped_status);

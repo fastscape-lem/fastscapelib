@@ -115,11 +115,11 @@ namespace fastscapelib
         TEST(flow_operator, return_same_elevation_ref)
         {
             fs::raster_boundary_status bs{ fs::node_status::fixed_value };
-            auto grid = fs::raster_grid_xt({ 5, 5 }, { 1.0, 1.0 }, bs);
+            auto grid = fs::raster_grid({ 5, 5 }, { 1.0, 1.0 }, bs);
             xt::xarray<double> elevation = xt::zeros<double>(grid.shape());
 
             test_operator op;
-            auto graph = fs::flow_graph<fs::raster_grid_xt>(grid, { fake_operator() });
+            auto graph = fs::flow_graph<fs::raster_grid<>>(grid, { fake_operator() });
 
             const auto& actual = graph.update_routes(elevation);
 
@@ -131,11 +131,11 @@ namespace fastscapelib
         TEST(flow_operator, apply)
         {
             fs::raster_boundary_status bs{ fs::node_status::fixed_value };
-            auto grid = fs::raster_grid_xt({ 5, 5 }, { 1.0, 1.0 }, bs);
+            auto grid = fs::raster_grid({ 5, 5 }, { 1.0, 1.0 }, bs);
             xt::xarray<double> elevation = xt::zeros<double>(grid.shape());
 
             auto op = std::make_shared<test_operator>();
-            auto graph = fs::flow_graph<fs::raster_grid_xt>(grid, { op, fake_operator() });
+            auto graph = fs::flow_graph<fs::raster_grid<>>(grid, { op, fake_operator() });
 
             {
                 SCOPED_TRACE("test apply 1st pass");

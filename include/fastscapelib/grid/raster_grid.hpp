@@ -441,12 +441,12 @@ namespace fastscapelib
     /**
      * 2-dimensional uniform (raster) grid.
      *
-     * @tparam S The xtensor container selector for data array members.
+     * @tparam S The container selector for data array members.
      * @tparam RC The kind of raster node connectivity.
      * @tparam C The grid neighbor nodes cache type.
      */
-    template <class S,
-              raster_connect RC,
+    template <class S = xt_selector,
+              raster_connect RC = raster_connect::queen,
               class C = neighbors_cache<raster_neighbors<RC>::_n_neighbors_max>>
     class raster_grid
         : public structured_grid<raster_grid<S, RC, C>>
@@ -1026,18 +1026,6 @@ namespace fastscapelib
                               + static_cast<size_type>((offset)[1]) + idx;
         }
     }
-
-    /**
-     * @typedef raster_grid_xt
-     *
-     * \rst
-     * Alias template on ``raster_grid`` with :cpp:type:`xt::xtensor`
-     * used as array container type for data members and operations.
-     *
-     * This is mainly for convenience when using in C++ applications.
-     * \endrst
-     */
-    using raster_grid_xt = raster_grid<xt_selector, raster_connect::queen>;
 }
 
 #endif

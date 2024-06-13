@@ -18,8 +18,8 @@ namespace fastscapelib
         class multi_flow_router : public ::testing::Test
         {
         protected:
-            using size_type = typename fs::raster_grid_xt::size_type;
-            using grid_type = fs::raster_grid_xt;
+            using size_type = typename fs::raster_grid<>::size_type;
+            using grid_type = fs::raster_grid<>;
             using flow_graph_type = fs::flow_graph<grid_type>;
 
             // test on a 3x3 tiny grid with base levels at all border nodes

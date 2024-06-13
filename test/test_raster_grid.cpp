@@ -61,10 +61,10 @@ namespace fastscapelib
 
         TEST_F(raster_grid, static_expr)
         {
-            EXPECT_EQ(fs::raster_grid_xt::is_structured(), true);
-            EXPECT_EQ(fs::raster_grid_xt::is_uniform(), true);
-            EXPECT_EQ(fs::raster_grid_xt::n_neighbors_max(), 8u);
-            EXPECT_EQ(fs::raster_grid_xt::container_ndims(), 2);
+            EXPECT_EQ(fs::raster_grid<>::is_structured(), true);
+            EXPECT_EQ(fs::raster_grid<>::is_uniform(), true);
+            EXPECT_EQ(fs::raster_grid<>::n_neighbors_max(), 8u);
+            EXPECT_EQ(fs::raster_grid<>::container_ndims(), 2);
         }
 
         TEST_F(raster_grid, spacing)

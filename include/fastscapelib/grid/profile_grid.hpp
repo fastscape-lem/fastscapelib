@@ -131,7 +131,7 @@ namespace fastscapelib
      * @tparam S The xtensor container selector for data array members.
      * @tparam C The grid neighbor nodes cache type.
      */
-    template <class S, class C = neighbors_cache<2>>
+    template <class S = xt_selector, class C = neighbors_cache<2>>
     class profile_grid : public structured_grid<profile_grid<S, C>>
     {
     public:
@@ -396,18 +396,6 @@ namespace fastscapelib
             }
         }
     }
-
-    /**
-     * @typedef profile_grid_xt
-     *
-     * \rst
-     * Alias template on ``profile_grid`` with :cpp:type:`xt::xtensor`
-     * used as array container type for data members.
-     *
-     * This is mainly for convenience when using in C++ applications.
-     * \endrst
-     */
-    using profile_grid_xt = profile_grid<xt_selector>;
 }
 
 #endif

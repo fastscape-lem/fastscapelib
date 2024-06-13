@@ -87,7 +87,7 @@ namespace fastscapelib
         }
 
         using profile_nocache = fs::profile_grid<xt_selector, neighbors_no_cache<2>>;
-        using profile_cacheall = fs::profile_grid_xt;
+        using profile_cacheall = fs::profile_grid<>;
 
 #define BENCH_GRID(NAME, GRID)                                                                     \
     BENCHMARK_TEMPLATE(NAME, GRID)->Arg(512)->Unit(benchmark::kNanosecond);

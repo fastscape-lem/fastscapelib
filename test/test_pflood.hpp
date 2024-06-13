@@ -24,7 +24,7 @@ namespace fastscapelib
         class sinks_raster_grid : public ::testing::Test
         {
         protected:
-            using grid_type = fs::raster_grid_xt;
+            using grid_type = fs::raster_grid<>;
             using flow_graph_type = fs::flow_graph<grid_type>;
             using shape_type = typename grid_type::shape_type;
             using elev_type = xt::xtensor<double, 2>;
@@ -60,7 +60,7 @@ namespace fastscapelib
         class sinks_profile_grid : public ::testing::Test
         {
         protected:
-            using grid_type = fs::profile_grid_xt;
+            using grid_type = fs::profile_grid<>;
             using flow_graph_type = fs::flow_graph<grid_type>;
             using elev_type = xt::xtensor<double, 1>;
 

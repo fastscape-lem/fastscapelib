@@ -25,16 +25,16 @@ namespace fs = fastscapelib;
 
 TEST(spl_eroder, ctor)
 {
-    using grid_type = fs::raster_grid_xt;
+    using grid_type = fs::raster_grid<>;
     using size_type = grid_type::size_type;
     using shape_type = grid_type::shape_type;
 
     double spacing = 300;
     shape_type shape{ 2, 2 };
 
-    auto grid = fs::raster_grid_xt(shape, { spacing, spacing }, fs::node_status::fixed_value);
+    auto grid = fs::raster_grid(shape, { spacing, spacing }, fs::node_status::fixed_value);
 
-    auto flow_graph = fs::flow_graph<fs::raster_grid_xt>(grid, { fs::single_flow_router() });
+    auto flow_graph = fs::flow_graph<fs::raster_grid<>>(grid, { fs::single_flow_router() });
 
     double k_coef = 1e-3;
     double area_exp = 0.5;
@@ -65,7 +65,7 @@ TEST(spl_eroder, ctor)
     {
         SCOPED_TRACE("error for n != 1 and multiple flow directions");
 
-        auto flow_graph = fs::flow_graph<fs::raster_grid_xt>(grid, { fs::multi_flow_router(1.0) });
+        auto flow_graph = fs::flow_graph<fs::raster_grid<>>(grid, { fs::multi_flow_router(1.0) });
         auto eroder = fs::make_spl_eroder(flow_graph, k_coef, area_exp, 1, tolerance);
 
         EXPECT_THROW(eroder.set_slope_exp(1.5), std::invalid_argument);
@@ -88,7 +88,7 @@ public:
     }
 
 protected:
-    using flow_graph_type = fs::flow_graph<fs::profile_grid_xt>;
+    using flow_graph_type = fs::flow_graph<fs::profile_grid<>>;
     using size_type = typename flow_graph_type::size_type;
 
     size_type n_corr = 0;
@@ -117,8 +117,8 @@ protected:
     fs::profile_boundary_status left_base_level{ fs::node_status::fixed_value,
                                                  fs::node_status::core };
 
-    fs::profile_grid_xt grid
-        = fs::profile_grid_xt(static_cast<size_type>(nnodes), spacing, left_base_level);
+    fs::profile_grid<> grid
+        = fs::profile_grid(static_cast<size_type>(nnodes), spacing, left_base_level);
 
     template <class K>
     xt::xtensor<double, 1> get_steady_slope_numerical(flow_graph_type& flow_graph,
@@ -302,8 +302,8 @@ TEST(spl_eroder__raster_grid, tiny_grid)
 {
     namespace fs = fastscapelib;
 
-    using grid_type = fs::raster_grid_xt;
-    using flow_graph_type = fs::flow_graph<fs::raster_grid_xt>;
+    using grid_type = fs::raster_grid<>;
+    using flow_graph_type = fs::flow_graph<fs::raster_grid<>>;
     using size_type = grid_type::size_type;
     using shape_type = grid_type::shape_type;
 
@@ -315,7 +315,7 @@ TEST(spl_eroder__raster_grid, tiny_grid)
     fs::node_status core = fs::node_status::core;
     fs::raster_boundary_status top_base_level{ { core, core, fixed, core } };
 
-    auto grid = fs::raster_grid_xt(shape, { spacing, spacing }, top_base_level);
+    auto grid = fs::raster_grid(shape, { spacing, spacing }, top_base_level);
     auto flow_graph = flow_graph_type(grid, { fs::single_flow_router() });
 
     double k_coef = 1e-3;
@@ -368,7 +368,7 @@ TEST(spl_eroder__raster_grid, tiny_grid)
  */
 TEST(spl_eroder, convervation_of_mass)
 {
-    using grid_type = fs::raster_grid_xt;
+    using grid_type = fs::raster_grid<>;
     using flow_graph_type = fs::flow_graph<grid_type>;
     using size_type = typename grid_type::size_type;
 

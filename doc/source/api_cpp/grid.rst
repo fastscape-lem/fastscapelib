@@ -99,7 +99,6 @@ Defined in ``fastscapelib/grid/profile_grid.hpp``.
 - :cpp:class:`~fastscapelib::profile_boundary_status`
 - :cpp:class:`~template\<class S, class C> fastscapelib::grid_inner_types\<profile_gridprofile_grid\<S, C>>`,
 - :cpp:class:`~template\<class S, class C = neighbors_cache\<2>> fastscapelib::profile_grid`
-- :cpp:type:`~fastscapelib::profile_grid_xt`
 
 |
 
@@ -114,7 +113,6 @@ Defined in ``fastscapelib/grid/profile_grid.hpp``.
    :members:
    :undoc-members:
 
-.. doxygentypedef:: fastscapelib::profile_grid_xt
 
 |
 
@@ -129,7 +127,6 @@ Defined in ``fastscapelib/grid/raster_grid.hpp``.
 - :cpp:enum:`~fastscapelib::raster_connect`
 - :cpp:class:`~template\<class S, raster_connect RC, class C> fastscapelib::grid_inner_types\<raster_grid\<S, RC, C>>`
 - :cpp:class:`~template\<class S, raster_connect RC, class C = neighbors_cache\<raster_neighbors\<RC>::_n_neighbors_max>> fastscapelib::raster_grid`
-- :cpp:type:`~fastscapelib::raster_grid_xt`
 
 |
 
@@ -151,8 +148,6 @@ Defined in ``fastscapelib/grid/raster_grid.hpp``.
 .. doxygenclass:: fastscapelib::raster_grid
    :members:
    :undoc-members:
-
-.. doxygentypedef:: fastscapelib::raster_grid_xt
 
 |
 
