@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
+#include "fastscapelib/utils/containers.hpp"
 #include "xtensor/xstrided_view.hpp"
 
 #include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/flow/flow_operator.hpp"
-#include "fastscapelib/utils/xtensor_utils.hpp"
 
 
 namespace fastscapelib
@@ -214,7 +214,7 @@ namespace fastscapelib
     /////////////////////////////////////////////////////////////////////////////////////////
 
     template <class G, class S, class Tag>
-    auto flow_graph<G, S, Tag>::mask() const -> xt_array_t<xt_selector, bool>
+    auto flow_graph<G, S, Tag>::mask() const -> dynamic_shape_container_t<container_selector, bool>
     {
         return m_impl_ptr->mask();
     }

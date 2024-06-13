@@ -4,7 +4,6 @@
 #include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/flow/flow_kernel.hpp"
 #include "fastscapelib/flow/flow_operator.hpp"
-#include "fastscapelib/utils/xtensor_utils.hpp"
 #include "fastscapelib/utils/thread_pool.hpp"
 
 #include "xtensor/xstrided_view.hpp"
@@ -159,10 +158,7 @@ namespace fastscapelib
          * Return a mask of where elements with a value ``true`` correspond
          * to grid nodes that are not included in the flow graph.
          */
-        dynamic_shape_container_t<container_selector, bool> mask() const
-        {
-            return m_impl_ptr->mask();
-        }
+        dynamic_shape_container_t<container_selector, bool> mask() const;
 
         /**
          * Set a new grid mask.

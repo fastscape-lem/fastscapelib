@@ -132,8 +132,8 @@ namespace fastscapelib
 
         TEST(flow_kernel, spl_eroder)
         {
-            using flow_graph_type = fs::flow_graph<fs::raster_grid>;
-            using grid_type = fs::raster_grid;
+            using flow_graph_type = fs::flow_graph<fs::raster_grid<>>;
+            using grid_type = fs::raster_grid<>;
 
             grid_type grid = grid_type({ 4, 4 }, { 1.0, 1.0 }, fs::node_status::fixed_value);
 
