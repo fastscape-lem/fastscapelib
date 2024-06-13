@@ -28,7 +28,7 @@ set(CMAKE_MODULE_PATH
 include(FetchContent)
 
 # -- get the whole xtensor stack (only when building python bindings)
-if(SKBUILD AND FS_USE_XTENSOR_CONTAINERS AND FS_DOWNLOAD_XTENSOR_PYTHON)
+if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
     message(STATUS "Downloading xtl, xtensor and xtensor-python libraries")
 
     FetchContent_Declare(xtl
@@ -55,7 +55,7 @@ if(SKBUILD AND FS_USE_XTENSOR_CONTAINERS AND FS_DOWNLOAD_XTENSOR_PYTHON)
     set_property(DIRECTORY ${xtensor-python_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
 
 # -- get xtensor development version (need xtl already installed)
-elseif(FS_USE_XTENSOR_CONTAINERS AND FS_DOWNLOAD_XTENSOR)
+elseif(FS_DOWNLOAD_XTENSOR)
     message(STATUS "Downloading xtensor development version (master branch)")
 
     FetchContent_Declare(xtensor
@@ -69,7 +69,7 @@ elseif(FS_USE_XTENSOR_CONTAINERS AND FS_DOWNLOAD_XTENSOR)
 
     FetchContent_MakeAvailable(xtensor)
 
-elseif(FS_USE_XTENSOR_CONTAINERS)
+else
     find_package(xtensor REQUIRED)
     message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 endif()

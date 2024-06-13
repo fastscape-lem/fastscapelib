@@ -94,7 +94,6 @@ foreach(filename IN LISTS FASTSCAPELIB_BENCHMARK_SRC)
     add_executable(${targetname} ${filename} ${FASTSCAPELIB_BENCHMARK_HEADERS} main.cpp)
     target_link_libraries(${targetname} PRIVATE fastscapelib xtensor Eigen3::Eigen benchmark::benchmark)
     target_compile_features(${targetname} PRIVATE cxx_std_17)
-    target_compile_definitions(${targetname} PRIVATE FS_USE_XTENSOR_CONTAINERS)
 endforeach()
 
 # -- build a global target for all benchmarks
@@ -103,6 +102,5 @@ add_executable(benchmark_fastscapelib
 
 target_link_libraries(benchmark_fastscapelib
         PRIVATE fastscapelib xtensor Eigen3::Eigen benchmark::benchmark)
-target_compile_definitions(benchmark_fastscapelib PRIVATE FS_USE_XTENSOR_CONTAINERS)
 
 target_compile_features(benchmark_fastscapelib PRIVATE cxx_std_17)

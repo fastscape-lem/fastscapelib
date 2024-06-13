@@ -42,7 +42,6 @@ target_compile_features(${PY_FASTSCAPELIB} PUBLIC cxx_std_17)
 target_compile_definitions(${PY_FASTSCAPELIB}
   PRIVATE
     VERSION_INFO=${PROJECT_VERSION}
-    FS_USE_XTENSOR_CONTAINERS
 )
 
 # Installation

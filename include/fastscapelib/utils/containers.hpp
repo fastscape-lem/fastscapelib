@@ -48,10 +48,6 @@ namespace fastscapelib
     using dynamic_shape_container_t = typename container_selection<S, T>::dynamic_shape_type;
 }  // namespace fastscapelib
 
-// clang-format off
-#ifdef FS_USE_XTENSOR_CONTAINERS
-    #include "fastscapelib/utils/xtensor_containers.hpp"
-#endif
-// clang-format on
+#include "fastscapelib/utils/xtensor_containers.hpp"
 
 #endif  // FASTSCAPELIB_UTILS_CONTAINERS_HPP
