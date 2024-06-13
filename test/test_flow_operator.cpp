@@ -123,7 +123,7 @@ namespace fastscapelib
             xt::xarray<double> elevation = xt::zeros<double>(grid.shape());
 
             test_operator op;
-            auto graph = fs::flow_graph<fs::raster_grid>(grid, { fake_operator() });
+            auto graph = fs::flow_graph<fs::raster_grid<>>(grid, { fake_operator() });
 
             const auto& actual = graph.update_routes(elevation);
 
@@ -139,7 +139,7 @@ namespace fastscapelib
             xt::xarray<double> elevation = xt::zeros<double>(grid.shape());
 
             auto op = std::make_shared<test_operator>();
-            auto graph = fs::flow_graph<fs::raster_grid>(grid, { op, fake_operator() });
+            auto graph = fs::flow_graph<fs::raster_grid<>>(grid, { op, fake_operator() });
 
             {
                 SCOPED_TRACE("test apply 1st pass");

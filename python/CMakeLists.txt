@@ -31,14 +31,18 @@ pybind11_add_module(${PY_FASTSCAPELIB}
     src/eroders.cpp
     src/flow_graph.cpp
     src/grid.cpp
-    src/main.cpp)
+    src/main.cpp
+)
 
 target_link_libraries(${PY_FASTSCAPELIB}
-                      PRIVATE fastscapelib xtensor-python Python::NumPy)
+                      PRIVATE fastscapelib xtensor xtensor-python Python::NumPy)
 
 target_compile_features(${PY_FASTSCAPELIB} PUBLIC cxx_std_17)
 
-target_compile_definitions(${PY_FASTSCAPELIB} PRIVATE VERSION_INFO=${PROJECT_VERSION})
+target_compile_definitions(${PY_FASTSCAPELIB}
+  PRIVATE
+    VERSION_INFO=${PROJECT_VERSION}
+)
 
 # Installation
 # ============

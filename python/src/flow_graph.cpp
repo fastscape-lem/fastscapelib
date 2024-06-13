@@ -1,11 +1,4 @@
-#include <memory>
-
-#include "xtensor-python/pytensor.hpp"
-
-#include "pybind11/pybind11.h"
-#include "pybind11/stl_bind.h"
-#include "pybind11/stl.h"
-
+#include "pytensor_containers.hpp"
 #include "grid.hpp"
 #include "flow_graph.hpp"
 
@@ -13,6 +6,15 @@
 #include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/flow/flow_snapshot.hpp"
 #include "fastscapelib/flow/sink_resolver.hpp"
+
+#include "xtensor-python/pytensor.hpp"
+
+#include "pybind11/pybind11.h"
+#include "pybind11/stl_bind.h"
+#include "pybind11/stl.h"
+
+#include <memory>
+
 
 namespace py = pybind11;
 namespace fs = fastscapelib;

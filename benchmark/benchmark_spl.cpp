@@ -56,7 +56,7 @@ namespace fastscapelib
 
             if (Nd == 1)
             {
-                using flow_graph_type = fs::flow_graph<fs::profile_grid>;
+                using flow_graph_type = fs::flow_graph<fs::profile_grid<>>;
 
                 double spacing = 300.;
                 double x0 = 300.;
@@ -86,7 +86,7 @@ namespace fastscapelib
 
             else if (Nd == 2)
             {
-                using flow_graph_type = fs::flow_graph<fs::raster_grid>;
+                using flow_graph_type = fs::flow_graph<fs::raster_grid<>>;
 
                 auto s = bms::FastscapeSetupBase<bms::surface_type::cone, T>(state.range(0));
                 elevation = s.elevation;

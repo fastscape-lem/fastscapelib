@@ -129,8 +129,10 @@ set(FASTSCAPELIB_HEADERS
   utils/thread_pool.hpp
   utils/union_find.hpp
   utils/utils.hpp
-  utils/xtensor_utils.hpp
   utils/impl/thread_pool_inl.hpp
+  utils/containers.hpp
+  utils/eigen_containers.hpp
+  utils/xtensor_containers.hpp
   # Version
   version.hpp
 )

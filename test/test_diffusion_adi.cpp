@@ -18,7 +18,7 @@ const double pi = 3.141592653589793238462643383279502884;
 
 TEST(diffusion_adi_eroder, ctor)
 {
-    using grid_type = fs::raster_grid;
+    using grid_type = fs::raster_grid<>;
     using size_type = grid_type::size_type;
     using shape_type = grid_type::shape_type;
 

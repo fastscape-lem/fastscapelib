@@ -97,8 +97,8 @@ details.
 classDiagram
     grid~G~ <|-- structured_grid~G~
     grid~G~ <|-- trimesh_xt
-    structured_grid~G~ <|-- profile_grid_xt
-    structured_grid~G~ <|-- raster_grid_xt
+    structured_grid~G~ <|-- profile_grid
+    structured_grid~G~ <|-- raster_grid
     class grid~G~{
         #derived_grid()
         +is_structured()
@@ -113,8 +113,8 @@ classDiagram
         +length()
         +shape()
     }
-    class profile_grid_xt
-    class raster_grid_xt{
+    class profile_grid
+    class raster_grid{
         +neighbors_indices(row, col)
         +neighbors(row, col)
     }

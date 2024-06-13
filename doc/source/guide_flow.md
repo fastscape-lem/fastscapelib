@@ -60,7 +60,7 @@ namespace fs = fastscapelib;
 fs::raster_boundary_status boundaries{ fs::node_status::fixed_value };
 fs::raster_grid grid({ 100, 100 }, { 200.0, 200.0 }, boundaries);
 
-fs::flow_graph<fs::raster_grid> graph(grid, { fs::single_flow_router() });
+fs::flow_graph<fs::raster_grid<>> graph(grid, { fs::single_flow_router() });
 ```
 
 ```{code-block} Python
@@ -141,7 +141,7 @@ namespace fs = fastscapelib;
 fs::raster_boundary_status boundaries{ fs::node_status::fixed_value };
 fs::raster_grid grid({ 100, 100 }, { 200.0, 200.0 }, boundaries);
 
-fs::flow_graph<fs::raster_grid> graph(grid, { fs::single_flow_router() });
+fs::flow_graph<fs::raster_grid<>> graph(grid, { fs::single_flow_router() });
 
 xt::xarray<double> elevation = xt::random::rand<double>(grid.shape());
 
@@ -331,7 +331,7 @@ only requires the {py:class}`~fastscapelib.SingleFlowRouter` operator.
 
 ````{tab-set-code}
 ```{code-block} C++
-fs::flow_graph<fs::raster_grid> single_graph(grid, { fs::single_flow_router() });
+fs::flow_graph<fs::raster_grid<>> single_graph(grid, { fs::single_flow_router() });
 ```
 
 ```{code-block} Python
@@ -352,7 +352,7 @@ topography before computing the flow paths.
 ```{code-block} C++
 #include "fastscapelib/flow/sink_resolver.hpp"
 
-fs::flow_graph<fs::raster_grid> single_graph_nosink(
+fs::flow_graph<fs::raster_grid<>> single_graph_nosink(
     grid, { fs::pflood_sink_resolver(), fs::single_flow_router() });
 ```
 
@@ -373,7 +373,7 @@ the flow trapped in closed depressions.
 ```{code-block} C++
 #include "fastscapelib/flow/sink_resolver.hpp"
 
-fs::flow_graph<fs::raster_grid> single_graph_nosink2(
+fs::flow_graph<fs::raster_grid<>> single_graph_nosink2(
     grid, { fs::single_flow_router(), fs::mst_sink_resolver() });
 ```
 
@@ -406,7 +406,7 @@ depressions, respectively.
 
 auto mrouter_ptr = std::make_shared<fs::multi_flow_router>(1.0);
 
-fs::flow_graph<fs::raster_grid> multi_graph(
+fs::flow_graph<fs::raster_grid<>> multi_graph(
     grid,
     { fs::single_flow_router(),
       fs::flow_snapshot("single")

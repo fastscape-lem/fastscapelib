@@ -6,7 +6,7 @@ Utilities
 Xtensor container selectors
 ---------------------------
 
-Defined in ``fastscapelib/utils/xtensor_utils.hpp``
+Defined in ``fastscapelib/utils/xtensor_containers.hpp``
 
 Most Fastscapelib data structures (i.e., grids, flow graph, etc.) expose a
 template parameter that allows setting the type of xtensor container to use for
@@ -23,11 +23,11 @@ contexts, e.g.,
 
 .. doxygenstruct:: fastscapelib::xt_selector
 
-.. doxygenstruct:: fastscapelib::xt_container
+.. doxygenstruct:: fastscapelib::container_selection
 
-.. doxygentypedef:: fastscapelib::xt_tensor_t
+.. doxygentypedef:: fastscapelib::fixed_shape_container_t
 
-.. doxygentypedef:: fastscapelib::xt_array_t
+.. doxygentypedef:: fastscapelib::dynamic_shape_container_t
 
 |
 
