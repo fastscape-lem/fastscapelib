@@ -1,6 +1,7 @@
 #include "benchmark_setup.hpp"
 
 #include "fastscapelib/utils/consts.hpp"
+#include "fastscapelib/utils/eigen_containers.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 
@@ -169,9 +170,7 @@ namespace fastscapelib
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape{ { n, n } };
 
-            neighbors_offsets_type::shape_type sh0 = { grid_type::n_neighbors_max() };
-            neighbors_offsets_type offsets
-                = xt::empty<xt::xtensor_fixed<std::ptrdiff_t, xt::xshape<2>>>(sh0);
+            neighbors_offsets_type offsets(grid_type::n_neighbors_max());
 
             auto get_neighbors_indices
                 = [&shape, &offsets](auto& r, auto& c) -> neighbors_offsets_type
@@ -181,7 +180,7 @@ namespace fastscapelib
                     const index_t kr = r + fs::consts::d8_row_offsets[k];
                     const index_t kc = c + fs::consts::d8_col_offsets[k];
 
-                    offsets(k - 1) = xt::xtensor_fixed<std::ptrdiff_t, xt::xshape<2>>({ kr, kc });
+                    offsets[k - 1] = std::array<std::ptrdiff_t, 2>({ kr, kc });
 
                     if (!fs::detail::in_bounds(shape, kr, kc))
                     {
@@ -204,19 +203,22 @@ namespace fastscapelib
         }
 
         using queen_nocache
-            = fs::raster_grid_xt<xt_selector, raster_connect::queen, neighbors_no_cache<8>>;
+            = fs::raster_grid<xt_selector, raster_connect::queen, neighbors_no_cache<8>>;
+        using eigen_queen_nocache
+            = fs::raster_grid<eigen_selector, raster_connect::queen, neighbors_no_cache<8>>;
         using queen_cacheall
-            = fs::raster_grid_xt<xt_selector, raster_connect::queen, neighbors_cache<8>>;
-
+            = fs::raster_grid<xt_selector, raster_connect::queen, neighbors_cache<8>>;
+        using eigen_queen_cacheall
+            = fs::raster_grid<eigen_selector, raster_connect::queen, neighbors_cache<8>>;
         using rook_nocache
-            = fs::raster_grid_xt<xt_selector, raster_connect::rook, neighbors_no_cache<4>>;
+            = fs::raster_grid<xt_selector, raster_connect::rook, neighbors_no_cache<4>>;
         using rook_cacheall
-            = fs::raster_grid_xt<xt_selector, raster_connect::rook, neighbors_cache<4>>;
+            = fs::raster_grid<xt_selector, raster_connect::rook, neighbors_cache<4>>;
 
         using bishop_nocache
-            = fs::raster_grid_xt<xt_selector, raster_connect::bishop, neighbors_no_cache<4>>;
+            = fs::raster_grid<xt_selector, raster_connect::bishop, neighbors_no_cache<4>>;
         using bishop_cacheall
-            = fs::raster_grid_xt<xt_selector, raster_connect::bishop, neighbors_cache<4>>;
+            = fs::raster_grid<xt_selector, raster_connect::bishop, neighbors_cache<4>>;
 
 
 #define BENCH_GRID(NAME, GRID)                                                                     \
@@ -224,12 +226,15 @@ namespace fastscapelib
 
 #define BENCH_RC(NAME)                                                                             \
     BENCH_GRID(NAME, queen_nocache)                                                                \
+    BENCH_GRID(NAME, eigen_queen_nocache)                                                          \
     BENCH_GRID(NAME, rook_nocache)                                                                 \
     BENCH_GRID(NAME, bishop_nocache)
 
 #define BENCH_ALL(NAME)                                                                            \
     BENCH_GRID(NAME, queen_nocache)                                                                \
+    BENCH_GRID(NAME, eigen_queen_nocache)                                                          \
     BENCH_GRID(NAME, queen_cacheall)                                                               \
+    BENCH_GRID(NAME, eigen_queen_cacheall)                                                         \
     BENCH_GRID(NAME, rook_nocache)                                                                 \
     BENCH_GRID(NAME, rook_cacheall)                                                                \
     BENCH_GRID(NAME, bishop_nocache)                                                               \

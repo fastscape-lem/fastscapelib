@@ -89,7 +89,7 @@ namespace fastscapelib
         class synthetic_topography_2d
         {
         public:
-            using grid_type = fs::raster_grid;
+            using grid_type = fs::raster_grid<>;
             using elevation_xt_type = xt::xtensor<T, 2>;
 
             int seed = 0;
@@ -123,7 +123,7 @@ namespace fastscapelib
         {
             fs::node_status fv = fs::node_status::fixed_value;
 
-            grid_type grid = fs::raster_grid::from_length(m_shape, { 2.0, 2.0 }, fv);
+            grid_type grid = fs::raster_grid<>::from_length(m_shape, { 2.0, 2.0 }, fv);
 
             return grid;
         }

@@ -14,7 +14,7 @@
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/iterators.hpp"
-#include "fastscapelib/utils/xtensor_utils.hpp"
+#include "fastscapelib/utils/containers.hpp"
 
 
 namespace fastscapelib
@@ -68,22 +68,23 @@ namespace fastscapelib
         public:
             using self_type = flow_graph_impl<G, S, flow_graph_fixed_array_tag>;
             using grid_type = G;
-            using xt_selector = S;
+            using container_selector = S;
             using tag = flow_graph_fixed_array_tag;
 
             using size_type = typename grid_type::size_type;
             using data_type = typename grid_type::grid_data_type;
-            using data_array_type = xt_array_t<xt_selector, data_type>;
+            using data_array_type = dynamic_shape_container_t<container_selector, data_type>;
 
-            using donors_type = xt_tensor_t<xt_selector, size_type, 2>;
-            using donors_count_type = xt_tensor_t<xt_selector, size_type, 1>;
+            using donors_type = fixed_shape_container_t<container_selector, size_type, 2>;
+            using donors_count_type = fixed_shape_container_t<container_selector, size_type, 1>;
             using receivers_type = donors_type;
             using receivers_count_type = donors_count_type;
-            using receivers_distance_type = xt_tensor_t<xt_selector, data_type, 2>;
-            using receivers_weight_type = xt_tensor_t<xt_selector, data_type, 2>;
-            using dfs_indices_type = xt_tensor_t<xt_selector, size_type, 1>;
+            using receivers_distance_type
+                = fixed_shape_container_t<container_selector, data_type, 2>;
+            using receivers_weight_type = fixed_shape_container_t<container_selector, data_type, 2>;
+            using dfs_indices_type = fixed_shape_container_t<container_selector, size_type, 1>;
 
-            using basins_type = xt_tensor_t<xt_selector, size_type, 1>;
+            using basins_type = fixed_shape_container_t<container_selector, size_type, 1>;
 
             flow_graph_impl(grid_type& grid, bool single_flow = false)
                 : m_single_flow(single_flow)

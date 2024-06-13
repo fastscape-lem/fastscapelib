@@ -1,18 +1,17 @@
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
+#include "pytensor_containers.hpp"
+#include "grid.hpp"
+#include "flow_graph.hpp"
 
 #include "fastscapelib/eroders/spl.hpp"
 #include "fastscapelib/eroders/diffusion_adi.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
-#include "fastscapelib/utils/xtensor_utils.hpp"
+#include "fastscapelib/utils/containers.hpp"
 
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
 
-#include "grid.hpp"
-#include "flow_graph.hpp"
-#include "pytensor_utils.hpp"
-
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 namespace py = pybind11;
 namespace fs = fastscapelib;
@@ -24,7 +23,7 @@ add_spl_bindings(py::module& m)
     py::options options;
     options.disable_function_signatures();
 
-    using py_spl_eroder = fs::spl_eroder<fs::py_flow_graph, fs::py_selector>;
+    using py_spl_eroder = fs::spl_eroder<fs::py_flow_graph, fs::xt_python_selector>;
     using data_array_type = py_spl_eroder::data_array_type;
 
     py::class_<py_spl_eroder> spl_eroder(
@@ -150,7 +149,8 @@ add_diffusion_adi_bindings(py::module& m)
     py::options options;
     options.disable_function_signatures();
 
-    using py_diffusion_adi_eroder = fs::diffusion_adi_eroder<fs::py_raster_grid, fs::py_selector>;
+    using py_diffusion_adi_eroder
+        = fs::diffusion_adi_eroder<fs::py_raster_grid, fs::xt_python_selector>;
     using data_array_type = py_diffusion_adi_eroder::data_array_type;
 
     py::class_<py_diffusion_adi_eroder> diffusion_adi_eroder(

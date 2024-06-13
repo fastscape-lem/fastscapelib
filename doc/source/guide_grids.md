@@ -19,14 +19,14 @@ Fastscapelib (also illustrated in {ref}`Figure 1 <fig_grid_types>`).
 * - C++ / Python Class
   - Properties
   - Usage Examples
-* - {cpp:class}`~fastscapelib::profile_grid_xt` {py:class}`~fastscapelib.ProfileGrid`
+* - {cpp:class}`~fastscapelib::profile_grid` {py:class}`~fastscapelib.ProfileGrid`
   - 1-dimensional, uniform, static
   - Evolution of a river longitudinal profile, hillslope or escarpment cross-section.
 
     Solving flow routing or differential equations in this special case is often
     trivial, but this grid is still is useful for quickly switching between
     the 1D and 2D cases without the need to re-implement anything.
-* - {cpp:class}`~fastscapelib::raster_grid_xt` {py:class}`~fastscapelib.RasterGrid`
+* - {cpp:class}`~fastscapelib::raster_grid` {py:class}`~fastscapelib.RasterGrid`
   - 2-dimensional, rectangular, uniform, static
   - Evolution of an hillslope, escarpment, drainage basin, orogenic belt, etc.
 * - {cpp:class}`~fastscapelib::trimesh_xt`
@@ -143,7 +143,7 @@ the grid or on the grid boundaries. See also the {doc}`examples/index`.
 namespace fs = fastscapelib;
 
 fs::profile_boundary_status bs(fs::node_status::fixed_value);
-auto grid = fs::profile_grid::from_length(501, 500.0, bs);
+auto grid = fs::profile_grid<>::from_length(501, 500.0, bs);
 ```
 
 ```{code-block} Python
@@ -245,8 +245,8 @@ shape of the array containers at runtime.
 
 Additionally, the {cpp:class}`~fastscapelib::grid_inner_types` C++ class
 specialized for each grid exposes some properties like ``grid_data_type``,
-``xt_selector`` and ``xt_ndims`` (for convenience, those are also exposed as
-static data members of the grid classes). This is particularly useful for
+``container_selector`` and ``container_ndims`` (for convenience, those are also
+exposed as static data members of the grid classes). This is particularly useful for
 maximizing code reusability in C++ (via type aliases) when creating new grid
 data variables.
 
@@ -283,15 +283,15 @@ xt::xarray<double> elevation = xt::random::rand<double>(grid.shape());
 //
 // setting a xt::xtensor with dimensions and data type from grid inner types
 //
-using dtype = fs::raster_grid::grid_data_type;
-using ndims = fs::grid_inner_types<fs::raster_grid>::xt_ndims;
+using dtype = fs::raster_grid<>::grid_data_type;
+using ndims = fs::grid_inner_types<fs::raster_grid<>>::container_ndims;
 xt::xtensor<dtype, ndims> elevation_alt = xt::random::rand<dtype>(grid.shape());
 
 //
 // use the xtensor container selector set for the grid
 //
-using selector = fs::raster_grid::xt_selector;
-using ctype = fs::xt_container<selector, dtype, ndims>::tensor_type;
+using selector = fs::raster_grid<>::container_selector;
+using ctype = fs::container_selection<selector, dtype, ndims>::tensor_type;
 ctype elevation_alt2 = xt::random::rand<dtype>(grid.shape());
 ```
 
@@ -415,7 +415,7 @@ fs::raster_grid grid({ 101, 101 }, { 200.0, 200.0 }, bs);
 //
 // optimization: initialize the neighbors container out of the loops
 //
-fs::raster_grid::neighbors_type neighbors;
+fs::raster_grid<>::neighbors_type neighbors;
 
 for (auto& idx_flat : grid.nodes_indices())
 {
@@ -450,12 +450,12 @@ given grid node or only the neighbor (flat) indices or the distances from one
 node to its neighbors, you can use the alternative methods
 ``neighbors_count()``, ``neighbors_indices()`` and ``neighbors_distances()``.
 
-{cpp:class}`~fastscapelib::raster_grid_xt` (C++) also provides some method
+{cpp:class}`~fastscapelib::raster_grid` (C++) also provides some method
 overloads to use row and column indices instead of grid flat indices.
 
 ### Raster Grid Connectivity
 
-{cpp:class}`~fastscapelib::raster_grid_xt` (C++) exposes a template parameter
+{cpp:class}`~fastscapelib::raster_grid` (C++) exposes a template parameter
 that allows choosing the grid connectivity among three modes (see
 {cpp:enum}`~fastscapelib::raster_connect` and {ref}`Figure 2
 <fig_raster_connect>`):
@@ -488,7 +488,7 @@ boundaries. Caveat: this speed-up is achieved at the expense of memory
 consumption.
 
 The cache is exposed as a template parameter for
-{cpp:class}`~fastscapelib::raster_grid_xt` so that this behavior may be
+{cpp:class}`~fastscapelib::raster_grid` so that this behavior may be
 customized (cache may be disabled). For other grid types like
 {cpp:class}`~fastscapelib::trimesh_xt` with explicit topology, the
 cache is not needed and not used.

@@ -19,7 +19,7 @@ main()
     using ns = fs::node_status;
     fs::profile_boundary_status bs{ ns::fixed_value, ns::core };
 
-    fs::profile_grid grid = fs::profile_grid(101, 300.0, bs);
+    auto grid = fs::profile_grid(101, 300.0, bs);
 
     // grid x-coordinate values
     double x0 = 300.;
@@ -27,7 +27,7 @@ main()
     xt::xtensor<double, 1> x = xt::linspace<double>(length + x0, x0, grid.size());
 
     // flow graph with single direction flow routing
-    fs::flow_graph<fs::profile_grid> flow_graph(grid, { fs::single_flow_router() });
+    fs::flow_graph<fs::profile_grid<>> flow_graph(grid, { fs::single_flow_router() });
 
     // compute drainage area using Hack's law
     double hack_coef = 6.69;

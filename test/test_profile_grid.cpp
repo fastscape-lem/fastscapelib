@@ -58,7 +58,7 @@ namespace fastscapelib
             fs::profile_boundary_status fixed_value_status{ fixed };
             fs::profile_boundary_status looped_status{ loop };
 
-            using grid_type = fs::profile_grid_xt<fs::xt_selector>;
+            using grid_type = fs::profile_grid<>;
             using size_type = typename grid_type::size_type;
             using shape_type = typename grid_type::shape_type;
 
@@ -90,10 +90,10 @@ namespace fastscapelib
 
         TEST_F(profile_grid, static_expr)
         {
-            EXPECT_EQ(fs::profile_grid::is_structured(), true);
-            EXPECT_EQ(fs::profile_grid::is_uniform(), true);
-            EXPECT_EQ(fs::profile_grid::n_neighbors_max(), 2u);
-            EXPECT_EQ(fs::profile_grid::xt_ndims(), 1);
+            EXPECT_EQ(fs::profile_grid<>::is_structured(), true);
+            EXPECT_EQ(fs::profile_grid<>::is_uniform(), true);
+            EXPECT_EQ(fs::profile_grid<>::n_neighbors_max(), 2u);
+            EXPECT_EQ(fs::profile_grid<>::container_ndims(), 1);
         }
 
         TEST_F(profile_grid, ctor)

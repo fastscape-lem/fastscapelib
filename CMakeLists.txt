@@ -119,7 +119,9 @@ set(FASTSCAPELIB_HEADERS
   utils/iterators.hpp
   utils/union_find.hpp
   utils/utils.hpp
-  utils/xtensor_utils.hpp
+  utils/containers.hpp
+  utils/eigen_containers.hpp
+  utils/xtensor_containers.hpp
   # Version
   version.hpp
 )
