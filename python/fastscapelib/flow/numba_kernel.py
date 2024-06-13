@@ -74,10 +74,24 @@ class NumbaJittedClass(Protocol):
     _numba_type_: Any
 
 
-KernelFunc = NumbaJittedFunc[[NumbaJittedClass], int]
-KernelNodeDataGetter = NumbaJittedFunc[[int, NumbaJittedClass, NumbaJittedClass], int]
-KernelNodeDataSetter = NumbaJittedFunc[[int, NumbaJittedClass, NumbaJittedClass], int]
-KernelNodeDataCreate = NumbaJittedFunc[[], NumbaJittedClass]
+if sys.version_info < (3, 10):
+    KernelFunc = "NumbaJittedFunc[[NumbaJittedClass], int]"
+    KernelNodeDataGetter = (
+        "NumbaJittedFunc[[int, NumbaJittedClass, NumbaJittedClass], int]"
+    )
+    KernelNodeDataSetter = (
+        "NumbaJittedFunc[[int, NumbaJittedClass, NumbaJittedClass], int]"
+    )
+    KernelNodeDataCreate = "NumbaJittedFunc[[], NumbaJittedClass]"
+else:
+    KernelFunc = NumbaJittedFunc[[NumbaJittedClass], int]
+    KernelNodeDataGetter = NumbaJittedFunc[
+        [int, NumbaJittedClass, NumbaJittedClass], int
+    ]
+    KernelNodeDataSetter = NumbaJittedFunc[
+        [int, NumbaJittedClass, NumbaJittedClass], int
+    ]
+    KernelNodeDataCreate = NumbaJittedFunc[[], NumbaJittedClass]
 
 
 @contextmanager
