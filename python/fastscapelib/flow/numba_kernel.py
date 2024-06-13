@@ -4,12 +4,11 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
-from typing import Any, Callable, ClassVar, Dict, Iterable, Iterator, List, Tuple, Union
+from typing import Any, Callable, ClassVar, Iterable, Iterator
 
 import numba as nb
 import numpy as np
-
-from fastscapelib.flow import FlowGraph, Kernel, KernelApplicationOrder, KernelData
+from _fastscapelib_py.flow import FlowGraph, Kernel, KernelApplicationOrder, KernelData
 
 
 class ConstantAssignmentVisitor(ast.NodeVisitor):
@@ -19,7 +18,7 @@ class ConstantAssignmentVisitor(ast.NodeVisitor):
         self.assigned = False
         self.aliases = {obj_name}
 
-    def visit_Assign(self, node: ast.Assign) -> None:
+    def visit_Assign(self, node: ast.Assign):
         """Visits a assignment nodes to search for invalid scalar variable.
 
         A scalar variable is passed to all node data and should not be mutated by
@@ -38,7 +37,7 @@ class ConstantAssignmentVisitor(ast.NodeVisitor):
                     self.aliases.add(target.id)
         self.generic_visit(node)
 
-    def visit_AugAssign(self, node: ast.AugAssign) -> None:
+    def visit_AugAssign(self, node: ast.AugAssign):
         # Check if the augmented assignment target is an attribute of the object or its aliases
         target = node.target
         if isinstance(target, ast.Attribute) and target.attr == self.member_name:
@@ -77,18 +76,25 @@ class NumbaKernelData:
     access numba jitclass and data validation.
     """
 
+    _grid_size: int
+    _spec_keys: list[str]
+    _grid_data_ty: dict[str, nb.core.types.Type]
+    _bound_data: set[str]
+    _data_ptr: KernelData
+    _data: FlowKernelData
+
     def __init__(
         self,
         grid_size: int,
-        spec_keys: List[str],
-        grid_data_ty: Dict[str, nb.core.types.Type],
+        spec_keys: list[str],
+        grid_data_ty: dict[str, nb.core.types.Type],
         data: FlowKernelData,
     ):
         super().__setattr__("_data", data)
         self._grid_size = grid_size
         self._spec_keys = spec_keys
         self._grid_data_ty = grid_data_ty
-        self._bound_data: set[str] = set()
+        self._bound_data = set()
 
         from numba.experimental.jitclass import _box
 
@@ -97,27 +103,27 @@ class NumbaKernelData:
         data_ptr.data.data = _box.box_get_dataptr(data)
         self._data_ptr = data_ptr
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         return getattr(self._data, name)
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> Any:
         return getattr(self._data, name)
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: Any):
         if name in self._data._numba_type_.struct:
             self.bind(**{name: value})
         else:
             super().__setattr__(name, value)
 
-    def __setitem__(self, name, value):
+    def __setitem__(self, name: str, value: Any):
         setattr(self, name, value)
 
     @property
-    def jitclass(self):
+    def jitclass(self) -> FlowKernelData:
         return self._data
 
     @property
-    def jitclass_ptr(self):
+    def jitclass_ptr(self) -> KernelData:
         return self._data_ptr
 
     def bind(self, **kwargs):
@@ -134,7 +140,7 @@ class NumbaKernelData:
             self._bound_data.add(name)
 
     @property
-    def bound(self):
+    def bound(self) -> set[str]:
         return self._bound_data
 
     def check_bindings(self):
@@ -159,7 +165,7 @@ class NumbaKernel:
     func: None
 
 
-def create_flow_kernel(*args, **kwargs) -> Tuple[NumbaKernel, NumbaKernelData]:
+def create_flow_kernel(*args, **kwargs) -> tuple[NumbaKernel, NumbaKernelData]:
     """Creates a numba flow kernel.
 
     Conveniance function to call a `NumbaFlowKernelFactory` and return
@@ -183,7 +189,7 @@ class NumbaFlowKernelFactory:
         self,
         flow_graph: FlowGraph,
         kernel_func: Callable[["FlowKernelNodeData"], int],
-        spec: Dict[str, Union[nb.core.types.Type, Tuple[nb.core.types.Type, Any]]],
+        spec: dict[str, nb.core.types.Type | tuple[nb.core.types.Type, Any]],
         application_order: KernelApplicationOrder,
         outputs: Iterable[str] = (),
         max_receivers: int = -1,
@@ -220,7 +226,7 @@ class NumbaFlowKernelFactory:
         )
 
     @property
-    def data(self):
+    def data(self) -> NumbaKernelData:
         flow_graph = self._flow_graph
         flow_graph_data = {
             "donors_idx": flow_graph.impl().donors.view(),
@@ -233,7 +239,7 @@ class NumbaFlowKernelFactory:
 
         data = self._data_jitclass(**flow_graph_data)
         data_wrapper = NumbaKernelData(
-            self._flow_graph.size, self._spec.keys(), self._grid_data_ty, data
+            self._flow_graph.size, list(self._spec.keys()), self._grid_data_ty, data
         )
         data_wrapper.bind(**self._init_values)
 
@@ -250,7 +256,7 @@ class NumbaFlowKernelFactory:
         or in parallel depending on the caller implementation.
         """
 
-        self._kernel = kernel = Kernel()
+        self._kernel = Kernel()
 
         with timer("build data classes", self._print_stats):
             self._build_and_set_data_classes()
@@ -527,7 +533,7 @@ class NumbaFlowKernelFactory:
     @staticmethod
     def _generate_jitclass(
         name,
-        spec: Tuple[Tuple[str, nb.core.types.Type]],
+        spec: tuple[tuple[str, nb.core.types.Type]],
         init_source: str,
         glbls: dict = {},
     ):
@@ -537,7 +543,7 @@ class NumbaFlowKernelFactory:
 
     @staticmethod
     def _get_spec_type(
-        item: Union[nb.core.types.Type, Tuple[nb.core.types.Type, Any]]
+        item: nb.core.types.Type | tuple[nb.core.types.Type, Any]
     ) -> nb.core.types.Type:
         if issubclass(item.__class__, nb.core.types.Type):
             return item
@@ -546,7 +552,7 @@ class NumbaFlowKernelFactory:
 
     @staticmethod
     def _get_spec_value(
-        item: Union[nb.core.types.Type, Tuple[nb.core.types.Type, Any]]
+        item: nb.core.types.Type | tuple[nb.core.types.Type, Any]
     ) -> Any:
         if issubclass(item.__class__, nb.core.types.Type):
             return
@@ -777,7 +783,7 @@ class NumbaFlowKernelFactory:
             {"distance": nb.float64[::1], "weight": nb.float64[::1]}
         )
 
-        data_dtypes: Dict[str, nb.core.types.Type] = {}
+        data_dtypes: dict[str, nb.core.types.Type] = {}
         for name, value in receivers_grid_data_ty.items():
             if value.dtype in data_dtypes:
                 data_dtypes[value.dtype].append(name)

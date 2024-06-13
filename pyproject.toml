@@ -55,3 +55,9 @@ exclude = [
     "doc/source/conf.py",
     "build/",
 ]
+
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = [
+    "numba.*"
+]
