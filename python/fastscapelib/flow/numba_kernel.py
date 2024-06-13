@@ -12,7 +12,6 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Never,
     Tuple,
     Union,
 )
@@ -60,8 +59,7 @@ class ConstantAssignmentVisitor(ast.NodeVisitor):
 
 class FlowKernelData:
     @property
-    def data(self) -> Any:
-        ...
+    def data(self) -> Any: ...
 
 
 class FlowKernelNodeData:
@@ -226,6 +224,7 @@ class NumbaFlowKernelFactory:
             node_data_init=self.node_data_init,
             node_data_getter=self.node_data_getter,
             node_data_setter=self.node_data_setter,
+            node_data_free=None,
             func=self.flow_kernel_func,
         )
 
@@ -707,7 +706,7 @@ class NumbaFlowKernelFactory:
             )
 
         self._data_jitclass = NumbaFlowKernelFactory._generate_jitclass(
-            FlowKernelData,
+            "FlowKernelData",
             spec,
             init_source,
         )
