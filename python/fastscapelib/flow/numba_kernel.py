@@ -12,6 +12,7 @@ from typing import (
     Callable,
     Iterable,
     Iterator,
+    Optional,
     Protocol,
     Type,
     TypeVar,
@@ -215,10 +216,10 @@ class NumbaKernel:
 
     kernel: Kernel
     node_data_create: KernelNodeDataCreate
-    node_data_init: NumbaJittedFunc | None
+    node_data_init: Optional[NumbaJittedFunc]
     node_data_getter: KernelNodeDataGetter
     node_data_setter: KernelNodeDataSetter
-    node_data_free: Any | None
+    node_data_free: Any
     func: NumbaJittedFunc
 
 
