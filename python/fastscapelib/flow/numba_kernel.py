@@ -4,17 +4,7 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
-from typing import (
-    Any,
-    Callable,
-    ClassVar,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, ClassVar, Dict, Iterable, Iterator, List, Tuple, Union
 
 import numba as nb
 import numpy as np
@@ -59,7 +49,8 @@ class ConstantAssignmentVisitor(ast.NodeVisitor):
 
 class FlowKernelData:
     @property
-    def data(self) -> Any: ...
+    def data(self) -> Any:
+        ...
 
 
 class FlowKernelNodeData:
