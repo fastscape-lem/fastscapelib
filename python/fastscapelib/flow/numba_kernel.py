@@ -4,7 +4,18 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
-from typing import Any, Callable, ClassVar, Dict, Iterable, List, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Iterable,
+    List,
+    Tuple,
+    Union,
+    Iterator,
+    Never,
+)
 
 import numba as nb
 import numpy as np
@@ -47,8 +58,17 @@ class ConstantAssignmentVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+class FlowKernelData:
+    @property
+    def data(self) -> Any: ...
+
+
+class FlowKernelNodeData:
+    pass
+
+
 @contextmanager
-def timer(msg: str, do_print: bool) -> None:
+def timer(msg: str, do_print: bool) -> Iterator[None]:
     """Times and prints a code block."""
 
     start_time = time.time()
@@ -72,13 +92,13 @@ class NumbaKernelData:
         grid_size: int,
         spec_keys: List[str],
         grid_data_ty: Dict[str, nb.core.types.Type],
-        data: "FlowKernelData",
+        data: FlowKernelData,
     ):
         super().__setattr__("_data", data)
         self._grid_size = grid_size
         self._spec_keys = spec_keys
         self._grid_data_ty = grid_data_ty
-        self._bound_data = set()
+        self._bound_data: set[str] = set()
 
         from numba.experimental.jitclass import _box
 
@@ -141,11 +161,11 @@ class NumbaKernel:
     """Stores a kernel"""
 
     kernel: Kernel
-    node_data_create: None
+    node_data_create: nb.core.dispatcher.Dispatcher
     node_data_init: None
     node_data_getter: None
     node_data_setter: None
-    node_data_setter: None
+    node_data_free: None
     func: None
 
 
@@ -192,7 +212,7 @@ class NumbaFlowKernelFactory:
             self._n_threads = n_threads
             self._application_order = application_order
 
-            self._bound_data = set()
+            self._bound_data: set[str] = set()
 
             self._set_interfaces()
             self._build_fs_kernel()
@@ -686,7 +706,7 @@ class NumbaFlowKernelFactory:
             )
 
         self._data_jitclass = NumbaFlowKernelFactory._generate_jitclass(
-            "FlowKernelData",
+            FlowKernelData,
             spec,
             init_source,
         )
@@ -766,7 +786,7 @@ class NumbaFlowKernelFactory:
             {"distance": nb.float64[::1], "weight": nb.float64[::1]}
         )
 
-        data_dtypes = {}
+        data_dtypes: Dict[str, nb.core.types.Type] = {}
         for name, value in receivers_grid_data_ty.items():
             if value.dtype in data_dtypes:
                 data_dtypes[value.dtype].append(name)
@@ -882,11 +902,11 @@ class NumbaFlowKernelFactory:
 @nb.njit
 def py_apply_kernel_impl(
     indices: np.ndarray,
-    func: Callable[["FlowKernelNodeData"], int],
-    data: "FlowKernelData",
-    node_data: "FlowKernelNodeData",
-    node_data_getter: Callable[[int, "FlowKernelData", "FlowKernelNodeData"], int],
-    node_data_setter: Callable[[int, "FlowKernelNodeData", "FlowKernelData"], int],
+    func: Callable[[FlowKernelNodeData], int],
+    data: FlowKernelData,
+    node_data: FlowKernelNodeData,
+    node_data_getter: Callable[[int, FlowKernelData, FlowKernelNodeData], int],
+    node_data_setter: Callable[[int, FlowKernelNodeData, FlowKernelData], int],
 ):
     """Applies a kernel on a grid.
 
@@ -928,7 +948,7 @@ def py_apply_kernel(
         nb_kernel.node_data_init(node_data, data._data)
 
     if kernel.application_order == KernelApplicationOrder.ANY:
-        indices = np.arange(0, flow_graph.size, 1)
+        indices = np.arange(0, flow_graph.size, 1, dtype=np.uint64)
     elif kernel.application_order == KernelApplicationOrder.BREADTH_UPSTREAM:
         indices = flow_graph.impl().bfs_indices
     elif kernel.application_order == KernelApplicationOrder.DEPTH_UPSTREAM:
