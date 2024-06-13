@@ -17,7 +17,7 @@ from _fastscapelib_py.flow import (  # type: ignore[import]
 
 from fastscapelib.flow.numba_kernel import create_flow_kernel, py_apply_kernel
 
-__all__ = (
+__all__ = [
     "FlowDirection",
     "FlowGraph",
     "FlowGraphImpl",
@@ -35,4 +35,4 @@ __all__ = (
     "KernelApplicationOrder",
     "create_flow_kernel",
     "py_apply_kernel",
-)
+]

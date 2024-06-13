@@ -2,17 +2,36 @@ import ast
 import inspect
 import sys
 import time
+from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
-from typing import Any, Callable, Iterable, Iterator, Protocol, Type, TypeVar, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    Protocol,
+    Type,
+    TypeVar,
+    cast,
+)
 
 import numba as nb
 import numpy as np
-from numba.core.types import Array as NumbaArray  # type: ignore[missing-imports]
-from numba.core.types import Type as NumbaType  # type: ignore[missing-imports]
 
-from fastscapelib.flow import FlowGraph, Kernel, KernelApplicationOrder, KernelData
+# type stubs defined in this sub-package (avoid circular imports)
+if TYPE_CHECKING:
+    from fastscapelib.flow import FlowGraph, Kernel, KernelApplicationOrder, KernelData
+else:
+    from _fastscapelib_py.flow import (
+        FlowGraph,
+        Kernel,
+        KernelApplicationOrder,
+        KernelData,
+    )
+
 
 if sys.version_info < (3, 10):
     from typing_extensions import ParamSpec
@@ -116,7 +135,7 @@ class NumbaKernelData:
 
     _grid_size: int
     _spec_keys: list[str]
-    _grid_data_ty: dict[str, NumbaType]
+    _grid_data_ty: dict[str, nb.types.Array]
     _bound_data: set[str]
     _data_ptr: KernelData
     _data: NumbaJittedClass
@@ -125,7 +144,7 @@ class NumbaKernelData:
         self,
         grid_size: int,
         spec_keys: list[str],
-        grid_data_ty: dict[str, NumbaType],
+        grid_data_ty: dict[str, nb.types.Array],
         data: NumbaJittedClass,
     ):
         super().__setattr__("_data", data)
@@ -223,11 +242,14 @@ class NumbaFlowKernelFactory:
     to be used as a kernel (functions) and data.
     """
 
+    _grid_data_ty: dict[str, nb.types.Array]
+    _scalar_data_ty: dict[str, nb.types.Type]
+
     def __init__(
         self,
         flow_graph: FlowGraph,
         kernel_func: Callable[["NumbaJittedClass"], int],
-        spec: dict[str, NumbaType | tuple[NumbaType, Any]],
+        spec: dict[str, nb.types.Type | tuple[nb.types.Type, Any]],
         application_order: KernelApplicationOrder,
         outputs: Iterable[str] = (),
         max_receivers: int = -1,
@@ -309,32 +331,28 @@ class NumbaFlowKernelFactory:
         self._kernel.application_order = self._application_order
 
     def _set_interfaces(self):
-        for name, item in self._spec.items():
-            if issubclass(item.__class__, NumbaType):
-                continue
+        self._grid_data_ty = {}
+        self._scalar_data_ty = {}
+        self._init_values = {}
 
-            try:
-                _, value = item
-            except ValueError:
+        for spec_name, spec_val in self._spec.items():
+            if isinstance(spec_val, tuple):
+                ty, val = spec_val
+            elif issubclass(spec_val.__class__, nb.types.Type):
+                ty = spec_val
+                val = None
+            else:
                 raise ValueError(
-                    f"'{name}' specification must be either a type or (type, default_value) iterable"
+                    f"'{spec_name}' specification must be either a numba type or a (numba type, default_value) tuple"
                 )
 
-        spec_ty = {name: self._get_spec_type(ty) for name, ty in self._spec.items()}
-        self._grid_data_ty = {
-            name: ty
-            for name, ty in spec_ty.items()
-            if issubclass(ty.__class__, NumbaArray)
-        }
-        self._scalar_data_ty = {
-            name: ty for name, ty in spec_ty.items() if name not in self._grid_data_ty
-        }
+            if issubclass(ty.__class__, nb.types.Array):
+                self._grid_data_ty[spec_name] = ty  # type: ignore
+            else:
+                self._scalar_data_ty[spec_name] = ty
 
-        self._init_values = {}
-        for name, item in self._spec.items():
-            value = self._get_spec_value(item)
-            if value is not None:
-                self._init_values[name] = value
+            if val is not None:
+                self._init_values[spec_name] = val
 
         invalid_outputs = [name for name in self._outputs if name not in self._spec]
         if invalid_outputs:
@@ -570,7 +588,7 @@ class NumbaFlowKernelFactory:
     @staticmethod
     def _generate_jitclass(
         name,
-        spec: Iterable[tuple[str, NumbaType]],
+        spec: Iterable[tuple[str, nb.types.Type]],
         init_source: str,
         glbls: dict = {},
     ) -> Type[NumbaJittedClass]:
@@ -580,24 +598,6 @@ class NumbaFlowKernelFactory:
             Type[NumbaJittedClass],
             nb.experimental.jitclass(spec)(type(name, (), {"__init__": ctor})),
         )
-
-    @staticmethod
-    def _get_spec_type(item: NumbaType | tuple[NumbaType, Any]) -> NumbaType:
-        if issubclass(item.__class__, NumbaType):
-            return item
-
-        return item[0]
-
-    @staticmethod
-    def _get_spec_value(item: NumbaType | tuple[NumbaType, Any]) -> Any:
-        if issubclass(item.__class__, NumbaType):
-            return
-
-        try:
-            _, value = item
-            return value
-        except TypeError:
-            pass
 
     def _build_node_data_jitclass(self):
         """Builds a node data jitclass.
@@ -819,12 +819,9 @@ class NumbaFlowKernelFactory:
             {"distance": nb.float64[::1], "weight": nb.float64[::1]}
         )
 
-        data_dtypes: dict[str, NumbaType] = {}
+        data_dtypes: dict[nb.types.Type, list[str]] = defaultdict(list)
         for name, value in receivers_grid_data_ty.items():
-            if value.dtype in data_dtypes:
-                data_dtypes[value.dtype].append(name)
-            else:
-                data_dtypes[value.dtype] = [name]
+            data_dtypes[value.dtype].append(name)
 
         node_content = "\n".join(
             [f"node_data.{name} = data.{name}[index]" for name in self._grid_data_ty]
