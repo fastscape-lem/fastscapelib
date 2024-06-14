@@ -399,5 +399,5 @@ class TestFlowKernel:
             max_receivers=1,
         )
         data.bind(a=np.ones(flow_graph.size, dtype=np.float64))
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             flow_graph.apply_kernel(kernel, data)

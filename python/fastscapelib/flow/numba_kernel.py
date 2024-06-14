@@ -960,7 +960,7 @@ class NumbaFlowKernelFactory:
 
 
 @nb.njit
-def py_apply_kernel_impl(
+def _apply_flow_kernel(
     indices: np.ndarray,
     func: KernelFunc,
     data: NumbaJittedClass,
@@ -981,7 +981,7 @@ def py_apply_kernel_impl(
 
     for i in indices:
         if node_data_getter(i, data, node_data):
-            raise RuntimeError(
+            raise ValueError(
                 f"Invalid index {i} encountered in node_data getter function\n"
                 "Please check if you are using dynamic receivers count "
                 "('max_receivers=-1') or adjust this setting in the "
@@ -993,8 +993,8 @@ def py_apply_kernel_impl(
     return 0
 
 
-def py_apply_kernel(
-    flow_graph: FlowGraph, nb_kernel: NumbaKernel, data: NumbaKernelData
+def apply_flow_kernel(
+    flow_graph: FlowGraph, kernel: NumbaKernel, data: NumbaKernelData
 ):
     """Applies a kernel on a grid.
 
@@ -1002,25 +1002,25 @@ def py_apply_kernel(
     of a sequential call of the flow kernel on the grid nodes.
     """
 
-    kernel = nb_kernel.kernel
-    node_data = nb_kernel.node_data_create()
-    if nb_kernel.node_data_init:
-        nb_kernel.node_data_init(node_data, data.jitclass_obj)
+    wrapped_kernel = kernel.kernel
+    node_data = kernel.node_data_create()
+    if kernel.node_data_init:
+        kernel.node_data_init(node_data, data.jitclass_obj)
 
-    if kernel.apply_dir == FlowGraphTraversalDir.ANY:
+    if wrapped_kernel.apply_dir == FlowGraphTraversalDir.ANY:
         indices = np.arange(0, flow_graph.size, 1, dtype=np.uint64)
-    elif kernel.apply_dir == FlowGraphTraversalDir.BREADTH_UPSTREAM:
+    elif wrapped_kernel.apply_dir == FlowGraphTraversalDir.BREADTH_UPSTREAM:
         indices = flow_graph.impl().bfs_indices
-    elif kernel.apply_dir == FlowGraphTraversalDir.DEPTH_UPSTREAM:
+    elif wrapped_kernel.apply_dir == FlowGraphTraversalDir.DEPTH_UPSTREAM:
         indices = flow_graph.impl().dfs_indices
     else:
-        raise RuntimeError("Unsupported kernel application order")
+        raise ValueError("Unsupported kernel application direction")
 
-    return py_apply_kernel_impl(
+    return _apply_flow_kernel(
         indices,
-        nb_kernel.func,
+        kernel.func,
         data.jitclass_obj,
         node_data,
-        nb_kernel.node_data_getter,
-        nb_kernel.node_data_setter,
+        kernel.node_data_getter,
+        kernel.node_data_setter,
     )
