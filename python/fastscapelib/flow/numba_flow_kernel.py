@@ -28,13 +28,18 @@ from numba.experimental.jitclass import _box  # type: ignore[missing-imports]
 
 # type stubs defined in this sub-package (avoid circular imports)
 if TYPE_CHECKING:
-    from fastscapelib.flow import FlowGraph, FlowGraphTraversalDir, _Kernel, _KernelData
+    from fastscapelib.flow import (
+        FlowGraph,
+        FlowGraphTraversalDir,
+        _FlowKernel,
+        _FlowKernelData,
+    )
 else:
     from _fastscapelib_py.flow import (
         FlowGraph,
         FlowGraphTraversalDir,
-        _Kernel,
-        _KernelData,
+        _FlowKernel,
+        _FlowKernelData,
     )
 
 
@@ -130,7 +135,7 @@ def timer(msg: str, do_print: bool) -> Iterator[None]:
         print(f"Time spent in {msg}: {elapsed_time:.1f} seconds")
 
 
-class NumbaKernelData(Mapping):
+class NumbaFlowKernelData(Mapping):
     """Proxy mapping for access to numba flow kernel data.
 
     This class implements the immutable mapping interface but still allows
@@ -147,7 +152,7 @@ class NumbaKernelData(Mapping):
     _spec_keys: list[str]
     _grid_spec_keys: list[str]
     _bound_keys: set[str]
-    _kernel_data: _KernelData
+    _kernel_data: _FlowKernelData
     _jitclass_obj: NumbaJittedClass
 
     def __init__(
@@ -164,7 +169,7 @@ class NumbaKernelData(Mapping):
         self._grid_spec_keys = grid_spec_keys
         self._bound_keys = set()
 
-        kernel_data = _KernelData()
+        kernel_data = _FlowKernelData()
         kernel_data.data.meminfo = _box.box_get_meminfoptr(jitclass_obj)
         kernel_data.data.data = _box.box_get_dataptr(jitclass_obj)
         self._kernel_data = kernel_data
@@ -194,7 +199,7 @@ class NumbaKernelData(Mapping):
         return self._jitclass_obj
 
     @property
-    def kernel_data(self) -> _KernelData:
+    def kernel_data(self) -> _FlowKernelData:
         """Return the object used to access kernel data from C++."""
         return self._kernel_data
 
@@ -237,10 +242,10 @@ class NumbaKernelData(Mapping):
 
 
 @dataclass
-class NumbaKernel:
-    """Stores a kernel"""
+class NumbaFlowKernel:
+    """Stores a numba flow kernel"""
 
-    kernel: _Kernel
+    kernel: _FlowKernel
     node_data_create: KernelNodeDataCreate
     node_data_init: Optional[NumbaJittedFunc]
     node_data_getter: KernelNodeDataGetter
@@ -249,7 +254,7 @@ class NumbaKernel:
     func: KernelFunc
 
 
-def create_flow_kernel(*args, **kwargs) -> tuple[NumbaKernel, NumbaKernelData]:
+def create_flow_kernel(*args, **kwargs) -> tuple[NumbaFlowKernel, NumbaFlowKernelData]:
     """Creates a numba flow kernel.
 
     Conveniance function to call a `NumbaFlowKernelFactory` and return
@@ -302,7 +307,7 @@ class NumbaFlowKernelFactory:
 
     @property
     def kernel(self):
-        return NumbaKernel(
+        return NumbaFlowKernel(
             kernel=self._kernel,
             node_data_create=self.node_data_create,
             node_data_init=self.node_data_init,
@@ -313,7 +318,7 @@ class NumbaFlowKernelFactory:
         )
 
     @property
-    def data(self) -> NumbaKernelData:
+    def data(self) -> NumbaFlowKernelData:
         flow_graph = self._flow_graph
         flow_graph_data = {
             "donors_idx": flow_graph.impl().donors.view(),
@@ -325,7 +330,7 @@ class NumbaFlowKernelFactory:
         }
 
         data = self._data_jitclass(**flow_graph_data)
-        data_wrapper = NumbaKernelData(
+        data_wrapper = NumbaFlowKernelData(
             self._flow_graph.grid_shape,
             list(self._spec.keys()),
             list(self._grid_data_ty),
@@ -346,7 +351,7 @@ class NumbaFlowKernelFactory:
         or in parallel depending on the caller implementation.
         """
 
-        self._kernel = _Kernel()
+        self._kernel = _FlowKernel()
 
         with timer("build data classes", self._print_stats):
             self._build_and_set_data_classes()
@@ -994,7 +999,7 @@ def _apply_flow_kernel(
 
 
 def apply_flow_kernel(
-    flow_graph: FlowGraph, kernel: NumbaKernel, data: NumbaKernelData
+    flow_graph: FlowGraph, kernel: NumbaFlowKernel, data: NumbaFlowKernelData
 ):
     """Applies a kernel on a grid.
 

@@ -8,7 +8,7 @@ from fastscapelib.flow import (
     MultiFlowRouter,
     PFloodSinkResolver,
 )
-from fastscapelib.flow.numba_kernel import create_flow_kernel
+from fastscapelib.flow.numba_flow_kernel import create_flow_kernel
 from fastscapelib.grid import NodeStatus, RasterGrid
 
 

@@ -618,7 +618,7 @@ add_flow_graph_bindings(py::module& m)
             {
                 auto py_apply_kernel = py::module::import("fastscapelib")
                                            .attr("flow")
-                                           .attr("numba_kernel")
+                                           .attr("numba_flow_kernel")
                                            .attr("apply_flow_kernel");
                 return py_apply_kernel(flow_graph, flow_kernel, flow_kernel_data).cast<int>();
             }
@@ -651,7 +651,7 @@ add_flow_graph_bindings(py::module& m)
                fs::flow_graph_traversal_dir::breadth_upstream,
                "From down to upstream in the breadth-first order");
 
-    py::class_<fs::py_numba_flow_kernel>(m, "_Kernel")
+    py::class_<fs::py_numba_flow_kernel>(m, "_FlowKernel")
         .def(py::init<>())
         .def_readwrite("func", &fs::py_numba_flow_kernel::func_ptr)
         .def_readwrite("node_data_getter", &fs::py_numba_flow_kernel::node_data_getter_ptr)
@@ -664,7 +664,7 @@ add_flow_graph_bindings(py::module& m)
         .def_readwrite("min_level_size", &fs::py_numba_flow_kernel::min_level_size)
         .def_readwrite("apply_dir", &fs::py_numba_flow_kernel::apply_dir);
 
-    py::class_<fs::py_numba_flow_kernel_data>(m, "_KernelData")
+    py::class_<fs::py_numba_flow_kernel_data>(m, "_FlowKernelData")
         .def(py::init<>())
         .def_readwrite("data", &fs::py_numba_flow_kernel_data::data_ptr);
 
