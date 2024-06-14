@@ -57,7 +57,8 @@ def kernel1(compiled_kernel1):
 @pytest.fixture(scope="function")
 def kernel1_data(compiled_kernel1):
     yield compiled_kernel1[1]
-    compiled_kernel1[1]._bound_data.clear()
+    # "un-bind" all kernel data
+    compiled_kernel1[1]._bound_keys.clear()
 
 
 @pytest.fixture(scope="module")
@@ -92,7 +93,8 @@ def kernel2(compiled_kernel2):
 @pytest.fixture(scope="function")
 def kernel2_data(compiled_kernel2):
     yield compiled_kernel2[1]
-    compiled_kernel2[1]._bound_data.clear()
+    # "un-bind" all kernel data
+    compiled_kernel2[1]._bound_keys.clear()
 
 
 @pytest.fixture(scope="module")
@@ -117,37 +119,66 @@ def kernel3(compiled_kernel3):
 @pytest.fixture(scope="function")
 def kernel3_data(compiled_kernel3):
     yield compiled_kernel3[1]
-    compiled_kernel3[1]._bound_data.clear()
+    # "un-bind" all kernel data
+    compiled_kernel3[1]._bound_keys.clear()
 
 
 class TestFlowKernelData:
-    def test_bind(self, flow_graph, kernel1, kernel1_data):
-        _, data = kernel1, kernel1_data
+    def test_bind_array(self, flow_graph, kernel1_data):
+        # not bound yet
+        assert kernel1_data.a is None
 
-        data.a = np.zeros(flow_graph.size)
-        assert data.bound == {"a"}
+        # 1-d array case
+        expected = np.zeros(flow_graph.size)
+        kernel1_data.bind(a=expected)
+        assert kernel1_data.a is expected
 
-    def test_setattr_bindings(self, flow_graph, kernel1, kernel1_data):
-        _, data = kernel1, kernel1_data
+        # scalar (expand) case
+        expected = np.ones(flow_graph.size)
+        kernel1_data.bind(a=1.0)
+        np.testing.assert_array_equal(kernel1_data.a, expected)
 
-        data.a = np.zeros(flow_graph.size)
-        assert data.bound == {"a"}
+        # 2-d raster (flatten) case
+        expected = 2 * np.ones(flow_graph.grid_shape)
+        kernel1_data.bind(a=expected)
+        np.testing.assert_array_equal(kernel1_data.a, expected.ravel())
 
-    def test_getattr_setattr(self, kernel2_data):
-        data = kernel2_data
+        # invalid shape
+        with pytest.raises(ValueError):
+            kernel1_data.bind(a=np.zeros(flow_graph.size - 1))
 
-        data.int64 = 10
-        assert data["int64"] == 10
-        assert data.int64 == 10
-        assert data._data.int64 == 10
+    def test_bind_scalar(self, kernel2_data):
+        # not bound yet
+        assert kernel2_data.f64 is None
+        kernel2_data.bind(f64=1.0)
+        assert kernel2_data.f64 == 1.0
 
-    def test_getitem_setitem(self, kernel2_data):
-        data = kernel2_data
+    def test_attr_like_access(self, kernel2_data):
+        kernel2_data.bind(int64=10)
+        assert kernel2_data.int64 == 10
+        assert kernel2_data._data.int64 == 10
 
-        data["int64"] = 11
-        assert data["int64"] == 11
-        assert data.int64 == 11
-        assert data._data.int64 == 11
+    def test_mapping_interface(self, kernel2_data):
+        assert len(kernel2_data) == 11
+        assert list(kernel2_data) == [
+            "f64",
+            "f32",
+            "int32",
+            "int64",
+            "uint64",
+            "f64_arr",
+            "f32_arr",
+            "int32_arr",
+            "int64_arr",
+            "uint64_arr",
+            "a",
+        ]
+
+        # no data bound yet
+        assert list(kernel2_data.values()) == [None] * 11
+
+        kernel2_data.bind(f64=1.0)
+        assert kernel2_data["f64"] == 1.0
 
     def test_multiple_bindings(self, flow_graph, kernel1_data):
         data = kernel1_data
@@ -260,10 +291,6 @@ class TestFlowKernel:
                 application_order=KernelApplicationOrder.ANY,
             )
 
-    def test_invalid_grid_data_shape(self, flow_graph):
-        with pytest.raises(AttributeError):
-            kernel1.bind_data(a=np.zeros(flow_graph.size - 1))
-
     def test_multiple_types(self, kernel2, kernel2_data):
         kernel, data = kernel2, kernel2_data
 
@@ -338,11 +365,11 @@ class TestFlowKernel:
         assert kernel3.node_data_init is not None
 
         node_data = kernel3.node_data_create()
-        kernel3_data.a = 12.0
+        kernel3_data.bind(a=12.0)
         kernel3.node_data_init(node_data, kernel3_data._data)
         assert node_data.a == 12.0
 
-        kernel3_data.a = 1.0
+        kernel3_data.bind(a=1.0)
         kernel3.node_data_init(node_data, kernel3_data._data)
         assert node_data.a == 1.0
 

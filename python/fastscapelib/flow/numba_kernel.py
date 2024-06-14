@@ -5,6 +5,7 @@ import inspect
 import sys
 import time
 from collections import defaultdict
+from collections.abc import Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
@@ -23,6 +24,7 @@ from typing import (
 
 import numba as nb
 import numpy as np
+from numba.experimental.jitclass import _box  # type: ignore[missing-imports]
 
 # type stubs defined in this sub-package (avoid circular imports)
 if TYPE_CHECKING:
@@ -128,35 +130,39 @@ def timer(msg: str, do_print: bool) -> Iterator[None]:
         print(f"Time spent in {msg}: {elapsed_time:.1f} seconds")
 
 
-class NumbaKernelData:
-    """Proxy class to expose kernel data.
+class NumbaKernelData(Mapping):
+    """Proxy mapping for access to numba flow kernel data.
 
-    This class implements getters and setters to access and update
-    kernel data, but also convenient properties and methods to
-    access numba jitclass and data validation.
+    This class implements the immutable mapping interface but still allows
+    setting or updating kernel data exclusively via the ``.bind()`` method (with
+    data validation).
+
+    For convenience, this class also provides attribute-style access to kernel
+    data.
+
     """
 
-    _grid_size: int
+    _grid_shape: tuple[int, ...]
+    _grid_size: np.int64
     _spec_keys: list[str]
-    _grid_data_ty: dict[str, nb.types.Array]
-    _bound_data: set[str]
+    _grid_spec_keys: list[str]
+    _bound_keys: set[str]
     _data_ptr: KernelData
     _data: NumbaJittedClass
 
     def __init__(
         self,
-        grid_size: int,
+        grid_shape: list[int],
         spec_keys: list[str],
-        grid_data_ty: dict[str, nb.types.Array],
+        grid_spec_keys: list[str],
         data: NumbaJittedClass,
     ):
         super().__setattr__("_data", data)
-        self._grid_size = grid_size
+        self._grid_shape = tuple(grid_shape)
+        self._grid_size = np.prod(grid_shape)
         self._spec_keys = spec_keys
-        self._grid_data_ty = grid_data_ty
-        self._bound_data = set()
-
-        from numba.experimental.jitclass import _box  # type: ignore[missing-imports]
+        self._grid_spec_keys = grid_spec_keys
+        self._bound_keys = set()
 
         data_ptr = KernelData()
         data_ptr.data.meminfo = _box.box_get_meminfoptr(data)
@@ -164,19 +170,21 @@ class NumbaKernelData:
         self._data_ptr = data_ptr
 
     def __getattr__(self, name: str) -> Any:
+        if name not in self._bound_keys:
+            return None
         return getattr(self._data, name)
 
     def __getitem__(self, name: str) -> Any:
+        if name not in self._bound_keys:
+            return None
         return getattr(self._data, name)
 
-    def __setattr__(self, name: str, value: Any):
-        if name in self._data._numba_type_.struct:
-            self.bind(**{name: value})
-        else:
-            super().__setattr__(name, value)
+    def __iter__(self):
+        for key in self._spec_keys:
+            yield key
 
-    def __setitem__(self, name: str, value: Any):
-        setattr(self, name, value)
+    def __len__(self):
+        return len(self._spec_keys)
 
     @property
     def jitclass(self) -> NumbaJittedClass:
@@ -187,28 +195,40 @@ class NumbaKernelData:
         return self._data_ptr
 
     def bind(self, **kwargs):
-        for name, value in kwargs.items():
-            if name in self._grid_data_ty:
-                if type(value) in (float, int):
-                    value = np.full((self._grid_size,), value)
+        """Set or update kernel data.
 
+        Parameters
+        ----------
+        **kwargs
+            Argument names must be valid kernel data keys. Argument value types must correspond
+            to the types defined via the kernel ``spec`` (either scalar or array).
+            Kernel grid data values must be either scalar (will be expanded into an array) or
+            1-d array (size matching the number of flow graph nodes) or n-d array (shape matching
+            the grid shape, will be flattened).
+
+        """
+        for name, value in kwargs.items():
+            if name not in self._spec_keys:
+                raise KeyError(f"Unknown kernel data key {name}")
+
+            if name in self._grid_spec_keys:
+                if np.isscalar(value):
+                    value = np.full(self._grid_size, value)
+                if value.shape == self._grid_shape:
+                    value = value.ravel()
                 if value.shape != (self._grid_size,):
                     raise ValueError(
                         f"Invalid shape {value.shape} for data '{name}' (must be {(self._grid_size,)})"
                     )
-            setattr(self._data, name, value)
-            self._bound_data.add(name)
 
-    @property
-    def bound(self) -> set[str]:
-        return self._bound_data
+            setattr(self._data, name, value)
+            self._bound_keys.add(name)
 
     def check_bindings(self):
-        spec_names = set(self._spec_keys)
-        unbound_data = spec_names.difference(self._bound_data)
+        unbound_data = set(self._spec_keys) - self._bound_keys
         if unbound_data:
             raise ValueError(
-                f"The following kernel data must be set prior any kernel call: {unbound_data}"
+                f"The following kernel data must be set prior any kernel call: {', '.join(list(unbound_data))}"
             )
 
 
@@ -222,7 +242,7 @@ class NumbaKernel:
     node_data_getter: KernelNodeDataGetter
     node_data_setter: KernelNodeDataSetter
     node_data_free: Any
-    func: NumbaJittedFunc
+    func: KernelFunc
 
 
 def create_flow_kernel(*args, **kwargs) -> tuple[NumbaKernel, NumbaKernelData]:
@@ -302,7 +322,10 @@ class NumbaFlowKernelFactory:
 
         data = self._data_jitclass(**flow_graph_data)
         data_wrapper = NumbaKernelData(
-            self._flow_graph.size, list(self._spec.keys()), self._grid_data_ty, data
+            self._flow_graph.grid_shape,
+            list(self._spec.keys()),
+            list(self._grid_data_ty),
+            data,
         )
         data_wrapper.bind(**self._init_values)
 
