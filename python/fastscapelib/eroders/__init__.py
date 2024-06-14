@@ -3,6 +3,6 @@ from _fastscapelib_py.eroders import (  # type: ignore[import]
     SPLEroder,
 )
 
-from .numba_eroder import NumbaEroderFlowKernel
+from fastscapelib.eroders.flow_kernel_eroder import FlowKernelEroder
 
-__all__ = ["DiffusionADIEroder", "SPLEroder", "NumbaEroderFlowKernel"]
+__all__ = ["DiffusionADIEroder", "SPLEroder", "FlowKernelEroder"]

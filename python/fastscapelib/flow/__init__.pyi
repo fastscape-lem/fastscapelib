@@ -3,6 +3,7 @@ from typing import Any, ClassVar, List, Union, overload
 import numpy as np
 import numpy.typing as npt
 
+from fastscapelib.flow.numba_flow_kernel import NumbaFlowKernel, NumbaFlowKernelData
 from fastscapelib.grid import ProfileGrid, RasterGrid, TriMesh
 
 Grid = Union[ProfileGrid, RasterGrid, TriMesh]
@@ -180,6 +181,9 @@ class FlowGraph:
     @overload
     def accumulate(self, src: float) -> npt.NDArray[np.float64]: ...
     def basins(self) -> npt.NDArray[np.uint64]: ...
+    def apply_kernel(
+        self, flow_kernel: NumbaFlowKernel, flow_kernel_data: NumbaFlowKernelData
+    ) -> int: ...
     @property
     def size(self) -> int: ...
     @property
