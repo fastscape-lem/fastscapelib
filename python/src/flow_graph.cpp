@@ -610,9 +610,9 @@ add_flow_graph_bindings(py::module& m)
            py::object flow_kernel_data) -> int
         {
             flow_kernel_data.attr("check_bindings")();
-            auto kernel = flow_kernel.attr("kernel").cast<fs::PyNumbaFlowKernel>();
+            auto kernel = flow_kernel.attr("kernel").cast<fs::py_numba_flow_kernel>();
             auto kernel_data
-                = flow_kernel_data.attr("jitclass_ptr").cast<fs::PyNumbaFlowKernelData>();
+                = flow_kernel_data.attr("kernel_data").cast<fs::py_numba_flow_kernel_data>();
 
             if (kernel.n_threads == 1)
             {
@@ -623,8 +623,8 @@ add_flow_graph_bindings(py::module& m)
             else
             {
                 py::gil_scoped_release release;
-                auto fs_kernel = (fs::NumbaFlowKernel&) kernel;
-                auto fs_kernel_data = (fs::NumbaFlowKernelData&) kernel_data;
+                auto fs_kernel = (fs::numba_flow_kernel&) kernel;
+                auto fs_kernel_data = (fs::numba_flow_kernel_data&) kernel_data;
 
                 return flow_graph.apply_kernel(fs_kernel, fs_kernel_data);
             }
@@ -638,25 +638,25 @@ add_flow_graph_bindings(py::module& m)
         .value("BREADTH_DOWNSTREAM", fs::kernel_application_order::BREADTH_DOWNSTREAM, "")
         .value("BREADTH_UPSTREAM", fs::kernel_application_order::BREADTH_UPSTREAM, "");
 
-    py::class_<fs::PyNumbaFlowKernel>(m, "Kernel")
+    py::class_<fs::py_numba_flow_kernel>(m, "_Kernel")
         .def(py::init<>())
-        .def_readwrite("func", &fs::PyNumbaFlowKernel::func_ptr)
-        .def_readwrite("node_data_getter", &fs::PyNumbaFlowKernel::node_data_getter_ptr)
-        .def_readwrite("node_data_setter", &fs::PyNumbaFlowKernel::node_data_setter_ptr)
-        .def_readwrite("node_data_create", &fs::PyNumbaFlowKernel::node_data_create_ptr)
-        .def_readwrite("node_data_init", &fs::PyNumbaFlowKernel::node_data_init_ptr)
-        .def_readwrite("node_data_free", &fs::PyNumbaFlowKernel::node_data_free_ptr)
-        .def_readwrite("n_threads", &fs::PyNumbaFlowKernel::n_threads)
-        .def_readwrite("min_block_size", &fs::PyNumbaFlowKernel::min_block_size)
-        .def_readwrite("min_level_size", &fs::PyNumbaFlowKernel::min_level_size)
-        .def_readwrite("application_order", &fs::PyNumbaFlowKernel::application_order);
+        .def_readwrite("func", &fs::py_numba_flow_kernel::func_ptr)
+        .def_readwrite("node_data_getter", &fs::py_numba_flow_kernel::node_data_getter_ptr)
+        .def_readwrite("node_data_setter", &fs::py_numba_flow_kernel::node_data_setter_ptr)
+        .def_readwrite("node_data_create", &fs::py_numba_flow_kernel::node_data_create_ptr)
+        .def_readwrite("node_data_init", &fs::py_numba_flow_kernel::node_data_init_ptr)
+        .def_readwrite("node_data_free", &fs::py_numba_flow_kernel::node_data_free_ptr)
+        .def_readwrite("n_threads", &fs::py_numba_flow_kernel::n_threads)
+        .def_readwrite("min_block_size", &fs::py_numba_flow_kernel::min_block_size)
+        .def_readwrite("min_level_size", &fs::py_numba_flow_kernel::min_level_size)
+        .def_readwrite("application_order", &fs::py_numba_flow_kernel::application_order);
 
-    py::class_<fs::PyNumbaFlowKernelData>(m, "KernelData")
+    py::class_<fs::py_numba_flow_kernel_data>(m, "_KernelData")
         .def(py::init<>())
-        .def_readwrite("data", &fs::PyNumbaFlowKernelData::data_ptr);
+        .def_readwrite("data", &fs::py_numba_flow_kernel_data::data_ptr);
 
-    py::class_<fs::PyNumbaJitClass>(m, "JitClass")
+    py::class_<fs::py_numba_jit_class>(m, "_JitClass")
         .def(py::init<>())
-        .def_readwrite("meminfo", &fs::PyNumbaJitClass::meminfoptr)
-        .def_readwrite("data", &fs::PyNumbaJitClass::dataptr);
+        .def_readwrite("meminfo", &fs::py_numba_jit_class::meminfo_ptr)
+        .def_readwrite("data", &fs::py_numba_jit_class::data_ptr);
 }

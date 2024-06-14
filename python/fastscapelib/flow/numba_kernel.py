@@ -28,13 +28,18 @@ from numba.experimental.jitclass import _box  # type: ignore[missing-imports]
 
 # type stubs defined in this sub-package (avoid circular imports)
 if TYPE_CHECKING:
-    from fastscapelib.flow import FlowGraph, Kernel, KernelApplicationOrder, KernelData
+    from fastscapelib.flow import (
+        FlowGraph,
+        KernelApplicationOrder,
+        _Kernel,
+        _KernelData,
+    )
 else:
     from _fastscapelib_py.flow import (
         FlowGraph,
-        Kernel,
         KernelApplicationOrder,
-        KernelData,
+        _Kernel,
+        _KernelData,
     )
 
 
@@ -147,37 +152,37 @@ class NumbaKernelData(Mapping):
     _spec_keys: list[str]
     _grid_spec_keys: list[str]
     _bound_keys: set[str]
-    _data_ptr: KernelData
-    _data: NumbaJittedClass
+    _kernel_data: _KernelData
+    _jitclass_obj: NumbaJittedClass
 
     def __init__(
         self,
         grid_shape: list[int],
         spec_keys: list[str],
         grid_spec_keys: list[str],
-        data: NumbaJittedClass,
+        jitclass_obj: NumbaJittedClass,
     ):
-        super().__setattr__("_data", data)
+        self._jitclass_obj = jitclass_obj
         self._grid_shape = tuple(grid_shape)
         self._grid_size = np.prod(grid_shape)
         self._spec_keys = spec_keys
         self._grid_spec_keys = grid_spec_keys
         self._bound_keys = set()
 
-        data_ptr = KernelData()
-        data_ptr.data.meminfo = _box.box_get_meminfoptr(data)
-        data_ptr.data.data = _box.box_get_dataptr(data)
-        self._data_ptr = data_ptr
+        kernel_data = _KernelData()
+        kernel_data.data.meminfo = _box.box_get_meminfoptr(jitclass_obj)
+        kernel_data.data.data = _box.box_get_dataptr(jitclass_obj)
+        self._kernel_data = kernel_data
 
     def __getattr__(self, name: str) -> Any:
         if name not in self._bound_keys:
             return None
-        return getattr(self._data, name)
+        return getattr(self._jitclass_obj, name)
 
     def __getitem__(self, name: str) -> Any:
         if name not in self._bound_keys:
             return None
-        return getattr(self._data, name)
+        return getattr(self._jitclass_obj, name)
 
     def __iter__(self):
         for key in self._spec_keys:
@@ -187,12 +192,16 @@ class NumbaKernelData(Mapping):
         return len(self._spec_keys)
 
     @property
-    def jitclass(self) -> NumbaJittedClass:
-        return self._data
+    def jitclass_obj(self) -> NumbaJittedClass:
+        """Return the numba jit-compiled class instance holding or referencing
+        the kernel data.
+        """
+        return self._jitclass_obj
 
     @property
-    def jitclass_ptr(self) -> KernelData:
-        return self._data_ptr
+    def kernel_data(self) -> _KernelData:
+        """Return the object used to access kernel data from C++."""
+        return self._kernel_data
 
     def bind(self, **kwargs):
         """Set or update kernel data.
@@ -221,7 +230,7 @@ class NumbaKernelData(Mapping):
                         f"Invalid shape {value.shape} for data '{name}' (must be {(self._grid_size,)})"
                     )
 
-            setattr(self._data, name, value)
+            setattr(self._jitclass_obj, name, value)
             self._bound_keys.add(name)
 
     def check_bindings(self):
@@ -236,7 +245,7 @@ class NumbaKernelData(Mapping):
 class NumbaKernel:
     """Stores a kernel"""
 
-    kernel: Kernel
+    kernel: _Kernel
     node_data_create: KernelNodeDataCreate
     node_data_init: Optional[NumbaJittedFunc]
     node_data_getter: KernelNodeDataGetter
@@ -342,7 +351,7 @@ class NumbaFlowKernelFactory:
         or in parallel depending on the caller implementation.
         """
 
-        self._kernel = Kernel()
+        self._kernel = _Kernel()
 
         with timer("build data classes", self._print_stats):
             self._build_and_set_data_classes()
@@ -1001,7 +1010,7 @@ def py_apply_kernel(
     kernel = nb_kernel.kernel
     node_data = nb_kernel.node_data_create()
     if nb_kernel.node_data_init:
-        nb_kernel.node_data_init(node_data, data._data)
+        nb_kernel.node_data_init(node_data, data._jitclass_obj)
 
     if kernel.application_order == KernelApplicationOrder.ANY:
         indices = np.arange(0, flow_graph.size, 1, dtype=np.uint64)
@@ -1015,7 +1024,7 @@ def py_apply_kernel(
     return py_apply_kernel_impl(
         indices,
         nb_kernel.func,
-        data._data,
+        data._jitclass_obj,
         node_data,
         nb_kernel.node_data_getter,
         nb_kernel.node_data_setter,

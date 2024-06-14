@@ -4,15 +4,15 @@ from _fastscapelib_py.flow import (  # type: ignore[import]
     FlowGraphImpl,
     FlowOperator,
     FlowSnapshot,
-    Kernel,
     KernelApplicationOrder,
-    KernelData,
     MSTMethod,
     MSTRouteMethod,
     MSTSinkResolver,
     MultiFlowRouter,
     PFloodSinkResolver,
     SingleFlowRouter,
+    _Kernel,
+    _KernelData,
 )
 
 from fastscapelib.flow.numba_kernel import create_flow_kernel, py_apply_kernel
@@ -30,8 +30,8 @@ __all__ = [
     "MultiFlowRouter",
     "PFloodSinkResolver",
     "SingleFlowRouter",
-    "Kernel",
-    "KernelData",
+    "_Kernel",
+    "_KernelData",
     "KernelApplicationOrder",
     "create_flow_kernel",
     "py_apply_kernel",
