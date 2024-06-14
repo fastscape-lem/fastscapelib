@@ -1,6 +1,6 @@
 import inspect
 
-from fastscapelib.flow.numba_kernel import create_flow_kernel
+from fastscapelib.flow.numba_flow_kernel import create_flow_kernel
 
 
 class NumbaEroderType(type):
