@@ -105,7 +105,7 @@ namespace fastscapelib
             using array_type = typename xt::xtensor<double, 2>;
 
             template <class FG>
-            SplEroder(FG& flow_graph, int threads_count = 1)
+            SplEroder(FG& /*flow_graph*/, int threads_count = 1)
             {
                 kernel.func = &SplEroder::kernel_func;
                 kernel.node_data_getter = &SplEroder::ndata_getter;
@@ -115,12 +115,12 @@ namespace fastscapelib
                 kernel.node_data_free = [](void* node_data_ptr)
                 { delete reinterpret_cast<SplEroderKernelNodeData*>(node_data_ptr); };
                 kernel.n_threads = threads_count;
-                kernel.application_order = kernel_application_order::BREADTH_UPSTREAM;
+                kernel.apply_dir = flow_graph_traversal_dir::breadth_upstream;
 
                 kernel_data.data = reinterpret_cast<void*>(&data);
             }
 
-            array_type erode(array_type& elevation, double dt)
+            array_type erode(array_type& elevation, double /*dt*/)
             {
                 return elevation;
             }

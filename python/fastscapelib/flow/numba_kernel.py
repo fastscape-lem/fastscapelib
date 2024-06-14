@@ -28,16 +28,11 @@ from numba.experimental.jitclass import _box  # type: ignore[missing-imports]
 
 # type stubs defined in this sub-package (avoid circular imports)
 if TYPE_CHECKING:
-    from fastscapelib.flow import (
-        FlowGraph,
-        KernelApplicationOrder,
-        _Kernel,
-        _KernelData,
-    )
+    from fastscapelib.flow import FlowGraph, FlowGraphTraversalDir, _Kernel, _KernelData
 else:
     from _fastscapelib_py.flow import (
         FlowGraph,
-        KernelApplicationOrder,
+        FlowGraphTraversalDir,
         _Kernel,
         _KernelData,
     )
@@ -282,7 +277,7 @@ class NumbaFlowKernelFactory:
         flow_graph: FlowGraph,
         kernel_func: Callable[["NumbaJittedClass"], int],
         spec: dict[str, nb.types.Type | tuple[nb.types.Type, Any]],
-        application_order: KernelApplicationOrder,
+        apply_dir: FlowGraphTraversalDir,
         outputs: Iterable[str] = (),
         max_receivers: int = -1,
         n_threads: int = 1,
@@ -298,7 +293,7 @@ class NumbaFlowKernelFactory:
             self._print_generated_code = print_generated_code
             self._print_stats = print_stats
             self._n_threads = n_threads
-            self._application_order = application_order
+            self._apply_dir = apply_dir
 
             self._bound_data: set[str] = set()
 
@@ -363,7 +358,7 @@ class NumbaFlowKernelFactory:
         with timer("build flow kernel", self._print_stats):
             self._build_and_set_flow_kernel_ptr()
         self._kernel.n_threads = self._n_threads
-        self._kernel.application_order = self._application_order
+        self._kernel.apply_dir = self._apply_dir
 
     def _set_interfaces(self):
         self._grid_data_ty = {}
@@ -1010,13 +1005,13 @@ def py_apply_kernel(
     kernel = nb_kernel.kernel
     node_data = nb_kernel.node_data_create()
     if nb_kernel.node_data_init:
-        nb_kernel.node_data_init(node_data, data._jitclass_obj)
+        nb_kernel.node_data_init(node_data, data.jitclass_obj)
 
-    if kernel.application_order == KernelApplicationOrder.ANY:
+    if kernel.apply_dir == FlowGraphTraversalDir.ANY:
         indices = np.arange(0, flow_graph.size, 1, dtype=np.uint64)
-    elif kernel.application_order == KernelApplicationOrder.BREADTH_UPSTREAM:
+    elif kernel.apply_dir == FlowGraphTraversalDir.BREADTH_UPSTREAM:
         indices = flow_graph.impl().bfs_indices
-    elif kernel.application_order == KernelApplicationOrder.DEPTH_UPSTREAM:
+    elif kernel.apply_dir == FlowGraphTraversalDir.DEPTH_UPSTREAM:
         indices = flow_graph.impl().dfs_indices
     else:
         raise RuntimeError("Unsupported kernel application order")
@@ -1024,7 +1019,7 @@ def py_apply_kernel(
     return py_apply_kernel_impl(
         indices,
         nb_kernel.func,
-        data._jitclass_obj,
+        data.jitclass_obj,
         node_data,
         nb_kernel.node_data_getter,
         nb_kernel.node_data_setter,

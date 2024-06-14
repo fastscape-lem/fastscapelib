@@ -4,7 +4,7 @@ import pytest
 
 from fastscapelib.flow import (
     FlowGraph,
-    KernelApplicationOrder,
+    FlowGraphTraversalDir,
     MultiFlowRouter,
     PFloodSinkResolver,
 )
@@ -44,7 +44,7 @@ def compiled_kernel1(kernel_func1, flow_graph):
             a=nb.float64[::1],
         ),
         outputs=["a"],
-        application_order=KernelApplicationOrder.ANY,
+        apply_dir=FlowGraphTraversalDir.ANY,
     )
     yield kernel
 
@@ -80,7 +80,7 @@ def compiled_kernel2(kernel_func1, flow_graph):
             a=nb.float64[::1],
         ),
         outputs=["a"],
-        application_order=KernelApplicationOrder.ANY,
+        apply_dir=FlowGraphTraversalDir.ANY,
     )
     yield kernel, data
 
@@ -105,7 +105,7 @@ def compiled_kernel3(kernel_func2, flow_graph):
         spec=dict(
             a=nb.float64,
         ),
-        application_order=KernelApplicationOrder.ANY,
+        apply_dir=FlowGraphTraversalDir.ANY,
         print_generated_code=True,
     )
     yield kernel, data
@@ -215,7 +215,7 @@ class TestFlowKernelData:
                 a=(nb.float32[::1], np.ones(flow_graph.size, dtype=np.float32) * 1.15),
             ),
             outputs=["a"],
-            application_order=KernelApplicationOrder.ANY,
+            apply_dir=FlowGraphTraversalDir.ANY,
         )
 
         np.testing.assert_almost_equal(
@@ -232,7 +232,7 @@ class TestFlowKernelData:
                 a=(nb.float32[::1], a),
             ),
             outputs=["a"],
-            application_order=KernelApplicationOrder.ANY,
+            apply_dir=FlowGraphTraversalDir.ANY,
         )
 
         np.testing.assert_almost_equal(
@@ -254,7 +254,7 @@ class TestFlowKernel:
                 spec=dict(
                     a=nb.float64[::1],
                 ),
-                application_order=KernelApplicationOrder.ANY,
+                apply_dir=FlowGraphTraversalDir.ANY,
             )
 
     def test_output_assignment(self, flow_graph, kernel1, kernel1_data):
@@ -276,7 +276,7 @@ class TestFlowKernel:
                     a=(nb.float64, 10.0),
                 ),
                 outputs=["a"],
-                application_order=KernelApplicationOrder.ANY,
+                apply_dir=FlowGraphTraversalDir.ANY,
             )
 
     def test_invalid_output(self, flow_graph, kernel_func1):
@@ -288,7 +288,7 @@ class TestFlowKernel:
                     a=(nb.float64, 10.0),
                 ),
                 outputs=["b"],
-                application_order=KernelApplicationOrder.ANY,
+                apply_dir=FlowGraphTraversalDir.ANY,
             )
 
     def test_multiple_types(self, kernel2, kernel2_data):
@@ -395,7 +395,7 @@ class TestFlowKernel:
                 a=nb.float64[::1],
             ),
             outputs=["a"],
-            application_order=KernelApplicationOrder.ANY,
+            apply_dir=FlowGraphTraversalDir.ANY,
             max_receivers=1,
         )
         data.bind(a=np.ones(flow_graph.size, dtype=np.float64))

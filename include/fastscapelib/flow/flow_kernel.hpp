@@ -10,13 +10,20 @@
 
 namespace fastscapelib
 {
-    enum class kernel_application_order
+    /**
+     * Flow graph traversal direction and order
+     *
+     * This enum class is used to specify the direction and order in which to
+     * visit each node of a flow graph.
+     *
+     */
+    enum class flow_graph_traversal_dir
     {
-        ANY,
-        DEPTH_DOWNSTREAM,
-        DEPTH_UPSTREAM,
-        BREADTH_DOWNSTREAM,
-        BREADTH_UPSTREAM
+        any,                /**< unspecified direction */
+        depth_downstream,   /**< from up to downstream in the depth-first order */
+        depth_upstream,     /**< from down to upstream in the depth-first order */
+        breadth_downstream, /**< from up to downstream in the breath-first order */
+        breadth_upstream    /**< from down to upstream in the breath-first order */
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -32,8 +39,8 @@ namespace fastscapelib
         int n_threads;
         int min_block_size;
         int min_level_size;
-        kernel_application_order application_order
-            = kernel_application_order::ANY;  ///< order for kernel application
+        flow_graph_traversal_dir apply_dir
+            = flow_graph_traversal_dir::any;  ///< order for kernel application
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////

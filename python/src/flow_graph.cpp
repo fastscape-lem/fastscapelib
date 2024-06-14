@@ -630,13 +630,24 @@ add_flow_graph_bindings(py::module& m)
             }
         });
 
-    py::enum_<fs::kernel_application_order>(
-        m, "KernelApplicationOrder", py::arithmetic(), "Order to satisfy to apply a kernel.")
-        .value("ANY", fs::kernel_application_order::ANY, "")
-        .value("DEPTH_DOWNSTREAM", fs::kernel_application_order::DEPTH_DOWNSTREAM, "")
-        .value("DEPTH_UPSTREAM", fs::kernel_application_order::DEPTH_UPSTREAM, "")
-        .value("BREADTH_DOWNSTREAM", fs::kernel_application_order::BREADTH_DOWNSTREAM, "")
-        .value("BREADTH_UPSTREAM", fs::kernel_application_order::BREADTH_UPSTREAM, "");
+    py::enum_<fs::flow_graph_traversal_dir>(
+        m,
+        "FlowGraphTraversalDir",
+        py::arithmetic(),
+        "Direction and order in which to visit the flow graph nodes.")
+        .value("ANY", fs::flow_graph_traversal_dir::any, "Unspecified direction")
+        .value("DEPTH_DOWNSTREAM",
+               fs::flow_graph_traversal_dir::depth_downstream,
+               "From up to downstream in the depth-first order")
+        .value("DEPTH_UPSTREAM",
+               fs::flow_graph_traversal_dir::depth_upstream,
+               "From down to upstream in the depth-first order")
+        .value("BREADTH_DOWNSTREAM",
+               fs::flow_graph_traversal_dir::breadth_downstream,
+               "From up to downstream in the breadth-first order")
+        .value("BREADTH_UPSTREAM",
+               fs::flow_graph_traversal_dir::breadth_upstream,
+               "From down to upstream in the breadth-first order");
 
     py::class_<fs::py_numba_flow_kernel>(m, "_Kernel")
         .def(py::init<>())
@@ -649,7 +660,7 @@ add_flow_graph_bindings(py::module& m)
         .def_readwrite("n_threads", &fs::py_numba_flow_kernel::n_threads)
         .def_readwrite("min_block_size", &fs::py_numba_flow_kernel::min_block_size)
         .def_readwrite("min_level_size", &fs::py_numba_flow_kernel::min_level_size)
-        .def_readwrite("application_order", &fs::py_numba_flow_kernel::application_order);
+        .def_readwrite("apply_dir", &fs::py_numba_flow_kernel::apply_dir);
 
     py::class_<fs::py_numba_flow_kernel_data>(m, "_KernelData")
         .def(py::init<>())

@@ -7,9 +7,7 @@ class NumbaEroderType(type):
     @classmethod
     def check_errs(cls, dct):
         errs = []
-        missing_members = {"spec", "outputs", "application_order"}.difference(
-            set(dct.keys())
-        )
+        missing_members = {"spec", "outputs", "apply_dir"}.difference(set(dct.keys()))
         if missing_members:
             errs.append(f"Missing mandatory class members {missing_members}")
 
@@ -49,7 +47,7 @@ class NumbaEroderFlowKernel(metaclass=NumbaEroderType):
             outputs=self.outputs,
             max_receivers=max_receivers,
             n_threads=1,
-            application_order=self.application_order,
+            apply_dir=self.apply_dir,
         )
 
     def set_kernel_data(self, **kwargs):

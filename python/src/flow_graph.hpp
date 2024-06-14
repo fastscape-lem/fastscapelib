@@ -323,9 +323,9 @@ namespace fastscapelib
         void (*node_data_init)(numba_jit_class, numba_jit_class);  ///< node data init
         void (*node_data_free)(numba_jit_class);                   ///< node data destructor
         int n_threads;                                             ///< threads count
-        int min_block_size;                          ///< minimum block size per execution thread
-        int min_level_size;                          ///< minimum level size for parallel execution
-        kernel_application_order application_order;  ///< traversal order for kernel application
+        int min_block_size;                  ///< minimum block size per execution thread
+        int min_level_size;                  ///< minimum level size for parallel execution
+        flow_graph_traversal_dir apply_dir;  ///< traversal order for kernel application
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -365,7 +365,7 @@ namespace fastscapelib
         int n_threads;
         int min_block_size;
         int min_level_size;
-        kernel_application_order application_order;
+        flow_graph_traversal_dir apply_dir;
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////
