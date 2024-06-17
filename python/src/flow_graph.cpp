@@ -645,9 +645,9 @@ add_flow_graph_bindings(py::module& m)
 
         Parameters
         ----------
-        kernel : NumbaFlowKernel
+        kernel : :py:class:`~fastscapelib.flow.numba_flow_kernel.NumbaFlowKernel`
             The flow kernel object to apply along the graph.
-        kernel_data : NumbaFlowKernelData
+        kernel_data : :py:class:`~fastscapelib.flow.numba_flow_kernel.NumbaFlowKernelData`
             The object holding or referencing input and output data used by the flow kernel.
 
         )doc");

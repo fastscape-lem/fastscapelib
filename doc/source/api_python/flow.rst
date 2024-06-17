@@ -12,6 +12,7 @@ Flow graph
 
    FlowGraph
    FlowGraphImpl
+   FlowGraphTraversalDir
 
 .. _py-api-flow-operators:
 
