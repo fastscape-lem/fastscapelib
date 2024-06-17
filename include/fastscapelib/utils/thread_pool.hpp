@@ -1,8 +1,6 @@
 #ifndef FASTSCAPELIB_UTILS_THREAD_POOL_HPP
 #define FASTSCAPELIB_UTILS_THREAD_POOL_HPP
 
-#include <atomic_queue/atomic_queue.h>
-
 #include <atomic>
 #include <chrono>
 #include <functional>
@@ -106,11 +104,11 @@ namespace fastscapelib
                         const std::size_t min_size = 0);
 
     private:
-        std::vector<std::thread> workers;
-        std::vector<job_type>* jobs;
-        std::vector<job_type> pause_jobs;
+        std::vector<std::thread> m_workers;
+        std::vector<job_type>* p_jobs;
+        std::vector<job_type> m_pause_jobs;
         std::atomic_bool m_stopped;
-        std::array<atomic_queue::AtomicQueue<int, 1>, 24> todos;
+        std::vector<std::atomic<std::uint8_t>> m_has_job;
         std::size_t m_size;
         bool m_started = false, m_paused = false;
         std::atomic<std::size_t> m_paused_count = 0;

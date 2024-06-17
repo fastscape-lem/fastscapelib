@@ -5,12 +5,12 @@
 namespace fastscapelib
 {
     template <class T>
-    thread_pool<T>::thread_pool(size_t size)
+    thread_pool<T>::thread_pool(std::size_t size)
         : m_stopped(false)
+        , m_has_job(size)
         , m_size(size)
     {
-        assert(size <= todos.size());
-        workers.reserve(size);
+        m_workers.reserve(size);
         init_pause_jobs();
     }
 
@@ -27,9 +27,9 @@ namespace fastscapelib
     template <class T>
     void thread_pool<T>::init_pause_jobs()
     {
-        pause_jobs.resize(m_size);
+        m_pause_jobs.resize(m_size);
         for (std::size_t i = 0; i < m_size; ++i)
-            pause_jobs[i] = [this, i]()
+            m_pause_jobs[i] = [this, i]()
             {
                 std::unique_lock<std::mutex> lk(m_cv_m);
                 ++m_paused_count;
@@ -43,7 +43,7 @@ namespace fastscapelib
     template <class T>
     void thread_pool<T>::set_tasks(std::vector<job_type>& jobs_)
     {
-        jobs = &jobs_;
+        p_jobs = &jobs_;
         assert(m_size == jobs_.size());
     }
 
@@ -59,8 +59,8 @@ namespace fastscapelib
             resume();
 
         for (std::size_t i = 0; i < m_size; ++i)
-            if ((*jobs)[i] != nullptr)
-                todos[i].push(1);
+            if ((*p_jobs)[i] != nullptr)
+                m_has_job[i].store(1, std::memory_order_relaxed);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ namespace fastscapelib
         if (!m_paused)
         {
             wait();
-            set_tasks(pause_jobs);
+            set_tasks(m_pause_jobs);
             run_tasks();
             m_paused = true;
 
@@ -109,7 +109,7 @@ namespace fastscapelib
     {
         for (std::size_t i = 0; i < m_size; ++i)
         {
-            if (!todos[i].was_empty())
+            if (m_has_job[i].load(std::memory_order_relaxed))
                 return false;
         }
         return true;
@@ -137,7 +137,7 @@ namespace fastscapelib
             if (m_paused)
                 resume();
 
-            for (std::thread& worker : workers)
+            for (std::thread& worker : m_workers)
                 worker.join();
         }
     }
@@ -169,15 +169,15 @@ namespace fastscapelib
 
             for (size_t i = 0; i < m_size; ++i)
             {
-                workers.emplace_back(
+                m_workers.emplace_back(
                     [this, i]
                     {
                         while (!m_stopped.load(std::memory_order_relaxed))
                         {
-                            if (!todos[i].was_empty())
+                            if (m_has_job[i].load(std::memory_order_relaxed))
                             {
-                                (*jobs)[i]();
-                                todos[i].pop();
+                                (*p_jobs)[i]();
+                                m_has_job[i].store(0, std::memory_order_relaxed);
                             }
                         }
                     });
@@ -203,8 +203,9 @@ namespace fastscapelib
             m_size = size;
             stop();
             m_stopped = false;
-            workers.clear();
-            workers.reserve(size);
+            m_workers.clear();
+            m_workers.reserve(size);
+            m_has_job = std::vector<std::atomic<std::uint8_t>>(size);
             init_pause_jobs();
             m_started = false;
         }
@@ -219,7 +220,7 @@ namespace fastscapelib
                                     F&& func,
                                     const std::size_t min_size)
     {
-        std::vector<std::function<void()>> jobs(m_size);
+        std::vector<std::function<void()>> p_jobs(m_size);
 
         if (index_after_last > first_index)
         {
@@ -228,14 +229,14 @@ namespace fastscapelib
             for (T i = 0; i < m_size; ++i)
             {
                 if (i < blks.num_blocks())
-                    jobs[i] = [i,
-                               func = std::forward<F>(func),
-                               start = blks.start(i),
-                               end = blks.end(i)]() { func(i, start, end); };
+                    p_jobs[i] = [i,
+                                 func = std::forward<F>(func),
+                                 start = blks.start(i),
+                                 end = blks.end(i)]() { func(i, start, end); };
                 else
-                    jobs[i] = nullptr;
+                    p_jobs[i] = nullptr;
             }
-            set_tasks(jobs);
+            set_tasks(p_jobs);
             run_tasks();
 
             wait();
