@@ -601,8 +601,11 @@ add_flow_graph_bindings(py::module& m)
                      return repr;
                  });
 
-    pyfgraph.def_property_readonly("size", &fs::py_flow_graph::size);
-    pyfgraph.def_property_readonly("grid_shape", &fs::py_flow_graph::grid_shape);
+    pyfgraph.def_property_readonly(
+        "size", &fs::py_flow_graph::size, "Total number of graph (grid) nodes.");
+    pyfgraph.def_property_readonly(
+        "grid_shape", &fs::py_flow_graph::grid_shape, "Shape of grid arrays.");
+
     pyfgraph.def(
         "apply_kernel",
         [](fs::py_flow_graph& flow_graph,
@@ -630,7 +633,24 @@ add_flow_graph_bindings(py::module& m)
 
                 return flow_graph.apply_kernel(fs_kernel, fs_kernel_data);
             }
-        });
+        },
+        py::arg("flow_kernel"),
+        py::arg("flow_kernel_data"),
+        R"doc(apply_kernel(self, flow_kernel: NumbaFlowKernel, flow_kernel_data: NumbaFlowKernelData) -> int
+
+        Apply a given kernel along the flow graph.
+
+        Visit the graph nodes in the direction and order given in the kernel object, call the
+        kernel function and fill the output variables referenced in the kernel data.
+
+        Parameters
+        ----------
+        kernel : NumbaFlowKernel
+            The flow kernel object to apply along the graph.
+        kernel_data : NumbaFlowKernelData
+            The object holding or referencing input and output data used by the flow kernel.
+
+        )doc");
 
     py::enum_<fs::flow_graph_traversal_dir>(
         m,

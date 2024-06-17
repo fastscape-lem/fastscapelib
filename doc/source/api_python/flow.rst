@@ -51,3 +51,12 @@ Flow snapshots
    :toctree: _api_generated/
 
    FlowSnapshot
+
+Flow Kernels
+------------
+
+.. autosummary::
+   :toctree: _api_generated/
+   :template: fastscapelib-class-template.rst
+
+   create_flow_kernel

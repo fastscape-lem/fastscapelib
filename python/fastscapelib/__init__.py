@@ -1,10 +1,11 @@
 from _fastscapelib_py import __version__  # type: ignore[import]
 
 from fastscapelib.eroders import DiffusionADIEroder, SPLEroder  # type: ignore[import]
-from fastscapelib.flow import (  # type: ignore[import]
+from fastscapelib.flow import (  # type: ignore[import, attr-defined]
     FlowDirection,
     FlowGraph,
     FlowGraphImpl,
+    FlowGraphTraversalDir,
     FlowOperator,
     FlowSnapshot,
     MSTMethod,
@@ -13,6 +14,7 @@ from fastscapelib.flow import (  # type: ignore[import]
     MultiFlowRouter,
     PFloodSinkResolver,
     SingleFlowRouter,
+    create_flow_kernel,
 )
 from fastscapelib.grid import (  # type: ignore[import]
     Neighbor,
@@ -44,6 +46,7 @@ __all__ = [
     "FlowDirection",
     "FlowGraph",
     "FlowGraphImpl",
+    "FlowGraphTraversalDir",
     "FlowOperator",
     "FlowOperator",
     "FlowSnapshot",
@@ -53,4 +56,5 @@ __all__ = [
     "MultiFlowRouter",
     "PFloodSinkResolver",
     "SingleFlowRouter",
+    "create_flow_kernel",
 ]

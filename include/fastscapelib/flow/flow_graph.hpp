@@ -241,6 +241,20 @@ namespace fastscapelib
          */
         data_array_size_type basins();
 
+        /**
+         * Apply a given kernel along the flow graph.
+         *
+         * Visit the graph nodes in the direction and order given in the kernel
+         * object, call the kernel function and fill the output variables
+         * referenced in the kernel data.
+         *
+         * @tparam FK The flow kernel type.
+         * @tparam FKD The flow kernel data type.
+         * @param kernel The flow kernel object to apply along the graph.
+         * @param kernel_data The object holding or referencing input and output data
+         * used by the flow kernel.
+         *
+         */
         template <class FK, class FKD>
         int apply_kernel(FK& kernel, FKD& data);
 
