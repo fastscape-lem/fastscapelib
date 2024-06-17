@@ -302,33 +302,37 @@ namespace fastscapelib
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    struct NumbaJitClass
+    struct numba_jit_class
     {
-        void* meminfoptr;  ///< meminfoptr
-        void* dataptr;     ///< dataptr
+        void* meminfo_ptr;  ///< meminfo_ptr
+        void* data_ptr;     ///< data_ptr
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    struct NumbaFlowKernel
+    struct numba_flow_kernel
     {
-        int (*func)(NumbaJitClass);                                          ///< flow kernel
-        int (*node_data_getter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data getter
-        int (*node_data_setter)(std::size_t, NumbaJitClass, NumbaJitClass);  ///< node data setter
-        NumbaJitClass (*node_data_create)();                   ///< node data allocator
-        void (*node_data_init)(NumbaJitClass, NumbaJitClass);  ///< node data init
-        void (*node_data_free)(NumbaJitClass);                 ///< node data destructor
-        int n_threads;                                         ///< threads count
-        int min_block_size;                          ///< minimum block size per execution thread
-        int min_level_size;                          ///< minimum level size for parallel execution
-        kernel_application_order application_order;  ///< traversal order for kernel application
+        int (*func)(numba_jit_class);  ///< flow kernel
+        int (*node_data_getter)(std::size_t,
+                                numba_jit_class,
+                                numba_jit_class);  ///< node data getter
+        int (*node_data_setter)(std::size_t,
+                                numba_jit_class,
+                                numba_jit_class);                  ///< node data setter
+        numba_jit_class (*node_data_create)();                     ///< node data allocator
+        void (*node_data_init)(numba_jit_class, numba_jit_class);  ///< node data init
+        void (*node_data_free)(numba_jit_class);                   ///< node data destructor
+        int n_threads;                                             ///< threads count
+        int min_block_size;                  ///< minimum block size per execution thread
+        int min_level_size;                  ///< minimum level size for parallel execution
+        flow_graph_traversal_dir apply_dir;  ///< traversal order for kernel application
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    struct NumbaFlowKernelData
+    struct numba_flow_kernel_data
     {
-        NumbaJitClass data;  ///< data
+        numba_jit_class data;  ///< data
 
         operator flow_kernel_data()
         {
@@ -339,6 +343,39 @@ namespace fastscapelib
             return kernel_data;
         }
     };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct py_numba_jit_class
+    {
+        std::uintptr_t meminfo_ptr;
+        std::uintptr_t data_ptr;
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct py_numba_flow_kernel
+    {
+        std::uintptr_t func_ptr;
+        std::uintptr_t node_data_getter_ptr;
+        std::uintptr_t node_data_setter_ptr;
+        std::uintptr_t node_data_create_ptr;
+        std::uintptr_t node_data_init_ptr;
+        std::uintptr_t node_data_free_ptr;
+        int n_threads;
+        int min_block_size;
+        int min_level_size;
+        flow_graph_traversal_dir apply_dir;
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct py_numba_flow_kernel_data
+    {
+        py_numba_jit_class data_ptr;
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Flow graph facade class for Python bindings.
@@ -392,7 +429,7 @@ namespace fastscapelib
 
             virtual data_array_size_type basins() = 0;
 
-            virtual int apply_kernel(NumbaFlowKernel& kernel, NumbaFlowKernelData& data) = 0;
+            virtual int apply_kernel(numba_flow_kernel& kernel, numba_flow_kernel_data& data) = 0;
         };
 
         template <class G>
@@ -505,7 +542,7 @@ namespace fastscapelib
                 return graph().basins();
             }
 
-            int apply_kernel(NumbaFlowKernel& kernel, NumbaFlowKernelData& data)
+            int apply_kernel(numba_flow_kernel& kernel, numba_flow_kernel_data& data)
             {
                 return graph().apply_kernel(kernel, data);
             }
@@ -655,7 +692,7 @@ namespace fastscapelib
             return m_wrapper_ptr->basins();
         }
 
-        int apply_kernel(NumbaFlowKernel& kernel, NumbaFlowKernelData& data)
+        int apply_kernel(numba_flow_kernel& kernel, numba_flow_kernel_data& data)
         {
             return m_wrapper_ptr->apply_kernel(kernel, data);
         }
@@ -710,37 +747,6 @@ namespace fastscapelib
             .def_readonly_static(
                 "out_flowdir", &OP::out_flowdir, ":class:`FlowDirection` of the output graph");
     }
-
-    /////////////////////////////////////////////////////////////////////////////////////////
-
-    struct PyNumbaJitClass
-    {
-        std::uintptr_t meminfoptr;
-        std::uintptr_t dataptr;
-    };
-
-    /////////////////////////////////////////////////////////////////////////////////////////
-
-    struct PyNumbaFlowKernel
-    {
-        std::uintptr_t func_ptr;
-        std::uintptr_t node_data_getter_ptr;
-        std::uintptr_t node_data_setter_ptr;
-        std::uintptr_t node_data_create_ptr;
-        std::uintptr_t node_data_init_ptr;
-        std::uintptr_t node_data_free_ptr;
-        int n_threads;
-        int min_block_size;
-        int min_level_size;
-        kernel_application_order application_order;
-    };
-
-    /////////////////////////////////////////////////////////////////////////////////////////
-
-    struct PyNumbaFlowKernelData
-    {
-        PyNumbaJitClass data_ptr;
-    };
 }
 
 #endif

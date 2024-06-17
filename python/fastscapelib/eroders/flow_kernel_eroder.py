@@ -1,15 +1,21 @@
 import inspect
 
-from fastscapelib.flow.numba_kernel import create_flow_kernel
+import numba as nb
+
+from fastscapelib.flow import FlowGraph, FlowGraphTraversalDir
+from fastscapelib.flow.numba_flow_kernel import (
+    NumbaFlowKernel,
+    NumbaFlowKernelData,
+    NumbaJittedClass,
+    create_flow_kernel,
+)
 
 
-class NumbaEroderType(type):
+class FlowKernelEroderMeta(type):
     @classmethod
     def check_errs(cls, dct):
         errs = []
-        missing_members = {"spec", "outputs", "application_order"}.difference(
-            set(dct.keys())
-        )
+        missing_members = {"spec", "outputs", "apply_dir"}.difference(set(dct.keys()))
         if missing_members:
             errs.append(f"Missing mandatory class members {missing_members}")
 
@@ -39,25 +45,49 @@ class NumbaEroderType(type):
         return instance
 
 
-class NumbaEroderFlowKernel(metaclass=NumbaEroderType):
-    def __init__(self, flow_graph, max_receivers=1, n_threads=1):
+class FlowKernelEroder(metaclass=FlowKernelEroderMeta):
+    spec: dict[str, nb.types.Type]
+    outputs: list[str]
+    apply_dir: FlowGraphTraversalDir
+    _flow_graph: FlowGraph
+    _kernel: NumbaFlowKernel
+    _kernel_data: NumbaFlowKernelData
+
+    def __init__(
+        self, flow_graph: FlowGraph, max_receivers: int = 1, n_threads: int = 1
+    ):
         self._flow_graph = flow_graph
-        self._kernel, self._data = create_flow_kernel(
+        self._kernel, self._kernel_data = create_flow_kernel(
             flow_graph,
             self.eroder_kernel,
             spec=self.spec,
             outputs=self.outputs,
             max_receivers=max_receivers,
-            n_threads=1,
-            application_order=self.application_order,
+            n_threads=n_threads,
+            apply_dir=self.apply_dir,
         )
 
+    @staticmethod
+    def eroder_kernel(node: NumbaJittedClass):
+        raise NotImplementedError()
+
+    def erode(self):
+        self._flow_graph.apply_kernel(self._kernel, self._kernel_data)
+
     def set_kernel_data(self, **kwargs):
-        self._data.bind(**kwargs)
+        self._kernel_data.bind(**kwargs)
 
     @property
-    def kernel_data(self):
-        return self._data
+    def kernel_data(self) -> NumbaFlowKernelData:
+        return self._kernel_data
+
+    @property
+    def kernel(self) -> NumbaFlowKernel:
+        return self._kernel
+
+    @property
+    def flow_graph(self) -> FlowGraph:
+        return self._flow_graph
 
     @property
     def n_threads(self):
@@ -82,6 +112,3 @@ class NumbaEroderFlowKernel(metaclass=NumbaEroderType):
     @min_level_size.setter
     def min_level_size(self, value):
         self._kernel.kernel.min_level_size = value
-
-    def apply_kernel(self):
-        self._flow_graph.apply_kernel(self._kernel, self._data)

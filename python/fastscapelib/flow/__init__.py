@@ -2,20 +2,20 @@ from _fastscapelib_py.flow import (  # type: ignore[import]
     FlowDirection,
     FlowGraph,
     FlowGraphImpl,
+    FlowGraphTraversalDir,
     FlowOperator,
     FlowSnapshot,
-    Kernel,
-    KernelApplicationOrder,
-    KernelData,
     MSTMethod,
     MSTRouteMethod,
     MSTSinkResolver,
     MultiFlowRouter,
     PFloodSinkResolver,
     SingleFlowRouter,
+    _FlowKernel,
+    _FlowKernelData,
 )
 
-from fastscapelib.flow.numba_kernel import create_flow_kernel, py_apply_kernel
+from fastscapelib.flow.numba_flow_kernel import create_flow_kernel
 
 __all__ = [
     "FlowDirection",
@@ -30,9 +30,8 @@ __all__ = [
     "MultiFlowRouter",
     "PFloodSinkResolver",
     "SingleFlowRouter",
-    "Kernel",
-    "KernelData",
-    "KernelApplicationOrder",
+    "_FlowKernel",
+    "_FlowKernelData",
+    "FlowGraphTraversalDir",
     "create_flow_kernel",
-    "py_apply_kernel",
 ]

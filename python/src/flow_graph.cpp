@@ -601,8 +601,11 @@ add_flow_graph_bindings(py::module& m)
                      return repr;
                  });
 
-    pyfgraph.def_property_readonly("size", &fs::py_flow_graph::size);
-    pyfgraph.def_property_readonly("grid_shape", &fs::py_flow_graph::grid_shape);
+    pyfgraph.def_property_readonly(
+        "size", &fs::py_flow_graph::size, "Total number of graph (grid) nodes.");
+    pyfgraph.def_property_readonly(
+        "grid_shape", &fs::py_flow_graph::grid_shape, "Shape of grid arrays.");
+
     pyfgraph.def(
         "apply_kernel",
         [](fs::py_flow_graph& flow_graph,
@@ -610,53 +613,83 @@ add_flow_graph_bindings(py::module& m)
            py::object flow_kernel_data) -> int
         {
             flow_kernel_data.attr("check_bindings")();
-            auto kernel = flow_kernel.attr("kernel").cast<fs::PyNumbaFlowKernel>();
+            auto kernel = flow_kernel.attr("kernel").cast<fs::py_numba_flow_kernel>();
             auto kernel_data
-                = flow_kernel_data.attr("jitclass_ptr").cast<fs::PyNumbaFlowKernelData>();
+                = flow_kernel_data.attr("kernel_data").cast<fs::py_numba_flow_kernel_data>();
 
             if (kernel.n_threads == 1)
             {
-                auto py_apply_kernel
-                    = py::module::import("fastscapelib").attr("flow").attr("py_apply_kernel");
+                auto py_apply_kernel = py::module::import("fastscapelib")
+                                           .attr("flow")
+                                           .attr("numba_flow_kernel")
+                                           .attr("apply_flow_kernel");
                 return py_apply_kernel(flow_graph, flow_kernel, flow_kernel_data).cast<int>();
             }
             else
             {
                 py::gil_scoped_release release;
-                auto fs_kernel = (fs::NumbaFlowKernel&) kernel;
-                auto fs_kernel_data = (fs::NumbaFlowKernelData&) kernel_data;
+                auto fs_kernel = (fs::numba_flow_kernel&) kernel;
+                auto fs_kernel_data = (fs::numba_flow_kernel_data&) kernel_data;
 
                 return flow_graph.apply_kernel(fs_kernel, fs_kernel_data);
             }
-        });
+        },
+        py::arg("flow_kernel"),
+        py::arg("flow_kernel_data"),
+        R"doc(apply_kernel(self, flow_kernel: NumbaFlowKernel, flow_kernel_data: NumbaFlowKernelData) -> int
 
-    py::enum_<fs::kernel_application_order>(
-        m, "KernelApplicationOrder", py::arithmetic(), "Order to satisfy to apply a kernel.")
-        .value("ANY", fs::kernel_application_order::ANY, "")
-        .value("DEPTH_DOWNSTREAM", fs::kernel_application_order::DEPTH_DOWNSTREAM, "")
-        .value("DEPTH_UPSTREAM", fs::kernel_application_order::DEPTH_UPSTREAM, "")
-        .value("BREADTH_DOWNSTREAM", fs::kernel_application_order::BREADTH_DOWNSTREAM, "")
-        .value("BREADTH_UPSTREAM", fs::kernel_application_order::BREADTH_UPSTREAM, "");
+        Apply a given kernel along the flow graph.
 
-    py::class_<fs::PyNumbaFlowKernel>(m, "Kernel")
+        Visit the graph nodes in the direction and order given in the kernel object, call the
+        kernel function and fill the output variables referenced in the kernel data.
+
+        Parameters
+        ----------
+        kernel : :py:class:`~fastscapelib.flow.numba_flow_kernel.NumbaFlowKernel`
+            The flow kernel object to apply along the graph.
+        kernel_data : :py:class:`~fastscapelib.flow.numba_flow_kernel.NumbaFlowKernelData`
+            The object holding or referencing input and output data used by the flow kernel.
+
+        )doc");
+
+    py::enum_<fs::flow_graph_traversal_dir>(
+        m,
+        "FlowGraphTraversalDir",
+        py::arithmetic(),
+        "Direction and order in which to visit the flow graph nodes.")
+        .value("ANY", fs::flow_graph_traversal_dir::any, "Unspecified direction")
+        .value("DEPTH_DOWNSTREAM",
+               fs::flow_graph_traversal_dir::depth_downstream,
+               "From up to downstream in the depth-first order")
+        .value("DEPTH_UPSTREAM",
+               fs::flow_graph_traversal_dir::depth_upstream,
+               "From down to upstream in the depth-first order")
+        .value("BREADTH_DOWNSTREAM",
+               fs::flow_graph_traversal_dir::breadth_downstream,
+               "From up to downstream in the breadth-first order")
+        .value("BREADTH_UPSTREAM",
+               fs::flow_graph_traversal_dir::breadth_upstream,
+               "From down to upstream in the breadth-first order");
+
+    py::class_<fs::py_numba_flow_kernel>(m, "_FlowKernel")
         .def(py::init<>())
-        .def_readwrite("func", &fs::PyNumbaFlowKernel::func_ptr)
-        .def_readwrite("node_data_getter", &fs::PyNumbaFlowKernel::node_data_getter_ptr)
-        .def_readwrite("node_data_setter", &fs::PyNumbaFlowKernel::node_data_setter_ptr)
-        .def_readwrite("node_data_create", &fs::PyNumbaFlowKernel::node_data_create_ptr)
-        .def_readwrite("node_data_init", &fs::PyNumbaFlowKernel::node_data_init_ptr)
-        .def_readwrite("node_data_free", &fs::PyNumbaFlowKernel::node_data_free_ptr)
-        .def_readwrite("n_threads", &fs::PyNumbaFlowKernel::n_threads)
-        .def_readwrite("min_block_size", &fs::PyNumbaFlowKernel::min_block_size)
-        .def_readwrite("min_level_size", &fs::PyNumbaFlowKernel::min_level_size)
-        .def_readwrite("application_order", &fs::PyNumbaFlowKernel::application_order);
+        .def_readwrite("func", &fs::py_numba_flow_kernel::func_ptr)
+        .def_readwrite("node_data_getter", &fs::py_numba_flow_kernel::node_data_getter_ptr)
+        .def_readwrite("node_data_setter", &fs::py_numba_flow_kernel::node_data_setter_ptr)
+        .def_readwrite("node_data_create", &fs::py_numba_flow_kernel::node_data_create_ptr)
+        .def_readwrite("node_data_init", &fs::py_numba_flow_kernel::node_data_init_ptr)
+        .def_readwrite("node_data_free", &fs::py_numba_flow_kernel::node_data_free_ptr)
+        .def_readwrite("n_threads", &fs::py_numba_flow_kernel::n_threads)
+        .def_readwrite("min_block_size", &fs::py_numba_flow_kernel::min_block_size)
+        .def_readwrite("min_level_size", &fs::py_numba_flow_kernel::min_level_size)
+        .def_readwrite("apply_dir", &fs::py_numba_flow_kernel::apply_dir);
 
-    py::class_<fs::PyNumbaFlowKernelData>(m, "KernelData")
+    py::class_<fs::py_numba_flow_kernel_data>(m, "_FlowKernelData")
         .def(py::init<>())
-        .def_readwrite("data", &fs::PyNumbaFlowKernelData::data_ptr);
+        .def_readwrite("data", &fs::py_numba_flow_kernel_data::data_ptr);
 
-    py::class_<fs::PyNumbaJitClass>(m, "JitClass")
+    py::class_<fs::py_numba_jit_class>(m, "_JitClass")
         .def(py::init<>())
-        .def_readwrite("meminfo", &fs::PyNumbaJitClass::meminfoptr)
-        .def_readwrite("data", &fs::PyNumbaJitClass::dataptr);
+        .def_readwrite("meminfo", &fs::py_numba_jit_class::meminfo_ptr)
+        .def_readwrite("data", &fs::py_numba_jit_class::data_ptr);
 }

@@ -4,11 +4,11 @@ import pytest
 
 from fastscapelib.flow import (
     FlowGraph,
-    KernelApplicationOrder,
+    FlowGraphTraversalDir,
     MultiFlowRouter,
     PFloodSinkResolver,
 )
-from fastscapelib.flow.numba_kernel import create_flow_kernel
+from fastscapelib.flow.numba_flow_kernel import create_flow_kernel
 from fastscapelib.grid import NodeStatus, RasterGrid
 
 
@@ -44,7 +44,7 @@ def compiled_kernel1(kernel_func1, flow_graph):
             a=nb.float64[::1],
         ),
         outputs=["a"],
-        application_order=KernelApplicationOrder.ANY,
+        apply_dir=FlowGraphTraversalDir.ANY,
     )
     yield kernel
 
@@ -57,7 +57,8 @@ def kernel1(compiled_kernel1):
 @pytest.fixture(scope="function")
 def kernel1_data(compiled_kernel1):
     yield compiled_kernel1[1]
-    compiled_kernel1[1]._bound_data.clear()
+    # "un-bind" all kernel data
+    compiled_kernel1[1]._bound_keys.clear()
 
 
 @pytest.fixture(scope="module")
@@ -79,7 +80,7 @@ def compiled_kernel2(kernel_func1, flow_graph):
             a=nb.float64[::1],
         ),
         outputs=["a"],
-        application_order=KernelApplicationOrder.ANY,
+        apply_dir=FlowGraphTraversalDir.ANY,
     )
     yield kernel, data
 
@@ -92,7 +93,8 @@ def kernel2(compiled_kernel2):
 @pytest.fixture(scope="function")
 def kernel2_data(compiled_kernel2):
     yield compiled_kernel2[1]
-    compiled_kernel2[1]._bound_data.clear()
+    # "un-bind" all kernel data
+    compiled_kernel2[1]._bound_keys.clear()
 
 
 @pytest.fixture(scope="module")
@@ -103,7 +105,7 @@ def compiled_kernel3(kernel_func2, flow_graph):
         spec=dict(
             a=nb.float64,
         ),
-        application_order=KernelApplicationOrder.ANY,
+        apply_dir=FlowGraphTraversalDir.ANY,
         print_generated_code=True,
     )
     yield kernel, data
@@ -117,37 +119,66 @@ def kernel3(compiled_kernel3):
 @pytest.fixture(scope="function")
 def kernel3_data(compiled_kernel3):
     yield compiled_kernel3[1]
-    compiled_kernel3[1]._bound_data.clear()
+    # "un-bind" all kernel data
+    compiled_kernel3[1]._bound_keys.clear()
 
 
 class TestFlowKernelData:
-    def test_bind(self, flow_graph, kernel1, kernel1_data):
-        _, data = kernel1, kernel1_data
+    def test_bind_array(self, flow_graph, kernel1_data):
+        # not bound yet
+        assert kernel1_data.a is None
 
-        data.a = np.zeros(flow_graph.size)
-        assert data.bound == {"a"}
+        # 1-d array case
+        expected = np.zeros(flow_graph.size)
+        kernel1_data.bind(a=expected)
+        assert kernel1_data.a is expected
 
-    def test_setattr_bindings(self, flow_graph, kernel1, kernel1_data):
-        _, data = kernel1, kernel1_data
+        # scalar (expand) case
+        expected = np.ones(flow_graph.size)
+        kernel1_data.bind(a=1.0)
+        np.testing.assert_array_equal(kernel1_data.a, expected)
 
-        data.a = np.zeros(flow_graph.size)
-        assert data.bound == {"a"}
+        # 2-d raster (flatten) case
+        expected = 2 * np.ones(flow_graph.grid_shape)
+        kernel1_data.bind(a=expected)
+        np.testing.assert_array_equal(kernel1_data.a, expected.ravel())
 
-    def test_getattr_setattr(self, kernel2_data):
-        data = kernel2_data
+        # invalid shape
+        with pytest.raises(ValueError):
+            kernel1_data.bind(a=np.zeros(flow_graph.size - 1))
 
-        data.int64 = 10
-        assert data["int64"] == 10
-        assert data.int64 == 10
-        assert data._data.int64 == 10
+    def test_bind_scalar(self, kernel2_data):
+        # not bound yet
+        assert kernel2_data.f64 is None
+        kernel2_data.bind(f64=1.0)
+        assert kernel2_data.f64 == 1.0
 
-    def test_getitem_setitem(self, kernel2_data):
-        data = kernel2_data
+    def test_attr_like_access(self, kernel2_data):
+        kernel2_data.bind(int64=10)
+        assert kernel2_data.int64 == 10
+        assert kernel2_data.jitclass_obj.int64 == 10
 
-        data["int64"] = 11
-        assert data["int64"] == 11
-        assert data.int64 == 11
-        assert data._data.int64 == 11
+    def test_mapping_interface(self, kernel2_data):
+        assert len(kernel2_data) == 11
+        assert list(kernel2_data) == [
+            "f64",
+            "f32",
+            "int32",
+            "int64",
+            "uint64",
+            "f64_arr",
+            "f32_arr",
+            "int32_arr",
+            "int64_arr",
+            "uint64_arr",
+            "a",
+        ]
+
+        # no data bound yet
+        assert list(kernel2_data.values()) == [None] * 11
+
+        kernel2_data.bind(f64=1.0)
+        assert kernel2_data["f64"] == 1.0
 
     def test_multiple_bindings(self, flow_graph, kernel1_data):
         data = kernel1_data
@@ -184,7 +215,7 @@ class TestFlowKernelData:
                 a=(nb.float32[::1], np.ones(flow_graph.size, dtype=np.float32) * 1.15),
             ),
             outputs=["a"],
-            application_order=KernelApplicationOrder.ANY,
+            apply_dir=FlowGraphTraversalDir.ANY,
         )
 
         np.testing.assert_almost_equal(
@@ -201,7 +232,7 @@ class TestFlowKernelData:
                 a=(nb.float32[::1], a),
             ),
             outputs=["a"],
-            application_order=KernelApplicationOrder.ANY,
+            apply_dir=FlowGraphTraversalDir.ANY,
         )
 
         np.testing.assert_almost_equal(
@@ -223,7 +254,7 @@ class TestFlowKernel:
                 spec=dict(
                     a=nb.float64[::1],
                 ),
-                application_order=KernelApplicationOrder.ANY,
+                apply_dir=FlowGraphTraversalDir.ANY,
             )
 
     def test_output_assignment(self, flow_graph, kernel1, kernel1_data):
@@ -245,7 +276,7 @@ class TestFlowKernel:
                     a=(nb.float64, 10.0),
                 ),
                 outputs=["a"],
-                application_order=KernelApplicationOrder.ANY,
+                apply_dir=FlowGraphTraversalDir.ANY,
             )
 
     def test_invalid_output(self, flow_graph, kernel_func1):
@@ -257,38 +288,34 @@ class TestFlowKernel:
                     a=(nb.float64, 10.0),
                 ),
                 outputs=["b"],
-                application_order=KernelApplicationOrder.ANY,
+                apply_dir=FlowGraphTraversalDir.ANY,
             )
-
-    def test_invalid_grid_data_shape(self, flow_graph):
-        with pytest.raises(AttributeError):
-            kernel1.bind_data(a=np.zeros(flow_graph.size - 1))
 
     def test_multiple_types(self, kernel2, kernel2_data):
         kernel, data = kernel2, kernel2_data
 
-        assert data._data._numba_type_.struct["f64"] == nb.float64
-        assert data._data._numba_type_.struct["f32"] == nb.float32
-        assert data._data._numba_type_.struct["int32"] == nb.int32
-        assert data._data._numba_type_.struct["int64"] == nb.int64
-        assert data._data._numba_type_.struct["uint64"] == nb.uint64
+        assert data.jitclass_obj._numba_type_.struct["f64"] == nb.float64
+        assert data.jitclass_obj._numba_type_.struct["f32"] == nb.float32
+        assert data.jitclass_obj._numba_type_.struct["int32"] == nb.int32
+        assert data.jitclass_obj._numba_type_.struct["int64"] == nb.int64
+        assert data.jitclass_obj._numba_type_.struct["uint64"] == nb.uint64
 
-        assert data._data._numba_type_.struct["f64_arr"] == nb.float64[::1]
-        assert data._data._numba_type_.struct["f32_arr"] == nb.float32[::1]
-        assert data._data._numba_type_.struct["int32_arr"] == nb.int32[::1]
-        assert data._data._numba_type_.struct["int64_arr"] == nb.int64[::1]
-        assert data._data._numba_type_.struct["uint64_arr"] == nb.uint64[::1]
+        assert data.jitclass_obj._numba_type_.struct["f64_arr"] == nb.float64[::1]
+        assert data.jitclass_obj._numba_type_.struct["f32_arr"] == nb.float32[::1]
+        assert data.jitclass_obj._numba_type_.struct["int32_arr"] == nb.int32[::1]
+        assert data.jitclass_obj._numba_type_.struct["int64_arr"] == nb.int64[::1]
+        assert data.jitclass_obj._numba_type_.struct["uint64_arr"] == nb.uint64[::1]
 
-        assert type(data._data.f64_arr) == np.ndarray
-        assert data._data.f64_arr.dtype == np.float64
-        assert type(data._data.f32_arr) == np.ndarray
-        assert data._data.f32_arr.dtype == np.float32
-        assert type(data._data.int32_arr) == np.ndarray
-        assert data._data.int32_arr.dtype == np.int32
-        assert type(data._data.int64_arr) == np.ndarray
-        assert data._data.int64_arr.dtype == np.int64
-        assert type(data._data.uint64_arr) == np.ndarray
-        assert data._data.uint64_arr.dtype == np.uint64
+        assert type(data.jitclass_obj.f64_arr) == np.ndarray
+        assert data.jitclass_obj.f64_arr.dtype == np.float64
+        assert type(data.jitclass_obj.f32_arr) == np.ndarray
+        assert data.jitclass_obj.f32_arr.dtype == np.float32
+        assert type(data.jitclass_obj.int32_arr) == np.ndarray
+        assert data.jitclass_obj.int32_arr.dtype == np.int32
+        assert type(data.jitclass_obj.int64_arr) == np.ndarray
+        assert data.jitclass_obj.int64_arr.dtype == np.int64
+        assert type(data.jitclass_obj.uint64_arr) == np.ndarray
+        assert data.jitclass_obj.uint64_arr.dtype == np.uint64
 
         node_data = kernel.node_data_create()
         node_data_struct = node_data.__class__._numba_type_.class_type.struct
@@ -338,12 +365,12 @@ class TestFlowKernel:
         assert kernel3.node_data_init is not None
 
         node_data = kernel3.node_data_create()
-        kernel3_data.a = 12.0
-        kernel3.node_data_init(node_data, kernel3_data._data)
+        kernel3_data.bind(a=12.0)
+        kernel3.node_data_init(node_data, kernel3_data.jitclass_obj)
         assert node_data.a == 12.0
 
-        kernel3_data.a = 1.0
-        kernel3.node_data_init(node_data, kernel3_data._data)
+        kernel3_data.bind(a=1.0)
+        kernel3.node_data_init(node_data, kernel3_data.jitclass_obj)
         assert node_data.a == 1.0
 
     def test_max_receivers(self, flow_graph, kernel1, kernel1_data, kernel_func1):
@@ -358,7 +385,7 @@ class TestFlowKernel:
 
         node_data = kernel1.node_data_create()
         for i in range(flow_graph.size):
-            kernel1.node_data_getter(i, kernel1_data.jitclass, node_data)
+            kernel1.node_data_getter(i, kernel1_data.jitclass_obj, node_data)
             assert node_data.receivers.count == flow_graph.impl().receivers_count[i]
 
         kernel, data = create_flow_kernel(
@@ -368,9 +395,9 @@ class TestFlowKernel:
                 a=nb.float64[::1],
             ),
             outputs=["a"],
-            application_order=KernelApplicationOrder.ANY,
+            apply_dir=FlowGraphTraversalDir.ANY,
             max_receivers=1,
         )
         data.bind(a=np.ones(flow_graph.size, dtype=np.float64))
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             flow_graph.apply_kernel(kernel, data)

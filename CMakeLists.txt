@@ -80,6 +80,10 @@ FetchContent_Declare(atomic_queue
   GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(atomic_queue)
 
+## treat atomic_queue headers as -isystem (disable warnings)
+get_target_property(atomic_queue_IID atomic_queue INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(atomic_queue PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${atomic_queue_IID}")
+
 find_package(Threads REQUIRED)
 
 # Installation directories

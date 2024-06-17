@@ -292,15 +292,15 @@ namespace fastscapelib
         using bfs_indices_type = typename impl_type::bfs_indices_type;
         const bfs_indices_type* indices;
 
-        switch (kernel.application_order)
+        switch (kernel.apply_dir)
         {
-            case kernel_application_order::ANY:
+            case flow_graph_traversal_dir::any:
                 indices = &impl().storage_indices();
                 break;
-            case kernel_application_order::BREADTH_UPSTREAM:
+            case flow_graph_traversal_dir::breadth_upstream:
                 indices = &impl().bfs_indices();
                 break;
-            case kernel_application_order::DEPTH_UPSTREAM:
+            case flow_graph_traversal_dir::depth_upstream:
                 indices = &impl().dfs_indices();
                 break;
             default:
@@ -341,13 +341,13 @@ namespace fastscapelib
         using bfs_indices_type = typename impl_type::bfs_indices_type;
         const bfs_indices_type *indices, *levels;
 
-        switch (kernel.application_order)
+        switch (kernel.apply_dir)
         {
-            case kernel_application_order::ANY:
+            case flow_graph_traversal_dir::any:
                 indices = &impl().storage_indices();
                 levels = &impl().random_levels();
                 break;
-            case kernel_application_order::BREADTH_UPSTREAM:
+            case flow_graph_traversal_dir::breadth_upstream:
                 indices = &impl().bfs_indices();
                 levels = &impl().bfs_levels();
                 break;
