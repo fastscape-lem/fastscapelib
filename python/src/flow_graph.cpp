@@ -115,9 +115,10 @@ add_flow_graph_bindings(py::module& m)
         .def_property_readonly("bfs_indices",
                                &fs::py_flow_graph_impl::bfs_indices,
                                "Deprecated alias of :attr:`FlowGraphImpl.nodes_indices_bottomup`.")
-        .def_property_readonly("bfs_levels",
-                               &fs::py_flow_graph_impl::bfs_levels,
-                               "Returns a 1-D array of graph node index intervals (left-closed, right-open) representing breadth-first search levels.")
+        .def_property_readonly(
+            "bfs_levels",
+            &fs::py_flow_graph_impl::bfs_levels,
+            "Returns a 1-D array of graph node index intervals (left-closed, right-open) representing breadth-first search levels.")
         .def_property_readonly(
             "nodes_indices_bottomup",
             &fs::py_flow_graph_impl::dfs_indices,
