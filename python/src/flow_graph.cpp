@@ -112,9 +112,13 @@ add_flow_graph_bindings(py::module& m)
         .def_property_readonly("dfs_indices",
                                &fs::py_flow_graph_impl::dfs_indices,
                                "Deprecated alias of :attr:`FlowGraphImpl.nodes_indices_bottomup`.")
-        .def_property_readonly("bfs_indices",
-                               &fs::py_flow_graph_impl::bfs_indices,
-                               "Deprecated alias of :attr:`FlowGraphImpl.nodes_indices_bottomup`.")
+        .def_property_readonly(
+            "bfs_indices",
+            &fs::py_flow_graph_impl::bfs_indices,
+            R"doc(Returns the node indices ordered topologically from base level nodes up to top nodes.
+
+            The order results from graph traversal using breadth-first search.
+            )doc")
         .def_property_readonly(
             "bfs_levels",
             &fs::py_flow_graph_impl::bfs_levels,
