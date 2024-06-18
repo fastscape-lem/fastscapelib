@@ -59,8 +59,8 @@ namespace fastscapelib
             using receivers_distance_type
                 = fixed_shape_container_t<xt_python_selector, grid_data_type, 2>;
 
-            using dfs_indices_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
-            using nodes_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
+            using nodes_indices_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
+            using nodes_indices_iterator_type = stl_container_iterator_wrapper<nodes_indices_type>;
 
             using basins_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
 
@@ -80,7 +80,11 @@ namespace fastscapelib
 
             virtual const donors_count_type& donors_count() const = 0;
 
-            virtual const dfs_indices_type& dfs_indices() const = 0;
+            virtual const nodes_indices_type& dfs_indices() const = 0;
+
+            virtual const nodes_indices_type& bfs_indices() const = 0;
+
+            virtual const nodes_indices_type& bfs_levels() const = 0;
 
             virtual nodes_indices_iterator_type nodes_indices_bottomup() const = 0;
 
@@ -134,9 +138,19 @@ namespace fastscapelib
                 return m_graph_impl_ptr->donors_count();
             };
 
-            const dfs_indices_type& dfs_indices() const
+            const nodes_indices_type& dfs_indices() const
             {
                 return m_graph_impl_ptr->dfs_indices();
+            };
+
+            const nodes_indices_type& bfs_indices() const
+            {
+                return m_graph_impl_ptr->bfs_indices();
+            };
+
+            const nodes_indices_type& bfs_levels() const
+            {
+                return m_graph_impl_ptr->bfs_levels();
             };
 
             nodes_indices_iterator_type nodes_indices_bottomup() const
@@ -170,8 +184,8 @@ namespace fastscapelib
         using receivers_distance_type
             = fixed_shape_container_t<xt_python_selector, grid_data_type, 2>;
 
-        using dfs_indices_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
-        using nodes_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
+        using nodes_indices_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
+        using nodes_indices_iterator_type = stl_container_iterator_wrapper<nodes_indices_type>;
 
         using basins_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
 
@@ -188,37 +202,47 @@ namespace fastscapelib
         const receivers_type& receivers() const
         {
             return m_wrapper_ptr->receivers();
-        };
+        }
 
         const receivers_count_type& receivers_count() const
         {
             return m_wrapper_ptr->receivers_count();
-        };
+        }
 
         const receivers_distance_type& receivers_distance() const
         {
             return m_wrapper_ptr->receivers_distance();
-        };
+        }
 
         const receivers_weight_type& receivers_weight() const
         {
             return m_wrapper_ptr->receivers_weight();
-        };
+        }
 
         const donors_type& donors() const
         {
             return m_wrapper_ptr->donors();
-        };
+        }
 
         const donors_count_type& donors_count() const
         {
             return m_wrapper_ptr->donors_count();
-        };
+        }
 
-        const dfs_indices_type& dfs_indices() const
+        const nodes_indices_type& dfs_indices() const
         {
             return m_wrapper_ptr->dfs_indices();
-        };
+        }
+
+        const nodes_indices_type& bfs_indices() const
+        {
+            return m_wrapper_ptr->bfs_indices();
+        }
+
+        const nodes_indices_type& bfs_levels() const
+        {
+            return m_wrapper_ptr->bfs_levels();
+        }
 
         nodes_indices_iterator_type nodes_indices_bottomup() const
         {
@@ -228,7 +252,7 @@ namespace fastscapelib
         const basins_type& basins() const
         {
             return m_wrapper_ptr->basins();
-        };
+        }
 
     private:
         std::unique_ptr<detail::flow_graph_impl_wrapper_base> m_wrapper_ptr;
@@ -274,6 +298,73 @@ namespace fastscapelib
         return std::move(op_sequence);
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct numba_jit_class
+    {
+        void* meminfo_ptr;  ///< meminfo_ptr
+        void* data_ptr;     ///< data_ptr
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct numba_flow_kernel
+    {
+        int (*func)(numba_jit_class);  ///< flow kernel
+        int (*node_data_getter)(std::size_t,
+                                numba_jit_class,
+                                numba_jit_class);  ///< node data getter
+        int (*node_data_setter)(std::size_t,
+                                numba_jit_class,
+                                numba_jit_class);                  ///< node data setter
+        numba_jit_class (*node_data_create)();                     ///< node data allocator
+        void (*node_data_init)(numba_jit_class, numba_jit_class);  ///< node data init
+        void (*node_data_free)(numba_jit_class);                   ///< node data destructor
+        int n_threads;                                             ///< threads count
+        int min_block_size;                  ///< minimum block size per execution thread
+        int min_level_size;                  ///< minimum level size for parallel execution
+        flow_graph_traversal_dir apply_dir;  ///< traversal order for kernel application
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct numba_flow_kernel_data
+    {
+        numba_jit_class data;  ///< data
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct py_numba_jit_class
+    {
+        std::uintptr_t meminfo_ptr;
+        std::uintptr_t data_ptr;
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct py_numba_flow_kernel
+    {
+        std::uintptr_t func_ptr;
+        std::uintptr_t node_data_getter_ptr;
+        std::uintptr_t node_data_setter_ptr;
+        std::uintptr_t node_data_create_ptr;
+        std::uintptr_t node_data_init_ptr;
+        std::uintptr_t node_data_free_ptr;
+        int n_threads;
+        int min_block_size;
+        int min_level_size;
+        flow_graph_traversal_dir apply_dir;
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    struct py_numba_flow_kernel_data
+    {
+        py_numba_jit_class data_ptr;
+    };
+
+    /////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Flow graph facade class for Python bindings.
@@ -326,6 +417,8 @@ namespace fastscapelib
             virtual data_array_type accumulate(data_type src) const = 0;
 
             virtual data_array_size_type basins() = 0;
+
+            virtual int apply_kernel(numba_flow_kernel& kernel, numba_flow_kernel_data& data) = 0;
         };
 
         template <class G>
@@ -436,6 +529,11 @@ namespace fastscapelib
             data_array_size_type basins()
             {
                 return graph().basins();
+            }
+
+            int apply_kernel(numba_flow_kernel& kernel, numba_flow_kernel_data& data)
+            {
+                return graph().apply_kernel(kernel, data);
             }
 
         private:
@@ -581,6 +679,11 @@ namespace fastscapelib
         data_array_size_type basins()
         {
             return m_wrapper_ptr->basins();
+        }
+
+        int apply_kernel(numba_flow_kernel& kernel, numba_flow_kernel_data& data)
+        {
+            return m_wrapper_ptr->apply_kernel(kernel, data);
         }
 
     private:

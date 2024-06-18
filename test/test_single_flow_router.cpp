@@ -129,6 +129,25 @@ namespace fastscapelib
             EXPECT_EQ(actual, expected);
         }
 
+        TEST_F(single_flow_router__profile, bfs_indices)
+        {
+            update();
+
+            xt::xtensor<std::uint8_t, 1> expected{ 0, 2, 7, 1, 3, 6, 4, 5 };
+            EXPECT_EQ(graph.impl().bfs_indices(), expected);
+
+            xt::xtensor<std::size_t, 1> expected_levels{ 0, 3, 6, 8 };
+            EXPECT_EQ(graph.impl().bfs_levels(), expected_levels);
+
+            elevation = { 0.0, 0.2, 0.1, 0.2, 0.4, 0.6, 0.5, 0.0 };
+            update();
+
+            expected = { 0, 2, 7, 1, 3, 6, 4, 5 };
+            EXPECT_EQ(graph.impl().bfs_indices(), expected);
+            expected_levels = { 0, 3, 6, 7, 8 };
+            EXPECT_EQ(graph.impl().bfs_levels(), expected_levels);
+        }
+
         TEST_F(single_flow_router__profile, mask)
         {
             // mask 4th node only

@@ -7,3 +7,5 @@
 
    MSTMethod
    MSTRouteMethod
+   flow.numba_flow_kernel.NumbaFlowKernel
+   flow.numba_flow_kernel.NumbaFlowKernelData

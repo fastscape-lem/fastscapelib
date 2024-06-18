@@ -8,3 +8,14 @@
   margin-top: 20px;
   margin-bottom: 20px;
 }
+
+/* Fix autosummary tables https://github.com/pradyunsg/furo/discussions/451 */
+
+.longtable {
+    width: 100%;
+}
+
+.longtable tr td:first-child {
+    width: 35%;
+    white-space: nowrap;
+}

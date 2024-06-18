@@ -22,7 +22,7 @@ maintainers = [
     {name = "Fastscapelib contributors"},
 ]
 requires-python = ">=3.8"
-dependencies = ["numpy"]
+dependencies = ["numpy", "numba"]
 
 [project.urls]
 Home = "https://fastscapelib.readthedocs.io"
@@ -54,4 +54,10 @@ known_first_party = "fastscapelib"
 exclude = [
     "doc/source/conf.py",
     "build/",
+]
+
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = [
+    "numba.*"
 ]

@@ -12,6 +12,7 @@ Flow graph
 
    FlowGraph
    FlowGraphImpl
+   FlowGraphTraversalDir
 
 .. _py-api-flow-operators:
 
@@ -51,3 +52,12 @@ Flow snapshots
    :toctree: _api_generated/
 
    FlowSnapshot
+
+Flow Kernels
+------------
+
+.. autosummary::
+   :toctree: _api_generated/
+   :template: fastscapelib-class-template.rst
+
+   create_flow_kernel

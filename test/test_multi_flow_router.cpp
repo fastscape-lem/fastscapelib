@@ -140,5 +140,58 @@ namespace fastscapelib
                 EXPECT_TRUE(xt::allclose(actual, expected));
             }
         }
+
+        TEST_F(multi_flow_router, dfs_indices)
+        {
+            flow_graph_type graph(grid, { fs::multi_flow_router(0.0) });
+            graph.update_routes(elevation);
+
+            auto actual = graph.impl().dfs_indices();
+            xt::xtensor<std::uint8_t, 1> expected{ 0, 1, 2, 3, 5, 6, 7, 8, 4 };
+
+            EXPECT_EQ(actual, expected);
+        }
+
+        TEST_F(multi_flow_router, bfs_indices)
+        {
+            flow_graph_type graph(grid, { fs::multi_flow_router(0.0) });
+            graph.update_routes(elevation);
+
+            xt::xtensor<std::uint8_t, 1> expected{ 0, 1, 2, 3, 5, 6, 7, 8, 4 };
+            EXPECT_EQ(graph.impl().bfs_indices(), expected);
+
+            xt::xtensor<std::size_t, 1> expected_levels{ 0, 8, 9 };
+            EXPECT_EQ(graph.impl().bfs_levels(), expected_levels);
+
+            fs::raster_boundary_status bs({ fs::node_status::fixed_value,
+                                            fs::node_status::fixed_value,
+                                            fs::node_status::looped,
+                                            fs::node_status::looped });
+
+            grid = grid_type({ 3, 3 }, { 1.0, 1.0 }, bs);
+            flow_graph_type graph2(grid, { fs::multi_flow_router(0.0) });
+            graph2.update_routes(elevation);
+
+            expected = { 0, 2, 3, 5, 6, 8, 1, 7, 4 };
+            EXPECT_EQ(graph2.impl().bfs_indices(), expected);
+
+            expected_levels = { 0, 6, 8, 9 };
+            EXPECT_EQ(graph2.impl().bfs_levels(), expected_levels);
+
+            fs::raster_boundary_status bs2({ fs::node_status::looped,
+                                             fs::node_status::looped,
+                                             fs::node_status::looped,
+                                             fs::node_status::looped });
+
+            grid = grid_type({ 3, 3 }, { 1.0, 1.0 }, bs2);
+            flow_graph_type graph3(grid, { fs::multi_flow_router(0.0) });
+            graph3.update_routes(elevation);
+
+            expected = { 0, 2, 6, 8, 1, 3, 5, 7, 4 };
+            EXPECT_EQ(graph3.impl().bfs_indices(), expected);
+
+            expected_levels = { 0, 4, 8, 9 };
+            EXPECT_EQ(graph3.impl().bfs_levels(), expected_levels);
+        }
     }
 }

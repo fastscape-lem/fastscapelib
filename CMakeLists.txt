@@ -74,6 +74,8 @@ else()
     message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 endif()
 
+find_package(Threads REQUIRED)
+
 # Installation directories
 # ========================
 
@@ -108,6 +110,7 @@ set(FASTSCAPELIB_HEADERS
   flow/flow_router.hpp
   flow/flow_snapshot.hpp
   flow/sink_resolver.hpp
+  flow/impl/flow_graph_inl.hpp
   # Grid
   grid/base.hpp
   grid/profile_grid.hpp
@@ -117,8 +120,10 @@ set(FASTSCAPELIB_HEADERS
   # Utils
   utils/consts.hpp
   utils/iterators.hpp
+  utils/thread_pool.hpp
   utils/union_find.hpp
   utils/utils.hpp
+  utils/impl/thread_pool_inl.hpp
   utils/containers.hpp
   utils/eigen_containers.hpp
   utils/xtensor_containers.hpp
@@ -136,7 +141,7 @@ target_include_directories(${FASTSCAPELIB_TARGET}
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor)
+target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor Threads::Threads)
 
 target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_17)
 

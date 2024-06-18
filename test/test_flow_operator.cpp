@@ -87,11 +87,15 @@ namespace fastscapelib
             using base_type = flow_operator_impl_base<graph_impl_type, test_operator>;
 
             using data_array_type = typename graph_impl_type::data_array_type;
+            using size_type = typename FG::size_type;
+            using thread_pool_type = thread_pool<size_type>;
 
             flow_operator_impl(std::shared_ptr<test_operator> ptr)
                 : base_type(std::move(ptr)){};
 
-            void apply(graph_impl_type& /*graph_impl*/, data_array_type& elevation)
+            void apply(graph_impl_type& /*graph_impl*/,
+                       data_array_type& elevation,
+                       thread_pool_type& /*pool*/)
             {
                 elevation += this->m_op_ptr->m_offset;
             }

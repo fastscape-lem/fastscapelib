@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <stack>
 #include <vector>
+#include <set>
 
 #include "xtensor/xbroadcast.hpp"
 #include "xtensor/xstrided_view.hpp"
@@ -79,10 +80,11 @@ namespace fastscapelib
             using donors_count_type = fixed_shape_container_t<container_selector, size_type, 1>;
             using receivers_type = donors_type;
             using receivers_count_type = donors_count_type;
+
             using receivers_distance_type
                 = fixed_shape_container_t<container_selector, data_type, 2>;
             using receivers_weight_type = fixed_shape_container_t<container_selector, data_type, 2>;
-            using dfs_indices_type = fixed_shape_container_t<container_selector, size_type, 1>;
+            using nodes_indices_type = fixed_shape_container_t<container_selector, size_type, 1>;
 
             using basins_type = fixed_shape_container_t<container_selector, size_type, 1>;
 
@@ -109,7 +111,14 @@ namespace fastscapelib
                 m_donors = xt::ones<size_type>(donors_shape) * -1;
                 m_donors_count = xt::zeros<size_type>({ grid.size() });
 
+                // TODO: replace indices and levels for any traversal direction to save memory
+                // footprint
+                m_storage_indices = xt::arange<size_type>(0, grid.size(), 1);
+                m_any_order_levels = nodes_indices_type({ 0, size() });
+
                 m_dfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
+                m_bfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
+                m_bfs_levels = xt::ones<size_type>({ grid.size() + 1 }) * -1;
 
                 // TODO: basins are not always needed (only init on-demand)
                 m_basins = xt::empty<size_type>({ grid.size() });
@@ -162,18 +171,39 @@ namespace fastscapelib
 
             void compute_donors();
 
-            const dfs_indices_type& dfs_indices() const
+            const nodes_indices_type& storage_indices() const
+            {
+                return m_storage_indices;
+            };
+
+            const nodes_indices_type& any_order_levels() const
+            {
+                return m_any_order_levels;
+            };
+
+            const nodes_indices_type& dfs_indices() const
             {
                 return m_dfs_indices;
             };
 
+            const nodes_indices_type& bfs_indices() const
+            {
+                return m_bfs_indices;
+            };
+
+            const nodes_indices_type& bfs_levels() const
+            {
+                return m_bfs_levels;
+            };
+
             void compute_dfs_indices_bottomup();
             void compute_dfs_indices_topdown();
+            void compute_bfs_indices_bottomup();
 
             /*
              * Should be used for graph traversal in an explicit direction.
              */
-            inline stl_container_iterator_wrapper<dfs_indices_type> nodes_indices_bottomup() const
+            inline stl_container_iterator_wrapper<nodes_indices_type> nodes_indices_bottomup() const
             {
                 return m_dfs_indices;
             }
@@ -244,7 +274,8 @@ namespace fastscapelib
             receivers_distance_type m_receivers_distance;
             receivers_weight_type m_receivers_weight;
 
-            dfs_indices_type m_dfs_indices;
+            nodes_indices_type m_dfs_indices, m_bfs_indices, m_bfs_levels, m_storage_indices,
+                m_any_order_levels;
 
             basins_type m_basins;
             std::vector<size_type> m_outlets;
@@ -317,6 +348,69 @@ namespace fastscapelib
             }
 
             assert(nstack == size());
+        }
+
+        /*
+         * Perform breadth-first search on the flow graph.
+         */
+        template <class G, class S>
+        void flow_graph_impl<G, S, flow_graph_fixed_array_tag>::compute_bfs_indices_bottomup()
+        {
+            std::vector<std::uint8_t> visited(m_grid.size(), std::uint8_t(0));
+            std::vector<size_type> levels(m_grid.size() + 1, 0);
+            size_type nstack = 0;
+            size_type level = 0;
+            bool skip;
+
+            for (size_type i = 0; i < size(); ++i)
+                if (m_receivers(i, 0) == i)
+                {
+                    m_bfs_indices(nstack++) = i;
+                }
+
+            levels[level++] = 0;
+            levels[level++] = nstack;
+
+            while (nstack < size())
+            {
+                for (size_type i = levels[level - 2]; i < levels[level - 1]; ++i)
+                {
+                    auto node_idx = m_bfs_indices(i);
+                    visited[node_idx] = 1;
+
+                    for (size_type k = 0; k < m_donors_count(node_idx); ++k)
+                    {
+                        auto donor_idx = m_donors(node_idx, k);
+
+                        skip = visited[donor_idx] > 0;
+                        if (skip)
+                            continue;
+
+                        for (std::size_t rcv_idx = 0; rcv_idx < m_receivers_count(donor_idx);
+                             ++rcv_idx)
+                        {
+                            if (visited[m_receivers(donor_idx, rcv_idx)] != 1)
+                            {
+                                skip = true;
+                                break;
+                            }
+                        }
+
+                        if (!skip && visited[donor_idx] == 0)
+                        {
+                            m_bfs_indices(nstack++) = donor_idx;
+                            visited[donor_idx] = 2;
+                        }
+                    }
+                }
+
+                for (size_type i = levels[level - 2]; i < levels[level - 1]; ++i)
+                    visited[m_bfs_indices(i)] = 1;
+
+                levels[level++] = nstack;
+            }
+
+            m_bfs_levels = xt::adapt(levels, { level });
         }
 
         /*
