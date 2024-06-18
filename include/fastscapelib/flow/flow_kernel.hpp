@@ -28,27 +28,38 @@ namespace fastscapelib
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    struct flow_kernel
+    namespace detail
     {
-        std::function<int(void*)> func;
-        std::function<int(std::size_t, void*, void*)> node_data_getter;
-        std::function<int(std::size_t, void*, void*)> node_data_setter;
-        std::function<void*()> node_data_create;
-        std::function<void(void*, void*)> node_data_init;
-        std::function<void(void*)> node_data_free;
-        int n_threads;
-        int min_block_size;
-        int min_level_size;
-        flow_graph_traversal_dir apply_dir
-            = flow_graph_traversal_dir::any;  ///< order for kernel application
-    };
+        struct flow_kernel
+        {
+            std::function<int(void*)> func; /**< the kernel function to be applied on each node */
+            std::function<int(std::size_t, void*, void*)>
+                node_data_getter; /**< gets the node data from the kernel data at specified index
+                                     before a kernel function call */
+            std::function<int(std::size_t, void*, void*)>
+                node_data_setter; /**< sets the kernel data back from the node data at specified
+                                     index after a kernel function call */
+            std::function<void*()> node_data_create; /**< creates a new node data */
+            std::function<void(void*, void*)>
+                node_data_init;                        /**< init a node data with kernel data*/
+            std::function<void(void*)> node_data_free; /**< frees a node data */
+            int n_threads;      /**< specifies the number of threads for parallel application of the
+                                   kernel function */
+            int min_block_size; /**< specifies the minimum block size (number of nodes) to dispatch
+                                   to each thread */
+            int min_level_size; /**< specifies the minimum level size to trigger parallel dispatch
+                                   instead of sequential one */
+            flow_graph_traversal_dir apply_dir
+                = flow_graph_traversal_dir::any; /**<  order for kernel application*/
+        };
 
-    /////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////
 
-    struct flow_kernel_data
-    {
-        void* data;
-    };
+        struct flow_kernel_data
+        {
+            void* data; /**<  kernel data*/
+        };
+    }
 }  // namespace fastscapelib
 
 #endif  // FASTSCAPELIB_FLOW_KERNEL_HPP

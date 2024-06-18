@@ -125,8 +125,8 @@ namespace fastscapelib
                 return elevation;
             }
 
-            flow_kernel kernel;
-            flow_kernel_data kernel_data;
+            detail::flow_kernel kernel;
+            detail::flow_kernel_data kernel_data;
             SplEroderKernelData data;
         };
 
