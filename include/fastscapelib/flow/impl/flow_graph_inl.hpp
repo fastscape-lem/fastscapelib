@@ -289,8 +289,8 @@ namespace fastscapelib
     template <class FK, class FKD>
     int flow_graph<G, S, Tag>::apply_kernel_seq(FK& kernel, FKD& data)
     {
-        using bfs_indices_type = typename impl_type::bfs_indices_type;
-        const bfs_indices_type* indices;
+        using nodes_indices_type = typename impl_type::nodes_indices_type;
+        const nodes_indices_type* indices;
 
         switch (kernel.apply_dir)
         {
@@ -338,8 +338,8 @@ namespace fastscapelib
     template <class FK, class FKD>
     int flow_graph<G, S, Tag>::apply_kernel_par(FK& kernel, FKD& data)
     {
-        using bfs_indices_type = typename impl_type::bfs_indices_type;
-        const bfs_indices_type *indices, *levels;
+        using nodes_indices_type = typename impl_type::nodes_indices_type;
+        const nodes_indices_type *indices, *levels;
 
         switch (kernel.apply_dir)
         {

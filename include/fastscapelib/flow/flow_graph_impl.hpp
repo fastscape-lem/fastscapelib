@@ -84,9 +84,7 @@ namespace fastscapelib
             using receivers_distance_type
                 = fixed_shape_container_t<container_selector, data_type, 2>;
             using receivers_weight_type = fixed_shape_container_t<container_selector, data_type, 2>;
-            using dfs_indices_type = fixed_shape_container_t<container_selector, size_type, 1>;
-            using bfs_indices_type = dfs_indices_type;
-            using indices_type = dfs_indices_type;
+            using nodes_indices_type = fixed_shape_container_t<container_selector, size_type, 1>;
 
             using basins_type = fixed_shape_container_t<container_selector, size_type, 1>;
 
@@ -114,7 +112,7 @@ namespace fastscapelib
                 m_donors_count = xt::zeros<size_type>({ grid.size() });
 
                 m_storage_indices = xt::arange<size_type>(0, grid.size(), 1);
-                m_random_levels = indices_type({ 0, size() });
+                m_random_levels = nodes_indices_type({ 0, size() });
 
                 m_dfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
                 m_bfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
@@ -171,27 +169,27 @@ namespace fastscapelib
 
             void compute_donors();
 
-            const indices_type& storage_indices() const
+            const nodes_indices_type& storage_indices() const
             {
                 return m_storage_indices;
             };
 
-            const indices_type& random_levels() const
+            const nodes_indices_type& random_levels() const
             {
                 return m_random_levels;
             };
 
-            const dfs_indices_type& dfs_indices() const
+            const nodes_indices_type& dfs_indices() const
             {
                 return m_dfs_indices;
             };
 
-            const bfs_indices_type& bfs_indices() const
+            const nodes_indices_type& bfs_indices() const
             {
                 return m_bfs_indices;
             };
 
-            const bfs_indices_type& bfs_levels() const
+            const nodes_indices_type& bfs_levels() const
             {
                 return m_bfs_levels;
             };
@@ -203,7 +201,7 @@ namespace fastscapelib
             /*
              * Should be used for graph traversal in an explicit direction.
              */
-            inline stl_container_iterator_wrapper<dfs_indices_type> nodes_indices_bottomup() const
+            inline stl_container_iterator_wrapper<nodes_indices_type> nodes_indices_bottomup() const
             {
                 return m_dfs_indices;
             }
@@ -274,9 +272,8 @@ namespace fastscapelib
             receivers_distance_type m_receivers_distance;
             receivers_weight_type m_receivers_weight;
 
-            dfs_indices_type m_dfs_indices;
-            bfs_indices_type m_bfs_indices, m_bfs_levels;
-            indices_type m_storage_indices, m_random_levels;
+            nodes_indices_type m_dfs_indices, m_bfs_indices, m_bfs_levels, m_storage_indices,
+                m_random_levels;
 
             basins_type m_basins;
             std::vector<size_type> m_outlets;

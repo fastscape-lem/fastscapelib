@@ -59,9 +59,8 @@ namespace fastscapelib
             using receivers_distance_type
                 = fixed_shape_container_t<xt_python_selector, grid_data_type, 2>;
 
-            using dfs_indices_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
-            using bfs_indices_type = dfs_indices_type;
-            using nodes_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
+            using nodes_indices_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
+            using nodes_indices_iterator_type = stl_container_iterator_wrapper<nodes_indices_type>;
 
             using basins_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
 
@@ -81,11 +80,11 @@ namespace fastscapelib
 
             virtual const donors_count_type& donors_count() const = 0;
 
-            virtual const dfs_indices_type& dfs_indices() const = 0;
+            virtual const nodes_indices_type& dfs_indices() const = 0;
 
-            virtual const bfs_indices_type& bfs_indices() const = 0;
+            virtual const nodes_indices_type& bfs_indices() const = 0;
 
-            virtual const bfs_indices_type& bfs_levels() const = 0;
+            virtual const nodes_indices_type& bfs_levels() const = 0;
 
             virtual nodes_indices_iterator_type nodes_indices_bottomup() const = 0;
 
@@ -139,17 +138,17 @@ namespace fastscapelib
                 return m_graph_impl_ptr->donors_count();
             };
 
-            const dfs_indices_type& dfs_indices() const
+            const nodes_indices_type& dfs_indices() const
             {
                 return m_graph_impl_ptr->dfs_indices();
             };
 
-            const bfs_indices_type& bfs_indices() const
+            const nodes_indices_type& bfs_indices() const
             {
                 return m_graph_impl_ptr->bfs_indices();
             };
 
-            const bfs_indices_type& bfs_levels() const
+            const nodes_indices_type& bfs_levels() const
             {
                 return m_graph_impl_ptr->bfs_levels();
             };
@@ -185,9 +184,8 @@ namespace fastscapelib
         using receivers_distance_type
             = fixed_shape_container_t<xt_python_selector, grid_data_type, 2>;
 
-        using dfs_indices_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
-        using bfs_indices_type = dfs_indices_type;
-        using nodes_indices_iterator_type = stl_container_iterator_wrapper<dfs_indices_type>;
+        using nodes_indices_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
+        using nodes_indices_iterator_type = stl_container_iterator_wrapper<nodes_indices_type>;
 
         using basins_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
 
@@ -231,17 +229,17 @@ namespace fastscapelib
             return m_wrapper_ptr->donors_count();
         }
 
-        const dfs_indices_type& dfs_indices() const
+        const nodes_indices_type& dfs_indices() const
         {
             return m_wrapper_ptr->dfs_indices();
         }
 
-        const bfs_indices_type& bfs_indices() const
+        const nodes_indices_type& bfs_indices() const
         {
             return m_wrapper_ptr->bfs_indices();
         }
 
-        const bfs_indices_type& bfs_levels() const
+        const nodes_indices_type& bfs_levels() const
         {
             return m_wrapper_ptr->bfs_levels();
         }
