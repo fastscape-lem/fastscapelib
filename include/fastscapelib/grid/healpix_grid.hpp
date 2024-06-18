@@ -15,14 +15,14 @@
 namespace fastscapelib
 {
 
-    template <class S>
+    template <class S, class T>
     class healpix_grid;
 
     /**
      * Healpix grid specialized types
      */
-    template <class S>
-    struct grid_inner_types<healpix_grid<S>>
+    template <class S, class T>
+    struct grid_inner_types<healpix_grid<S, T>>
     {
         static constexpr bool is_structured = false;
         static constexpr bool is_uniform = false;
@@ -33,7 +33,7 @@ namespace fastscapelib
         static constexpr std::size_t container_ndims = 1;
 
         static constexpr uint8_t n_neighbors_max = 8;
-        using neighbors_cache_type = neighbors_no_cache<0>;
+        using neighbors_cache_type = neighbors_no_cache<n_neighbors_max>;
     };
 
     /**
@@ -43,12 +43,13 @@ namespace fastscapelib
      * isoLatitude Pixelation of a sphere) grid.
      *
      * @tparam S The container selector for data array members.
+     * @tparam T The integer type used to store the HEALPix grid node indices.
      */
-    template <class S>
-    class healpix_grid : public grid<healpix_grid<S>>
+    template <class S, class T = int>
+    class healpix_grid : public grid<healpix_grid<S, T>>
     {
     public:
-        using self_type = healpix_grid<S>;
+        using self_type = healpix_grid<S, T>;
         using base_type = grid<self_type>;
 
         using grid_data_type = typename base_type::grid_data_type;
@@ -57,11 +58,14 @@ namespace fastscapelib
         using size_type = typename base_type::size_type;
         using shape_type = typename base_type::shape_type;
 
-        healpix_grid(std::size_t nside);
+        healpix_grid(int nside);
 
     protected:
-        using healpix_grid_type = T_Healpix_Base<std::size_t>;
-        std::unique_ptr<healpix_grid_type> m_healpix_grid_ptr;
+        using healpix_type = T_Healpix_Base<int64>;
+        std::unique_ptr<healpix_type> m_healpix_obj_ptr;
+
+        shape_type m_shape;
+        size_type m_size;
 
         friend class grid<self_type>;
     };
@@ -75,11 +79,13 @@ namespace fastscapelib
      *
      * @param nside number of divisions along the side of a base-resolution HEALPix pixel.
      */
-    template <class S>
-    healpix_grid<S>::healpix_grid(std::size_t nside)
+    template <class S, class T>
+    healpix_grid<S, T>::healpix_grid(int nside)
     {
-        m_healpix_grid_ptr
-            = std::make_unique<healpix_grid_type>(nside, Healpix_Ordering_Scheme::NEST);
+        m_healpix_obj_ptr = std::make_unique<healpix_type>(nside, Healpix_Ordering_Scheme::NEST);
+
+        m_size = m_healpix_obj_ptr->Npix();
+        m_shape = { static_cast<typename shape_type::value_type>(m_size) };
     }
     //@}
 }
