@@ -345,7 +345,7 @@ namespace fastscapelib
         {
             case flow_graph_traversal_dir::any:
                 indices = &impl().storage_indices();
-                levels = &impl().random_levels();
+                levels = &impl().any_order_levels();
                 break;
             case flow_graph_traversal_dir::breadth_upstream:
                 indices = &impl().bfs_indices();

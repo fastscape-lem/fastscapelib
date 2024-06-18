@@ -111,8 +111,10 @@ namespace fastscapelib
                 m_donors = xt::ones<size_type>(donors_shape) * -1;
                 m_donors_count = xt::zeros<size_type>({ grid.size() });
 
+                // TODO: replace indices and levels for any traversal direction to save memory
+                // footprint
                 m_storage_indices = xt::arange<size_type>(0, grid.size(), 1);
-                m_random_levels = nodes_indices_type({ 0, size() });
+                m_any_order_levels = nodes_indices_type({ 0, size() });
 
                 m_dfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
                 m_bfs_indices = xt::ones<size_type>({ grid.size() }) * -1;
@@ -174,9 +176,9 @@ namespace fastscapelib
                 return m_storage_indices;
             };
 
-            const nodes_indices_type& random_levels() const
+            const nodes_indices_type& any_order_levels() const
             {
-                return m_random_levels;
+                return m_any_order_levels;
             };
 
             const nodes_indices_type& dfs_indices() const
@@ -273,7 +275,7 @@ namespace fastscapelib
             receivers_weight_type m_receivers_weight;
 
             nodes_indices_type m_dfs_indices, m_bfs_indices, m_bfs_levels, m_storage_indices,
-                m_random_levels;
+                m_any_order_levels;
 
             basins_type m_basins;
             std::vector<size_type> m_outlets;
