@@ -331,15 +331,6 @@ namespace fastscapelib
     struct numba_flow_kernel_data
     {
         numba_jit_class data;  ///< data
-
-        operator flow_kernel_data()
-        {
-            flow_kernel_data kernel_data;
-
-            kernel_data.data = &data;
-
-            return kernel_data;
-        }
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////
