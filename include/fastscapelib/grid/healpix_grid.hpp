@@ -75,12 +75,23 @@ namespace fastscapelib
                                                        grid_data_type,
                                                        inner_types::container_ndims>;
 
+        using neighbors_type = typename base_type::neighbors_type;
+        using neighbors_indices_type = typename base_type::neighbors_indices_type;
+        using neighbors_distances_type = typename base_type::neighbors_distances_type;
+
+        using nodes_status_type = typename base_type::nodes_status_type;
+        using nodes_status_array_type = fixed_shape_container_t<container_selector, node_status, 1>;
+
         using size_type = typename base_type::size_type;
         using shape_type = typename base_type::shape_type;
 
-        healpix_grid(T nside, double radius = numeric_constants<>::EARTH_RADIUS);
+        healpix_grid(T nside,
+                     const nodes_status_array_type& nodes_status,
+                     double radius = numeric_constants<>::EARTH_RADIUS);
 
         // TODO: factory calculating nside from a given approx. cell area.
+
+        void set_nodes_status(const nodes_status_array_type& nodes_status);
 
         T nside() const;
         double radius() const;
@@ -93,6 +104,8 @@ namespace fastscapelib
         size_type m_size;
         double m_radius;
         double m_node_area;
+
+        nodes_status_type m_nodes_status;
 
         using neighbors_distances_impl_type = typename base_type::neighbors_distances_impl_type;
         using neighbors_indices_impl_type = typename base_type::neighbors_indices_impl_type;
@@ -130,7 +143,9 @@ namespace fastscapelib
      * @param radius The radius of the sphere (default: Earth radius in meters).
      */
     template <class S, class T>
-    healpix_grid<S, T>::healpix_grid(T nside, double radius)
+    healpix_grid<S, T>::healpix_grid(T nside,
+                                     const nodes_status_array_type& nodes_status,
+                                     double radius)
         : base_type(0)
         , m_radius(radius)
     {
@@ -141,9 +156,24 @@ namespace fastscapelib
         m_shape = { static_cast<typename shape_type::value_type>(m_size) };
         m_node_area = 4.0 * M_PI * m_radius * m_radius / m_size;
 
-        set_neighbors();
+        // will also compute grid node neighbors
+        set_nodes_status(nodes_status);
     }
     //@}
+
+    template <class S, class T>
+    void healpix_grid<S, T>::set_nodes_status(const nodes_status_array_type& nodes_status)
+    {
+        if (!xt::same_shape(nodes_status.shape(), m_shape))
+        {
+            throw std::invalid_argument(
+                "invalid shape for nodes_status array (expects shape [N] where N is the total number of nodes)");
+        }
+        m_nodes_status = nodes_status;
+
+        // maybe invalidates the grid node neighbors so it must be (re)computed
+        set_neighbors();
+    }
 
     template <class S, class T>
     void healpix_grid<S, T>::set_neighbors()
@@ -156,6 +186,11 @@ namespace fastscapelib
 
         for (size_type inode = 0; inode < m_size; inode++)
         {
+            if (m_nodes_status[inode] == node_status::ghost)
+            {
+                continue;
+            }
+
             T inode_ = static_cast<T>(inode);
             size_type neighbors_count = 0;
             auto inode_vec3 = m_healpix_obj_ptr->pix2vec(inode_);
@@ -165,10 +200,11 @@ namespace fastscapelib
             for (size_type k = 1; k < 8; ++k)
             {
                 auto ineighbor = temp_neighbors_indices[k];
+                auto ineighbor_ = static_cast<size_type>(ineighbor);
 
-                if (ineighbor > -1)
+                if (ineighbor > -1 && m_nodes_status[ineighbor_] != node_status::ghost)
                 {
-                    m_neighbors_indices[inode][neighbors_count] = static_cast<size_type>(ineighbor);
+                    m_neighbors_indices[inode][neighbors_count] = ineighbor_;
 
                     auto ineighbor_vec3 = m_healpix_obj_ptr->pix2vec(ineighbor);
                     m_neighbors_distances[inode][neighbors_count]
