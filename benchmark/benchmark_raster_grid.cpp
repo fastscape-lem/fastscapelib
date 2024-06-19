@@ -170,15 +170,18 @@ namespace fastscapelib
             auto n = static_cast<size_type>(state.range(0));
             std::array<size_type, 2> shape{ { n, n } };
 
+            const short d8_row_offsets[9] = { 0, -1, -1, 0, 1, 1, 1, 0, -1 };
+            const short d8_col_offsets[9] = { 0, 0, -1, -1, -1, 0, 1, 1, 1 };
+
             neighbors_offsets_type offsets(grid_type::n_neighbors_max());
 
-            auto get_neighbors_indices
-                = [&shape, &offsets](auto& r, auto& c) -> neighbors_offsets_type
+            auto get_neighbors_indices = [&shape, &offsets, &d8_row_offsets, &d8_col_offsets](
+                                             auto& r, auto& c) -> neighbors_offsets_type
             {
                 for (std::size_t k = 1; k <= grid_type::n_neighbors_max(); ++k)
                 {
-                    const index_t kr = r + fs::consts::d8_row_offsets[k];
-                    const index_t kc = c + fs::consts::d8_col_offsets[k];
+                    const index_t kr = r + d8_row_offsets[k];
+                    const index_t kc = c + d8_col_offsets[k];
 
                     offsets[k - 1] = std::array<std::ptrdiff_t, 2>({ kr, kc });
 

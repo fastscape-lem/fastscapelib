@@ -3,12 +3,14 @@
 
 #include "healpix_cxx/healpix_base.h"
 #include "healpix_cxx/healpix_tables.h"
+#include "healpix_cxx/vec3.h"
 
 // conflict between healpix xcomplex macro and xtl xcomplex
 #undef xcomplex
 #include <xtensor/xbroadcast.hpp>
 
 #include "fastscapelib/grid/base.hpp"
+#include "fastscapelib/utils/consts.hpp"
 #include "fastscapelib/utils/xtensor_containers.hpp"
 
 #include <math.h>
@@ -18,6 +20,15 @@
 
 namespace fastscapelib
 {
+    namespace detail
+    {
+        inline double vec3_distance(vec3 a, vec3 b)
+        {
+            return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2)
+                             + std::pow(a.z - b.z, 2));
+        }
+
+    }
 
     template <class S, class T>
     class healpix_grid;
@@ -67,11 +78,12 @@ namespace fastscapelib
         using size_type = typename base_type::size_type;
         using shape_type = typename base_type::shape_type;
 
-        healpix_grid(T nside, double radius = 6.371e6);
+        healpix_grid(T nside, double radius = numeric_constants<>::EARTH_RADIUS);
 
         // TODO: factory calculating nside from a given approx. cell area.
 
         T nside() const;
+        double radius() const;
 
     protected:
         using healpix_type = T_Healpix_Base<T>;
@@ -94,6 +106,14 @@ namespace fastscapelib
         inline container_type nodes_areas_impl() const;
         inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;
 
+        inline size_type neighbors_count_impl(const size_type& idx) const;
+
+        void neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
+                                    const size_type& idx) const;
+
+        inline const neighbors_distances_impl_type& neighbors_distances_impl(
+            const size_type& idx) const;
+
         static constexpr std::size_t dimension_impl() noexcept;
 
         friend class grid<self_type>;
@@ -106,16 +126,18 @@ namespace fastscapelib
     /**
      * Creates a new HEALPix grid
      *
-     * @param nside number of divisions along the side of a base-resolution HEALPix pixel.
+     * @param nside The number of divisions along the side of a base-resolution HEALPix pixel.
+     * @param radius The radius of the sphere (default: Earth radius in meters).
      */
     template <class S, class T>
     healpix_grid<S, T>::healpix_grid(T nside, double radius)
         : base_type(0)
         , m_radius(radius)
     {
-        m_healpix_obj_ptr = std::make_unique<healpix_type>(nside, Healpix_Ordering_Scheme::NEST);
+        m_healpix_obj_ptr
+            = std::make_unique<healpix_type>(nside, Healpix_Ordering_Scheme::NEST, SET_NSIDE);
 
-        m_size = m_healpix_obj_ptr->Npix();
+        m_size = static_cast<size_type>(m_healpix_obj_ptr->Npix());
         m_shape = { static_cast<typename shape_type::value_type>(m_size) };
         m_node_area = 4.0 * M_PI * m_radius * m_radius / m_size;
 
@@ -130,22 +152,28 @@ namespace fastscapelib
         m_neighbors_indices.resize(m_size);
         m_neighbors_distances.resize(m_size);
 
-        std::array<T, 8> temp_neighbors_indices;
+        fix_arr<T, 8> temp_neighbors_indices;
 
         for (size_type inode = 0; inode < m_size; inode++)
         {
+            T inode_ = static_cast<T>(inode);
             size_type neighbors_count = 0;
-            auto pointing = m_healpix_obj_ptr->pix2ang(inode);
+            auto inode_vec3 = m_healpix_obj_ptr->pix2vec(inode_);
 
-            m_healpix_obj_ptr->neighbors(inode, temp_neighbors_indices);
+            m_healpix_obj_ptr->neighbors(inode_, temp_neighbors_indices);
 
             for (size_type k = 1; k < 8; ++k)
             {
-                size_type ineighbor = temp_neighbors_indices[k];
+                auto ineighbor = temp_neighbors_indices[k];
 
                 if (ineighbor > -1)
                 {
-                    m_neighbors_indices[inode][neighbors_count] = ineighbor;
+                    m_neighbors_indices[inode][neighbors_count] = static_cast<size_type>(ineighbor);
+
+                    auto ineighbor_vec3 = m_healpix_obj_ptr->pix2vec(ineighbor);
+                    m_neighbors_distances[inode][neighbors_count]
+                        = detail::vec3_distance(inode_vec3, ineighbor_vec3);
+
                     neighbors_count++;
                 }
             }
@@ -157,7 +185,13 @@ namespace fastscapelib
     template <class S, class T>
     auto healpix_grid<S, T>::nside() const -> T
     {
-        return m_healpix_obj_ptr->NSide();
+        return m_healpix_obj_ptr->Nside();
+    }
+
+    template <class S, class T>
+    double healpix_grid<S, T>::radius() const
+    {
+        return m_radius;
     }
 
     template <class S, class T>
@@ -171,6 +205,32 @@ namespace fastscapelib
         -> grid_data_type
     {
         return m_node_area;
+    }
+
+    template <class S, class T>
+    inline auto healpix_grid<S, T>::neighbors_count_impl(const size_type& idx) const -> size_type
+    {
+        return m_neighbors_count[idx];
+    }
+
+    template <class S, class T>
+    void healpix_grid<S, T>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
+                                                    const size_type& idx) const
+    {
+        const auto& size = m_neighbors_count[idx].size();
+        neighbors.resize(size);
+
+        for (size_type i = 0; i < size; i++)
+        {
+            neighbors[i] = m_neighbors_indices[idx][i];
+        }
+    }
+
+    template <class S, class T>
+    auto healpix_grid<S, T>::neighbors_distances_impl(const size_type& idx) const
+        -> const neighbors_distances_impl_type&
+    {
+        return m_neighbors_distances[idx];
     }
 
     template <class S, class T>
