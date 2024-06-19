@@ -17,6 +17,7 @@ from fastscapelib.flow import (  # type: ignore[import, attr-defined]
     create_flow_kernel,
 )
 from fastscapelib.grid import (  # type: ignore[import]
+    HealpixGrid,
     Neighbor,
     Node,
     NodeStatus,
@@ -32,6 +33,7 @@ from fastscapelib.grid import (  # type: ignore[import]
 __all__ = [
     "__version__",
     "DiffusionADIEroder",
+    "HealpixGrid",
     "SPLEroder",
     "Neighbor",
     "Node",

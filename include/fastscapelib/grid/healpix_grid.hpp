@@ -150,7 +150,7 @@ namespace fastscapelib
         , m_radius(radius)
     {
         m_healpix_obj_ptr
-            = std::make_unique<healpix_type>(nside, Healpix_Ordering_Scheme::NEST, SET_NSIDE);
+            = std::make_unique<healpix_type>(nside, Healpix_Ordering_Scheme::RING, SET_NSIDE);
 
         m_size = static_cast<size_type>(m_healpix_obj_ptr->Npix());
         m_shape = { static_cast<typename shape_type::value_type>(m_size) };
@@ -253,8 +253,7 @@ namespace fastscapelib
     void healpix_grid<S, T>::neighbors_indices_impl(neighbors_indices_impl_type& neighbors,
                                                     const size_type& idx) const
     {
-        const auto& size = m_neighbors_count[idx].size();
-        neighbors.resize(size);
+        const auto& size = m_neighbors_count[idx];
 
         for (size_type i = 0; i < size; i++)
         {
