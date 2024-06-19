@@ -421,6 +421,7 @@ add_flow_graph_bindings(py::module& m)
     fs::register_py_flow_graph_init<fs::py_profile_grid>(pyfgraph, true);
     fs::register_py_flow_graph_init<fs::py_raster_grid>(pyfgraph, false);
     fs::register_py_flow_graph_init<fs::py_trimesh>(pyfgraph, false);
+    fs::register_py_flow_graph_init<fs::py_healpix_grid>(pyfgraph, false);
 
     pyfgraph.def_property_readonly(
         "operators",

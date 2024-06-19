@@ -166,6 +166,21 @@ add_grid_bindings(py::module& m)
     fs::register_grid_methods(tmesh);
 
     /*
+    ** Healpix grid
+    */
+
+    py::class_<fs::py_healpix_grid> hgrid(m, "HealpixGrid", "A HEALPix grid.");
+
+    hgrid.def(py::init<int, const fs::py_healpix_grid::nodes_status_array_type&, double>(),
+              py::arg("nside"),
+              py::arg("nodes_status"),
+              py::arg("radius"));
+
+    fs::register_grid_static_properties(hgrid);
+    fs::register_base_grid_properties(hgrid);
+    fs::register_grid_methods(hgrid);
+
+    /*
     ** Profile Grid
     */
 

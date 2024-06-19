@@ -72,6 +72,7 @@ set(FASTSCAPELIB_TEST_SRC
     test_flow_operator.cpp
     test_flow_router.cpp
     test_flow_snapshot.cpp
+    test_healpix_grid.cpp
     test_single_flow_router.cpp
     test_multi_flow_router.cpp
     test_pflood.cpp

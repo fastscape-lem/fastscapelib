@@ -1,4 +1,5 @@
 from _fastscapelib_py.grid import (  # type: ignore[import]
+    HealpixGrid,
     Neighbor,
     Node,
     NodeStatus,
@@ -12,6 +13,7 @@ from _fastscapelib_py.grid import (  # type: ignore[import]
 )
 
 __all__ = [
+    "HealpidxGrid",
     "Neighbor",
     "Node",
     "NodeStatus",
