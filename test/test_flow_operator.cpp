@@ -55,7 +55,7 @@ namespace fastscapelib
             using base_type = flow_operator_impl_base<FG, fake_operator>;
 
             flow_operator_impl(std::shared_ptr<fake_operator> ptr)
-                : base_type(std::move(ptr)){};
+                : base_type(std::move(ptr)) {};
         };
     }
 
@@ -91,7 +91,7 @@ namespace fastscapelib
             using thread_pool_type = thread_pool<size_type>;
 
             flow_operator_impl(std::shared_ptr<test_operator> ptr)
-                : base_type(std::move(ptr)){};
+                : base_type(std::move(ptr)) {};
 
             void apply(graph_impl_type& /*graph_impl*/,
                        data_array_type& elevation,

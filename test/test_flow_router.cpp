@@ -45,7 +45,7 @@ namespace fastscapelib
             using base_type = flow_operator_impl<FG, multi_flow_router, flow_graph_fixed_array_tag>;
 
             flow_operator_impl(std::shared_ptr<multi_flow_router_0> ptr)
-                : base_type(std::move(ptr)){};
+                : base_type(std::move(ptr)) {};
         };
 
         template <class FG>
@@ -56,7 +56,7 @@ namespace fastscapelib
             using base_type = flow_operator_impl<FG, multi_flow_router, flow_graph_fixed_array_tag>;
 
             flow_operator_impl(std::shared_ptr<multi_flow_router_2> ptr)
-                : base_type(std::move(ptr)){};
+                : base_type(std::move(ptr)) {};
         };
     }
 

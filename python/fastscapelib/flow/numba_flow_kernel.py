@@ -90,11 +90,9 @@ P = ParamSpec("P")
 
 
 class NumbaJittedFunc(Protocol[P, R]):
-    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
-        ...
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
 
-    def get_compile_result(self, sig: Any) -> Any:
-        ...
+    def get_compile_result(self, sig: Any) -> Any: ...
 
 
 # simplified type annotation for numba.experimental.jitclass decorated class
