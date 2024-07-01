@@ -196,8 +196,10 @@ namespace fastscapelib
      *      5   6   7        3   4        2   3   4
      */
     inline auto raster_neighbors<raster_connect::queen>::node_neighbors_offsets(
-        std::ptrdiff_t up, std::ptrdiff_t down, std::ptrdiff_t left, std::ptrdiff_t right) const
-        -> neighbors_offsets_type
+        std::ptrdiff_t up,
+        std::ptrdiff_t down,
+        std::ptrdiff_t left,
+        std::ptrdiff_t right) const -> neighbors_offsets_type
     {
         std::array<bool, 8> mask{
             (up != 0 && left != 0),   up != 0,   (up != 0 && right != 0),  left != 0, right != 0,
@@ -282,8 +284,10 @@ namespace fastscapelib
      *        3            2                2
      */
     inline auto raster_neighbors<raster_connect::rook>::node_neighbors_offsets(
-        std::ptrdiff_t up, std::ptrdiff_t down, std::ptrdiff_t left, std::ptrdiff_t right) const
-        -> neighbors_offsets_type
+        std::ptrdiff_t up,
+        std::ptrdiff_t down,
+        std::ptrdiff_t left,
+        std::ptrdiff_t right) const -> neighbors_offsets_type
     {
         std::array<bool, 4> mask{ up != 0, left != 0, right != 0, down != 0 };
 
@@ -359,8 +363,10 @@ namespace fastscapelib
      *      2       3            1        0       1
      */
     inline auto raster_neighbors<raster_connect::bishop>::node_neighbors_offsets(
-        std::ptrdiff_t up, std::ptrdiff_t down, std::ptrdiff_t left, std::ptrdiff_t right) const
-        -> neighbors_offsets_type
+        std::ptrdiff_t up,
+        std::ptrdiff_t down,
+        std::ptrdiff_t left,
+        std::ptrdiff_t right) const -> neighbors_offsets_type
     {
         std::array<bool, 4> mask{ (up != 0 && left != 0),
                                   (up != 0 && right != 0),
@@ -932,8 +938,8 @@ namespace fastscapelib
      * @return A vector of neighbor node objects.
      */
     template <class S, raster_connect RC, class C>
-    inline auto raster_grid<S, RC, C>::neighbors(const size_type& row, const size_type& col)
-        -> neighbors_raster_type
+    inline auto raster_grid<S, RC, C>::neighbors(const size_type& row,
+                                                 const size_type& col) -> neighbors_raster_type
     {
         neighbors_raster_type nb;
         neighbors(row, col, nb);

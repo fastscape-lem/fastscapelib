@@ -27,7 +27,7 @@ namespace fastscapelib
     public:
         single_flow_router() = default;
         single_flow_router(int n_threads)
-            : m_threads_count(n_threads){};
+            : m_threads_count(n_threads) {};
 
         inline std::string name() const noexcept override
         {
@@ -70,7 +70,7 @@ namespace fastscapelib
 
         public:
             flow_operator_impl(std::shared_ptr<single_flow_router> ptr)
-                : base_type(std::move(ptr)){};
+                : base_type(std::move(ptr)) {};
 
             void apply(graph_impl_type& graph_impl,
                        data_array_type& elevation,
@@ -268,7 +268,7 @@ namespace fastscapelib
             using thread_pool_type = thread_pool<size_type>;
 
             flow_operator_impl(std::shared_ptr<multi_flow_router> ptr)
-                : base_type(std::move(ptr)){};
+                : base_type(std::move(ptr)) {};
 
             void apply(graph_impl_type& graph_impl,
                        data_array_type& elevation,

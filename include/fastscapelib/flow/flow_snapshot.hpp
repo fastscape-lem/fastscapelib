@@ -75,7 +75,7 @@ namespace fastscapelib
             using elevation_map = std::map<std::string, std::unique_ptr<data_array_type>>;
 
             flow_operator_impl(std::shared_ptr<flow_snapshot> ptr)
-                : base_type(std::move(ptr)){};
+                : base_type(std::move(ptr)) {};
 
             void save(const FG& graph_impl,
                       graph_impl_map& graph_impl_snapshots,
