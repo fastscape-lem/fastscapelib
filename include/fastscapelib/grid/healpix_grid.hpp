@@ -186,13 +186,20 @@ namespace fastscapelib
 
         for (size_type inode = 0; inode < m_size; inode++)
         {
-            if (m_nodes_status[inode] == node_status::ghost)
+            size_type neighbors_count = 0;
+
+            if (m_nodes_status[inode] == node_status::looped)
             {
+                throw std::invalid_argument("node_status::looped is not allowed in "
+                                            "healpix grid");
+            }
+            else if (m_nodes_status[inode] == node_status::ghost)
+            {
+                m_neighbors_count[inode] = neighbors_count;
                 continue;
             }
 
             T inode_ = static_cast<T>(inode);
-            size_type neighbors_count = 0;
             auto inode_vec3 = m_healpix_obj_ptr->pix2vec(inode_);
 
             m_healpix_obj_ptr->neighbors(inode_, temp_neighbors_indices);
