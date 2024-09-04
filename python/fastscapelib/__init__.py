@@ -16,7 +16,7 @@ from fastscapelib.flow import (  # type: ignore[import, attr-defined]
     SingleFlowRouter,
     create_flow_kernel,
 )
-from fastscapelib.grid import (  # type: ignore[import]
+from fastscapelib.grid import (  # type: ignore[import, attr-defined]
     HealpixGrid,
     Neighbor,
     Node,
