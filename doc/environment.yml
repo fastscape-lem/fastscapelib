@@ -5,6 +5,7 @@ dependencies:
   - python=3.9
   - breathe
   - cmake
+  - healpix_cxx
   - xtensor-python
   - pybind11
   - scikit-build-core
