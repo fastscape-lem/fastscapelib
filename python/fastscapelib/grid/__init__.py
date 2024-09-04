@@ -11,7 +11,14 @@ from _fastscapelib_py.grid import (
     TriMesh,
 )
 
+try:
+    from _fastscapelib_py.grid import HealpixGrid
+except ImportError:
+    # Python module built with no healpix grid support (e.g., Windows)
+    HealpixGrid = None
+
 __all__ = [
+    "HealpixGrid",
     "Neighbor",
     "Node",
     "NodeStatus",
@@ -23,23 +30,3 @@ __all__ = [
     "RasterNode",
     "TriMesh",
 ]
-
-try:
-    from _fastscapelib_py import HealpixGrid
-
-    __all__ = [
-        "HealpixGrid",
-        "Neighbor",
-        "Node",
-        "NodeStatus",
-        "ProfileBoundaryStatus",
-        "ProfileGrid",
-        "RasterBoundaryStatus",
-        "RasterGrid",
-        "RasterNeighbor",
-        "RasterNode",
-        "TriMesh",
-    ]
-except ImportError:
-    # Python module built with no healpix grid support (e.g., Windows)
-    pass
