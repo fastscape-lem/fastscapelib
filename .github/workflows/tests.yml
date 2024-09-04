@@ -41,7 +41,7 @@ jobs:
           cache-downloads: false
 
       - name: Install Healpix (Linux and MacOS)
-        if: matrix.os != 'windows-latest'
+        if: matrix.cfg.os != 'windows-latest'
         run: |
           micromamba install healpix_cxx
 
