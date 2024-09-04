@@ -165,6 +165,7 @@ add_grid_bindings(py::module& m)
     fs::register_base_grid_properties(tmesh);
     fs::register_grid_methods(tmesh);
 
+#ifdef WITH_HEALPIX
     /*
     ** Healpix grid
     */
@@ -179,6 +180,7 @@ add_grid_bindings(py::module& m)
     fs::register_grid_static_properties(hgrid);
     fs::register_base_grid_properties(hgrid);
     fs::register_grid_methods(hgrid);
+#endif
 
     /*
     ** Profile Grid

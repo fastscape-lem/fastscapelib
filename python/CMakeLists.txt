@@ -44,6 +44,10 @@ target_compile_definitions(${PY_FASTSCAPELIB}
     VERSION_INFO=${PROJECT_VERSION}
 )
 
+if(FS_WITH_HEALPIX)
+  target_compile_definitions(${PY_FASTSCAPELIB} PRIVATE WITH_HEALPIX)
+endif()
+
 # Installation
 # ============
 

@@ -19,6 +19,10 @@ OPTION(FS_DOWNLOAD_GBENCHMARK "Build gbenchmark from downloaded sources" OFF)
 OPTION(FS_GBENCHMARK_SRC_DIR "Build gbenchmark from local sources" OFF)
 OPTION(FS_WITH_HEALPIX "Turn on support of Healpix grid" ON)
 
+if(WIN32)
+  set(FS_WITH_HEALPIX OFF CACHE BOOL "Healpix grid not supported on Windows")
+endif()
+
 set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/cmake/modules
     ${CMAKE_MODULE_PATH})
@@ -119,7 +123,6 @@ set(FASTSCAPELIB_HEADERS
   flow/impl/flow_graph_inl.hpp
   # Grid
   grid/base.hpp
-  grid/healpix_grid.hpp
   grid/profile_grid.hpp
   grid/raster_grid.hpp
   grid/structured_grid.hpp
@@ -138,6 +141,10 @@ set(FASTSCAPELIB_HEADERS
   version.hpp
 )
 
+if(FS_WITH_HEALPIX)
+  list(APPEND FASTSCAPELIB_HEADERS grid/healpix_grid.hpp)
+endif()
+
 set(FASTSCAPELIB_TARGET fastscapelib)
 
 add_library(${FASTSCAPELIB_TARGET} INTERFACE)
@@ -149,7 +156,10 @@ target_include_directories(${FASTSCAPELIB_TARGET}
 )
 
 target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE xtensor Threads::Threads)
-target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE healpix)
+
+if(FS_WITH_HEALPIX)
+  target_link_libraries(${FASTSCAPELIB_TARGET} INTERFACE healpix)
+endif()
 
 target_compile_features(${FASTSCAPELIB_TARGET} INTERFACE cxx_std_17)
 

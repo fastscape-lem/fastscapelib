@@ -72,7 +72,6 @@ set(FASTSCAPELIB_TEST_SRC
     test_flow_operator.cpp
     test_flow_router.cpp
     test_flow_snapshot.cpp
-    test_healpix_grid.cpp
     test_single_flow_router.cpp
     test_multi_flow_router.cpp
     test_pflood.cpp
@@ -86,6 +85,10 @@ set(FASTSCAPELIB_TEST_SRC
     test_spl.cpp
     test_trimesh.cpp
 )
+
+if(FS_WITH_HEALPIX)
+  list(APPEND FASTSCAPELIB_TEST_SRC test_healpix_grid.cpp)
+endif()
 
 enable_testing()
 

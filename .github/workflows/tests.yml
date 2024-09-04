@@ -40,6 +40,11 @@ jobs:
           cache-environment: true
           cache-downloads: false
 
+      - name: Install Healpix (Linux and MacOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          micromamba install healpix_cxx
+
       - name: Configure Fastscapelib (CMake)
         run: |
           cmake -S . -B build \
@@ -77,6 +82,11 @@ jobs:
           cache-downloads: false
           create-args: >-
             python=${{ matrix.python-version }}
+
+      - name: Install Healpix (Linux and MacOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          micromamba install healpix_cxx
 
       - name: Build and install Fastscapelib Python
         run: |
