@@ -1,5 +1,4 @@
 from _fastscapelib_py.grid import (
-    HealpixGrid,
     Neighbor,
     Node,
     NodeStatus,
