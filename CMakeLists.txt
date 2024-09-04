@@ -20,7 +20,7 @@ OPTION(FS_GBENCHMARK_SRC_DIR "Build gbenchmark from local sources" OFF)
 OPTION(FS_WITH_HEALPIX "Turn on support of Healpix grid" ON)
 
 if(WIN32)
-  set(FS_WITH_HEALPIX OFF CACHE BOOL "Healpix grid not supported on Windows")
+  set(FS_WITH_HEALPIX OFF CACHE BOOL "Healpix grid not supported on Windows" FORCE)
 endif()
 
 set(CMAKE_MODULE_PATH
