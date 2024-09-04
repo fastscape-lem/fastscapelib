@@ -4,5 +4,3 @@ channels:
 dependencies:
   - xtensor
   - cmake
-  - gtest
-  - benchmark
