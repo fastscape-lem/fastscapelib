@@ -16,6 +16,7 @@
 
 #include <math.h>
 #include <memory>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -97,6 +98,8 @@ namespace fastscapelib
 
         std::pair<container_type, container_type> nodes_lonlat() const;
         std::pair<double, double> nodes_lonlat(const size_type& idx) const;
+        std::tuple<container_type, container_type, container_type> nodes_xyz() const;
+        std::tuple<double, double, double> nodes_xyz(const size_type& idx) const;
 
         T nside() const;
         double radius() const;
@@ -215,6 +218,43 @@ namespace fastscapelib
 
         return std::make_pair<container_type, container_type>(std::move(lon), std::move(lat));
     }
+
+    /**
+     * Returns the x, y, z cartesian coordinates of a given grid node (HEALPix cell centroid).
+     *
+     * @param idx The grid node indice.
+     */
+    template <class S, class T>
+    std::tuple<double, double, double> healpix_grid<S, T>::nodes_xyz(const size_type& idx) const
+    {
+        auto vec = m_healpix_obj_ptr->pix2vec(static_cast<int>(idx));
+
+        return std::make_tuple<double, double, double>(
+            vec.x * m_radius, vec.y * m_radius, vec.z * m_radius);
+    }
+
+    /**
+     * Returns the x, y, z cartesian coordinates of all grid nodes (HEALPix cell centroids).
+     */
+    template <class S, class T>
+    auto healpix_grid<S, T>::nodes_xyz() const
+        -> std::tuple<container_type, container_type, container_type>
+    {
+        container_type x(m_shape);
+        container_type y(m_shape);
+        container_type z(m_shape);
+
+        for (size_type idx = 0; idx < m_size; ++idx)
+        {
+            auto vec = m_healpix_obj_ptr->pix2vec(static_cast<int>(idx));
+            x(idx) = vec.x * m_radius;
+            y(idx) = vec.y * m_radius;
+            z(idx) = vec.z * m_radius;
+        }
+
+        return std::make_tuple<container_type, container_type, container_type>(
+            std::move(x), std::move(y), std::move(z));
+    }
     //@}
 
     template <class S, class T>
@@ -267,17 +307,30 @@ namespace fastscapelib
         }
     }
 
+    /**
+     * @name HEALPix specific properties
+     */
+    /**
+     * HEALPix's Nside (number of divisions along the side of a HEALPix
+     * base-resolution pixel).
+     *
+     * The higher the value is, the finer the resolution of the grid is.
+     */
     template <class S, class T>
     auto healpix_grid<S, T>::nside() const -> T
     {
         return m_healpix_obj_ptr->Nside();
     }
 
+    /**
+     * Sphere radius
+     */
     template <class S, class T>
     double healpix_grid<S, T>::radius() const
     {
         return m_radius;
     }
+    //@}
 
     template <class S, class T>
     inline auto healpix_grid<S, T>::nodes_areas_impl() const -> container_type

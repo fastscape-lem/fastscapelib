@@ -200,6 +200,13 @@ add_grid_bindings(py::module& m)
     fs::register_grid_methods(hgrid);
 
     hgrid
+        .def_property_readonly(
+            "nside",
+            &fs::py_healpix_grid::nside,
+            "HEALPix's Nside (number of division along the side of a HEALPix base-resolution pixel).")
+        .def_property_readonly("radius", &fs::py_healpix_grid::radius, "Sphere radius");
+
+    hgrid
         .def("nodes_lonlat",
              py::overload_cast<const fs::py_healpix_grid::size_type&>(
                  &fs::py_healpix_grid::nodes_lonlat, py::const_),
@@ -227,6 +234,36 @@ add_grid_bindings(py::module& m)
 
              )doc")
         .def("nodes_lonlat", py::overload_cast<>(&fs::py_healpix_grid::nodes_lonlat, py::const_));
+
+    hgrid
+        .def("nodes_xyz",
+             py::overload_cast<const fs::py_healpix_grid::size_type&>(
+                 &fs::py_healpix_grid::nodes_xyz, py::const_),
+             py::arg("idx"),
+             R"doc(nodes_xyz(*args) -> tuple
+
+             Return the x,y,z cartesian coordinates of one or all grid nodes
+             (HEALPix cell centroids).
+
+             Overloaded method that supports the following signatures:
+
+             1. ``nodes_xyz(idx: int) -> tuple[double, double, double]``
+
+             2. ``nodes_xyz() -> tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]``
+
+             Parameters
+             ----------
+             idx : int
+                 Grid node indice.
+
+             Returns
+             -------
+             x, y, z : floats (scalar or arrays)
+                 X, Y and Z coordinates in the same scale and units than the grid's
+                 sphere radius.
+
+             )doc")
+        .def("nodes_xyz", py::overload_cast<>(&fs::py_healpix_grid::nodes_xyz, py::const_));
 #endif
 
     /*

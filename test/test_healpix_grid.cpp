@@ -97,6 +97,22 @@ namespace fastscapelib
             EXPECT_EQ(actual, expected);
         }
 
+        TEST_F(healpix_grid, nodes_xyz)
+        {
+            auto grid = fs::healpix_grid<>(nside, nodes_status);
+
+            auto actual = grid.nodes_xyz(0);
+            auto actual_arr = grid.nodes_xyz();
+            auto actual_arr0 = std::make_tuple<double&, double&, double&>(
+                std::get<0>(actual_arr)(0), std::get<1>(actual_arr)(0), std::get<2>(actual_arr)(0));
+
+            auto expected = std::make_tuple<double, double, double>(
+                114937.4753788243, 114937.4753788243, 6368926.106770833);
+
+            EXPECT_EQ(actual, actual_arr0);
+            EXPECT_EQ(actual, expected);
+        }
+
         TEST_F(healpix_grid, neighbors_count)
         {
             auto grid = fs::healpix_grid<>(nside, nodes_status);
