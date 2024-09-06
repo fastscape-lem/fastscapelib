@@ -4,6 +4,7 @@
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
+#include "fastscapelib/utils/consts.hpp"
 
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
@@ -134,7 +135,7 @@ add_grid_bindings(py::module& m)
 
         Create a new mesh with a dictionary of node status (optional).
 
-        2. ``__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: np.ndarray) -> None``
+        2. ``__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: numpy.ndarray) -> None``
 
         Create a new mesh with an array of node status.
 
@@ -172,10 +173,27 @@ add_grid_bindings(py::module& m)
 
     py::class_<fs::py_healpix_grid> hgrid(m, "HealpixGrid", "A HEALPix grid.");
 
-    hgrid.def(py::init<int, const fs::py_healpix_grid::nodes_status_array_type&, double>(),
-              py::arg("nside"),
-              py::arg("nodes_status"),
-              py::arg("radius"));
+    hgrid.def(
+        py::init<int, const fs::py_healpix_grid::nodes_status_array_type&, double>(),
+        py::arg("nside"),
+        py::arg("nodes_status"),
+        py::arg("radius") = fs::numeric_constants<>::EARTH_RADIUS,
+        R"doc(__init__(nside: int, nodes_status: numpy.ndarray, radius: float = 6.371e6) -> None
+
+        HEALPix grid initializer.
+
+        Parameters
+        ----------
+        nside : int
+            Number of divisions along the side of a HEALPix base-resolution pixel.
+            A higher value sets a grid with a finer resolution and a greater size N
+            (i.e., total number of grid nodes).
+        nodes_status : array-like
+            Array of shape [N] setting the status of all grid nodes at once.
+        radius : float, optional
+            Sphere radius (default, Earth radius in meters).
+
+        )doc");
 
     fs::register_grid_static_properties(hgrid);
     fs::register_base_grid_properties(hgrid);
