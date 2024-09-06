@@ -180,6 +180,35 @@ add_grid_bindings(py::module& m)
     fs::register_grid_static_properties(hgrid);
     fs::register_base_grid_properties(hgrid);
     fs::register_grid_methods(hgrid);
+
+    hgrid
+        .def("nodes_lonlat",
+             py::overload_cast<const fs::py_healpix_grid::size_type&>(
+                 &fs::py_healpix_grid::nodes_lonlat, py::const_),
+             py::arg("idx"),
+             R"doc(nodes_lonlat(*args) -> tuple
+
+             Return the longitude and latitude coordinates of one or all grid nodes
+             (HEALPix cell centroids), in radians.
+
+             Overloaded method that supports the following signatures:
+
+             1. ``nodes_lonlat(idx: int) -> tuple[double, double]``
+
+             2. ``nodes_lonlat() -> tuple[numpy.ndarray, numpy.ndarray]``
+
+             Parameters
+             ----------
+             idx : int
+                 Grid node indice.
+
+             Returns
+             -------
+             lonlat : tuple
+                 Longitude and latitude coordinates (scalars or arrays) in radians.
+
+             )doc")
+        .def("nodes_lonlat", py::overload_cast<>(&fs::py_healpix_grid::nodes_lonlat, py::const_));
 #endif
 
     /*

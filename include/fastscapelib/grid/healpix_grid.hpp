@@ -8,6 +8,7 @@
 // conflict between healpix xcomplex macro and xtl xcomplex
 #undef xcomplex
 #include <xtensor/xbroadcast.hpp>
+#include <xtensor/xmath.hpp>
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/consts.hpp"
@@ -15,6 +16,7 @@
 
 #include <math.h>
 #include <memory>
+#include <utility>
 #include <vector>
 
 
@@ -92,6 +94,9 @@ namespace fastscapelib
         // TODO: factory calculating nside from a given approx. cell area.
 
         void set_nodes_status(const nodes_status_array_type& nodes_status);
+
+        std::pair<container_type, container_type> nodes_lonlat() const;
+        std::pair<double, double> nodes_lonlat(const size_type& idx) const;
 
         T nside() const;
         double radius() const;
@@ -174,6 +179,43 @@ namespace fastscapelib
         // maybe invalidates the grid node neighbors so it must be (re)computed
         set_neighbors();
     }
+
+    /**
+     * @name HEALPix specific methods
+     */
+    /**
+     * Returns the longitude and latitude of a given grid node (HEALPix cell centroid), in radians.
+     *
+     * @param idx The grid node indice.
+     */
+    template <class S, class T>
+    std::pair<double, double> healpix_grid<S, T>::nodes_lonlat(const size_type& idx) const
+    {
+        auto ang = m_healpix_obj_ptr->pix2ang(static_cast<int>(idx));
+
+        return std::make_pair<double, double>(double(ang.phi),
+                                              xt::numeric_constants<double>::PI_2 - ang.theta);
+    }
+
+    /**
+     * Returns the longitude and latitude of all grid nodes (HEALPix cell centroids), in radians.
+     */
+    template <class S, class T>
+    auto healpix_grid<S, T>::nodes_lonlat() const -> std::pair<container_type, container_type>
+    {
+        container_type lon(m_shape);
+        container_type lat(m_shape);
+
+        for (size_type idx = 0; idx < m_size; ++idx)
+        {
+            auto ang = m_healpix_obj_ptr->pix2ang(static_cast<int>(idx));
+            lon(idx) = ang.phi;
+            lat(idx) = xt::numeric_constants<double>::PI_2 - ang.theta;
+        }
+
+        return std::make_pair<container_type, container_type>(std::move(lon), std::move(lat));
+    }
+    //@}
 
     template <class S, class T>
     void healpix_grid<S, T>::set_neighbors()
