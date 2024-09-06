@@ -89,7 +89,7 @@ namespace fastscapelib
 
         healpix_grid(T nside,
                      const nodes_status_array_type& nodes_status,
-                     double radius = numeric_constants<>::EARTH_RADIUS);
+                     double radius = numeric_constants<>::EARTH_RADIUS_METERS);
 
         // TODO: factory calculating nside from a given approx. cell area.
 

@@ -39,7 +39,7 @@ namespace fastscapelib
 
             EXPECT_EQ(grid.nside(), nside);
             EXPECT_EQ(grid.size(), size);
-            EXPECT_EQ(grid.radius(), fs::numeric_constants<>::EARTH_RADIUS);
+            EXPECT_EQ(grid.radius(), fs::numeric_constants<>::EARTH_RADIUS_METERS);
         }
 
         TEST_F(healpix_grid, nodes_status)

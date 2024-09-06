@@ -177,7 +177,7 @@ add_grid_bindings(py::module& m)
         py::init<int, const fs::py_healpix_grid::nodes_status_array_type&, double>(),
         py::arg("nside"),
         py::arg("nodes_status"),
-        py::arg("radius") = fs::numeric_constants<>::EARTH_RADIUS,
+        py::arg("radius") = fs::numeric_constants<>::EARTH_RADIUS_METERS,
         R"doc(__init__(nside: int, nodes_status: numpy.ndarray, radius: float = 6.371e6) -> None
 
         HEALPix grid initializer.
