@@ -64,7 +64,7 @@ namespace fastscapelib
 
             using basins_type = fixed_shape_container_t<xt_python_selector, size_type, 1>;
 
-            virtual ~flow_graph_impl_wrapper_base(){};
+            virtual ~flow_graph_impl_wrapper_base() {};
 
             virtual bool single_flow() const = 0;
 
@@ -96,7 +96,7 @@ namespace fastscapelib
         class flow_graph_impl_wrapper : public flow_graph_impl_wrapper_base
         {
         public:
-            virtual ~flow_graph_impl_wrapper(){};
+            virtual ~flow_graph_impl_wrapper() {};
 
             flow_graph_impl_wrapper(const std::shared_ptr<FG>& graph_impl_ptr)
                 : m_graph_impl_ptr(graph_impl_ptr)
@@ -192,7 +192,7 @@ namespace fastscapelib
         template <class FG>
         py_flow_graph_impl(const std::shared_ptr<FG>& graph_impl_ptr)
             : m_wrapper_ptr(
-                std::make_unique<detail::flow_graph_impl_wrapper<FG>>(graph_impl_ptr)){};
+                  std::make_unique<detail::flow_graph_impl_wrapper<FG>>(graph_impl_ptr)){};
 
         bool single_flow() const
         {
@@ -388,7 +388,7 @@ namespace fastscapelib
             using shape_type = data_array_type::shape_type;
             using data_array_size_type = dynamic_shape_container_t<xt_python_selector, size_type>;
 
-            virtual ~flow_graph_wrapper_base(){};
+            virtual ~flow_graph_wrapper_base() {};
 
             virtual bool single_flow() const = 0;
             virtual size_type size() const = 0;
@@ -442,7 +442,7 @@ namespace fastscapelib
                     = std::make_unique<py_flow_graph_impl>(m_snapshot_graph_ptr->impl_ptr());
             }
 
-            virtual ~flow_graph_wrapper(){};
+            virtual ~flow_graph_wrapper() {};
 
             bool single_flow() const
             {
