@@ -21,7 +21,7 @@ authors = [
 maintainers = [
     {name = "Fastscapelib contributors"},
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = ["numpy", "numba"]
 
 [project.urls]

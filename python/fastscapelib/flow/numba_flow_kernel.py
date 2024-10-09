@@ -16,6 +16,7 @@ from typing import (
     Iterable,
     Iterator,
     Optional,
+    ParamSpec,
     Protocol,
     Type,
     TypeVar,
@@ -41,12 +42,6 @@ else:
         _FlowKernel,
         _FlowKernelData,
     )
-
-
-if sys.version_info < (3, 10):
-    from typing_extensions import ParamSpec
-else:
-    from typing import ParamSpec
 
 
 class ConstantAssignmentVisitor(ast.NodeVisitor):
