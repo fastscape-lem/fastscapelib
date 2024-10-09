@@ -7,11 +7,11 @@ if(FS_DOWNLOAD_GTEST OR FS_GTEST_SRC_DIR)
     include(FetchContent)
 
     if(FS_DOWNLOAD_GTEST)
-        message(STATUS "Downloading googletest v1.13.0")
+        message(STATUS "Downloading googletest v1.15.2")
 
         FetchContent_Declare(googletest
             GIT_REPOSITORY https://github.com/google/googletest
-            GIT_TAG tags/v1.13.0
+            GIT_TAG tags/v1.15.2
             GIT_SHALLOW TRUE)
     else()
         message(STATUS "Build googletest from local directory")
