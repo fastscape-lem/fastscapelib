@@ -64,9 +64,9 @@ def create_flow_kernel(
 
     Returns
     -------
-    flow_kernel : :py:class:`~fastscapelib.flow.numba_flow_kernel.NumbaFlowKernel`
+    flow_kernel : :py:class:`~fastscapelib.flow.numba.flow_kernel.NumbaFlowKernel`
         An object used to apply the flow kernel.
-    flow_kernel_data : :py:class:`~fastscapelib.flow.numba_flow_kernel.NumbaFlowKernelData`
+    flow_kernel_data : :py:class:`~fastscapelib.flow.numba.flow_kernel.NumbaFlowKernelData`
         An object used to manage flow kernel data.
 
     """
