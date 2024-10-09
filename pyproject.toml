@@ -23,7 +23,10 @@ maintainers = [
     {name = "Fastscapelib contributors"},
 ]
 requires-python = ">=3.10"
-dependencies = ["numpy", "numba"]
+dependencies = [
+    "numpy>=1.24",
+    "numba",
+]
 
 [project.urls]
 Home = "https://fastscapelib.readthedocs.io"
