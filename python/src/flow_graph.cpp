@@ -626,7 +626,8 @@ add_flow_graph_bindings(py::module& m)
             {
                 auto py_apply_kernel = py::module::import("fastscapelib")
                                            .attr("flow")
-                                           .attr("numba_flow_kernel")
+                                           .attr("numba")
+                                           .attr("flow_kernel")
                                            .attr("apply_flow_kernel");
                 return py_apply_kernel(flow_graph, flow_kernel, flow_kernel_data).cast<int>();
             }

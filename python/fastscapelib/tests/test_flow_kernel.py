@@ -1,4 +1,3 @@
-import numba as nb
 import numpy as np
 import pytest
 
@@ -8,8 +7,10 @@ from fastscapelib.flow import (
     MultiFlowRouter,
     PFloodSinkResolver,
 )
-from fastscapelib.flow.numba_flow_kernel import create_flow_kernel
+from fastscapelib.flow.numba import create_flow_kernel
 from fastscapelib.grid import NodeStatus, RasterGrid
+
+nb = pytest.importorskip("numba")
 
 
 @pytest.fixture(scope="module")
