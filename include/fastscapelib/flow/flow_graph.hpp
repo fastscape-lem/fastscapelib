@@ -251,7 +251,7 @@ namespace fastscapelib
          * @tparam FK The flow kernel type.
          * @tparam FKD The flow kernel data type.
          * @param kernel The flow kernel object to apply along the graph.
-         * @param kernel_data The object holding or referencing input and output data
+         * @param data The object holding or referencing input and output data
          * used by the flow kernel.
          *
          */

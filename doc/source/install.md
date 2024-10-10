@@ -130,7 +130,7 @@ options.
 
 ## Install the Python Library
 
-Fastscapelib's Python package requires Python (3.9+) and [numpy].
+Fastscapelib's Python package requires Python (3.10+) and [numpy].
 
 (install-python-binary)=
 

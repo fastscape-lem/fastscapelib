@@ -3,7 +3,7 @@ from typing import Any, ClassVar, List, Union, overload
 import numpy as np
 import numpy.typing as npt
 
-from fastscapelib.flow.numba_flow_kernel import NumbaFlowKernel, NumbaFlowKernelData
+from fastscapelib.flow.numba import NumbaFlowKernel, NumbaFlowKernelData
 from fastscapelib.grid import ProfileGrid, RasterGrid, TriMesh
 
 Grid = Union[ProfileGrid, RasterGrid, TriMesh]

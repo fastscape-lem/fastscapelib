@@ -39,14 +39,14 @@ if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
 
     FetchContent_Declare(xtensor
         GIT_REPOSITORY https://github.com/xtensor-stack/xtensor
-        GIT_TAG 0.24.6
+        GIT_TAG 0.25.0
         GIT_SHALLOW TRUE)
     set(CPP17 ON CACHE BOOL "Enable C++17 for xtensor" FORCE)
     FetchContent_MakeAvailable(xtensor)
 
     FetchContent_Declare(xtensor-python
         GIT_REPOSITORY https://github.com/xtensor-stack/xtensor-python
-        GIT_TAG 0.26.1
+        GIT_TAG 0.27.0
         GIT_SHALLOW TRUE)
     FetchContent_MakeAvailable(xtensor-python)
 
