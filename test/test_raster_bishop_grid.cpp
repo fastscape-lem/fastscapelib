@@ -105,11 +105,7 @@ namespace fastscapelib
                                       /*(r,c)*/ }));
                 }
                 // Bottom-right corner
-                EXPECT_INDICES(4,
-                               9,
-                               ({ 38 }),
-                               ({ { 3, 8 }
-                                  /*(r,c)*/ }));
+                EXPECT_INDICES(4, 9, ({ 38 }), ({ { 3, 8 } /*(r,c)*/ }));
             }
         }
 #undef EXPECT_INDICES

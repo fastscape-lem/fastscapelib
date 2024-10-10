@@ -363,7 +363,7 @@ namespace fastscapelib
             typename neighbors_cache_type::template storage_type<grid_data_type>;
 
         grid(std::size_t size)
-            : m_neighbors_indices_cache(neighbors_cache_type(size)){};
+            : m_neighbors_indices_cache(neighbors_cache_type(size)) {};
         ~grid() = default;
 
         const derived_grid_type& derived_grid() const noexcept;

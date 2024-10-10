@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -8,17 +8,21 @@ repos:
       - id: debug-statements
       - id: mixed-line-ending
   - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
+    rev: 5.13.2
     hooks:
       - id: isort
         args: ["--profile", "black"]
   - repo: https://github.com/psf/black
-    rev: 23.9.1
+    rev: 24.10.0
     hooks:
       - id: black
         args: [--safe, --quiet]
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v17.0.2
+    rev: v19.1.1
     hooks:
       - id: clang-format
         args: [--style=file]
+
+ci:
+  autofix_prs: false
+  autoupdate_schedule: monthly

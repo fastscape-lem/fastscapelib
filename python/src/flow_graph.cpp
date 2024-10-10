@@ -237,10 +237,10 @@ add_flow_graph_bindings(py::module& m)
         )doc");
     mrouter_op.def_readwrite(
         "slope_exp", &fs::multi_flow_router::m_slope_exp, "Flow partition slope exponent.");
-    mrouter_op.def("__repr__",
-                   [](const fs::multi_flow_router& op) {
-                       return "MultiFlowRouter (slope_exp=" + std::to_string(op.m_slope_exp) + ")";
-                   });
+    mrouter_op.def(
+        "__repr__",
+        [](const fs::multi_flow_router& op)
+        { return "MultiFlowRouter (slope_exp=" + std::to_string(op.m_slope_exp) + ")"; });
 
     py::class_<fs::pflood_sink_resolver,
                fs::flow_operator,
