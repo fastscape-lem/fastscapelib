@@ -7,5 +7,12 @@
 
    MSTMethod
    MSTRouteMethod
-   flow.numba.flow_kernel.NumbaFlowKernel
-   flow.numba.flow_kernel.NumbaFlowKernelData
+
+
+.. currentmodule:: fastscapelib.flow.numba.flow_kernel
+
+.. autosummary::
+   :toctree: _api_generated/
+
+   NumbaFlowKernel
+   NumbaFlowKernelData
