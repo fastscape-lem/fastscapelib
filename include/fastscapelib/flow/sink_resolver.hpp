@@ -65,7 +65,7 @@ namespace fastscapelib
             using thread_pool_type = thread_pool<size_type>;
 
             flow_operator_impl(std::shared_ptr<pflood_sink_resolver> ptr)
-                : base_type(std::move(ptr)){};
+                : base_type(std::move(ptr)) {};
 
             void apply(graph_impl_type& graph_impl,
                        data_array_type& elevation,
@@ -182,7 +182,7 @@ namespace fastscapelib
             using thread_pool_type = thread_pool<size_type>;
 
             flow_operator_impl(std::shared_ptr<mst_sink_resolver> ptr)
-                : base_type(std::move(ptr)){};
+                : base_type(std::move(ptr)) {};
 
             void apply(graph_impl_type& graph_impl,
                        data_array_type& elevation,

@@ -237,10 +237,10 @@ add_flow_graph_bindings(py::module& m)
         )doc");
     mrouter_op.def_readwrite(
         "slope_exp", &fs::multi_flow_router::m_slope_exp, "Flow partition slope exponent.");
-    mrouter_op.def("__repr__",
-                   [](const fs::multi_flow_router& op) {
-                       return "MultiFlowRouter (slope_exp=" + std::to_string(op.m_slope_exp) + ")";
-                   });
+    mrouter_op.def(
+        "__repr__",
+        [](const fs::multi_flow_router& op)
+        { return "MultiFlowRouter (slope_exp=" + std::to_string(op.m_slope_exp) + ")"; });
 
     py::class_<fs::pflood_sink_resolver,
                fs::flow_operator,
@@ -629,7 +629,8 @@ add_flow_graph_bindings(py::module& m)
             {
                 auto py_apply_kernel = py::module::import("fastscapelib")
                                            .attr("flow")
-                                           .attr("numba_flow_kernel")
+                                           .attr("numba")
+                                           .attr("flow_kernel")
                                            .attr("apply_flow_kernel");
                 return py_apply_kernel(flow_graph, flow_kernel, flow_kernel_data).cast<int>();
             }
@@ -653,9 +654,9 @@ add_flow_graph_bindings(py::module& m)
 
         Parameters
         ----------
-        kernel : :py:class:`~fastscapelib.flow.numba_flow_kernel.NumbaFlowKernel`
+        kernel : :py:class:`~fastscapelib.flow.numba.flow_kernel.NumbaFlowKernel`
             The flow kernel object to apply along the graph.
-        kernel_data : :py:class:`~fastscapelib.flow.numba_flow_kernel.NumbaFlowKernelData`
+        kernel_data : :py:class:`~fastscapelib.flow.numba.flow_kernel.NumbaFlowKernelData`
             The object holding or referencing input and output data used by the flow kernel.
 
         )doc");
