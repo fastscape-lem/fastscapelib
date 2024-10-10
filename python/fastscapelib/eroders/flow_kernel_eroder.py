@@ -1,14 +1,19 @@
-import inspect
+from __future__ import annotations
 
-import numba as nb
+import inspect
+from typing import TYPE_CHECKING, Any
 
 from fastscapelib.flow import FlowGraph, FlowGraphTraversalDir
-from fastscapelib.flow.numba_flow_kernel import (
-    NumbaFlowKernel,
-    NumbaFlowKernelData,
-    NumbaJittedClass,
-    create_flow_kernel,
-)
+from fastscapelib.flow.numba import create_flow_kernel
+
+if TYPE_CHECKING:
+    import numba as nb
+
+    from fastscapelib.flow.numba.flow_kernel import (
+        NumbaFlowKernel,
+        NumbaFlowKernelData,
+        NumbaJittedClass,
+    )
 
 
 class FlowKernelEroderMeta(type):
@@ -46,7 +51,7 @@ class FlowKernelEroderMeta(type):
 
 
 class FlowKernelEroder(metaclass=FlowKernelEroderMeta):
-    spec: dict[str, nb.types.Type]
+    spec: dict[str, nb.types.Type | tuple[nb.types.Type, Any]]
     outputs: list[str]
     apply_dir: FlowGraphTraversalDir
     _flow_graph: FlowGraph

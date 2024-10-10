@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import ast
 import inspect
-import sys
 import time
 from collections import defaultdict
 from collections.abc import Mapping
@@ -10,12 +9,12 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Iterable,
     Iterator,
     Optional,
+    ParamSpec,
     Protocol,
     Type,
     TypeVar,
@@ -26,27 +25,12 @@ import numba as nb
 import numpy as np
 from numba.experimental.jitclass import _box  # type: ignore[missing-imports]
 
-# type stubs defined in this sub-package (avoid circular imports)
-if TYPE_CHECKING:
-    from fastscapelib.flow import (
-        FlowGraph,
-        FlowGraphTraversalDir,
-        _FlowKernel,
-        _FlowKernelData,
-    )
-else:
-    from _fastscapelib_py.flow import (
-        FlowGraph,
-        FlowGraphTraversalDir,
-        _FlowKernel,
-        _FlowKernelData,
-    )
-
-
-if sys.version_info < (3, 10):
-    from typing_extensions import ParamSpec
-else:
-    from typing import ParamSpec
+from fastscapelib.flow import (
+    FlowGraph,
+    FlowGraphTraversalDir,
+    _FlowKernel,
+    _FlowKernelData,
+)
 
 
 class ConstantAssignmentVisitor(ast.NodeVisitor):
@@ -101,24 +85,10 @@ class NumbaJittedClass(Protocol):
     _numba_type_: Any
 
 
-if sys.version_info < (3, 10):
-    KernelFunc = "NumbaJittedFunc[[NumbaJittedClass], int]"
-    KernelNodeDataGetter = (
-        "NumbaJittedFunc[[int, NumbaJittedClass, NumbaJittedClass], int]"
-    )
-    KernelNodeDataSetter = (
-        "NumbaJittedFunc[[int, NumbaJittedClass, NumbaJittedClass], int]"
-    )
-    KernelNodeDataCreate = "NumbaJittedFunc[[], NumbaJittedClass]"
-else:
-    KernelFunc = NumbaJittedFunc[[NumbaJittedClass], int]
-    KernelNodeDataGetter = NumbaJittedFunc[
-        [int, NumbaJittedClass, NumbaJittedClass], int
-    ]
-    KernelNodeDataSetter = NumbaJittedFunc[
-        [int, NumbaJittedClass, NumbaJittedClass], int
-    ]
-    KernelNodeDataCreate = NumbaJittedFunc[[], NumbaJittedClass]
+KernelFunc = NumbaJittedFunc[[NumbaJittedClass], int]
+KernelNodeDataGetter = NumbaJittedFunc[[int, NumbaJittedClass, NumbaJittedClass], int]
+KernelNodeDataSetter = NumbaJittedFunc[[int, NumbaJittedClass, NumbaJittedClass], int]
+KernelNodeDataCreate = NumbaJittedFunc[[], NumbaJittedClass]
 
 
 @contextmanager
@@ -250,77 +220,6 @@ class NumbaFlowKernel:
     node_data_setter: KernelNodeDataSetter
     node_data_free: Any
     func: KernelFunc
-
-
-def create_flow_kernel(
-    flow_graph: FlowGraph,
-    kernel_func: Callable[["NumbaJittedClass"], int],
-    spec: dict[str, nb.types.Type | tuple[nb.types.Type, Any]],
-    apply_dir: FlowGraphTraversalDir,
-    outputs: Iterable[str] = (),
-    max_receivers: int = -1,
-    n_threads: int = 1,
-    print_generated_code: bool = False,
-    print_stats: bool = False,
-) -> tuple[NumbaFlowKernel, NumbaFlowKernelData]:
-    """Creates a numba flow kernel.
-
-    Parameters
-    ----------
-    flow_graph : :py:class:`~fastscapelib.FlowGraph`
-        A flow graph object.
-    kernel_func : callable
-        A Python function to apply to each node of the graph. It must take one
-        input argument (numba jit-compiled class) that holds or references input
-        and output kernel data of one graph node. It should return an integer.
-    spec : dict
-        Dictionary where keys are kernel input and output variable names and
-        values are either variable types (i.e. numba scalar or array types) or
-        variable (type, value) tuples (only for scalar variables).
-    apply_dir : :py:class:`~fastscapelib.FlowGraphTraversalDir.`
-        The direction and order in which the flow kernel will be applied along
-        the graph.
-    outputs : iterable
-        The names of the kernel output variables. All names given here must be
-        also present in ``spec``.
-    max_receivers : int
-        Maximum number of flow receiver nodes per graph node. Setting this number
-        to 1 may speed up the application of the kernel function along the graph.
-        Setting this number to -1 (default) will use the maximum number defined
-        from the flow graph object and is generally safer.
-    n_threads : int
-        Number of threads to use for applying the kernel function in parallel
-        along the flow graph (default: 1, the kernel will be applied sequentially).
-        A value > 1 may be useful for kernel functions that are computationally
-        expensive. For trivial kernel functions it is generally more efficient to
-        apply the kernel sequentially (i.e., ``n_threads = 1``).
-    print_generated_code : bool
-        If True, prints the code used to create the numba jit-compiled classes for
-        managing kernel data (default: False). Useful for debugging.
-    print_stats : bool
-        If True, prints a small report on kernel creation performance
-        (default: False).
-
-    Returns
-    -------
-    flow_kernel : :py:class:`~fastscapelib.flow.numba_flow_kernel.NumbaFlowKernel`
-        An object used to apply the flow kernel.
-    flow_kernel_data : :py:class:`~fastscapelib.flow.numba_flow_kernel.NumbaFlowKernelData`
-        An object used to manage flow kernel data.
-
-    """
-    factory = NumbaFlowKernelFactory(
-        flow_graph,
-        kernel_func,
-        spec,
-        apply_dir,
-        outputs=outputs,
-        max_receivers=max_receivers,
-        n_threads=n_threads,
-        print_generated_code=print_generated_code,
-        print_stats=print_stats,
-    )
-    return factory.kernel, factory.data
 
 
 class NumbaFlowKernelFactory:

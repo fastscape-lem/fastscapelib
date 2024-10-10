@@ -15,7 +15,7 @@ from _fastscapelib_py.flow import (  # type: ignore[import]
     _FlowKernelData,
 )
 
-from fastscapelib.flow.numba_flow_kernel import create_flow_kernel
+from fastscapelib.flow.numba import create_flow_kernel
 
 __all__ = [
     "FlowDirection",

@@ -57,6 +57,7 @@ namespace fastscapelib
              * @param first_index_ The first index in the range.
              * @param index_after_last_ The index after the last index in the range.
              * @param num_blocks_ The desired number of blocks to divide the range into.
+             * @param min_size_ The minimum size of each blocks (ignored if zero, default).
              */
             blocks(const T& first_index_,
                    const T& index_after_last_,
