@@ -9,7 +9,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Iterable,
