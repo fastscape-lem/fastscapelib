@@ -22,3 +22,7 @@ repos:
     hooks:
       - id: clang-format
         args: [--style=file]
+
+ci:
+  autofix_prs: false
+  autoupdate_schedule: monthly
