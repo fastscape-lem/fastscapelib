@@ -36,5 +36,9 @@ src = "doc/source/conf.py"
 search = "version = \"{current_version}\""
 
 [[file]]
+src = "pixi.toml"
+search = "version = \"{current_version}\""
+
+[[file]]
 src = "pyproject.toml"
 search = "version = \"{current_version}\""

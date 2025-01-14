@@ -1,0 +1,73 @@
+[project]
+name = "fastscapelib"
+authors = ["Benoit Bovy", "Fastscapelib contributors"]
+channels = ["conda-forge"]
+description = "A C++/Python library of efficient algorithms for landscape evolution modeling"
+platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
+version = "0.3.0"
+repository = "https://github.com/fastscape-lem/fastscapelib"
+documentation = "https://fastscapelib.readthedocs.io"
+
+[dependencies]
+xtensor = ">=0.24,<0.26"
+
+[feature.build.dependencies]
+cmake = ">=3.31.4,<4"
+ninja = ">=1.12.1,<2"
+make = ">=4.4.1,<5"
+eigen = ">=3.4.0,<4"
+
+[feature.build.tasks.configure-tests]
+cmd = [
+  "cmake",
+  "-GNinja",
+  "-S.",
+  "-Bbuild/test",
+  "-DFS_DOWNLOAD_GTEST=ON",
+]
+inputs = ["CMakeLists.txt"]
+outputs = ["build/test/CMakeFiles/"]
+
+[feature.build.tasks.build-tests]
+cmd = ["cmake", "--build", "build/test", "--config", "Debug"]
+depends-on = ["configure-tests"]
+inputs = ["CMakeLists.txt", "include/*", "test/*"]
+outputs = ["build/test/test/test_*"]
+
+[feature.build.tasks.run-tests]
+cmd = ["ctest", "-T", "test", "--output-on-failure", "."]
+cwd = "build/test"
+depends-on = ["build-tests"]
+
+[feature.build.tasks.configure-benchmarks]
+cmd = [
+  "cmake",
+  "-GNinja",
+  "-S.",
+  "-Bbuild/benchmarks",
+  "-DFS_BUILD_BENCHMARKS=ON",
+  "-DFS_DOWNLOAD_GBENCHMARK=ON",
+]
+inputs = ["CMakeLists.txt"]
+outputs = ["build/benchmarks/CMakeFiles/"]
+
+[feature.build.tasks.build-benchmarks]
+cmd = ["cmake", "--build", "build/benchmarks", "--config", "Release"]
+depends-on = ["configure-benchmarks"]
+inputs = ["CMakeLists.txt", "include/*", "benchmark/*"]
+outputs = ["build/benhcmarks/benchmark/benchmark_*"]
+
+[feature.build.tasks.run-benchmarks]
+cmd = "./benchmark_fastscapelib"
+cwd = "build/benchmarks/benchmark"
+depends-on = ["build-benchmarks"]
+
+[feature.python]
+dependencies = { python = ">=3.10,<3.14", numpy = ">=1.24" }
+
+[feature.python.pypi-dependencies]
+fastscapelib = { path = ".", editable = true }
+
+[environments]
+build = ["build"]
+python = ["python"]
