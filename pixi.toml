@@ -8,6 +8,8 @@ version = "0.3.0"
 repository = "https://github.com/fastscape-lem/fastscapelib"
 documentation = "https://fastscapelib.readthedocs.io"
 
+# --- dependencies
+
 [dependencies]
 xtensor = ">=0.24,<0.26"
 
@@ -15,9 +17,24 @@ xtensor = ">=0.24,<0.26"
 cmake = ">=3.31.4,<4"
 ninja = ">=1.12.1,<2"
 make = ">=4.4.1,<5"
+
+[feature.cpp.dependencies]
 eigen = ">=3.4.0,<4"
 
-[feature.build.tasks.configure-tests]
+[feature.python.dependencies]
+python = ">=3.10,<3.14"
+numpy = ">=1.24"
+uv = ">=0.5.18,<0.6"
+pybind11 = ">=2.13.6,<3"
+scikit-build-core = ">=0.10.7,<0.11"
+xtensor-python = ">=0.27.0,<0.28"
+
+[feature.python.pypi-dependencies]
+fastscapelib = { path = ".", editable = true }
+
+# --- tasks
+
+[feature.cpp.tasks.configure-tests]
 cmd = [
   "cmake",
   "-GNinja",
@@ -28,18 +45,18 @@ cmd = [
 inputs = ["CMakeLists.txt"]
 outputs = ["build/test/CMakeFiles/"]
 
-[feature.build.tasks.build-tests]
+[feature.cpp.tasks.build-tests]
 cmd = ["cmake", "--build", "build/test", "--config", "Debug"]
 depends-on = ["configure-tests"]
-inputs = ["CMakeLists.txt", "include/*", "test/*"]
+inputs = ["include/*", "test/*"]
 outputs = ["build/test/test/test_*"]
 
-[feature.build.tasks.run-tests]
+[feature.cpp.tasks.run-tests]
 cmd = ["ctest", "-T", "test", "--output-on-failure", "."]
 cwd = "build/test"
 depends-on = ["build-tests"]
 
-[feature.build.tasks.configure-benchmarks]
+[feature.cpp.tasks.configure-benchmarks]
 cmd = [
   "cmake",
   "-GNinja",
@@ -51,23 +68,38 @@ cmd = [
 inputs = ["CMakeLists.txt"]
 outputs = ["build/benchmarks/CMakeFiles/"]
 
-[feature.build.tasks.build-benchmarks]
+[feature.cpp.tasks.build-benchmarks]
 cmd = ["cmake", "--build", "build/benchmarks", "--config", "Release"]
 depends-on = ["configure-benchmarks"]
-inputs = ["CMakeLists.txt", "include/*", "benchmark/*"]
+inputs = ["include/*", "benchmark/*"]
 outputs = ["build/benhcmarks/benchmark/benchmark_*"]
 
-[feature.build.tasks.run-benchmarks]
+[feature.cpp.tasks.run-benchmarks]
 cmd = "./benchmark_fastscapelib"
 cwd = "build/benchmarks/benchmark"
 depends-on = ["build-benchmarks"]
 
-[feature.python]
-dependencies = { python = ">=3.10,<3.14", numpy = ">=1.24" }
+[feature.python.tasks.build]
+cmd = ["uv", "build"]
 
-[feature.python.pypi-dependencies]
-fastscapelib = { path = ".", editable = true }
+[feature.python.tasks.configure-python]
+cmd = [
+  "cmake",
+  "-GNinja",
+  "-S.",
+  "-Bbuild/python",
+  "-DSKBUILD=ON",
+]
+inputs = ["CMakeLists.txt", "python/CMakeLists.txt"]
+outputs = ["build/python/CMakeFiles/"]
+
+[feature.python.tasks.compile-python]
+cmd = ["cmake", "--build", "build/python", "--config", "Debug"]
+depends-on = ["configure-python"]
+inputs = ["include/*", "python/src/*"]
+outputs = ["build/python/python/_fastscapelib_py*"]
 
 [environments]
 build = ["build"]
-python = ["python"]
+cpp = ["cpp", "build"]
+python = ["python", "build"]
