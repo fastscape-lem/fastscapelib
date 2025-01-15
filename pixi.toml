@@ -12,7 +12,7 @@ documentation = "https://fastscapelib.readthedocs.io"
 build = ["build"]
 cpp = ["cpp", "build"]
 python = ["python", "build"]
-doc = ["doc", "python"]
+doc = ["doc", "python", "build"]
 dev = ["dev", "cpp", "python", "build"]
 
 # --- dependencies
@@ -178,3 +178,6 @@ depends-on = ["configure-compile-commands"]
 
 [feature.dev.tasks.pre-commit-install]
 cmd = ["pre-commit", "install"]
+
+[feature.dev.tasks.run-tests-python]
+cmd = ["pytest", "python/fastscapelib/tests", "--color=yes"]
