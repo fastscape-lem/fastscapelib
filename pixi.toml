@@ -8,6 +8,12 @@ version = "0.3.0"
 repository = "https://github.com/fastscape-lem/fastscapelib"
 documentation = "https://fastscapelib.readthedocs.io"
 
+[environments]
+build = ["build"]
+cpp = ["cpp", "build"]
+python = ["python", "build"]
+doc = ["doc", "python"]
+
 # --- dependencies
 
 [dependencies]
@@ -28,9 +34,29 @@ uv = ">=0.5.18,<0.6"
 pybind11 = ">=2.13.6,<3"
 scikit-build-core = ">=0.10.7,<0.11"
 xtensor-python = ">=0.27.0,<0.28"
+numba = ">=0.60.0,<0.61"
 
 [feature.python.pypi-dependencies]
 fastscapelib = { path = ".", editable = true }
+
+[feature.doc.dependencies]
+breathe = ">=4.35.0,<5"
+matplotlib-base = ">=3.10.0,<4"
+sphinx = ">=8.1.3,<9"
+sphinx-remove-toctrees = ">=1.0.0.post1,<2"
+sphinxcontrib-bibtex = ">=2.6.3,<3"
+sphinxcontrib-mermaid = ">=1.0.0,<2"
+sphinx-design = ">=0.6.1,<0.7"
+sphinx-autodoc-typehints = ">=3.0.0,<4"
+myst-nb = ">=1.1.2,<2"
+furo = ">=2024.8.6,<2025"
+doxygen = ">=1.11.0,<2"
+
+[feature.doc.target.linux-64.dependencies]
+pygalmesh = ">=0.10.7,<0.11"
+
+[feature.doc.target.osx-64.dependencies]
+pygalmesh = ">=0.10.7,<0.11"
 
 # --- tasks
 
@@ -99,7 +125,13 @@ depends-on = ["configure-python"]
 inputs = ["include/*", "python/src/*"]
 outputs = ["build/python/python/_fastscapelib_py*"]
 
-[environments]
-build = ["build"]
-cpp = ["cpp", "build"]
-python = ["python", "build"]
+[feature.doc.tasks.run-doxygen]
+cmd = ["doxygen"]
+cwd = "doc"
+inputs = ["../include/*"]
+outputs = ["_xml"]
+
+[feature.doc.tasks.build-doc]
+cmd = ["sphinx-build", "-M", "html", "source", "_build"]
+cwd = "doc"
+depends-on = ["run-doxygen"]
