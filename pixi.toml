@@ -181,3 +181,6 @@ cmd = ["pre-commit", "install"]
 
 [feature.dev.tasks.run-tests-python]
 cmd = ["pytest", "python/fastscapelib/tests", "--color=yes"]
+
+[feature.dev.tasks.run-mypy]
+cmd = ["mypy", "."]
