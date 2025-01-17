@@ -116,7 +116,7 @@ jobs:
 
       - uses: prefix-dev/setup-pixi@v0.8.1
         with:
-          pixi-version: v0.40.2
+          pixi-version: v0.40.1
           cache: true
 
       - run: pixi run test
