@@ -119,4 +119,4 @@ jobs:
           pixi-version: v0.40.1
           cache: true
 
-      - run: pixi run run-tests --environment=cpp
+      - run: pixi run  --environment cpp run-tests
