@@ -50,7 +50,7 @@ default). See below for more explanations.
 
 (pixi-configuration)=
 
-## Pixi configuration
+## Pixi Configuration
 
 Fastscapelib provides everything needed to manage its dependencies and run
 common tasks via [pixi].
