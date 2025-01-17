@@ -48,6 +48,75 @@ default). See below for more explanations.
     it to build fastscapelib (useful for testing)
 ```
 
+(pixi-configuration)=
+
+## Pixi configuration
+
+Fastscapelib provides everything needed to manage its dependencies and run
+common tasks via [pixi].
+
+If you have `pixi` installed, you can install a development environment for your
+platform simply by executing the following command from Fastscapelib's project
+root directory:
+
+```
+$ pixi install --environment dev
+```
+
+The following environments are defined:
+
+```{list-table}
+:widths: 25 75
+
+* - ``build``
+  - All tools and dependencies needed to build and install Fastscapelib's
+    core (C++) library.
+* - ``cpp``
+  - For running C++ tests and benchmarks.
+* - ``python``
+  - All tools and dependencies needed to build Fastscapelib's Python bindings
+* - ``doc``
+  - For building Fastscapelib's documentation.
+* - ``dev``
+  - For contributing to Fastscapelib's code (including test and lint tools).
+```
+
+Those environments are used to run Fastscapelib's pixi tasks, e.g.,
+
+```
+$ pixi run build-python
+```
+
+Here is a subset of the available tasks:
+
+```{list-table}
+:widths: 25 75
+
+* - ``run-tests``
+  - Run the C++ tests (build them if needed).
+* - ``run-benchmarks``
+  - Run the benchmarks (build them if needed).
+* - ``build-python``
+  - Build the Python bindings (note the python bindings are built and installed
+    in the pixi environments during the `pixi install` steps)
+* - ``run-tests-python``
+  - Run the Python bindings tests.
+* - ``run-mypy``
+  - Run the Python static type checker.
+* - ``build-doc``
+  - Build the documentation.
+* - ``pre-commit-install``
+  - Run `pre-commit install` (a set of git hooks that will automatically
+    check and format the source code prior to each commit)
+* - ``update-compile-commands``
+  - Create of update the compile commands database (useful for C++ LSP
+    servers)
+```
+
+For more details, check the [pixi] documentation. The full pixi configuration
+for Fastscapelib can be found in the `pixi.toml` file located in the project
+root directory.
+
 (run-cpp-tests)=
 
 ## Build and Run the C++ Tests
@@ -139,4 +208,5 @@ $ build/benchmarks/./benchmark_fastscapelib
 
 [google-benchmark]: https://github.com/google/benchmark
 [google-test]: https://github.com/google/googletest
+[pixi]: https://pixi.sh
 [pytest]: https://docs.pytest.org/
