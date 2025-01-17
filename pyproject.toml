@@ -37,6 +37,7 @@ test = ["pytest>=6.0"]
 
 [tool.scikit-build]
 wheel.packages = ["python/fastscapelib"]
+sdist.exclude = [".pixi"]
 
 [tool.cibuildwheel]
 environment = {SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON'}

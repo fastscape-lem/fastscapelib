@@ -93,7 +93,8 @@ in a (CMake) project.
 
 Fastscapelib [conda] packages are available for all stable versions via the
 conda-forge channel. You can install Fastscapelib's C++ headers and all the
-dependencies using the following command (alternatively you can use [mamba]):
+dependencies using the following command (alternatively you can use [mamba] or
+[pixi]):
 
 ```bash
 $ conda install fastscapelib -c conda-forge
@@ -197,6 +198,7 @@ See [scikit-build-core]'s documentation for more available options.
 [numpy]: https://numpy.org
 [pip]: https://pip.pypa.io
 [pybind11]: https://pybind11.readthedocs.io
+[pixi]: https://pixi.sh
 [xtensor]: https://xtensor.readthedocs.io
 [xtensor-python]: https://xtensor-python.readthedocs.io
 [scikit-build-core]: https://scikit-build-core.readthedocs.io
