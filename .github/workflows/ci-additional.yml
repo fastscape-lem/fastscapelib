@@ -33,6 +33,10 @@ jobs:
           environment-file: environment-python-dev.yml
           cache-environment: true
 
+      - name: Install Healpix
+        run: |
+          micromamba install healpix_cxx
+
       - name: Build and install Fastscapelib Python
         run: |
           python -m pip install . -v --no-build-isolation

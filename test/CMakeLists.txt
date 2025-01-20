@@ -86,6 +86,10 @@ set(FASTSCAPELIB_TEST_SRC
     test_trimesh.cpp
 )
 
+if(FS_WITH_HEALPIX)
+  list(APPEND FASTSCAPELIB_TEST_SRC test_healpix_grid.cpp)
+endif()
+
 enable_testing()
 
 # -- build a target for each test
