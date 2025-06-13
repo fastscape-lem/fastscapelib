@@ -1,5 +1,8 @@
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/tests_xtensor_master.yml"
 
 name: Tests Xtensor master
 
@@ -14,7 +17,7 @@ jobs:
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v2
         with:
-          environment-file: ci/environment-dev-xtensor-master.yml
+          environment-file: ci/environment-dev-no-xtensor.yml
           cache-environment: true
           cache-downloads: false
 

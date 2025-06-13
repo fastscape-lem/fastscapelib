@@ -54,9 +54,15 @@ if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
     set_property(DIRECTORY ${xtensor_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
     set_property(DIRECTORY ${xtensor-python_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
 
-# -- get xtensor development version (need xtl already installed)
+# -- get xtensor development version (for testing only)
 elseif(FS_DOWNLOAD_XTENSOR)
     message(STATUS "Downloading xtensor development version (master branch)")
+
+    FetchContent_Declare(xtl
+        GIT_REPOSITORY https://github.com/xtensor-stack/xtl
+        GIT_TAG 0.8.0
+        GIT_SHALLOW TRUE)
+    FetchContent_MakeAvailable(xtl)
 
     FetchContent_Declare(xtensor
       GIT_REPOSITORY https://github.com/xtensor-stack/xtensor
