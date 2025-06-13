@@ -4,6 +4,10 @@ on:
   release:
     types:
       - published
+  pull_request:  # also build on PRs touching any file below
+    paths:
+      - ".github/workflows/python-wheels.yml"
+      - "pyproject.toml"
 
 name: Python wheels
 
