@@ -47,7 +47,7 @@ jobs:
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: wheelhouse/*.whl
 
