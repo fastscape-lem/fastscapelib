@@ -48,7 +48,9 @@ build-verbosity = 1
 [[tool.cibuildwheel.overrides]]
 # keep this override: will be useful for next versions of Python
 # (Numba support always come with a delay)
-select = "cp3{10,11,12,13}-*"
+# TODO: activate numba tests for py313
+# (still some failing test with jitclass in macos arm64, issue seems in numba)
+select = "cp3{10,11,12}-*"
 inherit.test-requires = "append"
 test-requires = ["numba"]
 
