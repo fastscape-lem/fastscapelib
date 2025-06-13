@@ -24,6 +24,7 @@ xtensor = ">=0.24,<0.26"
 cmake = ">=3.31.4,<4"
 ninja = ">=1.12.1,<2"
 make = ">=4.4.1,<5"
+cxx-compiler = ">=1.9.0,<1.10.0"
 
 [feature.cpp.dependencies]
 eigen = ">=3.4.0,<4"

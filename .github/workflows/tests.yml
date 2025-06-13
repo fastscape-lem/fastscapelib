@@ -34,7 +34,7 @@ jobs:
         if: runner.os == 'Linux'
 
       - name: Setup micromamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment-dev.yml
           cache-environment: true
@@ -63,14 +63,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-20.04", "ubuntu-latest", "macos-latest", "windows-latest"]
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: ["3.10", "3.11", "3.12"]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup micromamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment-python-dev.yml
           cache-environment: true
@@ -114,7 +114,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           pixi-version: v0.40.1
           cache: true
