@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22
+        uses: pypa/cibuildwheel@v3.0
         env:
           # skip PyPy and muslinux (for now)
           CIBW_SKIP: "pp* *musllinux*"
