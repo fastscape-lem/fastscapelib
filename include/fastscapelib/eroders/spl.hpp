@@ -111,7 +111,7 @@ namespace fastscapelib
             set_slope_exp(slope_exp);
 
             m_erosion.resize(m_shape);
-        };
+        }
 
         /**
          * Return the \f$K\f$ value.
@@ -119,7 +119,7 @@ namespace fastscapelib
         const data_array_type& k_coef()
         {
             return m_k_coef;
-        };
+        }
 
         /**
          * Set a spatially uniform, scalar \f$K\f$ value.
@@ -128,7 +128,7 @@ namespace fastscapelib
         void set_k_coef(T value, typename std::enable_if_t<std::is_floating_point<T>::value>* = 0)
         {
             m_k_coef = xt::broadcast(std::forward<T>(value), { m_flow_graph.size() });
-        };
+        }
 
         /**
          * Set a spatially variable, array \f$K\f$ value.
@@ -144,7 +144,7 @@ namespace fastscapelib
                 throw std::runtime_error("cannot set k_coef value: shape mismatch");
             }
             m_k_coef = xt::flatten(value);
-        };
+        }
 
         /**
          * Return the \f$A\f$ exponent value.
@@ -152,7 +152,7 @@ namespace fastscapelib
         double area_exp()
         {
             return m_area_exp;
-        };
+        }
 
         /**
          * Set the \f$A\f$ exponent value.
@@ -161,7 +161,7 @@ namespace fastscapelib
         {
             // TODO: validate value
             m_area_exp = value;
-        };
+        }
 
         /**
          * Return the \f$\nabla h\f$ exponent value.
@@ -169,7 +169,7 @@ namespace fastscapelib
         double slope_exp()
         {
             return m_slope_exp;
-        };
+        }
 
         /**
          * Set the \f$\nabla h\f$ exponent value.
@@ -185,7 +185,7 @@ namespace fastscapelib
                 throw std::invalid_argument(
                     "SPL slope exponent != 1 is not supported for multiple flow directions");
             }
-        };
+        }
 
         /**
          * Return the tolerance controlling the convergence of the
@@ -208,7 +208,7 @@ namespace fastscapelib
         size_type n_corr()
         {
             return m_n_corr;
-        };
+        }
 
         /**
          * Solve SPL for one time step.
