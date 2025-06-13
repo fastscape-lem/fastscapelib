@@ -33,7 +33,7 @@ if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
 
     FetchContent_Declare(xtl
         GIT_REPOSITORY https://github.com/xtensor-stack/xtl
-        GIT_TAG 0.7.5
+        GIT_TAG 0.7.7
         GIT_SHALLOW TRUE)
     FetchContent_MakeAvailable(xtl)
 
