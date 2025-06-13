@@ -15,13 +15,35 @@
 #include <map>
 #include <vector>
 
-#include "xtensor/xbuilder.hpp"
-#include "xtensor/xarray.hpp"
-#include "xtensor/xfixed.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xview.hpp"
-#include "xtensor/xindex_view.hpp"
-#include "xtensor/xnoalias.hpp"
+// Include the Xtensor configuration file so that we can query the
+// Xtensor version number below to address the fact that between
+// 0.25.0 and 0.26.0, all Xtensor include files were moved around,
+// see https://github.com/xtensor-stack/xtensor/pull/2829 and the
+// complaints therein.
+#if __has_include(<xtensor/core/xtensor_config.hpp>)  // 0.26.0 and later
+#  include <xtensor/core/xtensor_config.hpp>
+#else // 0.25.0 and earlier
+#  include <xtensor/xtensor_config.hpp>
+#endif
+
+#if XTENSOR_VERSION_MAJOR ==0 && XTENSOR_VERSION_MINOR <= 25
+#  include <xtensor/xindex_view.hpp>
+#  include <xtensor/xview.hpp>
+#  include <xtensor/xbuilder.hpp>
+#  include <xtensor/xarray.hpp>
+#  include <xtensor/xfixed.hpp>
+#  include <xtensor/xtensor.hpp>
+#  include <xtensor/xnoalias.hpp>
+#else
+#  include <xtensor/views/xindex_view.hpp>
+#  include <xtensor/views/xview.hpp>
+#  include <xtensor/generators/xbuilder.hpp>
+#  include <xtensor/containers/xarray.hpp>
+#  include <xtensor/containers/xfixed.hpp>
+#  include <xtensor/containers/xtensor.hpp>
+#  include <xtensor/core/xnoalias.hpp>
+#endif
+
 
 #include "xtl/xiterator_base.hpp"
 

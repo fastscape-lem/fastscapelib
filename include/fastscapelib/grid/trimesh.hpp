@@ -11,8 +11,24 @@
 #include <utility>
 #include <vector>
 
-#include "xtensor/xstrided_view.hpp"
-#include "xtensor/xhistogram.hpp"
+// Include the Xtensor configuration file so that we can query the
+// Xtensor version number below to address the fact that between
+// 0.25.0 and 0.26.0, all Xtensor include files were moved around,
+// see https://github.com/xtensor-stack/xtensor/pull/2829 and the
+// complaints therein.
+#if __has_include(<xtensor/core/xtensor_config.hpp>)  // 0.26.0 and later
+#  include <xtensor/core/xtensor_config.hpp>
+#else // 0.25.0 and earlier
+#  include <xtensor/xhistogram.hpp>
+#  include <xtensor/xtensor_config.hpp>
+#endif
+
+#if XTENSOR_VERSION_MAJOR ==0 && XTENSOR_VERSION_MINOR <= 25
+#  include <xtensor/misc/xhistogram.hpp>
+#  include <xtensor/xstrided_view.hpp>
+#else
+#  include <xtensor/views/xstrided_view.hpp>
+#endif
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/containers.hpp"
