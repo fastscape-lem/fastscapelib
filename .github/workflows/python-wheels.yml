@@ -55,11 +55,11 @@ jobs:
           # skip PyPy and muslinux (for now)
           CIBW_SKIP: "pp* *musllinux*"
           CIBW_ARCHS: ${{ matrix.arch }}
+          # need also to redefine here some environment vars defined in pyprojet.toml
           CIBW_ENVIRONMENT_MACOS:
             MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}
             CMAKE_OSX_ARCHITECTURES='${{ matrix.cmake_osx_architectures }}'
-          CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: pytest {project}/python/fastscapelib/tests
+            SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON'
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
