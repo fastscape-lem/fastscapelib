@@ -30,7 +30,7 @@ jobs:
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v2
         with:
-          environment-file: environment-python-dev.yml
+          environment-file: ci/environment-python-dev.yml
           cache-environment: true
 
       - name: Build and install Fastscapelib Python
