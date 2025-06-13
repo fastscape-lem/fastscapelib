@@ -1,0 +1,7 @@
+name: fastscapelib-dev-xtensor-master
+channels:
+  - conda-forge
+dependencies:
+  - xtl>=0.8,<0.9
+  - cmake
+  - gtest
