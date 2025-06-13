@@ -46,13 +46,13 @@ test-command = "pytest {project}/python/fastscapelib/tests"
 build-verbosity = 1
 
 [[tool.cibuildwheel.overrides]]
-# TODO: remove when numba supports python 3.13
+# keep this override: will be useful for next versions of Python
+# (Numba support always come with a delay)
+# TODO: activate numba tests for py313
+# (still some failing test with jitclass in macos arm64, issue seems in numba)
 select = "cp3{10,11,12}-*"
 inherit.test-requires = "append"
 test-requires = ["numba"]
-
-[tool.cibuildwheel.macos]
-environment = {SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON', MACOSX_DEPLOYMENT_TARGET=10.13}
 
 [tool.isort]
 profile = "black"

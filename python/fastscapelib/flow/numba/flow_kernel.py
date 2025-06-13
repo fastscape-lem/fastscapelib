@@ -23,6 +23,7 @@ from typing import (
 
 import numba as nb
 import numpy as np
+import numpy.typing as npt
 from numba.experimental.jitclass import _box  # type: ignore[missing-imports]
 
 from fastscapelib.flow import (
@@ -969,6 +970,8 @@ def apply_flow_kernel(
     node_data = kernel.node_data_create()
     if kernel.node_data_init:
         kernel.node_data_init(node_data, data.jitclass_obj)
+
+    indices: npt.NDArray[np.uint64]
 
     if wrapped_kernel.apply_dir == FlowGraphTraversalDir.ANY:
         indices = np.arange(0, flow_graph.size, 1, dtype=np.uint64)
