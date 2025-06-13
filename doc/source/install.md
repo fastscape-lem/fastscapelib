@@ -124,6 +124,9 @@ $ cmake --install build
 Where `/path/to/prefix` is the path where the header files will be installed
 (skip this option if you want to install Fastscapelib in a default location).
 
+If you have installed [xtensor] in a custom directory, you can help CMake find
+it by setting the `-DXTENSOR_DIR` option.
+
 See Section {doc}`build_options` for more information on the available build
 options.
 

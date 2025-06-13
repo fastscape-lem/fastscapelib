@@ -70,7 +70,11 @@ elseif(FS_DOWNLOAD_XTENSOR)
     FetchContent_MakeAvailable(xtensor)
 
 else()
-    find_package(xtensor REQUIRED)
+    if(XTENSOR_DIR)
+        message(STATUS "Searching for xtensor in ${XTENSOR_DIR}")
+    endif()
+    find_package(xtensor REQUIRED
+                 HINTS ${XTENSOR_DIR})
     message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 endif()
 
