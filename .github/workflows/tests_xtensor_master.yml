@@ -1,0 +1,34 @@
+on:
+  workflow_dispatch:
+
+name: Tests Xtensor master
+
+jobs:
+  test_cpp:
+    name: Test C++
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment-dev.yml
+          cache-environment: true
+          cache-downloads: false
+
+      - name: Configure Fastscapelib (CMake)
+        run: |
+          cmake -S . -B build \
+            -DFS_DOWNLOAD_GTEST=ON \
+            -DFS_DOWNLOAD_XTENSOR \
+            -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
+
+      - name: Build Fastscapelib
+        run: cmake --build build
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest -T test --output-on-failure .
