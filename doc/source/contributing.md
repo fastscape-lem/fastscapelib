@@ -95,7 +95,7 @@ C++ and Python development by running the following command from the
 repository's root directory:
 
 ```bash
-$ conda env create -n fastscapelib-dev -f environment-dev.yml -f environment-python-dev.yml
+$ conda env create -n fastscapelib-dev -f ci/environment-dev.yml -f ci/environment-python-dev.yml
 ```
 
 Note: this doesn't include a recent C++ compiler supporting the C++17 standard
