@@ -3409,7 +3409,7 @@ packages:
 - pypi: ./
   name: fastscapelib
   version: 0.3.0
-  sha256: 73681cafcc6c2056998aa4dd480036d0ebeeca46f6672eeb895d47a7094ec2f7
+  sha256: 33f606512d71883fc42286c01ba471c32e5b7c5eeed4d34271fee3078305a589
   requires_dist:
   - numpy>=1.24
   - numba ; extra == 'numba'
