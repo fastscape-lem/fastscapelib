@@ -295,14 +295,7 @@ namespace fastscapelib
         template <class... OPs>
         flow_operator_sequence(OPs&&... operators)
         {
-            int i = 0;
-            (
-                [&]
-                {
-                    ++i;
-                    add_operator(std::forward<OPs>(operators));
-                }(),
-                ...);
+            ([&] { add_operator(std::forward<OPs>(operators)); }(), ...);
         }
 
         // implement move semantics only (entity of flow_graph)
