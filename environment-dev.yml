@@ -2,7 +2,7 @@ name: fastscapelib-dev
 channels:
   - conda-forge
 dependencies:
-  - xtensor
+  - xtensor>=0.25,<0.26
   - cmake
   - gtest
   - benchmark
