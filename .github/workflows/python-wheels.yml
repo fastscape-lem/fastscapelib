@@ -8,6 +8,8 @@ on:
     paths:
       - ".github/workflows/python-wheels.yml"
       - "pyproject.toml"
+      - "CMakeLists.txt"
+      - "python/CMakeLists.txt"
 
 name: Python wheels
 
