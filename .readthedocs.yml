@@ -13,5 +13,6 @@ conda:
 
 sphinx:
   fail_on_warning: true
+  configuration: doc/source/conf.py
 
 formats: []
