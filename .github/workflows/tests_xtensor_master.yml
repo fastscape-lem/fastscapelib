@@ -22,7 +22,7 @@ jobs:
         run: |
           cmake -S . -B build \
             -DFS_DOWNLOAD_GTEST=ON \
-            -DFS_DOWNLOAD_XTENSOR \
+            -DFS_DOWNLOAD_XTENSOR=ON \
             -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
 
       - name: Build Fastscapelib
