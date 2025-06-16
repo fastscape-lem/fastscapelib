@@ -65,7 +65,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS:
             MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}
             CMAKE_OSX_ARCHITECTURES='${{ matrix.cmake_osx_architectures }}'
-            SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON'
+            SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON;-DFS_WITH_HEALPIX=OFF'
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4

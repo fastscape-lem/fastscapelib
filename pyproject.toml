@@ -40,7 +40,7 @@ wheel.packages = ["python/fastscapelib"]
 sdist.exclude = [".pixi"]
 
 [tool.cibuildwheel]
-environment = {SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON'}
+environment = {SKBUILD_CMAKE_ARGS='-DFS_DOWNLOAD_XTENSOR_PYTHON=ON;-DFS_WITH_HEALPIX=OFF'}
 test-extras = "test"
 test-command = "pytest {project}/python/fastscapelib/tests"
 build-verbosity = 1
