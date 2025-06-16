@@ -2,8 +2,8 @@
 #include "fastscapelib/grid/healpix_grid.hpp"
 #include "fastscapelib/utils/consts.hpp"
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xmath.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/core/xmath.hpp"
 
 #include "gtest/gtest.h"
 

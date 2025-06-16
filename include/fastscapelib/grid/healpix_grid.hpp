@@ -7,8 +7,8 @@
 
 // conflict between healpix xcomplex macro and xtl xcomplex
 #undef xcomplex
-#include <xtensor/xbroadcast.hpp>
-#include <xtensor/xmath.hpp>
+#include <xtensor/views/xbroadcast.hpp>
+#include <xtensor/core/xmath.hpp>
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/consts.hpp"
@@ -162,7 +162,7 @@ namespace fastscapelib
 
         m_size = static_cast<size_type>(m_healpix_obj_ptr->Npix());
         m_shape = { static_cast<typename shape_type::value_type>(m_size) };
-        m_node_area = 4.0 * M_PI * m_radius * m_radius / m_size;
+        m_node_area = 4.0 * M_PI * m_radius * m_radius / static_cast<double>(m_size);
 
         // will also compute grid node neighbors
         set_nodes_status(nodes_status);
