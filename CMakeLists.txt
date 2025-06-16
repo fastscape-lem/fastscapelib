@@ -41,7 +41,6 @@ if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
         GIT_REPOSITORY https://github.com/xtensor-stack/xtensor
         GIT_TAG 0.26.0
         GIT_SHALLOW TRUE)
-    target_compile_features(xtensor INTERFACE cxx_std_17)
     FetchContent_MakeAvailable(xtensor)
 
     FetchContent_Declare(xtensor-python
@@ -69,7 +68,6 @@ elseif(FS_DOWNLOAD_XTENSOR)
       GIT_TAG master
       GIT_SHALLOW TRUE)
 
-    target_compile_features(xtensor INTERFACE cxx_std_17)
     set(DOWNLOAD_GBENCHMARK OFF CACHE BOOL
       "skip downloading google-benchmark via xtensor" FORCE)
 
