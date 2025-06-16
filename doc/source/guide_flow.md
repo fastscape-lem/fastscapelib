@@ -130,8 +130,8 @@ field defined on the grid):
 :linenos:
 :emphasize-lines: 17
 
-#include "xtensor/xarray.hpp"
-#include "xtensor/xrandom.hpp"
+#include "xtensor/containers/xarray.hpp"
+#include "xtensor/generators/xrandom.hpp"
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"

@@ -1,7 +1,7 @@
 #include <algorithm>
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xstrided_view.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/views/xstrided_view.hpp"
 
 #include "gtest/gtest.h"
 

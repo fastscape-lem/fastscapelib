@@ -5,8 +5,8 @@
 #include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xio.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/io/xio.hpp"
 
 #include "gtest/gtest.h"
 

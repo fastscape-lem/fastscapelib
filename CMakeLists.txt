@@ -33,20 +33,19 @@ if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
 
     FetchContent_Declare(xtl
         GIT_REPOSITORY https://github.com/xtensor-stack/xtl
-        GIT_TAG 0.7.7
+        GIT_TAG 0.8.0
         GIT_SHALLOW TRUE)
     FetchContent_MakeAvailable(xtl)
 
     FetchContent_Declare(xtensor
         GIT_REPOSITORY https://github.com/xtensor-stack/xtensor
-        GIT_TAG 0.25.0
+        GIT_TAG 0.26.0
         GIT_SHALLOW TRUE)
-    set(CPP17 ON CACHE BOOL "Enable C++17 for xtensor" FORCE)
     FetchContent_MakeAvailable(xtensor)
 
     FetchContent_Declare(xtensor-python
         GIT_REPOSITORY https://github.com/xtensor-stack/xtensor-python
-        GIT_TAG 0.27.0
+        GIT_TAG 0.28.0
         GIT_SHALLOW TRUE)
     FetchContent_MakeAvailable(xtensor-python)
 
@@ -69,7 +68,6 @@ elseif(FS_DOWNLOAD_XTENSOR)
       GIT_TAG master
       GIT_SHALLOW TRUE)
 
-    set(CPP17 ON CACHE BOOL "Enable C++17 for xtensor" FORCE)
     set(DOWNLOAD_GBENCHMARK OFF CACHE BOOL
       "skip downloading google-benchmark via xtensor" FORCE)
 

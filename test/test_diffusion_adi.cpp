@@ -2,9 +2,9 @@
 #include <cstddef>
 
 #include "gtest/gtest.h"
-#include "xtensor/xbuilder.hpp"
-#include "xtensor/xmath.hpp"
-#include "xtensor/xtensor.hpp"
+#include "xtensor/generators/xbuilder.hpp"
+#include "xtensor/core/xmath.hpp"
+#include "xtensor/containers/xtensor.hpp"
 
 #include "fastscapelib/eroders/diffusion_adi.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"

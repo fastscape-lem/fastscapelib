@@ -15,13 +15,13 @@
 #include <map>
 #include <vector>
 
-#include "xtensor/xbuilder.hpp"
-#include "xtensor/xarray.hpp"
-#include "xtensor/xfixed.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xview.hpp"
-#include "xtensor/xindex_view.hpp"
-#include "xtensor/xnoalias.hpp"
+#include "xtensor/generators/xbuilder.hpp"
+#include "xtensor/containers/xarray.hpp"
+#include "xtensor/containers/xfixed.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/views/xview.hpp"
+#include "xtensor/views/xindex_view.hpp"
+#include "xtensor/core/xnoalias.hpp"
 
 #include "xtl/xiterator_base.hpp"
 

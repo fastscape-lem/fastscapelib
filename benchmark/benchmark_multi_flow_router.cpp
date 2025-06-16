@@ -4,8 +4,8 @@
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xrandom.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/generators/xrandom.hpp"
 
 #include <benchmark/benchmark.h>
 

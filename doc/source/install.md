@@ -104,8 +104,8 @@ $ conda install fastscapelib -c conda-forge
 
 ### From Source Using CMake
 
-In addition to a C++ compiler supporting C++17, you need [xtensor] and [cmake]
-that you can install, e.g., using [conda]:
+In addition to a C++ compiler supporting C++17, you need [xtensor] (version 0.26
+or newer) and [cmake] that you can install, e.g., using [conda]:
 
 ```bash
 $ conda install xtensor cmake -c conda-forge
@@ -165,9 +165,9 @@ $ python -m pip install fastscapelib
 ### From Source Using Pip
 
 In addition to Python and Numpy, building and installing Fastscapelib-Python
-from source requires [pip], [pybind11], [xtensor-python] and [scikit-build-core]
-(a C++ compiler supporting C++17 is also required). All these dependencies are
-all available on conda-forge:
+from source requires [pip], [pybind11], [xtensor-python] (version 0.28 or newer)
+and [scikit-build-core] (a C++ compiler supporting C++17 is also required). All
+these dependencies are all available on conda-forge:
 
 ```bash
 $ conda install python numpy pybind11 xtensor-python scikit-build-core pip -c conda-forge

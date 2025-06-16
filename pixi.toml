@@ -18,7 +18,7 @@ dev = ["dev", "cpp", "python", "build"]
 # --- dependencies
 
 [dependencies]
-xtensor = ">=0.24,<0.26"
+xtensor = ">=0.26,<0.27"
 
 [feature.build.dependencies]
 cmake = ">=3.31.4,<4"
@@ -35,7 +35,7 @@ numpy = ">=1.24"
 uv = ">=0.5.18,<0.6"
 pybind11 = ">=2.13.6,<3"
 scikit-build-core = ">=0.10.7,<0.11"
-xtensor-python = ">=0.27.0,<0.28"
+xtensor-python = ">=0.28.0,<0.29"
 numba = ">=0.60.0,<0.61"
 
 [feature.python.pypi-dependencies]

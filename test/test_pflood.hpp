@@ -1,7 +1,7 @@
 #ifndef FASTSCAPELIB_TEST_SINKS_H
 #define FASTSCAPELIB_TEST_SINKS_H
 
-#include "xtensor/xtensor.hpp"
+#include "xtensor/containers/xtensor.hpp"
 
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
