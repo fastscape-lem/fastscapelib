@@ -38,20 +38,19 @@ if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
 
     FetchContent_Declare(xtl
         GIT_REPOSITORY https://github.com/xtensor-stack/xtl
-        GIT_TAG 0.7.5
+        GIT_TAG 0.8.0
         GIT_SHALLOW TRUE)
     FetchContent_MakeAvailable(xtl)
 
     FetchContent_Declare(xtensor
         GIT_REPOSITORY https://github.com/xtensor-stack/xtensor
-        GIT_TAG 0.25.0
+        GIT_TAG 0.26.0
         GIT_SHALLOW TRUE)
-    set(CPP17 ON CACHE BOOL "Enable C++17 for xtensor" FORCE)
     FetchContent_MakeAvailable(xtensor)
 
     FetchContent_Declare(xtensor-python
         GIT_REPOSITORY https://github.com/xtensor-stack/xtensor-python
-        GIT_TAG 0.27.0
+        GIT_TAG 0.28.0
         GIT_SHALLOW TRUE)
     FetchContent_MakeAvailable(xtensor-python)
 
@@ -59,23 +58,32 @@ if(SKBUILD AND FS_DOWNLOAD_XTENSOR_PYTHON)
     set_property(DIRECTORY ${xtensor_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
     set_property(DIRECTORY ${xtensor-python_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
 
-# -- get xtensor development version (need xtl already installed)
+# -- get xtensor development version (for testing only)
 elseif(FS_DOWNLOAD_XTENSOR)
     message(STATUS "Downloading xtensor development version (master branch)")
+
+    FetchContent_Declare(xtl
+        GIT_REPOSITORY https://github.com/xtensor-stack/xtl
+        GIT_TAG 0.8.0
+        GIT_SHALLOW TRUE)
+    FetchContent_MakeAvailable(xtl)
 
     FetchContent_Declare(xtensor
       GIT_REPOSITORY https://github.com/xtensor-stack/xtensor
       GIT_TAG master
       GIT_SHALLOW TRUE)
 
-    set(CPP17 ON CACHE BOOL "Enable C++17 for xtensor" FORCE)
     set(DOWNLOAD_GBENCHMARK OFF CACHE BOOL
       "skip downloading google-benchmark via xtensor" FORCE)
 
     FetchContent_MakeAvailable(xtensor)
 
 else()
-    find_package(xtensor REQUIRED)
+    if(XTENSOR_DIR)
+        message(STATUS "Searching for xtensor in ${XTENSOR_DIR}")
+    endif()
+    find_package(xtensor REQUIRED
+                 HINTS ${XTENSOR_DIR})
     message(STATUS "Found xtensor: ${xtensor_INCLUDE_DIRS}/xtensor")
 endif()
 

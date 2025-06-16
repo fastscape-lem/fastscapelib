@@ -85,12 +85,17 @@ We strongly recommend installing all the dependencies and development tools in a
 new [conda](https://conda.io/docs/) environment created specifically for this
 project.
 
+:::{note}
+If you are using [pixi], setting a development environment is easy! See
+{ref}`pixi-configuration`.
+:::
+
 You can create a new conda environment with all the dependencies needed for both
 C++ and Python development by running the following command from the
 repository's root directory:
 
 ```bash
-$ conda env create -n fastscapelib-dev -f environment-dev.yml -f environment-python-dev.yml
+$ conda env create -n fastscapelib-dev -f ci/environment-dev.yml -f ci/environment-python-dev.yml
 ```
 
 Note: this doesn't include a recent C++ compiler supporting the C++17 standard
@@ -259,3 +264,5 @@ following tasks are run automatically using GitHub Actions:
 - run pre-commit to check for code formatting inconsistencies
 - run mypy for checking Python type hints
 - build the documentation on readthedocs
+
+[pixi]: https://pixi.sh

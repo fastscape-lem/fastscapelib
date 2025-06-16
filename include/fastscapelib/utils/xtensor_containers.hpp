@@ -4,10 +4,10 @@
 #ifndef FASTSCAPELIB_UTILS_XTENSOR_CONTAINERS_HPP
 #define FASTSCAPELIB_UTILS_XTENSOR_CONTAINERS_HPP
 
-#include "xtensor/xarray.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xadapt.hpp"
-#include "xtensor/xview.hpp"
+#include "xtensor/containers/xarray.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/containers/xadapt.hpp"
+#include "xtensor/views/xview.hpp"
 
 #include <stdexcept>
 

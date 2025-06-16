@@ -1,9 +1,9 @@
 #include <stdexcept>
 
 #include "gtest/gtest.h"
-#include "xtensor/xsort.hpp"
-#include "xtensor/xindex_view.hpp"
-#include "xtensor/xtensor.hpp"
+#include "xtensor/misc/xsort.hpp"
+#include "xtensor/views/xindex_view.hpp"
+#include "xtensor/containers/xtensor.hpp"
 
 #include "fastscapelib/grid/trimesh.hpp"
 

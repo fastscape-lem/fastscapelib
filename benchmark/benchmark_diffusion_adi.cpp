@@ -5,9 +5,9 @@
 
 #include <benchmark/benchmark.h>
 
-#include "xtensor/xbuilder.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xrandom.hpp"
+#include "xtensor/generators/xbuilder.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/generators/xrandom.hpp"
 
 #include "fastscapelib/eroders/diffusion_adi.hpp"
 

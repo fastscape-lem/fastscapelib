@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "xtensor/xtensor.hpp"
+#include "xtensor/containers/xtensor.hpp"
 
 #include "fastscapelib/flow/basin_graph.hpp"
 #include "fastscapelib/flow/flow_graph.hpp"

@@ -6,8 +6,8 @@
 #include "fastscapelib/flow/sink_resolver.hpp"
 #include "fastscapelib/utils/eigen_containers.hpp"
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xrandom.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/generators/xrandom.hpp"
 
 #include <benchmark/benchmark.h>
 

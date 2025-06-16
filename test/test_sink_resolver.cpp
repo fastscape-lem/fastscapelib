@@ -2,12 +2,12 @@
 #include <limits>
 #include <memory>
 
-#include "xtensor/xarray.hpp"
-#include "xtensor/xmath.hpp"
-#include "xtensor/xoperation.hpp"
-#include "xtensor/xrandom.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xview.hpp"
+#include "xtensor/containers/xarray.hpp"
+#include "xtensor/core/xmath.hpp"
+#include "xtensor/core/xoperation.hpp"
+#include "xtensor/generators/xrandom.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/views/xview.hpp"
 
 #include "gtest/gtest.h"
 

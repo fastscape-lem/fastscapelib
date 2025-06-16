@@ -2,11 +2,11 @@ name: fastscapelib-docs
 channels:
   - conda-forge
 dependencies:
-  - python=3.11
+  - python=3.10
   - breathe
   - cmake
   - healpix_cxx
-  - xtensor-python
+  - xtensor-python>=0.28,<0.29
   - pybind11
   - scikit-build-core
   - numpy

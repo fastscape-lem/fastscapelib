@@ -3,8 +3,8 @@
 #include "fastscapelib/utils/consts.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
 
-#include "xtensor/xfixed.hpp"
-#include "xtensor/xtensor.hpp"
+#include "xtensor/containers/xfixed.hpp"
+#include "xtensor/containers/xtensor.hpp"
 
 #include <benchmark/benchmark.h>
 

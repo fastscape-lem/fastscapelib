@@ -8,8 +8,8 @@
 #include <vector>
 #include <utility>
 
-#include <xtensor/xbroadcast.hpp>
-#include <xtensor/xtensor.hpp>
+#include <xtensor/views/xbroadcast.hpp>
+#include <xtensor/containers/xtensor.hpp>
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/grid/structured_grid.hpp"

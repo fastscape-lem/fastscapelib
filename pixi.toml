@@ -1,0 +1,187 @@
+[project]
+name = "fastscapelib"
+authors = ["Benoit Bovy", "Fastscapelib contributors"]
+channels = ["conda-forge"]
+description = "A C++/Python library of efficient algorithms for landscape evolution modeling"
+platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
+version = "0.3.0"
+repository = "https://github.com/fastscape-lem/fastscapelib"
+documentation = "https://fastscapelib.readthedocs.io"
+
+[environments]
+build = ["build"]
+cpp = ["cpp", "build"]
+python = ["python", "build"]
+doc = ["doc", "python", "build"]
+dev = ["dev", "cpp", "python", "build"]
+
+# --- dependencies
+
+[dependencies]
+xtensor = ">=0.26,<0.27"
+
+[feature.build.dependencies]
+cmake = ">=3.31.4,<4"
+ninja = ">=1.12.1,<2"
+make = ">=4.4.1,<5"
+cxx-compiler = ">=1.9.0,<1.10.0"
+
+[feature.cpp.dependencies]
+eigen = ">=3.4.0,<4"
+
+[feature.python.dependencies]
+python = ">=3.10,<3.14"
+numpy = ">=1.24"
+uv = ">=0.5.18,<0.6"
+pybind11 = ">=2.13.6,<3"
+scikit-build-core = ">=0.10.7,<0.11"
+xtensor-python = ">=0.28.0,<0.29"
+numba = ">=0.60.0,<0.61"
+
+[feature.python.pypi-dependencies]
+fastscapelib = { path = ".", editable = true }
+
+[feature.doc.dependencies]
+breathe = ">=4.35.0,<5"
+matplotlib-base = ">=3.10.0,<4"
+sphinx = ">=8.1.3,<9"
+sphinx-remove-toctrees = ">=1.0.0.post1,<2"
+sphinxcontrib-bibtex = ">=2.6.3,<3"
+sphinxcontrib-mermaid = ">=1.0.0,<2"
+sphinx-design = ">=0.6.1,<0.7"
+sphinx-autodoc-typehints = ">=3.0.0,<4"
+myst-nb = ">=1.1.2,<2"
+furo = ">=2024.8.6,<2025"
+doxygen = ">=1.11.0,<2"
+
+[feature.doc.target.linux-64.dependencies]
+pygalmesh = ">=0.10.7,<0.11"
+
+[feature.doc.target.osx-64.dependencies]
+pygalmesh = ">=0.10.7,<0.11"
+
+[feature.dev.dependencies]
+pre-commit = ">=4.0.1,<5"
+pytest = ">=8.3.4,<9"
+mypy = ">=1.14.1,<2"
+
+[feature.dev.pypi-dependencies]
+compdb = "*"
+
+# --- tasks
+
+[feature.cpp.tasks.configure-tests]
+cmd = [
+  "cmake",
+  "-GNinja",
+  "-S.",
+  "-Bbuild/test",
+  "-DFS_DOWNLOAD_GTEST=ON",
+]
+inputs = ["CMakeLists.txt"]
+outputs = ["build/test/CMakeFiles/"]
+
+[feature.cpp.tasks.build-tests]
+cmd = ["cmake", "--build", "build/test", "--config", "Debug"]
+depends-on = ["configure-tests"]
+inputs = ["include/*", "test/*"]
+outputs = ["build/test/test/test_*"]
+
+[feature.cpp.tasks.run-tests]
+cmd = ["ctest", "-T", "test", "--output-on-failure", "."]
+cwd = "build/test"
+depends-on = ["build-tests"]
+
+[feature.cpp.tasks.configure-benchmarks]
+cmd = [
+  "cmake",
+  "-GNinja",
+  "-S.",
+  "-Bbuild/benchmarks",
+  "-DFS_BUILD_BENCHMARKS=ON",
+  "-DFS_DOWNLOAD_GBENCHMARK=ON",
+]
+inputs = ["CMakeLists.txt"]
+outputs = ["build/benchmarks/CMakeFiles/"]
+
+[feature.cpp.tasks.build-benchmarks]
+cmd = ["cmake", "--build", "build/benchmarks", "--config", "Release"]
+depends-on = ["configure-benchmarks"]
+inputs = ["include/*", "benchmark/*"]
+outputs = ["build/benhcmarks/benchmark/benchmark_*"]
+
+[feature.cpp.tasks.run-benchmarks]
+cmd = "./benchmark_fastscapelib"
+cwd = "build/benchmarks/benchmark"
+depends-on = ["build-benchmarks"]
+
+[feature.python.tasks.build-python]
+cmd = ["uv", "build"]
+
+[feature.python.tasks.configure-python]
+cmd = [
+  "cmake",
+  "-GNinja",
+  "-S.",
+  "-Bbuild/python",
+  "-DSKBUILD=ON",
+]
+inputs = ["CMakeLists.txt", "python/CMakeLists.txt"]
+outputs = ["build/python/CMakeFiles/"]
+
+[feature.python.tasks.compile-python]
+cmd = ["cmake", "--build", "build/python", "--config", "Debug"]
+depends-on = ["configure-python"]
+inputs = ["include/*", "python/src/*"]
+outputs = ["build/python/python/_fastscapelib_py*"]
+
+[feature.doc.tasks.run-doxygen]
+cmd = ["doxygen"]
+cwd = "doc"
+inputs = ["../include/*"]
+outputs = ["_xml"]
+
+[feature.doc.tasks.build-doc]
+cmd = ["sphinx-build", "-M", "html", "source", "_build"]
+cwd = "doc"
+depends-on = ["run-doxygen"]
+
+[feature.dev.tasks.configure-compile-commands]
+cmd = [
+  "cmake",
+  "-GNinja",
+  "-S.",
+  "-Bbuild/compile-commands",
+  "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+  "-DCMAKE_VERIFY_INTERFACE_HEADER_SETS=ON",
+  "-DFS_DOWNLOAD_GTEST=ON",
+  "-DFS_DOWNLOAD_GBENCHMARK=ON",
+  "-DSKBUILD=ON",
+]
+inputs = [
+  "CMakeLists.txt",
+  "test/CMakeLists.txt",
+  "benchmark/CMakeLists.txt",
+  "python/CMakeLists.txt"
+]
+outputs = ["build/compile-commands/compile_commands.json"]
+
+[feature.dev.tasks.update-compile-commands]
+cmd = [
+  "compdb",
+  "-p",
+  "build/compile-commands/",
+  "list",
+  ">",
+  "compile_commands.json"
+]
+depends-on = ["configure-compile-commands"]
+
+[feature.dev.tasks.pre-commit-install]
+cmd = ["pre-commit", "install"]
+
+[feature.dev.tasks.run-tests-python]
+cmd = ["pytest", "python/fastscapelib/tests", "--color=yes"]
+
+[feature.dev.tasks.run-mypy]
+cmd = ["mypy", "."]

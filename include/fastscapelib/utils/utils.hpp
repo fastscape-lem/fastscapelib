@@ -9,7 +9,7 @@
 #include <cstddef>
 #include <type_traits>
 
-#include "xtensor/xcontainer.hpp"
+#include "xtensor/containers/xcontainer.hpp"
 
 
 // type used for array indexers

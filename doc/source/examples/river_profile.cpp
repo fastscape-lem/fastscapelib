@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xmath.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/core/xmath.hpp"
 
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_router.hpp"

@@ -6,7 +6,7 @@
 #include "fastscapelib/flow/flow_operator.hpp"
 #include "fastscapelib/utils/thread_pool.hpp"
 
-#include "xtensor/xstrided_view.hpp"
+#include "xtensor/views/xstrided_view.hpp"
 
 #include <map>
 #include <memory>

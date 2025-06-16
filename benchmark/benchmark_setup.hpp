@@ -7,10 +7,10 @@
 
 #include <benchmark/benchmark.h>
 
-#include "xtensor/xmath.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xrandom.hpp"
-#include "xtensor/xview.hpp"
+#include "xtensor/core/xmath.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/generators/xrandom.hpp"
+#include "xtensor/views/xview.hpp"
 
 #include "fastscapelib/grid/raster_grid.hpp"
 #include "fastscapelib/utils/utils.hpp"

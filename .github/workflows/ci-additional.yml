@@ -25,12 +25,12 @@ jobs:
         shell: bash -el {0}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup micromamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
-          environment-file: environment-python-dev.yml
+          environment-file: ci/environment-python-dev.yml
           cache-environment: true
 
       - name: Install Healpix

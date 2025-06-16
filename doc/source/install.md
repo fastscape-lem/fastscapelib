@@ -93,7 +93,8 @@ in a (CMake) project.
 
 Fastscapelib [conda] packages are available for all stable versions via the
 conda-forge channel. You can install Fastscapelib's C++ headers and all the
-dependencies using the following command (alternatively you can use [mamba]):
+dependencies using the following command (alternatively you can use [mamba] or
+[pixi]):
 
 ```bash
 $ conda install fastscapelib -c conda-forge
@@ -103,8 +104,8 @@ $ conda install fastscapelib -c conda-forge
 
 ### From Source Using CMake
 
-In addition to a C++ compiler supporting C++17, you need [xtensor] and [cmake]
-that you can install, e.g., using [conda]:
+In addition to a C++ compiler supporting C++17, you need [xtensor] (version 0.26
+or newer) and [cmake] that you can install, e.g., using [conda]:
 
 ```bash
 $ conda install xtensor cmake -c conda-forge
@@ -122,6 +123,9 @@ $ cmake --install build
 
 Where `/path/to/prefix` is the path where the header files will be installed
 (skip this option if you want to install Fastscapelib in a default location).
+
+If you have installed [xtensor] in a custom directory, you can help CMake find
+it by setting the `-DXTENSOR_DIR` option.
 
 See Section {doc}`build_options` for more information on the available build
 options.
@@ -161,9 +165,9 @@ $ python -m pip install fastscapelib
 ### From Source Using Pip
 
 In addition to Python and Numpy, building and installing Fastscapelib-Python
-from source requires [pip], [pybind11], [xtensor-python] and [scikit-build-core]
-(a C++ compiler supporting C++17 is also required). All these dependencies are
-all available on conda-forge:
+from source requires [pip], [pybind11], [xtensor-python] (version 0.28 or newer)
+and [scikit-build-core] (a C++ compiler supporting C++17 is also required). All
+these dependencies are all available on conda-forge:
 
 ```bash
 $ conda install python numpy pybind11 xtensor-python scikit-build-core pip -c conda-forge
@@ -197,6 +201,7 @@ See [scikit-build-core]'s documentation for more available options.
 [numpy]: https://numpy.org
 [pip]: https://pip.pypa.io
 [pybind11]: https://pybind11.readthedocs.io
+[pixi]: https://pixi.sh
 [xtensor]: https://xtensor.readthedocs.io
 [xtensor-python]: https://xtensor-python.readthedocs.io
 [scikit-build-core]: https://scikit-build-core.readthedocs.io

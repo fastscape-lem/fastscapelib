@@ -11,8 +11,8 @@
 #include <utility>
 #include <vector>
 
-#include "xtensor/xstrided_view.hpp"
-#include "xtensor/xhistogram.hpp"
+#include "xtensor/views/xstrided_view.hpp"
+#include "xtensor/misc/xhistogram.hpp"
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/containers.hpp"
