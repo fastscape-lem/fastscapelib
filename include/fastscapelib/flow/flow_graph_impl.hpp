@@ -9,9 +9,9 @@
 #include <vector>
 #include <set>
 
-#include "xtensor/xbroadcast.hpp"
-#include "xtensor/xstrided_view.hpp"
-#include "xtensor/xview.hpp"
+#include "xtensor/views/xbroadcast.hpp"
+#include "xtensor/views/xstrided_view.hpp"
+#include "xtensor/views/xview.hpp"
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/utils/iterators.hpp"

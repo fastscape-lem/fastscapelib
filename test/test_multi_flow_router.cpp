@@ -2,8 +2,8 @@
 #include "fastscapelib/flow/flow_router.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xview.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/views/xview.hpp"
 
 #include "gtest/gtest.h"
 

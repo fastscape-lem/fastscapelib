@@ -1,7 +1,7 @@
 #include <memory>
 
-#include "xtensor/xarray.hpp"
-#include "xtensor/xbuilder.hpp"
+#include "xtensor/containers/xarray.hpp"
+#include "xtensor/generators/xbuilder.hpp"
 
 #include "gtest/gtest.h"
 

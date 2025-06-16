@@ -266,8 +266,8 @@ raster grid.
 ```{code-block} C++
 :linenos:
 
-#include "xtensor/xarray.hpp"
-#include "xtensor/xrandom.hpp"
+#include "xtensor/containers/xarray.hpp"
+#include "xtensor/generators/xrandom.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 
 namespace fs = fastscapelib;

@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "fastscapelib/utils/containers.hpp"
-#include "xtensor/xstrided_view.hpp"
+#include "xtensor/views/xstrided_view.hpp"
 
 #include "fastscapelib/flow/flow_graph_impl.hpp"
 #include "fastscapelib/flow/flow_operator.hpp"

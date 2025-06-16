@@ -13,7 +13,7 @@
 #include <map>
 #include <vector>
 
-#include <xtensor/xbroadcast.hpp>
+#include <xtensor/views/xbroadcast.hpp>
 
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/grid/structured_grid.hpp"

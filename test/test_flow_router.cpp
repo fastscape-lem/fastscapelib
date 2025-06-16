@@ -1,8 +1,8 @@
-#include "xtensor/xbuilder.hpp"
-#include "xtensor/xrandom.hpp"
-#include "xtensor/xset_operation.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xview.hpp"
+#include "xtensor/generators/xbuilder.hpp"
+#include "xtensor/generators/xrandom.hpp"
+#include "xtensor/misc/xset_operation.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/views/xview.hpp"
 
 #include "gtest/gtest.h"
 

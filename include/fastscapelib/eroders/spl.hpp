@@ -11,9 +11,9 @@
 #include <limits>
 #include <type_traits>
 
-#include "xtensor/xbroadcast.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xmanipulation.hpp"
+#include "xtensor/views/xbroadcast.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/misc/xmanipulation.hpp"
 
 #include "fastscapelib/utils/utils.hpp"
 #include "fastscapelib/utils/containers.hpp"

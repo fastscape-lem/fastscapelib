@@ -12,7 +12,7 @@
 #include <limits>
 #include <type_traits>
 
-#include "xtensor/xtensor.hpp"
+#include "xtensor/containers/xtensor.hpp"
 
 #include "fastscapelib/utils/utils.hpp"
 #include "fastscapelib/utils/consts.hpp"

@@ -10,11 +10,11 @@
 #include <type_traits>
 #include <utility>
 
-#include "xtensor/xbroadcast.hpp"
-#include "xtensor/xbuilder.hpp"
-#include "xtensor/xnoalias.hpp"
-#include "xtensor/xview.hpp"
-#include "xtensor/xmanipulation.hpp"
+#include "xtensor/views/xbroadcast.hpp"
+#include "xtensor/generators/xbuilder.hpp"
+#include "xtensor/core/xnoalias.hpp"
+#include "xtensor/views/xview.hpp"
+#include "xtensor/misc/xmanipulation.hpp"
 
 #include "fastscapelib/grid/structured_grid.hpp"
 #include "fastscapelib/utils/utils.hpp"
