@@ -147,6 +147,7 @@ namespace fastscapelib
      * Creates a new HEALPix grid
      *
      * @param nside The number of divisions along the side of a base-resolution HEALPix pixel.
+     * @param nodes_status an array of shape [N] setting the status of all grid nodes at once.
      * @param radius The radius of the sphere (default: Earth radius in meters).
      */
     template <class S, class T>

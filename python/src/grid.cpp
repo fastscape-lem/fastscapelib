@@ -171,7 +171,10 @@ add_grid_bindings(py::module& m)
     ** Healpix grid
     */
 
-    py::class_<fs::py_healpix_grid> hgrid(m, "HealpixGrid", "A HEALPix grid.");
+    py::class_<fs::py_healpix_grid> hgrid(
+        m,
+        "HealpixGrid",
+        "A HEALPix (Hierarchical Equal Area isoLatitude Pixelation) grid defined on the sphere.");
 
     hgrid.def(
         py::init<int, const fs::py_healpix_grid::nodes_status_array_type&, double>(),

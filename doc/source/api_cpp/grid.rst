@@ -171,3 +171,23 @@ Defined in ``fastscapelib/grid/trimesh.hpp``.
    :undoc-members:
 
 .. doxygentypedef:: fastscapelib::trimesh
+
+|
+
+Healpix grid
+------------
+
+Defined in ``fastscapelib/grid/healpix_grid.hpp``
+
+- :cpp:class:`~template\<class S, class T> fastscapelib::grid_inner_types\<healpix_grid\<S, T>>`
+- :cpp:class:`~template\<class S, class T> fastscapelib::healpix_grid`
+
+|
+
+.. doxygenstruct:: fastscapelib::grid_inner_types< healpix_grid< S, T > >
+   :members:
+   :undoc-members:
+
+.. doxygenclass:: fastscapelib::healpix_grid
+   :members:
+   :undoc-members:
