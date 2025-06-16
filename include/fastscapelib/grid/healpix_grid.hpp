@@ -94,8 +94,6 @@ namespace fastscapelib
 
         // TODO: factory calculating nside from a given approx. cell area.
 
-        void set_nodes_status(const nodes_status_array_type& nodes_status);
-
         std::pair<container_type, container_type> nodes_lonlat() const;
         std::pair<double, double> nodes_lonlat(const size_type& idx) const;
         std::tuple<container_type, container_type, container_type> nodes_xyz() const;
@@ -123,6 +121,7 @@ namespace fastscapelib
         std::vector<neighbors_distances_impl_type> m_neighbors_distances;
 
         void set_neighbors();
+        void set_nodes_status(const nodes_status_array_type& nodes_status);
 
         inline container_type nodes_areas_impl() const;
         inline grid_data_type nodes_areas_impl(const size_type& idx) const noexcept;

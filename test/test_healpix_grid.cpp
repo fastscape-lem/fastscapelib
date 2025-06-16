@@ -53,13 +53,13 @@ namespace fastscapelib
 
                 auto nodes_status2 = nodes_status;
                 nodes_status2(1) = fs::node_status::ghost;
-                grid.set_nodes_status(nodes_status2);
-                EXPECT_EQ(grid.neighbors_count(0), 6);
+                auto grid2 = fs::healpix_grid<>(nside, nodes_status2);
+                EXPECT_EQ(grid2.neighbors_count(0), 6);
 
                 auto nodes_status3 = nodes_status;
                 nodes_status3(0) = fs::node_status::ghost;
-                grid.set_nodes_status(nodes_status3);
-                EXPECT_EQ(grid.neighbors_count(0), 0);
+                auto grid3 = fs::healpix_grid<>(nside, nodes_status3);
+                EXPECT_EQ(grid3.neighbors_count(0), 0);
             }
 
             {
@@ -67,7 +67,7 @@ namespace fastscapelib
 
                 auto nodes_status2 = nodes_status;
                 nodes_status2(0) = fs::node_status::looped;
-                EXPECT_THROW(grid.set_nodes_status(nodes_status2), std::invalid_argument);
+                EXPECT_THROW(fs::healpix_grid<>(nside, nodes_status2), std::invalid_argument);
             }
         }
 
