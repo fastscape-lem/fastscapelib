@@ -355,8 +355,7 @@ namespace fastscapelib
                                             m_nrows,
                                             dt);
 
-        auto erosion_v = xt::view(m_erosion, xt::all(), xt::all());
-        erosion_v = elevation - xt::transpose(elevation_next);
+        m_erosion = elevation - xt::transpose(elevation_next);
 
         return m_erosion;
     }
