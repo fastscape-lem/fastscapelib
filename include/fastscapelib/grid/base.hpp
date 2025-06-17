@@ -45,7 +45,7 @@ namespace fastscapelib
         fixed_value = 1,    /**< Dirichlet boundary condition */
         fixed_gradient = 2, /**< Neumann boundary condition */
         looped = 3,         /**< Reflective boundaries */
-        ghost = 4           /**< Inactive grid node (outisde the domain) */
+        ghost = 4           /**< Inactive grid node (outside the domain) */
     };
 
     namespace detail

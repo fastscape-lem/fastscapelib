@@ -47,7 +47,8 @@ add_grid_bindings(py::module& m)
         .value("FIXED_VALUE", fs::node_status::fixed_value, "boundary node with fixed value")
         .value(
             "FIXED_GRADIENT", fs::node_status::fixed_gradient, "boundary node with fixed gradient")
-        .value("LOOPED", fs::node_status::looped, "reflective (periodic) boundary node");
+        .value("LOOPED", fs::node_status::looped, "reflective (periodic) boundary node")
+        .value("GHOST", fs::node_status::ghost, "inactive grid node (outside the domain)");
 
     // ==== Binding of the node structure ==== //
     py::class_<fs::node> node(m, "Node", "Represents a grid/mesh node.");
