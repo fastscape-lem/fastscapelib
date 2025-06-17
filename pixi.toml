@@ -62,12 +62,18 @@ sphinx-autodoc-typehints = ">=3.0.0,<4"
 myst-nb = ">=1.1.2,<2"
 furo = ">=2024.8.6,<2025"
 doxygen = ">=1.11.0,<2"
+ipykernel = ">=6.29.5,<7"
 
 [feature.doc.target.linux-64.dependencies]
 pygalmesh = ">=0.10.7,<0.11"
+healpy = ">=1.18.1,<2"
 
 [feature.doc.target.osx-64.dependencies]
 pygalmesh = ">=0.10.7,<0.11"
+healpy = ">=1.18.1,<2"
+
+[feature.doc.target.osx-arm64.dependencies]
+healpy = ">=1.18.1,<2"
 
 [feature.dev.dependencies]
 pre-commit = ">=4.0.1,<5"

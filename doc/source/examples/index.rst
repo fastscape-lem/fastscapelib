@@ -100,6 +100,17 @@ flow routing, eroder classes, etc.)
        2-d triangular (irregular) mesh, one catchment with one base level node
        (outlet), stream-power law + base level lowering.
 
+   .. grid-item-card:: Planetary (HEALPix)
+       :link: planetary_py
+       :link-type: doc
+       :text-align: center
+       :img-bottom: ../_static/fig_catchment.png
+
+       |python-logo|
+       ^^^
+
+       HEALPix grid, planetary scale.
+
 .. toctree::
    :hidden:
    :maxdepth: 1
@@ -111,3 +122,4 @@ flow routing, eroder classes, etc.)
    escarpment_py
    inner_base_levels_py
    catchment_py
+   planetary_py
