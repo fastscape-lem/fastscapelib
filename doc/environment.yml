@@ -13,6 +13,7 @@ dependencies:
   - numba
   - matplotlib-base
   - pygalmesh
+  - healpy
   - sphinx
   - sphinx-remove-toctrees
   - sphinxcontrib-bibtex
