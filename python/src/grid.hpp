@@ -12,6 +12,9 @@
 #include "xtensor-python/pytensor.hpp"
 
 #include "fastscapelib/grid/base.hpp"
+#ifdef WITH_HEALPIX
+#include "fastscapelib/grid/healpix_grid.hpp"
+#endif
 #include "fastscapelib/grid/profile_grid.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 #include "fastscapelib/grid/trimesh.hpp"
@@ -29,6 +32,9 @@ namespace fastscapelib
     using py_profile_grid = fs::profile_grid<fs::xt_python_selector>;
     using py_raster_grid = fs::raster_grid<fs::xt_python_selector, fs::raster_connect::queen>;
     using py_trimesh = fs::trimesh_xt<fs::xt_python_selector>;
+#ifdef WITH_HEALPIX
+    using py_healpix_grid = fs::healpix_grid<fs::xt_python_selector>;
+#endif
 
     template <class G>
     void register_grid_static_properties(py::class_<G>& pyg)

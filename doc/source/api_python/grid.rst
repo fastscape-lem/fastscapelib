@@ -35,3 +35,4 @@ Grids
    ProfileGrid
    RasterGrid
    TriMesh
+   HealpixGrid

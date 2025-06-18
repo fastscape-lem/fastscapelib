@@ -4,6 +4,7 @@
 #include "fastscapelib/grid/base.hpp"
 #include "fastscapelib/grid/profile_grid.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
+#include "fastscapelib/utils/consts.hpp"
 
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
@@ -46,7 +47,8 @@ add_grid_bindings(py::module& m)
         .value("FIXED_VALUE", fs::node_status::fixed_value, "boundary node with fixed value")
         .value(
             "FIXED_GRADIENT", fs::node_status::fixed_gradient, "boundary node with fixed gradient")
-        .value("LOOPED", fs::node_status::looped, "reflective (periodic) boundary node");
+        .value("LOOPED", fs::node_status::looped, "reflective (periodic) boundary node")
+        .value("GHOST", fs::node_status::ghost, "inactive grid node (outside the domain)");
 
     // ==== Binding of the node structure ==== //
     py::class_<fs::node> node(m, "Node", "Represents a grid/mesh node.");
@@ -134,7 +136,7 @@ add_grid_bindings(py::module& m)
 
         Create a new mesh with a dictionary of node status (optional).
 
-        2. ``__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: np.ndarray) -> None``
+        2. ``__init__(self, points: numpy.ndarray, triangles: numpy.ndarray, nodes_status: numpy.ndarray) -> None``
 
         Create a new mesh with an array of node status.
 
@@ -164,6 +166,109 @@ add_grid_bindings(py::module& m)
     fs::register_grid_static_properties(tmesh);
     fs::register_base_grid_properties(tmesh);
     fs::register_grid_methods(tmesh);
+
+#ifdef WITH_HEALPIX
+    /*
+    ** Healpix grid
+    */
+
+    py::class_<fs::py_healpix_grid> hgrid(
+        m,
+        "HealpixGrid",
+        "A HEALPix (Hierarchical Equal Area isoLatitude Pixelation) grid defined on the sphere.");
+
+    hgrid.def(
+        py::init<int, const fs::py_healpix_grid::nodes_status_array_type&, double>(),
+        py::arg("nside"),
+        py::arg("nodes_status"),
+        py::arg("radius") = fs::numeric_constants<>::EARTH_RADIUS_METERS,
+        R"doc(__init__(nside: int, nodes_status: numpy.ndarray, radius: float = 6.371e6) -> None
+
+        HEALPix grid initializer.
+
+        Parameters
+        ----------
+        nside : int
+            Number of divisions along the side of a HEALPix base-resolution pixel.
+            A higher value sets a grid with a finer resolution and a greater size N
+            (i.e., total number of grid nodes).
+        nodes_status : array-like
+            Array of shape [N] setting the status of all grid nodes at once.
+        radius : float, optional
+            Sphere radius (default, Earth radius in meters).
+
+        )doc");
+
+    fs::register_grid_static_properties(hgrid);
+    fs::register_base_grid_properties(hgrid);
+    fs::register_grid_methods(hgrid);
+
+    hgrid
+        .def_property_readonly(
+            "nside",
+            &fs::py_healpix_grid::nside,
+            "HEALPix's Nside (number of division along the side of a HEALPix base-resolution pixel).")
+        .def_property_readonly("radius", &fs::py_healpix_grid::radius, "Sphere radius");
+
+    hgrid
+        .def("nodes_lonlat",
+             py::overload_cast<const fs::py_healpix_grid::size_type&>(
+                 &fs::py_healpix_grid::nodes_lonlat, py::const_),
+             py::arg("idx"),
+             R"doc(nodes_lonlat(*args) -> tuple
+
+             Return the longitude and latitude coordinates of one or all grid nodes
+             (HEALPix cell centroids), in radians.
+
+             Overloaded method that supports the following signatures:
+
+             1. ``nodes_lonlat(idx: int) -> tuple[double, double]``
+
+             2. ``nodes_lonlat() -> tuple[numpy.ndarray, numpy.ndarray]``
+
+             Parameters
+             ----------
+             idx : int
+                 Grid node indice.
+
+             Returns
+             -------
+             lonlat : tuple
+                 Longitude and latitude coordinates (scalars or arrays) in radians.
+
+             )doc")
+        .def("nodes_lonlat", py::overload_cast<>(&fs::py_healpix_grid::nodes_lonlat, py::const_));
+
+    hgrid
+        .def("nodes_xyz",
+             py::overload_cast<const fs::py_healpix_grid::size_type&>(
+                 &fs::py_healpix_grid::nodes_xyz, py::const_),
+             py::arg("idx"),
+             R"doc(nodes_xyz(*args) -> tuple
+
+             Return the x,y,z cartesian coordinates of one or all grid nodes
+             (HEALPix cell centroids).
+
+             Overloaded method that supports the following signatures:
+
+             1. ``nodes_xyz(idx: int) -> tuple[double, double, double]``
+
+             2. ``nodes_xyz() -> tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]``
+
+             Parameters
+             ----------
+             idx : int
+                 Grid node indice.
+
+             Returns
+             -------
+             x, y, z : floats (scalar or arrays)
+                 X, Y and Z coordinates in the same scale and units than the grid's
+                 sphere radius.
+
+             )doc")
+        .def("nodes_xyz", py::overload_cast<>(&fs::py_healpix_grid::nodes_xyz, py::const_));
+#endif
 
     /*
     ** Profile Grid
