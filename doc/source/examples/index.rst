@@ -104,7 +104,7 @@ flow routing, eroder classes, etc.)
        :link: planetary_py
        :link-type: doc
        :text-align: center
-       :img-bottom: ../_static/fig_catchment.png
+       :img-bottom: ../_static/fig_planetary.png
 
        |python-logo|
        ^^^
