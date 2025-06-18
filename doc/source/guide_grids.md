@@ -42,6 +42,14 @@ Fastscapelib (also illustrated in {ref}`Figure 1 <fig_grid_types>`).
 
     Note: this class doesn't implement any triangulation (triangles must be
     given to the grid constructor).
+* - {cpp:class}`~fastscapelib::healpix_grid`
+    {py:class}`~fastscapelib.HealpixGrid`
+  - 2-dimensional, [HEALPix](https://healpix.sourceforge.io/) grid on the sphere,
+    static
+  - Planetary scale simulations.
+
+    Note: this class is only available for Linux and MacOS (built by default
+    in packages published on conda-forge but not on PyPI).
  ```
 
 ```{figure} _static/fig_grid_types.svg
