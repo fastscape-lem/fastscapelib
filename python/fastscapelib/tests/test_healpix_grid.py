@@ -20,6 +20,7 @@ def size() -> int:
 
 @pytest.fixture
 def nodes_status(size) -> np.ndarray:
+    ghost = NodeStatus.GHOST
     return np.zeros(size, dtype=np.uint8)
 
 
