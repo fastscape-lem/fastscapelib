@@ -156,21 +156,18 @@ Triangular mesh
 
 Defined in ``fastscapelib/grid/trimesh.hpp``.
 
-- :cpp:class:`~template\<class S, unsigned int N> fastscapelib::grid_inner_types\<trimesh_xt\<S, N>>`
-- :cpp:class:`~template\<class S, unsigned int N = 30> fastscapelib::trimesh_xt`
-- :cpp:type:`~fastscapelib::trimesh`
+- :cpp:class:`~template\<class S, unsigned int N> fastscapelib::grid_inner_types\<trimesh\<S, N>>`
+- :cpp:class:`~template\<class S, unsigned int N = 30> fastscapelib::trimesh`
 
 |
 
-.. doxygenstruct:: fastscapelib::grid_inner_types< trimesh_xt< S, N > >
+.. doxygenstruct:: fastscapelib::grid_inner_types< trimesh< S, N > >
    :members:
    :undoc-members:
 
-.. doxygenclass:: fastscapelib::trimesh_xt
+.. doxygenclass:: fastscapelib::trimesh
    :members:
    :undoc-members:
-
-.. doxygentypedef:: fastscapelib::trimesh
 
 |
 

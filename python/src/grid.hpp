@@ -31,7 +31,7 @@ namespace fastscapelib
 
     using py_profile_grid = fs::profile_grid<fs::xt_python_selector>;
     using py_raster_grid = fs::raster_grid<fs::xt_python_selector, fs::raster_connect::queen>;
-    using py_trimesh = fs::trimesh_xt<fs::xt_python_selector>;
+    using py_trimesh = fs::trimesh<fs::xt_python_selector>;
 #ifdef WITH_HEALPIX
     using py_healpix_grid = fs::healpix_grid<fs::xt_python_selector>;
 #endif

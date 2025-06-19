@@ -23,7 +23,7 @@ namespace fastscapelib
             node_s fixed = node_s::fixed_value;
             node_s core = node_s::core;
 
-            using grid_type = fs::trimesh_xt<fs::xt_selector>;
+            using grid_type = fs::trimesh<fs::xt_selector>;
             using size_type = typename grid_type::size_type;
             using shape_type = typename grid_type::shape_type;
 
@@ -40,10 +40,10 @@ namespace fastscapelib
 
         TEST_F(trimesh, static_expr)
         {
-            EXPECT_EQ(fs::trimesh::is_structured(), false);
-            EXPECT_EQ(fs::trimesh::is_uniform(), false);
-            EXPECT_EQ(fs::trimesh::n_neighbors_max(), 20u);
-            EXPECT_EQ(fs::trimesh::container_ndims(), 1);
+            EXPECT_EQ(fs::trimesh<>::is_structured(), false);
+            EXPECT_EQ(fs::trimesh<>::is_uniform(), false);
+            EXPECT_EQ(fs::trimesh<>::n_neighbors_max(), 20u);
+            EXPECT_EQ(fs::trimesh<>::container_ndims(), 1);
         }
 
 
