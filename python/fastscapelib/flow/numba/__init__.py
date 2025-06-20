@@ -15,7 +15,8 @@ if TYPE_CHECKING:
 
 def create_flow_kernel(
     flow_graph: FlowGraph,
-    kernel_func: Callable[[NumbaJittedClass], int],
+    kernel_func: Callable[[NumbaJittedClass | Any], int | None],
+    *,
     spec: dict[str, nb.types.Type | tuple[nb.types.Type, Any]],
     apply_dir: FlowGraphTraversalDir,
     outputs: Iterable[str] = (),
