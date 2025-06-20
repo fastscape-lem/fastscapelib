@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from textwrap import dedent, indent
+from types import MappingProxyType
 from typing import (
     Any,
     Callable,
@@ -221,6 +222,8 @@ class NumbaFlowKernel:
     node_data_setter: KernelNodeDataSetter
     node_data_free: Any
     func: KernelFunc
+    generated_code: MappingProxyType[str, str]
+    generated_spec: tuple[tuple[str, Any], ...]
 
 
 class NumbaFlowKernelFactory:
@@ -235,6 +238,8 @@ class NumbaFlowKernelFactory:
 
     _grid_data_ty: dict[str, nb.types.Array]
     _scalar_data_ty: dict[str, nb.types.Type]
+    _generated_code: dict[str, str]
+    _generated_spec: list[tuple[str, Any]]
 
     def __init__(
         self,
@@ -245,7 +250,6 @@ class NumbaFlowKernelFactory:
         outputs: Iterable[str] = tuple(),
         max_receivers: int = -1,
         n_threads: int = 1,
-        print_generated_code: bool = False,
         print_stats: bool = False,
     ):
         with timer("flow kernel init", print_stats):
@@ -254,12 +258,13 @@ class NumbaFlowKernelFactory:
             self._outputs = outputs
             self._max_receivers = max_receivers
             self._spec = spec
-            self._print_generated_code = print_generated_code
             self._print_stats = print_stats
             self._n_threads = n_threads
             self._apply_dir = apply_dir
 
             self._bound_data: set[str] = set()
+            self._generated_code = {}
+            self._generated_spec = []
 
             self._set_interfaces()
             self._build_fs_kernel()
@@ -274,6 +279,8 @@ class NumbaFlowKernelFactory:
             node_data_setter=self.node_data_setter,
             node_data_free=None,
             func=self.flow_kernel_func,
+            generated_code=MappingProxyType(self._generated_code),
+            generated_spec=tuple(self._generated_spec),
         )
 
     @property
@@ -444,8 +451,7 @@ class NumbaFlowKernelFactory:
 
         init_source = func_tmpl.format(content=indent(content, self._indent4))
 
-        if self._print_generated_code:
-            print(f"Node data init source code:\n{indent(init_source, self._indent4)}")
+        self._generated_code["node_data_init"] = init_source
 
         glbls = {}
         exec(init_source, glbls)
@@ -671,17 +677,12 @@ class NumbaFlowKernelFactory:
             default_size=default_size,
         )
 
-        spec = base_spec + grid_data_spec + scalar_data_spec
-
-        if self._print_generated_code:
-            print(f"Node data jitclass spec:\n{spec}")
-            print(
-                f"Node data jitclass constructor source code:\n{indent(init_source, self._indent4)}"
-            )
+        self._generated_spec = base_spec + grid_data_spec + scalar_data_spec
+        self._generated_code["node_data_jitclass_init"] = init_source
 
         self._node_data_jitclass = NumbaFlowKernelFactory._generate_jitclass(
             "FlowKernelNodeData",
-            base_spec + grid_data_spec + scalar_data_spec,
+            self._generated_spec,
             init_source,
             {"ReceiversData": ReceiversData, "np": np},
         )
@@ -727,10 +728,7 @@ class NumbaFlowKernelFactory:
         args = ", ".join([name for name in base_spec])
         init_source = __init___template.format(content=content, args=args)
 
-        if self._print_generated_code:
-            print(
-                f"Data jitclass constructor source code:\n{indent(init_source, self._indent4)}"
-            )
+        self._generated_code["data_jitclass_init"] = init_source
 
         self._data_jitclass = NumbaFlowKernelFactory._generate_jitclass(
             "FlowKernelData",
@@ -866,10 +864,7 @@ class NumbaFlowKernelFactory:
             resize_content=resize_content,
             receivers_set_content=indent(receivers_set_content, self._indent8),
         )
-        if self._print_generated_code:
-            print(
-                f"Node data getter source code:\n{indent(getter_source, self._indent4)}"
-            )
+        self._generated_code["node_data_getter"] = getter_source
 
         @nb.njit(inline="always")
         def set_view(data, size):
@@ -929,10 +924,7 @@ class NumbaFlowKernelFactory:
             receivers_content=indent(receivers_content, self._indent8),
         )
 
-        if self._print_generated_code:
-            print(
-                f"Node data setter source code:\n{indent(setter_source, self._indent4)}"
-            )
+        self._generated_code["node_data_setter"] = setter_source
 
         glbls: dict[str, Any] = dict()
         exec(setter_source, glbls)

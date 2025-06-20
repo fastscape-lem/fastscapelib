@@ -112,7 +112,6 @@ def compiled_kernel3(kernel_func2, flow_graph):
             a=nb.float64,
         ),
         apply_dir=FlowGraphTraversalDir.ANY,
-        print_generated_code=True,
     )
     yield kernel, data
 

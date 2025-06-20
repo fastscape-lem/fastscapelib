@@ -22,7 +22,6 @@ def create_flow_kernel(
     outputs: Iterable[str] = (),
     max_receivers: int = -1,
     n_threads: int = 1,
-    print_generated_code: bool = False,
     print_stats: bool = False,
 ) -> tuple[NumbaFlowKernel, NumbaFlowKernelData]:
     """Creates a numba flow kernel.
@@ -56,9 +55,6 @@ def create_flow_kernel(
         A value > 1 may be useful for kernel functions that are computationally
         expensive. For trivial kernel functions it is generally more efficient to
         apply the kernel sequentially (i.e., ``n_threads = 1``).
-    print_generated_code : bool
-        If True, prints the code used to create the numba jit-compiled classes for
-        managing kernel data (default: False). Useful for debugging.
     print_stats : bool
         If True, prints a small report on kernel creation performance
         (default: False).
@@ -81,7 +77,6 @@ def create_flow_kernel(
         outputs=outputs,
         max_receivers=max_receivers,
         n_threads=n_threads,
-        print_generated_code=print_generated_code,
         print_stats=print_stats,
     )
     return factory.kernel, factory.data
