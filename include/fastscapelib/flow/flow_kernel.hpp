@@ -2,10 +2,6 @@
 #define FASTSCAPELIB_FLOW_KERNEL_HPP
 
 #include <cstddef>
-#include <cstdint>
-#include <thread>
-#include <iostream>
-#include <vector>
 #include <functional>
 
 namespace fastscapelib
