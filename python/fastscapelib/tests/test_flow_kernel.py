@@ -14,9 +14,14 @@ nb = pytest.importorskip("numba")
 
 
 @pytest.fixture(scope="module")
-def flow_graph():
+def grid():
     raster_grid = RasterGrid([5, 5], [2.2, 2.4], NodeStatus.FIXED_VALUE)
-    flow_graph = FlowGraph(raster_grid, [PFloodSinkResolver(), MultiFlowRouter()])
+    yield raster_grid
+
+
+@pytest.fixture(scope="module")
+def flow_graph(grid):
+    flow_graph = FlowGraph(grid, [PFloodSinkResolver(), MultiFlowRouter()])
     yield flow_graph
 
 
@@ -402,3 +407,37 @@ class TestFlowKernel:
         data.bind(a=np.ones(flow_graph.size, dtype=np.float64))
         with pytest.raises(ValueError):
             flow_graph.apply_kernel(kernel, data)
+
+
+def test_simple_accumulate_flow_kernel(grid, flow_graph):
+    def accumulate_kernel_func(node):
+        r_count = node.receivers.count
+        if r_count == 1 and node.receivers.distance[0] == 0.0:
+            return
+        for r in range(r_count):
+            irec_weight = node.receivers.weight[r]
+            node.receivers.drainage_area[r] += node.drainage_area * irec_weight
+
+    kernel, data = create_flow_kernel(
+        flow_graph,
+        accumulate_kernel_func,
+        spec=dict(
+            drainage_area=nb.float64[::1],
+        ),
+        outputs=["drainage_area"],
+        # FIXME: output values not updated with max_receivers=-1 (dynamic resizing)
+        max_receivers=grid.n_neighbors_max,
+        n_threads=1,
+        apply_dir=FlowGraphTraversalDir.DEPTH_DOWNSTREAM,
+    )
+
+    elevation = np.random.uniform(size=grid.shape)
+    flow_graph.update_routes(elevation)
+
+    drainage_area_actual = grid.nodes_areas()
+    data.bind(drainage_area=drainage_area_actual.ravel())
+    flow_graph.apply_kernel(kernel, data)
+
+    drainage_area_expected = flow_graph.accumulate(1.0)
+
+    np.testing.assert_allclose(drainage_area_actual, drainage_area_expected)
