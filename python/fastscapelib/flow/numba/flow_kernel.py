@@ -996,11 +996,13 @@ def apply_flow_kernel(
         indices = flow_graph.impl().bfs_indices
     elif wrapped_kernel.apply_dir == FlowGraphTraversalDir.DEPTH_UPSTREAM:
         indices = flow_graph.impl().dfs_indices
+    elif wrapped_kernel.apply_dir == FlowGraphTraversalDir.BREADTH_DOWNSTREAM:
+        indices = flow_graph.impl().bfs_indices[::-1]
     elif wrapped_kernel.apply_dir == FlowGraphTraversalDir.DEPTH_DOWNSTREAM:
         indices = flow_graph.impl().dfs_indices[::-1]
     else:
         raise ValueError(
-            f"Unsupported kernel application direction: {wrapped_kernel.apply_dir!r}"
+            f"Unknown kernel application direction: {wrapped_kernel.apply_dir!r}"
         )
 
     return _apply_flow_kernel(

@@ -409,7 +409,11 @@ class TestFlowKernel:
             flow_graph.apply_kernel(kernel, data)
 
 
-def test_simple_accumulate_flow_kernel(grid, flow_graph):
+@pytest.mark.parametrize(
+    "apply_dir",
+    [FlowGraphTraversalDir.DEPTH_DOWNSTREAM, FlowGraphTraversalDir.BREADTH_DOWNSTREAM],
+)
+def test_simple_accumulate_flow_kernel(grid, flow_graph, apply_dir):
     def accumulate_kernel_func(node):
         r_count = node.receivers.count
         if r_count == 1 and node.receivers.distance[0] == 0.0:
@@ -428,7 +432,7 @@ def test_simple_accumulate_flow_kernel(grid, flow_graph):
         # FIXME: output values not updated with max_receivers=-1 (dynamic resizing)
         max_receivers=grid.n_neighbors_max,
         n_threads=1,
-        apply_dir=FlowGraphTraversalDir.DEPTH_DOWNSTREAM,
+        apply_dir=apply_dir,
     )
 
     elevation = np.random.uniform(size=grid.shape)
