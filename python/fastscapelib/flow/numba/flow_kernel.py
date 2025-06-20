@@ -844,7 +844,7 @@ class NumbaFlowKernelFactory:
         else:
             resize_tmpl = self._node_data_getter_dynamic_resize_tmpl
 
-        resize_source = indent(
+        resize_content = indent(
             resize_tmpl.format(
                 set_views=indent(
                     "\n".join(
@@ -863,7 +863,7 @@ class NumbaFlowKernelFactory:
 
         getter_source = self._node_data_getter_tmpl.format(
             node_content=indent(node_content, self._indent4),
-            resize_content=resize_source,
+            resize_content=resize_content,
             receivers_set_content=indent(receivers_set_content, self._indent8),
         )
         if self._print_generated_code:
@@ -885,7 +885,14 @@ class NumbaFlowKernelFactory:
     node_data_setter_tmpl = dedent(
         """
         def node_data_setter(index, node_data, data):
-        {content}
+            receivers_count = data.receivers_count[index]
+            receivers = node_data.receivers
+
+        {node_content}
+
+            for i in range(receivers_count):
+                receiver_idx = data.receivers_idx[index, i]
+        {receivers_content}
 
             return 0
         """
@@ -901,7 +908,7 @@ class NumbaFlowKernelFactory:
         - `setattr` is not implemented -> use a template source code to be executed
         """
 
-        content = "\n".join(
+        node_content = "\n".join(
             [
                 f"data.{name}[index] = node_data.{name}"
                 for name in self._grid_data_ty
@@ -909,9 +916,19 @@ class NumbaFlowKernelFactory:
             ]
         )
 
-        setter_source = self.node_data_setter_tmpl.format(
-            content=indent(content, self._indent4)
+        receivers_content = "\n".join(
+            [
+                f"data.{name}[receiver_idx] = receivers.{name}[i]"
+                for name in self._grid_data_ty
+                if name in self._outputs
+            ]
         )
+
+        setter_source = self.node_data_setter_tmpl.format(
+            node_content=indent(node_content, self._indent4),
+            receivers_content=indent(receivers_content, self._indent8),
+        )
+
         if self._print_generated_code:
             print(
                 f"Node data setter source code:\n{indent(setter_source, self._indent4)}"
@@ -946,10 +963,10 @@ def _apply_flow_kernel(
     for i in indices:
         if node_data_getter(i, data, node_data):
             raise ValueError(
-                f"Invalid index {i} encountered in node_data getter function\n"
+                f"Invalid index {i} encountered in node_data getter function. "
                 "Please check if you are using dynamic receivers count "
-                "('max_receivers=-1') or adjust this setting in the "
-                "'Kernel' specification"
+                "('max_receivers=-1') or adjust this setting in "
+                "`create_flow_kernel()`."
             )
         func(node_data)
         node_data_setter(i, node_data, data)
