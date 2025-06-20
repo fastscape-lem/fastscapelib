@@ -100,7 +100,7 @@ outputs = ["build/test/CMakeFiles/"]
 [feature.cpp.tasks.build-tests]
 cmd = ["cmake", "--build", "build/test", "--config", "Debug"]
 depends-on = ["configure-tests"]
-inputs = ["include/*", "test/*"]
+inputs = ["include/fastscapelib/*/*.hpp", "test/*"]
 outputs = ["build/test/test/test_*"]
 
 [feature.cpp.tasks.run-tests]

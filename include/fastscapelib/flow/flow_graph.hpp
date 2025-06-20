@@ -633,13 +633,13 @@ namespace fastscapelib
                 break;
         }
 
-        auto n_threads = kernel.n_threads;
+        auto n_threads = static_cast<size_type>(kernel.n_threads);
 
         m_thread_pool.resume();
         m_thread_pool.resize(n_threads);
 
         std::vector<decltype(kernel.node_data_create())> node_data(n_threads);
-        for (auto i = 0; i < n_threads; ++i)
+        for (size_type i = 0; i < n_threads; ++i)
         {
             node_data[i] = kernel.node_data_create();
 
@@ -675,10 +675,11 @@ namespace fastscapelib
             const size_type after_last_idx = (*levels)[i];
             const size_type level_size = after_last_idx - first_idx;
 
-            if (level_size < kernel.min_level_size)
+            if (level_size < static_cast<size_type>(kernel.min_level_size))
                 run(0, first_idx, after_last_idx);
             else
-                m_thread_pool.run_blocks(first_idx, after_last_idx, run, kernel.min_block_size);
+                m_thread_pool.run_blocks(
+                    first_idx, after_last_idx, run, static_cast<size_type>(kernel.min_block_size));
         }
 
         for (std::size_t i = 0; i < n_threads; ++i)
