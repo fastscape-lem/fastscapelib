@@ -581,7 +581,7 @@ namespace fastscapelib
                 break;
             default:
                 throw std::runtime_error(
-                    "Unsupported kernel application order for sequential execution");
+                    "Unsupported kernel application direction for sequential execution");
                 break;
         }
 
@@ -629,7 +629,7 @@ namespace fastscapelib
                 break;
             default:
                 throw std::runtime_error(
-                    "Unsupported kernel application order for parallel execution");
+                    "Unsupported kernel application direction for parallel execution");
                 break;
         }
 
