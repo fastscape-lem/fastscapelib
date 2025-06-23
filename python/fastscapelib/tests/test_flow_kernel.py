@@ -436,14 +436,17 @@ def test_simple_accumulate_flow_kernel(grid, flow_graph, apply_dir):
     np.testing.assert_allclose(drainage_area_actual, drainage_area_expected)
 
 
-@pytest.mark.parametrize("data_access", [True, False])
-def test_data_access_at_receivers(flow_graph, data_access):
-    def kernel_func(node):
-        r_count = node.receivers.count
-        new_a = 0
-        for r in range(r_count):
-            new_a += node.receivers.a[r]
-        node.a = new_a
+@pytest.mark.parametrize(
+    "receiver_or_donor,data_access",
+    [
+        ("receiver", True),
+        ("receiver", False),
+        ("donor", True),
+        ("donor", False),
+    ],
+)
+def test_data_access_at_receivers(flow_graph, receiver_or_donor, data_access):
+    def kernel_func(_): ...
 
     kernel, _ = create_flow_kernel(
         flow_graph,
@@ -452,16 +455,17 @@ def test_data_access_at_receivers(flow_graph, data_access):
         outputs=["a"],
         get_data_at_receivers=data_access,
         set_data_at_receivers=data_access,
-        n_threads=1,
+        get_data_at_donors=data_access,
+        set_data_at_donors=data_access,
     )
 
-    # receivers content node data always generated to prevent
+    # receivers and donors content node data always generated to prevent
     # segmentation faults
-    line_content = "self.receivers.a = self.receivers._a[:]"
+    line_content = f"self.{receiver_or_donor}s.a = self.{receiver_or_donor}s._a[:]"
     assert line_content in kernel.generated_code["node_data_jitclass_init"]
 
-    line_view = "(receivers.a, receivers._a)"
-    line_content = "receivers._a[i] = data.a[receiver_idx]"
+    line_view = f"({receiver_or_donor}s.a, {receiver_or_donor}s._a)"
+    line_content = f"{receiver_or_donor}s._a[i] = data.a[{receiver_or_donor}_idx]"
     if data_access:
         assert line_view in kernel.generated_code["node_data_getter"]
         assert line_content in kernel.generated_code["node_data_getter"]
@@ -469,7 +473,7 @@ def test_data_access_at_receivers(flow_graph, data_access):
         assert line_view not in kernel.generated_code["node_data_getter"]
         assert line_content not in kernel.generated_code["node_data_getter"]
 
-    line_content = "data.a[receiver_idx] = receivers.a[i]"
+    line_content = f"data.a[{receiver_or_donor}_idx] = {receiver_or_donor}s.a[i]"
     if data_access:
         assert line_content in kernel.generated_code["node_data_setter"]
     else:

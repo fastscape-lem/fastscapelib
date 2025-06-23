@@ -268,6 +268,8 @@ class NumbaFlowKernelFactory:
         n_threads: int = 1,
         get_data_at_receivers: bool = True,
         set_data_at_receivers: bool = True,
+        get_data_at_donors: bool = True,
+        set_data_at_donors: bool = True,
         max_receivers: int | None = None,
         auto_resize: bool = False,
         print_stats: bool = False,
@@ -280,13 +282,11 @@ class NumbaFlowKernelFactory:
                 f"some output variables are not defined in spec: {invalid_outputs}"
             )
 
-        if auto_resize:
-            max_receivers = None
+        if flow_graph.single_flow:
+            max_receivers = 1
         else:
-            if flow_graph.single_flow:
-                max_receivers = 1
-            else:
-                max_receivers = flow_graph.impl().receivers.shape[1]
+            max_receivers = flow_graph.impl().receivers.shape[1]
+        max_donors = flow_graph.impl().donors.shape[1]
 
         with timer("flow kernel init", print_stats):
             self._flow_graph = flow_graph
@@ -294,7 +294,11 @@ class NumbaFlowKernelFactory:
             self._outputs = outputs
             self._get_data_at_receivers = get_data_at_receivers
             self._set_data_at_receivers = set_data_at_receivers
+            self._get_data_at_donors = get_data_at_donors
+            self._set_data_at_donors = set_data_at_donors
             self._max_receivers = max_receivers
+            self._max_donors = max_donors
+            self._auto_resize = auto_resize
             self._spec = spec
             self._print_stats = print_stats
             self._n_threads = n_threads
@@ -535,8 +539,8 @@ class NumbaFlowKernelFactory:
         to a node data instance.
         """
 
-        func = self._build_node_data_getter(self._max_receivers)
-        self.node_data_getter = self._build_node_data_getter(self._max_receivers)
+        func = self._build_node_data_getter()
+        self.node_data_getter = self._build_node_data_getter()
         compiled_func = func.get_compile_result(
             nb.core.typing.Signature(
                 nb.none,
@@ -815,11 +819,14 @@ class NumbaFlowKernelFactory:
     _node_data_getter_tmpl = dedent(
         """
         def node_data_getter(index, data, node_data):
+            # --- data at node ---
+        {node_content}
+
+            # --- data at flow receivers ---
             receivers_count = data.receivers_count[index]
             receivers = node_data.receivers
 
-        {node_content}
-            {resize_content}
+        {receivers_resize_content}
 
             receivers.count = receivers_count
 
@@ -829,25 +836,37 @@ class NumbaFlowKernelFactory:
                 receivers._weight[i] = data.receivers_weight[index, i]
         {receivers_set_content}
 
+            # --- data at flow donors ---
+            donors_count = data.donors_count[index]
+            donors = node_data.donors
+
+        {donors_resize_content}
+
+            donors.count = donors_count
+
+            for i in range(donors_count):
+                donor_idx = data.donors_idx[index, i]
+        {donors_set_content}
+
             return 0
         """
     )
 
     _node_data_getter_fixed_resize_tmpl = dedent(
-        """
-        if {max_receivers} < receivers_count:
+        """\
+        if {receivers_or_donors}_count > {max_count}:
             return 1
 
-        if receivers_count != receivers.count:
+        if {receivers_or_donors}_count != {receivers_or_donors}.count:
         {set_views}
         """
     ).rstrip("\n")
 
     _node_data_getter_dynamic_resize_tmpl = dedent(
-        """
-        if receivers_count != receivers.count:
-            if receivers_count > receivers.count:
-        {receivers_resize_source}
+        """\
+        if {receivers_or_donors}_count != {receivers_or_donor}.count:
+            if {receivers_or_donors}_count > {receivers_or_donors}.count:
+        {resize_source}
         {set_views}
         """
     ).rstrip("\n")
@@ -858,7 +877,7 @@ class NumbaFlowKernelFactory:
             (
         {view_data},
             ),
-            receivers_count
+            {receivers_or_donors}_count
         )"""
     ).lstrip("\n")
 
@@ -866,7 +885,7 @@ class NumbaFlowKernelFactory:
     _indent8 = _indent4 * 2
     _indent12 = _indent4 * 3
 
-    def _build_node_data_getter(self, max_receivers: int | None) -> NumbaJittedFunc:
+    def _build_node_data_getter(self) -> NumbaJittedFunc:
         """Builds a node data getter from the global data
 
         The node data getter is called prior to the flow kernel to
@@ -882,10 +901,17 @@ class NumbaFlowKernelFactory:
         been tested but generates very poor performances (not understood in details)
         """
 
+        if self._auto_resize:
+            resize_tmpl = self._node_data_getter_dynamic_resize_tmpl
+        else:
+            resize_tmpl = self._node_data_getter_fixed_resize_tmpl
+
+        # --- node data ---
         node_content = "\n".join(
             [f"node_data.{name} = data.{name}[index]" for name in self._grid_data_ty]
         )
 
+        # --- flow receivers data ---
         receivers_grid_data_ty = {
             "distance": nb.float64[::1],
             "weight": nb.float64[::1],
@@ -919,32 +945,74 @@ class NumbaFlowKernelFactory:
         else:
             receivers_set_content = ""
 
-        if max_receivers is not None:
-            resize_tmpl = self._node_data_getter_fixed_resize_tmpl
-        else:
-            resize_tmpl = self._node_data_getter_dynamic_resize_tmpl
+        receivers_resize_content = resize_tmpl.format(
+            set_views=indent(
+                "\n".join(
+                    self._set_view_tmpl.format(
+                        view_data=indent(content, self._indent8),
+                        receivers_or_donors="receivers",
+                    )
+                    for content in receivers_view_data
+                ),
+                self._indent4,
+            ),
+            resize_source=indent(receivers_resize_source, self._indent8),
+            receivers_or_donors="receivers",
+            max_count=self._max_receivers,
+        )
 
-        resize_content = indent(
-            resize_tmpl.format(
+        # --- flow donors data ---
+        if not self._get_data_at_donors:
+            donors_resize_content = ""
+            donors_set_content = ""
+        else:
+            donors_grid_data_ty = self._grid_data_ty.copy()
+
+            donors_data_dtypes: dict[nb.types.Type, list[str]] = defaultdict(list)
+            for name, value in donors_grid_data_ty.items():
+                donors_data_dtypes[value.dtype].append(name)
+
+            donors_view_data = [
+                f",\n".join([f"(donors.{name}, donors._{name})" for name in names])
+                for names in donors_data_dtypes.values()
+            ]
+
+            donors_resize_source = "\n".join(
+                [
+                    f"donors._{name} = np.empty(donors_count, dtype=np.{value.dtype})"
+                    for name, value in donors_grid_data_ty.items()
+                ]
+            )
+
+            donors_set_content = "\n".join(
+                [
+                    f"donors._{name}[i] = data.{name}[donor_idx]"
+                    for name in self._grid_data_ty
+                ]
+            )
+
+            donors_resize_content = resize_tmpl.format(
                 set_views=indent(
                     "\n".join(
                         self._set_view_tmpl.format(
-                            view_data=indent(content, self._indent8)
+                            view_data=indent(content, self._indent8),
+                            receivers_or_donors="donors",
                         )
-                        for content in receivers_view_data
+                        for content in donors_view_data
                     ),
                     self._indent4,
                 ),
-                receivers_resize_source=indent(receivers_resize_source, self._indent8),
-                max_receivers=max_receivers,
-            ),
-            self._indent4,
-        )
+                resize_source=indent(donors_resize_source, self._indent8),
+                receivers_or_donors="donors",
+                max_count=self._max_donors,
+            )
 
         getter_source = self._node_data_getter_tmpl.format(
             node_content=indent(node_content, self._indent4),
-            resize_content=resize_content,
+            receivers_resize_content=indent(receivers_resize_content, self._indent4),
             receivers_set_content=indent(receivers_set_content, self._indent8),
+            donors_resize_content=indent(donors_resize_content, self._indent4),
+            donors_set_content=indent(donors_set_content, self._indent8),
         )
         self._generated_code["node_data_getter"] = getter_source
 
@@ -962,14 +1030,24 @@ class NumbaFlowKernelFactory:
     node_data_setter_tmpl = dedent(
         """
         def node_data_setter(index, node_data, data):
+            # --- data at node ---
+        {node_content}
+
+            # --- data at flow receivers ---
             receivers_count = data.receivers_count[index]
             receivers = node_data.receivers
-
-        {node_content}
 
             for i in range(receivers_count):
                 receiver_idx = data.receivers_idx[index, i]
         {receivers_content}
+
+            # --- data at flow donors ---
+            donors_count = data.donors_count[index]
+            donors = node_data.donors
+
+            for i in range(donors_count):
+                donor_idx = data.donors_idx[index, i]
+        {donors_content}
 
             return 0
         """
@@ -1004,9 +1082,21 @@ class NumbaFlowKernelFactory:
         else:
             receivers_content = ""
 
+        if self._set_data_at_donors:
+            donors_content = "\n".join(
+                [
+                    f"data.{name}[donor_idx] = donors.{name}[i]"
+                    for name in self._grid_data_ty
+                    if name in self._outputs
+                ]
+            )
+        else:
+            donors_content = ""
+
         setter_source = self.node_data_setter_tmpl.format(
             node_content=indent(node_content, self._indent4),
             receivers_content=indent(receivers_content, self._indent8),
+            donors_content=indent(donors_content, self._indent8),
         )
 
         self._generated_code["node_data_setter"] = setter_source

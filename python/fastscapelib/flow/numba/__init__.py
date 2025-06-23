@@ -25,7 +25,8 @@ def create_flow_kernel(
     n_threads: int = 1,
     get_data_at_receivers: bool = True,
     set_data_at_receivers: bool = True,
-    max_receivers: int | None = None,
+    get_data_at_donors: bool = True,
+    set_data_at_donors: bool = True,
     auto_resize: bool = False,
     print_stats: bool = False,
 ) -> tuple[NumbaFlowKernel, NumbaFlowKernelData]:
@@ -67,6 +68,10 @@ def create_flow_kernel(
         are copied back to the kernel data after calling the kernel function).
         You can set it to False if this is not needed, it may speed-up the application
         of the kernel.
+    get_data_at_donors : bool, optional
+        Same than ``get_data_at_receivers`` but for the node ``.donors``.
+    set_data_at_donors : bool, optional
+        Same than ``set_data_at_receivers`` but for the node ``.donors``.
     auto_resize: bool, optional
         If True, dynamically resize the temporary containers used to store data at flow
         receivers and donors. Otherwise (default), set fixed sizes according to the
@@ -94,6 +99,8 @@ def create_flow_kernel(
         n_threads=n_threads,
         get_data_at_receivers=get_data_at_receivers,
         set_data_at_receivers=set_data_at_receivers,
+        get_data_at_donors=get_data_at_donors,
+        set_data_at_donors=set_data_at_donors,
         auto_resize=auto_resize,
         print_stats=print_stats,
     )
