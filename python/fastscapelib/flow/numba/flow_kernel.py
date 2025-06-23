@@ -268,7 +268,7 @@ class NumbaFlowKernelFactory:
         n_threads: int = 1,
         get_data_at_receivers: bool = True,
         set_data_at_receivers: bool = True,
-        max_receivers: int = -1,
+        max_receivers: int | None = None,
         print_stats: bool = False,
     ):
         if not outputs:
@@ -277,6 +277,11 @@ class NumbaFlowKernelFactory:
         if invalid_outputs := set(outputs) - set(spec):
             raise ValueError(
                 f"some output variables are not defined in spec: {invalid_outputs}"
+            )
+
+        if max_receivers is not None and max_receivers < 1:
+            raise ValueError(
+                f"max_receivers must be either None or a positive integer, got {max_receivers}"
             )
 
         with timer("flow kernel init", print_stats):
@@ -690,7 +695,7 @@ class NumbaFlowKernelFactory:
         """
         )
 
-        default_size = max_receivers if max_receivers > 0 else 0
+        default_size = max_receivers if max_receivers is not None else 0
         receivers_content_init = "\n    ".join(
             [
                 f"self.receivers._{name} = np.ones({default_size}, dtype=np.{value.dtype})"
@@ -819,7 +824,7 @@ class NumbaFlowKernelFactory:
     _indent8 = _indent4 * 2
     _indent12 = _indent4 * 3
 
-    def _build_node_data_getter(self, max_receivers: int) -> NumbaJittedFunc:
+    def _build_node_data_getter(self, max_receivers: int | None) -> NumbaJittedFunc:
         """Builds a node data getter from the global data
 
         The node data getter is called prior to the flow kernel to
@@ -872,7 +877,7 @@ class NumbaFlowKernelFactory:
         else:
             receivers_set_content = ""
 
-        if max_receivers > 0:
+        if max_receivers is not None:
             resize_tmpl = self._node_data_getter_fixed_resize_tmpl
         else:
             resize_tmpl = self._node_data_getter_dynamic_resize_tmpl
@@ -995,7 +1000,7 @@ def _apply_flow_kernel(
             raise ValueError(
                 f"Invalid index {i} encountered in node_data getter function. "
                 "Please check if you are using dynamic receivers count "
-                "('max_receivers=-1') or adjust this setting in "
+                "('max_receivers=None') or adjust this setting in "
                 "`create_flow_kernel()`."
             )
         func(node_data)

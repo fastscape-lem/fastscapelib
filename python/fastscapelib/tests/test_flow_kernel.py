@@ -486,3 +486,17 @@ def test_data_access_at_receivers(flow_graph, data_access):
         assert line_content in kernel.generated_code["node_data_setter"]
     else:
         assert line_content not in kernel.generated_code["node_data_setter"]
+
+
+def test_invalid_max_receivers(flow_graph):
+    def kernel_func(_):
+        pass
+
+    with pytest.raises(ValueError, match="max_receivers must be either"):
+        create_flow_kernel(
+            flow_graph,
+            kernel_func,
+            spec=dict(a=nb.float64[::1]),
+            outputs=["a"],
+            max_receivers=0,
+        )
