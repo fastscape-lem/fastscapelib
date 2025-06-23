@@ -653,24 +653,23 @@ class NumbaFlowKernelFactory:
 
         grid_data = self._grid_data_ty
         scalar_data = self._scalar_data_ty
-        max_receivers = self._max_receivers
+        grid_data_ty_spec = [(name, ty) for name, ty in grid_data.items()]
 
         receivers_flow_graph_spec = [
             ("distance", nb.float64[::1]),
             ("weight", nb.float64[::1]),
         ]
-        receivers_grid_data_ty_spec = [(name, ty) for name, ty in grid_data.items()]
         receivers_internal_spec = [
             ("count", nb.uint64),
         ]
 
         receivers_spec = (
             receivers_flow_graph_spec
-            + receivers_grid_data_ty_spec
+            + grid_data_ty_spec
             + receivers_internal_spec
             + [
                 ("_" + name, ty)
-                for name, ty in receivers_flow_graph_spec + receivers_grid_data_ty_spec
+                for name, ty in receivers_flow_graph_spec + grid_data_ty_spec
             ]
         )
 
@@ -679,7 +678,24 @@ class NumbaFlowKernelFactory:
             def __init__(self):
                 pass
 
-        base_spec = [("receivers", ReceiversData.class_type.instance_type)]
+        donors_internal_spec = [
+            ("count", nb.uint64),
+        ]
+        donors_spec = (
+            grid_data_ty_spec
+            + donors_internal_spec
+            + [("_" + name, ty) for name, ty in grid_data_ty_spec]
+        )
+
+        @nb.experimental.jitclass(donors_spec)
+        class DonorsData(object):
+            def __init__(self):
+                pass
+
+        base_spec = [
+            ("receivers", ReceiversData.class_type.instance_type),
+            ("donors", DonorsData.class_type.instance_type),
+        ]
         grid_data_spec = [(name, ty.dtype) for name, ty in grid_data.items()]
         scalar_data_spec = [(name, ty) for name, ty in scalar_data.items()]
 
@@ -687,8 +703,8 @@ class NumbaFlowKernelFactory:
             """
         def generated_init(self):
             self.receivers = ReceiversData()
-            self.receivers._distance = np.ones({default_size})
-            self.receivers._weight = np.ones({default_size})
+            self.receivers._distance = np.ones({default_rec_size})
+            self.receivers._weight = np.ones({default_rec_size})
             {receivers_content_init}
 
             self.receivers.distance = self.receivers._distance[:]
@@ -696,23 +712,45 @@ class NumbaFlowKernelFactory:
             {receivers_content_view}
 
             self.receivers.count = 0
+
+            self.donors = DonorsData()
+            {donors_content_init}
+
+            {donors_content_view}
+
+            self.donors.count = 0
         """
         )
 
-        default_size = max_receivers if max_receivers is not None else 0
+        default_rec_size = self._max_receivers if self._max_receivers is not None else 0
         receivers_content_init = "\n    ".join(
             [
-                f"self.receivers._{name} = np.ones({default_size}, dtype=np.{value.dtype})"
+                f"self.receivers._{name} = np.ones({default_rec_size}, dtype=np.{value.dtype})"
                 for name, value in grid_data.items()
             ]
         )
         receivers_content_view = "\n    ".join(
             [f"self.receivers.{name} = self.receivers._{name}[:]" for name in grid_data]
         )
+
+        default_don_size = self._max_receivers if self._max_receivers is not None else 0
+        donors_content_init = "\n    ".join(
+            [
+                f"self.donors._{name} = np.ones({default_don_size}, dtype=np.{value.dtype})"
+                for name, value in grid_data.items()
+            ]
+        )
+        donors_content_view = "\n    ".join(
+            [f"self.donors.{name} = self.donors._{name}[:]" for name in grid_data]
+        )
+
         init_source = __init___template.format(
+            default_rec_size=default_rec_size,
             receivers_content_init=receivers_content_init,
             receivers_content_view=receivers_content_view,
-            default_size=default_size,
+            default_don_size=default_don_size,
+            donors_content_init=donors_content_init,
+            donors_content_view=donors_content_view,
         )
 
         self._generated_spec = base_spec + grid_data_spec + scalar_data_spec
@@ -722,7 +760,7 @@ class NumbaFlowKernelFactory:
             "FlowKernelNodeData",
             self._generated_spec,
             init_source,
-            {"ReceiversData": ReceiversData, "np": np},
+            {"ReceiversData": ReceiversData, "DonorsData": DonorsData, "np": np},
         )
 
     def _build_data_jitclass(self):

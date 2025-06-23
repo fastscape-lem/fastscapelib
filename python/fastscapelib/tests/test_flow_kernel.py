@@ -344,11 +344,22 @@ class TestFlowKernel:
         assert node_data_receivers_struct["weight"] == nb.float64[::1]
         assert node_data_receivers_struct["count"] == nb.uint64
 
+        node_data_donors_struct = node_data_struct["donors"].struct
+        assert len(node_data_donors_struct) == 13
+        assert node_data_donors_struct["a"] == nb.float64[::1]
+        assert node_data_donors_struct["f64_arr"] == nb.float64[::1]
+        assert node_data_donors_struct["f32_arr"] == nb.float32[::1]
+        assert node_data_donors_struct["int32_arr"] == nb.int32[::1]
+        assert node_data_donors_struct["int64_arr"] == nb.int64[::1]
+        assert node_data_donors_struct["uint64_arr"] == nb.uint64[::1]
+        assert node_data_donors_struct["count"] == nb.uint64
+
     def test_node_data(self, kernel1):
         node_data = kernel1.node_data_create()
         node_data_struct = node_data.__class__._numba_type_.class_type.struct
-        assert len(node_data_struct) == 2
+        assert len(node_data_struct) == 3
         assert "receivers" in node_data_struct
+        assert "donors" in node_data_struct
         assert node_data_struct["a"] == nb.float64
 
         node_data_receivers_struct = node_data_struct["receivers"].struct
@@ -360,6 +371,12 @@ class TestFlowKernel:
         assert node_data_receivers_struct["weight"] == nb.float64[::1]
         assert node_data_receivers_struct["_weight"] == nb.float64[::1]
         assert node_data_receivers_struct["count"] == nb.uint64
+
+        node_data_donors_struct = node_data_struct["donors"].struct
+        assert len(node_data_donors_struct) == 3
+        assert node_data_donors_struct["a"] == nb.float64[::1]
+        assert node_data_donors_struct["_a"] == nb.float64[::1]
+        assert node_data_donors_struct["count"] == nb.uint64
 
     def test_node_data_create(self, kernel1):
         node_data = kernel1.node_data_create()

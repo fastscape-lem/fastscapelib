@@ -26,6 +26,9 @@ namespace fastscapelib
 
     namespace detail
     {
+        /*
+        ** TODO: C++ flow_kernel not ready yet for public use.
+        */
         struct flow_kernel
         {
             std::function<int(void*)> func; /**< the kernel function to be applied on each node */
