@@ -1,13 +1,11 @@
 #include <algorithm>
 
 #include "xtensor/containers/xtensor.hpp"
-#include "xtensor/views/xstrided_view.hpp"
 
 #include "gtest/gtest.h"
 
 #include "fastscapelib/flow/flow_graph.hpp"
 #include "fastscapelib/flow/flow_router.hpp"
-#include "fastscapelib/flow/flow_snapshot.hpp"
 #include "fastscapelib/grid/raster_grid.hpp"
 
 
@@ -57,27 +55,31 @@ namespace fastscapelib
             vector_t<double> distance;
         };
 
-        struct SplEroderKernelNodeData : public Data<scalar_t>
+        struct TestKernelNodeData : public Data<scalar_t>
         {
             ReceiversData receivers;
         };
 
-        using SplEroderKernelData = Data<grid_t>;
+        using TestKernelData = Data<grid_t>;
 
-        class SplEroder
+        /*
+        ** A simple "eroder" flow kernel for testing the flow kernel C++ interface.
+        ** (note: the C++ interface is not ready for public use yet).
+        */
+        class TestKernelEroder
         {
         private:
-            static int kernel_func(void* node_data_ptr)
+            static int kernel_func(void* /*node_data_ptr*/)
             {
-                auto& node = *reinterpret_cast<SplEroderKernelNodeData*>(node_data_ptr);
+                // auto& node = *reinterpret_cast<TestKernelNodeData*>(node_data_ptr);
 
                 return 0;
             }
 
             static int ndata_getter(std::size_t idx, void* data_ptr, void* node_data_ptr)
             {
-                auto& data = *reinterpret_cast<SplEroderKernelData*>(data_ptr);
-                auto& node_data = *reinterpret_cast<SplEroderKernelNodeData*>(node_data_ptr);
+                auto& data = *reinterpret_cast<TestKernelData*>(data_ptr);
+                auto& node_data = *reinterpret_cast<TestKernelNodeData*>(node_data_ptr);
 
                 node_data.erosion = data.erosion[idx];
 
@@ -86,8 +88,8 @@ namespace fastscapelib
 
             static int ndata_setter(std::size_t idx, void* node_data_ptr, void* data_ptr)
             {
-                auto& node_data = *reinterpret_cast<SplEroderKernelNodeData*>(node_data_ptr);
-                auto& data = *reinterpret_cast<SplEroderKernelData*>(data_ptr);
+                auto& node_data = *reinterpret_cast<TestKernelNodeData*>(node_data_ptr);
+                auto& data = *reinterpret_cast<TestKernelData*>(data_ptr);
 
                 data.erosion[idx] = node_data.erosion;
 
@@ -96,7 +98,7 @@ namespace fastscapelib
 
             static void* ndata_create()
             {
-                SplEroderKernelNodeData* node_data_ptr = new SplEroderKernelNodeData;
+                TestKernelNodeData* node_data_ptr = new TestKernelNodeData;
 
                 return reinterpret_cast<void*>(node_data_ptr);
             }
@@ -105,15 +107,15 @@ namespace fastscapelib
             using array_type = typename xt::xtensor<double, 2>;
 
             template <class FG>
-            SplEroder(FG& /*flow_graph*/, int threads_count = 1)
+            TestKernelEroder(FG& /*flow_graph*/, int threads_count = 1)
             {
-                kernel.func = &SplEroder::kernel_func;
-                kernel.node_data_getter = &SplEroder::ndata_getter;
-                kernel.node_data_setter = &SplEroder::ndata_setter;
-                kernel.node_data_create = &SplEroder::ndata_create;
+                kernel.func = &TestKernelEroder::kernel_func;
+                kernel.node_data_getter = &TestKernelEroder::ndata_getter;
+                kernel.node_data_setter = &TestKernelEroder::ndata_setter;
+                kernel.node_data_create = &TestKernelEroder::ndata_create;
                 kernel.node_data_init = nullptr;
                 kernel.node_data_free = [](void* node_data_ptr)
-                { delete reinterpret_cast<SplEroderKernelNodeData*>(node_data_ptr); };
+                { delete reinterpret_cast<TestKernelNodeData*>(node_data_ptr); };
                 kernel.n_threads = threads_count;
                 kernel.apply_dir = flow_graph_traversal_dir::breadth_upstream;
 
@@ -127,10 +129,10 @@ namespace fastscapelib
 
             detail::flow_kernel kernel;
             detail::flow_kernel_data kernel_data;
-            SplEroderKernelData data;
+            TestKernelData data;
         };
 
-        TEST(flow_kernel, spl_eroder)
+        TEST(flow_kernel, test_kernel_eroder)
         {
             using flow_graph_type = fs::flow_graph<fs::raster_grid<>>;
             using grid_type = fs::raster_grid<>;
@@ -144,11 +146,12 @@ namespace fastscapelib
                                               { 0.2, 0.2, 0.2, 0.2 },
                                               { 0.1, 0.0, 0.1, 0.1 } };
 
-            SplEroder eroder(graph);
-            eroder.data.erosion = xt::zeros_like(elevation);
+            TestKernelEroder test_kernel_eroder(graph);
+            test_kernel_eroder.data.erosion = xt::zeros_like(elevation);
 
-            graph.apply_kernel(eroder.kernel, eroder.kernel_data);
-            eroder.erode(elevation, 2e4);
+            graph.apply_kernel(test_kernel_eroder.kernel, test_kernel_eroder.kernel_data);
+            auto actual = test_kernel_eroder.erode(elevation, 2e4);
+            EXPECT_EQ(actual, elevation);
         }
     }
 }

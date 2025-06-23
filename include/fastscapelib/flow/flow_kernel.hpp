@@ -2,10 +2,6 @@
 #define FASTSCAPELIB_FLOW_KERNEL_HPP
 
 #include <cstddef>
-#include <cstdint>
-#include <thread>
-#include <iostream>
-#include <vector>
 #include <functional>
 
 namespace fastscapelib
@@ -30,6 +26,9 @@ namespace fastscapelib
 
     namespace detail
     {
+        /*
+        ** TODO: C++ flow_kernel not ready yet for public use.
+        */
         struct flow_kernel
         {
             std::function<int(void*)> func; /**< the kernel function to be applied on each node */

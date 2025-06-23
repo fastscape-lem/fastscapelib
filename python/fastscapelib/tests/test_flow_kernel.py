@@ -14,9 +14,14 @@ nb = pytest.importorskip("numba")
 
 
 @pytest.fixture(scope="module")
-def flow_graph():
+def grid():
     raster_grid = RasterGrid([5, 5], [2.2, 2.4], NodeStatus.FIXED_VALUE)
-    flow_graph = FlowGraph(raster_grid, [PFloodSinkResolver(), MultiFlowRouter()])
+    yield raster_grid
+
+
+@pytest.fixture(scope="module")
+def flow_graph(grid):
+    flow_graph = FlowGraph(grid, [PFloodSinkResolver(), MultiFlowRouter()])
     yield flow_graph
 
 
@@ -38,7 +43,7 @@ def kernel_func2():
 
 @pytest.fixture(scope="module")
 def compiled_kernel1(kernel_func1, flow_graph):
-    kernel = create_flow_kernel(
+    kernel, data = create_flow_kernel(
         flow_graph,
         kernel_func1,
         spec=dict(
@@ -47,7 +52,7 @@ def compiled_kernel1(kernel_func1, flow_graph):
         outputs=["a"],
         apply_dir=FlowGraphTraversalDir.ANY,
     )
-    yield kernel
+    yield kernel, data
 
 
 @pytest.fixture(scope="function")
@@ -105,9 +110,10 @@ def compiled_kernel3(kernel_func2, flow_graph):
         kernel_func2,
         spec=dict(
             a=nb.float64,
+            b=nb.float64[::1],
         ),
+        outputs=["b"],
         apply_dir=FlowGraphTraversalDir.ANY,
-        print_generated_code=True,
     )
     yield kernel, data
 
@@ -247,8 +253,8 @@ class TestFlowKernelData:
 
 
 class TestFlowKernel:
-    def test_input_assignment(self, flow_graph, kernel_func1):
-        with pytest.raises(AttributeError):
+    def test_no_output_error(self, flow_graph, kernel_func1):
+        with pytest.raises(ValueError, match="no output variable"):
             create_flow_kernel(
                 flow_graph,
                 kernel_func1,
@@ -268,7 +274,7 @@ class TestFlowKernel:
             data.a, np.ones(flow_graph.size, dtype=np.float64) * 10.0
         )
 
-    def test_scalar_output(self, flow_graph, kernel_func1):
+    def test_scalar_output_error(self, flow_graph, kernel_func1):
         with pytest.raises(TypeError):
             create_flow_kernel(
                 flow_graph,
@@ -280,8 +286,8 @@ class TestFlowKernel:
                 apply_dir=FlowGraphTraversalDir.ANY,
             )
 
-    def test_invalid_output(self, flow_graph, kernel_func1):
-        with pytest.raises(KeyError):
+    def test_output_not_in_spec_error(self, flow_graph, kernel_func1):
+        with pytest.raises(ValueError, match=".*output variables.*not defined in spec"):
             create_flow_kernel(
                 flow_graph,
                 kernel_func1,
@@ -338,11 +344,22 @@ class TestFlowKernel:
         assert node_data_receivers_struct["weight"] == nb.float64[::1]
         assert node_data_receivers_struct["count"] == nb.uint64
 
+        node_data_donors_struct = node_data_struct["donors"].struct
+        assert len(node_data_donors_struct) == 13
+        assert node_data_donors_struct["a"] == nb.float64[::1]
+        assert node_data_donors_struct["f64_arr"] == nb.float64[::1]
+        assert node_data_donors_struct["f32_arr"] == nb.float32[::1]
+        assert node_data_donors_struct["int32_arr"] == nb.int32[::1]
+        assert node_data_donors_struct["int64_arr"] == nb.int64[::1]
+        assert node_data_donors_struct["uint64_arr"] == nb.uint64[::1]
+        assert node_data_donors_struct["count"] == nb.uint64
+
     def test_node_data(self, kernel1):
         node_data = kernel1.node_data_create()
         node_data_struct = node_data.__class__._numba_type_.class_type.struct
-        assert len(node_data_struct) == 2
+        assert len(node_data_struct) == 3
         assert "receivers" in node_data_struct
+        assert "donors" in node_data_struct
         assert node_data_struct["a"] == nb.float64
 
         node_data_receivers_struct = node_data_struct["receivers"].struct
@@ -354,6 +371,12 @@ class TestFlowKernel:
         assert node_data_receivers_struct["weight"] == nb.float64[::1]
         assert node_data_receivers_struct["_weight"] == nb.float64[::1]
         assert node_data_receivers_struct["count"] == nb.uint64
+
+        node_data_donors_struct = node_data_struct["donors"].struct
+        assert len(node_data_donors_struct) == 3
+        assert node_data_donors_struct["a"] == nb.float64[::1]
+        assert node_data_donors_struct["_a"] == nb.float64[::1]
+        assert node_data_donors_struct["count"] == nb.uint64
 
     def test_node_data_create(self, kernel1):
         node_data = kernel1.node_data_create()
@@ -374,31 +397,184 @@ class TestFlowKernel:
         kernel3.node_data_init(node_data, kernel3_data.jitclass_obj)
         assert node_data.a == 1.0
 
-    def test_max_receivers(self, flow_graph, kernel1, kernel1_data, kernel_func1):
-        rng = np.random.Generator(np.random.PCG64(1234))
-        init_elevation = rng.uniform(0, 5, size=flow_graph.grid_shape)
 
-        flow_graph.update_routes(init_elevation)
-        assert np.any(flow_graph.impl().receivers_count > 1)
+def test_reserved_spec(flow_graph):
+    def kernel_func(_): ...
 
-        kernel1_data.bind(a=np.ones(flow_graph.size, dtype=np.float64))
-        flow_graph.apply_kernel(kernel1, kernel1_data)
-
-        node_data = kernel1.node_data_create()
-        for i in range(flow_graph.size):
-            kernel1.node_data_getter(i, kernel1_data.jitclass_obj, node_data)
-            assert node_data.receivers.count == flow_graph.impl().receivers_count[i]
-
-        kernel, data = create_flow_kernel(
+    with pytest.raises(ValueError, match="reserved variable names defined in spec"):
+        create_flow_kernel(
             flow_graph,
-            kernel_func1,
-            spec=dict(
-                a=nb.float64[::1],
-            ),
-            outputs=["a"],
-            apply_dir=FlowGraphTraversalDir.ANY,
-            max_receivers=1,
+            kernel_func,
+            spec=dict(receivers_count=nb.int64[::1]),
+            outputs=["receivers_count"],
         )
-        data.bind(a=np.ones(flow_graph.size, dtype=np.float64))
-        with pytest.raises(ValueError):
-            flow_graph.apply_kernel(kernel, data)
+
+
+def test_simple_recounter_flow_kernel(grid, flow_graph):
+    # recount flow receivers and donors at each node in a
+    # flow kernel function by reading values at the receivers and donors
+    # and updating output values at the current node.
+    def recounter_kernel_func(node):
+        nb_receivers = 0
+        nb_donors = 0
+
+        for i in range(node.receivers.count):
+            nb_receivers += node.receivers.one[i]
+        for i in range(node.donors.count):
+            nb_donors += node.donors.one[i]
+
+        node.rec_count = nb_receivers
+        node.don_count = nb_donors
+
+    kernel, data = create_flow_kernel(
+        flow_graph,
+        recounter_kernel_func,
+        spec=dict(
+            one=nb.int64[::1],
+            rec_count=nb.int64[::1],
+            don_count=nb.int64[::1],
+        ),
+        outputs=["rec_count", "don_count"],
+        # FIXME: output values not updated with auto_resize=True (dynamic resizing)
+        auto_resize=False,
+        n_threads=1,
+        apply_dir=FlowGraphTraversalDir.ANY,
+    )
+
+    elevation = np.random.uniform(size=grid.shape)
+    flow_graph.update_routes(elevation)
+
+    one = np.ones(grid.size, dtype=np.int64)
+    rec_count = np.zeros(grid.size, dtype=np.int64)
+    don_count = np.zeros(grid.size, dtype=np.int64)
+    data.bind(one=one, rec_count=rec_count, don_count=don_count)
+    flow_graph.apply_kernel(kernel, data)
+
+    np.testing.assert_array_equal(rec_count, flow_graph.impl().receivers_count)
+    np.testing.assert_array_equal(don_count, flow_graph.impl().donors_count)
+
+
+def test_simple_recounter_flow_kernel2(grid, flow_graph):
+    # recount flow receivers and donors at each node in a
+    # flow kernel function by directly updating output values at
+    # the receivers and donors of the current node.
+    def recounter_kernel_func2(node):
+        for i in range(node.donors.count):
+            node.donors.rec_count[i] += 1
+
+        if node.receivers.count == 1 and node.receivers.distance[0] == 0.0:
+            # base level node
+            node.rec_count = 1
+        else:
+            for i in range(node.receivers.count):
+                node.receivers.don_count[i] += 1
+
+    kernel, data = create_flow_kernel(
+        flow_graph,
+        recounter_kernel_func2,
+        spec=dict(
+            rec_count=nb.int64[::1],
+            don_count=nb.int64[::1],
+        ),
+        outputs=["rec_count", "don_count"],
+        # FIXME: output values not updated with auto_resize=True (dynamic resizing)
+        auto_resize=False,
+        n_threads=1,
+        apply_dir=FlowGraphTraversalDir.ANY,
+    )
+
+    elevation = np.random.uniform(size=grid.shape)
+    flow_graph.update_routes(elevation)
+
+    rec_count = np.zeros(grid.size, dtype=np.int64)
+    don_count = np.zeros(grid.size, dtype=np.int64)
+    data.bind(rec_count=rec_count, don_count=don_count)
+    flow_graph.apply_kernel(kernel, data)
+
+    np.testing.assert_array_equal(rec_count, flow_graph.impl().receivers_count)
+    np.testing.assert_array_equal(don_count, flow_graph.impl().donors_count)
+
+
+@pytest.mark.parametrize(
+    "apply_dir",
+    [FlowGraphTraversalDir.DEPTH_DOWNSTREAM, FlowGraphTraversalDir.BREADTH_DOWNSTREAM],
+)
+def test_simple_accumulate_flow_kernel(grid, flow_graph, apply_dir):
+    def accumulate_kernel_func(node):
+        r_count = node.receivers.count
+        if r_count == 1 and node.receivers.distance[0] == 0.0:
+            # base level node
+            return
+        for r in range(r_count):
+            irec_weight = node.receivers.weight[r]
+            node.receivers.drainage_area[r] += node.drainage_area * irec_weight
+
+    kernel, data = create_flow_kernel(
+        flow_graph,
+        accumulate_kernel_func,
+        spec=dict(
+            drainage_area=nb.float64[::1],
+        ),
+        outputs=["drainage_area"],
+        # FIXME: output values not updated with auto_resize=True (dynamic resizing)
+        auto_resize=False,
+        n_threads=1,
+        apply_dir=apply_dir,
+    )
+
+    elevation = np.random.uniform(size=grid.shape)
+    flow_graph.update_routes(elevation)
+
+    drainage_area_actual = grid.nodes_areas()
+    data.bind(drainage_area=drainage_area_actual.ravel())
+    flow_graph.apply_kernel(kernel, data)
+
+    drainage_area_expected = flow_graph.accumulate(1.0)
+
+    np.testing.assert_allclose(drainage_area_actual, drainage_area_expected)
+
+
+@pytest.mark.parametrize(
+    "receiver_or_donor,data_access",
+    [
+        ("receiver", True),
+        ("receiver", False),
+        ("donor", True),
+        ("donor", False),
+    ],
+)
+def test_data_access_at_receivers_and_donors(
+    flow_graph, receiver_or_donor, data_access
+):
+    def kernel_func(_): ...
+
+    kernel, _ = create_flow_kernel(
+        flow_graph,
+        kernel_func,
+        spec=dict(a=nb.float64[::1]),
+        outputs=["a"],
+        get_data_at_receivers=data_access,
+        set_data_at_receivers=data_access,
+        get_data_at_donors=data_access,
+        set_data_at_donors=data_access,
+    )
+
+    # receivers and donors content node data always generated to prevent
+    # segmentation faults
+    line_content = f"self.{receiver_or_donor}s.a = self.{receiver_or_donor}s._a[:]"
+    assert line_content in kernel.generated_code["node_data_jitclass_init"]
+
+    line_view = f"({receiver_or_donor}s.a, {receiver_or_donor}s._a)"
+    line_content = f"{receiver_or_donor}s._a[i] = data.a[{receiver_or_donor}_idx]"
+    if data_access:
+        assert line_view in kernel.generated_code["node_data_getter"]
+        assert line_content in kernel.generated_code["node_data_getter"]
+    else:
+        assert line_view not in kernel.generated_code["node_data_getter"]
+        assert line_content not in kernel.generated_code["node_data_getter"]
+
+    line_content = f"data.a[{receiver_or_donor}_idx] = {receiver_or_donor}s.a[i]"
+    if data_access:
+        assert line_content in kernel.generated_code["node_data_setter"]
+    else:
+        assert line_content not in kernel.generated_code["node_data_setter"]
