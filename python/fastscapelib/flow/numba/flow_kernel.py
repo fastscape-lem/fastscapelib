@@ -282,6 +282,16 @@ class NumbaFlowKernelFactory:
                 f"some output variables are not defined in spec: {invalid_outputs}"
             )
 
+        reserved_vars = {
+            "receivers_count",
+            "receivers_distance",
+            "receivers_weight",
+            "donors_count",
+        }
+        invalid_vars = set(spec) & reserved_vars
+        if invalid_vars:
+            raise ValueError(f"reserved variable names defined in spec: {invalid_vars}")
+
         if flow_graph.single_flow:
             max_receivers = 1
         else:
@@ -864,7 +874,7 @@ class NumbaFlowKernelFactory:
 
     _node_data_getter_dynamic_resize_tmpl = dedent(
         """\
-        if {receivers_or_donors}_count != {receivers_or_donor}.count:
+        if {receivers_or_donors}_count != {receivers_or_donors}.count:
             if {receivers_or_donors}_count > {receivers_or_donors}.count:
         {resize_source}
         {set_views}
@@ -1030,9 +1040,6 @@ class NumbaFlowKernelFactory:
     node_data_setter_tmpl = dedent(
         """
         def node_data_setter(index, node_data, data):
-            # --- data at node ---
-        {node_content}
-
             # --- data at flow receivers ---
             receivers_count = data.receivers_count[index]
             receivers = node_data.receivers
@@ -1048,6 +1055,12 @@ class NumbaFlowKernelFactory:
             for i in range(donors_count):
                 donor_idx = data.donors_idx[index, i]
         {donors_content}
+
+            # --- data at node ---
+            # Note: at a base level node (receiver index == node index):
+            # if a new value was set above via the receiver, it will
+            # be overwritten here.
+        {node_content}
 
             return 0
         """

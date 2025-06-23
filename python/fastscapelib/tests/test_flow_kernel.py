@@ -398,6 +398,103 @@ class TestFlowKernel:
         assert node_data.a == 1.0
 
 
+def test_reserved_spec(flow_graph):
+    def kernel_func(_): ...
+
+    with pytest.raises(ValueError, match="reserved variable names defined in spec"):
+        create_flow_kernel(
+            flow_graph,
+            kernel_func,
+            spec=dict(receivers_count=nb.int64[::1]),
+            outputs=["receivers_count"],
+        )
+
+
+def test_simple_recounter_flow_kernel(grid, flow_graph):
+    # recount flow receivers and donors at each node in a
+    # flow kernel function by reading values at the receivers and donors
+    # and updating output values at the current node.
+    def recounter_kernel_func(node):
+        nb_receivers = 0
+        nb_donors = 0
+
+        for i in range(node.receivers.count):
+            nb_receivers += node.receivers.one[i]
+        for i in range(node.donors.count):
+            nb_donors += node.donors.one[i]
+
+        node.rec_count = nb_receivers
+        node.don_count = nb_donors
+
+    kernel, data = create_flow_kernel(
+        flow_graph,
+        recounter_kernel_func,
+        spec=dict(
+            one=nb.int64[::1],
+            rec_count=nb.int64[::1],
+            don_count=nb.int64[::1],
+        ),
+        outputs=["rec_count", "don_count"],
+        # FIXME: output values not updated with auto_resize=True (dynamic resizing)
+        auto_resize=False,
+        n_threads=1,
+        apply_dir=FlowGraphTraversalDir.ANY,
+    )
+
+    elevation = np.random.uniform(size=grid.shape)
+    flow_graph.update_routes(elevation)
+
+    one = np.ones(grid.size, dtype=np.int64)
+    rec_count = np.zeros(grid.size, dtype=np.int64)
+    don_count = np.zeros(grid.size, dtype=np.int64)
+    data.bind(one=one, rec_count=rec_count, don_count=don_count)
+    flow_graph.apply_kernel(kernel, data)
+
+    np.testing.assert_array_equal(rec_count, flow_graph.impl().receivers_count)
+    np.testing.assert_array_equal(don_count, flow_graph.impl().donors_count)
+
+
+def test_simple_recounter_flow_kernel2(grid, flow_graph):
+    # recount flow receivers and donors at each node in a
+    # flow kernel function by directly updating output values at
+    # the receivers and donors of the current node.
+    def recounter_kernel_func2(node):
+        for i in range(node.donors.count):
+            node.donors.rec_count[i] += 1
+
+        if node.receivers.count == 1 and node.receivers.distance[0] == 0.0:
+            # base level node
+            node.rec_count = 1
+        else:
+            for i in range(node.receivers.count):
+                node.receivers.don_count[i] += 1
+
+    kernel, data = create_flow_kernel(
+        flow_graph,
+        recounter_kernel_func2,
+        spec=dict(
+            rec_count=nb.int64[::1],
+            don_count=nb.int64[::1],
+        ),
+        outputs=["rec_count", "don_count"],
+        # FIXME: output values not updated with auto_resize=True (dynamic resizing)
+        auto_resize=False,
+        n_threads=1,
+        apply_dir=FlowGraphTraversalDir.ANY,
+    )
+
+    elevation = np.random.uniform(size=grid.shape)
+    flow_graph.update_routes(elevation)
+
+    rec_count = np.zeros(grid.size, dtype=np.int64)
+    don_count = np.zeros(grid.size, dtype=np.int64)
+    data.bind(rec_count=rec_count, don_count=don_count)
+    flow_graph.apply_kernel(kernel, data)
+
+    np.testing.assert_array_equal(rec_count, flow_graph.impl().receivers_count)
+    np.testing.assert_array_equal(don_count, flow_graph.impl().donors_count)
+
+
 @pytest.mark.parametrize(
     "apply_dir",
     [FlowGraphTraversalDir.DEPTH_DOWNSTREAM, FlowGraphTraversalDir.BREADTH_DOWNSTREAM],
@@ -406,6 +503,7 @@ def test_simple_accumulate_flow_kernel(grid, flow_graph, apply_dir):
     def accumulate_kernel_func(node):
         r_count = node.receivers.count
         if r_count == 1 and node.receivers.distance[0] == 0.0:
+            # base level node
             return
         for r in range(r_count):
             irec_weight = node.receivers.weight[r]
@@ -445,7 +543,9 @@ def test_simple_accumulate_flow_kernel(grid, flow_graph, apply_dir):
         ("donor", False),
     ],
 )
-def test_data_access_at_receivers(flow_graph, receiver_or_donor, data_access):
+def test_data_access_at_receivers_and_donors(
+    flow_graph, receiver_or_donor, data_access
+):
     def kernel_func(_): ...
 
     kernel, _ = create_flow_kernel(

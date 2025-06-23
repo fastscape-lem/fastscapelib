@@ -68,6 +68,8 @@ def create_flow_kernel(
         are copied back to the kernel data after calling the kernel function).
         You can set it to False if this is not needed, it may speed-up the application
         of the kernel.
+        Note: when the kernel function is evaluated at a base level node, any value set
+        via ``.receivers`` within the function won't be copied in the output variable.
     get_data_at_donors : bool, optional
         Same than ``get_data_at_receivers`` but for the node ``.donors``.
     set_data_at_donors : bool, optional
