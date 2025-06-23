@@ -380,35 +380,6 @@ class TestFlowKernel:
         kernel3.node_data_init(node_data, kernel3_data.jitclass_obj)
         assert node_data.a == 1.0
 
-    def test_max_receivers(self, flow_graph, kernel1, kernel1_data, kernel_func1):
-        rng = np.random.Generator(np.random.PCG64(1234))
-        init_elevation = rng.uniform(0, 5, size=flow_graph.grid_shape)
-
-        flow_graph.update_routes(init_elevation)
-        assert np.any(flow_graph.impl().receivers_count > 1)
-
-        kernel1_data.bind(a=np.ones(flow_graph.size, dtype=np.float64))
-        flow_graph.apply_kernel(kernel1, kernel1_data)
-
-        node_data = kernel1.node_data_create()
-        for i in range(flow_graph.size):
-            kernel1.node_data_getter(i, kernel1_data.jitclass_obj, node_data)
-            assert node_data.receivers.count == flow_graph.impl().receivers_count[i]
-
-        kernel, data = create_flow_kernel(
-            flow_graph,
-            kernel_func1,
-            spec=dict(
-                a=nb.float64[::1],
-            ),
-            outputs=["a"],
-            apply_dir=FlowGraphTraversalDir.ANY,
-            max_receivers=1,
-        )
-        data.bind(a=np.ones(flow_graph.size, dtype=np.float64))
-        with pytest.raises(ValueError):
-            flow_graph.apply_kernel(kernel, data)
-
 
 @pytest.mark.parametrize(
     "apply_dir",
@@ -430,8 +401,8 @@ def test_simple_accumulate_flow_kernel(grid, flow_graph, apply_dir):
             drainage_area=nb.float64[::1],
         ),
         outputs=["drainage_area"],
-        # FIXME: output values not updated with max_receivers=-1 (dynamic resizing)
-        max_receivers=grid.n_neighbors_max,
+        # FIXME: output values not updated with auto_resize=True (dynamic resizing)
+        auto_resize=False,
         n_threads=1,
         apply_dir=apply_dir,
     )
@@ -486,17 +457,3 @@ def test_data_access_at_receivers(flow_graph, data_access):
         assert line_content in kernel.generated_code["node_data_setter"]
     else:
         assert line_content not in kernel.generated_code["node_data_setter"]
-
-
-def test_invalid_max_receivers(flow_graph):
-    def kernel_func(_):
-        pass
-
-    with pytest.raises(ValueError, match="max_receivers must be either"):
-        create_flow_kernel(
-            flow_graph,
-            kernel_func,
-            spec=dict(a=nb.float64[::1]),
-            outputs=["a"],
-            max_receivers=0,
-        )

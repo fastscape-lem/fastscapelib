@@ -26,6 +26,7 @@ def create_flow_kernel(
     get_data_at_receivers: bool = True,
     set_data_at_receivers: bool = True,
     max_receivers: int | None = None,
+    auto_resize: bool = False,
     print_stats: bool = False,
 ) -> tuple[NumbaFlowKernel, NumbaFlowKernelData]:
     """Creates a numba flow kernel.
@@ -66,11 +67,10 @@ def create_flow_kernel(
         are copied back to the kernel data after calling the kernel function).
         You can set it to False if this is not needed, it may speed-up the application
         of the kernel.
-    max_receivers : int, optional
-        Maximum number of flow receiver nodes per graph node. Setting this number
-        to 1 may speed up the application of the kernel function along the graph.
-        Setting this number to None (default) will dynamically resize the temporary
-        containers used to store data at flow receiver nodes and is generally safer.
+    auto_resize: bool, optional
+        If True, dynamically resize the temporary containers used to store data at flow
+        receivers and donors. Otherwise (default), set fixed sizes according to the
+        flow graph properties. Default settings are generally recommended.
     print_stats : bool
         If True, prints a small report on kernel creation performance
         (default: False).
@@ -94,7 +94,7 @@ def create_flow_kernel(
         n_threads=n_threads,
         get_data_at_receivers=get_data_at_receivers,
         set_data_at_receivers=set_data_at_receivers,
-        max_receivers=max_receivers,
+        auto_resize=auto_resize,
         print_stats=print_stats,
     )
     return factory.kernel, factory.data

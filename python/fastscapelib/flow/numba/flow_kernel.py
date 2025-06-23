@@ -269,6 +269,7 @@ class NumbaFlowKernelFactory:
         get_data_at_receivers: bool = True,
         set_data_at_receivers: bool = True,
         max_receivers: int | None = None,
+        auto_resize: bool = False,
         print_stats: bool = False,
     ):
         if not outputs:
@@ -279,10 +280,13 @@ class NumbaFlowKernelFactory:
                 f"some output variables are not defined in spec: {invalid_outputs}"
             )
 
-        if max_receivers is not None and max_receivers < 1:
-            raise ValueError(
-                f"max_receivers must be either None or a positive integer, got {max_receivers}"
-            )
+        if auto_resize:
+            max_receivers = None
+        else:
+            if flow_graph.single_flow:
+                max_receivers = 1
+            else:
+                max_receivers = flow_graph.impl().receivers.shape[1]
 
         with timer("flow kernel init", print_stats):
             self._flow_graph = flow_graph
