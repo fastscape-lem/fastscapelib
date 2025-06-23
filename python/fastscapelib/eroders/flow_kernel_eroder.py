@@ -58,16 +58,13 @@ class FlowKernelEroder(metaclass=FlowKernelEroderMeta):
     _kernel: NumbaFlowKernel
     _kernel_data: NumbaFlowKernelData
 
-    def __init__(
-        self, flow_graph: FlowGraph, max_receivers: int = 1, n_threads: int = 1
-    ):
+    def __init__(self, flow_graph: FlowGraph, n_threads: int = 1):
         self._flow_graph = flow_graph
         self._kernel, self._kernel_data = create_flow_kernel(
             flow_graph,
             self.eroder_kernel,
             spec=self.spec,
             outputs=self.outputs,
-            max_receivers=max_receivers,
             n_threads=n_threads,
             apply_dir=self.apply_dir,
         )
