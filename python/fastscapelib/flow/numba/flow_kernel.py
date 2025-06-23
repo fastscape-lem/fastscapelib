@@ -213,7 +213,11 @@ class NumbaFlowKernelData(Mapping):
 
 @dataclass
 class NumbaFlowKernel:
-    """Stores a numba flow kernel."""
+    """Stores a numba flow kernel.
+
+    TODO: add an Attributes section.
+
+    """
 
     kernel: _FlowKernel
     node_data_create: KernelNodeDataCreate
@@ -252,6 +256,14 @@ class NumbaFlowKernelFactory:
         n_threads: int = 1,
         print_stats: bool = False,
     ):
+        if not outputs:
+            raise ValueError("no output variable set for the flow kernel")
+
+        if invalid_outputs := set(outputs) - set(spec):
+            raise ValueError(
+                f"some output variables are not defined in spec: {invalid_outputs}"
+            )
+
         with timer("flow kernel init", print_stats):
             self._flow_graph = flow_graph
             self._py_flow_kernel = kernel_func

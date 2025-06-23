@@ -43,7 +43,7 @@ def kernel_func2():
 
 @pytest.fixture(scope="module")
 def compiled_kernel1(kernel_func1, flow_graph):
-    kernel = create_flow_kernel(
+    kernel, data = create_flow_kernel(
         flow_graph,
         kernel_func1,
         spec=dict(
@@ -52,7 +52,7 @@ def compiled_kernel1(kernel_func1, flow_graph):
         outputs=["a"],
         apply_dir=FlowGraphTraversalDir.ANY,
     )
-    yield kernel
+    yield kernel, data
 
 
 @pytest.fixture(scope="function")
@@ -110,7 +110,9 @@ def compiled_kernel3(kernel_func2, flow_graph):
         kernel_func2,
         spec=dict(
             a=nb.float64,
+            b=nb.float64[::1],
         ),
+        outputs=["b"],
         apply_dir=FlowGraphTraversalDir.ANY,
     )
     yield kernel, data
@@ -251,8 +253,8 @@ class TestFlowKernelData:
 
 
 class TestFlowKernel:
-    def test_input_assignment(self, flow_graph, kernel_func1):
-        with pytest.raises(AttributeError):
+    def test_no_output_error(self, flow_graph, kernel_func1):
+        with pytest.raises(ValueError, match="no output variable"):
             create_flow_kernel(
                 flow_graph,
                 kernel_func1,
@@ -272,7 +274,7 @@ class TestFlowKernel:
             data.a, np.ones(flow_graph.size, dtype=np.float64) * 10.0
         )
 
-    def test_scalar_output(self, flow_graph, kernel_func1):
+    def test_scalar_output_error(self, flow_graph, kernel_func1):
         with pytest.raises(TypeError):
             create_flow_kernel(
                 flow_graph,
@@ -284,8 +286,8 @@ class TestFlowKernel:
                 apply_dir=FlowGraphTraversalDir.ANY,
             )
 
-    def test_invalid_output(self, flow_graph, kernel_func1):
-        with pytest.raises(KeyError):
+    def test_output_not_in_spec_error(self, flow_graph, kernel_func1):
+        with pytest.raises(ValueError, match=".*output variables.*not defined in spec"):
             create_flow_kernel(
                 flow_graph,
                 kernel_func1,

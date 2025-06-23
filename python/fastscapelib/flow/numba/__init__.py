@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Iterable
 
+from _fastscapelib_py.flow import FlowGraphTraversalDir
+
 if TYPE_CHECKING:
     import numba as nb
 
@@ -16,9 +18,9 @@ if TYPE_CHECKING:
 def create_flow_kernel(
     flow_graph: FlowGraph,
     kernel_func: Callable[[NumbaJittedClass | Any], int | None],
-    *,
     spec: dict[str, nb.types.Type | tuple[nb.types.Type, Any]],
-    apply_dir: FlowGraphTraversalDir,
+    *,
+    apply_dir: FlowGraphTraversalDir = FlowGraphTraversalDir.DEPTH_UPSTREAM,
     outputs: Iterable[str] = (),
     max_receivers: int = -1,
     n_threads: int = 1,
@@ -38,10 +40,10 @@ def create_flow_kernel(
         Dictionary where keys are kernel input and output variable names and
         values are either variable types (i.e. numba scalar or array types) or
         variable (type, value) tuples (only for scalar variables).
-    apply_dir : :py:class:`~fastscapelib.FlowGraphTraversalDir.`
+    apply_dir : :py:class:`~fastscapelib.FlowGraphTraversalDir`, optional
         The direction and order in which the flow kernel will be applied along
-        the graph.
-    outputs : iterable
+        the graph (default: downstream to upstream, depth-first search).
+    outputs : iterable, optional
         The names of the kernel output variables. All names given here must be
         also present in ``spec``.
     max_receivers : int
