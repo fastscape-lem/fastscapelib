@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Iterable
 
-from _fastscapelib_py.flow import FlowGraphTraversalDir
+from _fastscapelib_py.flow import FlowGraphTraversalDir  # type: ignore[import]
 
 if TYPE_CHECKING:
     import numba as nb
