@@ -250,10 +250,13 @@ class NumbaFlowKernelFactory:
         flow_graph: FlowGraph,
         kernel_func: Callable[["NumbaJittedClass" | Any], int | None],
         spec: dict[str, nb.types.Type | tuple[nb.types.Type, Any]],
-        apply_dir: FlowGraphTraversalDir,
+        *,
+        apply_dir: FlowGraphTraversalDir = FlowGraphTraversalDir.DEPTH_UPSTREAM,
         outputs: Iterable[str] = tuple(),
-        max_receivers: int = -1,
         n_threads: int = 1,
+        get_data_at_receivers: bool = True,
+        set_data_at_receivers: bool = True,
+        max_receivers: int = -1,
         print_stats: bool = False,
     ):
         if not outputs:
@@ -268,6 +271,8 @@ class NumbaFlowKernelFactory:
             self._flow_graph = flow_graph
             self._py_flow_kernel = kernel_func
             self._outputs = outputs
+            self._get_data_at_receivers = get_data_at_receivers
+            self._set_data_at_receivers = set_data_at_receivers
             self._max_receivers = max_receivers
             self._spec = spec
             self._print_stats = print_stats
@@ -818,22 +823,24 @@ class NumbaFlowKernelFactory:
         been tested but generates very poor performances (not understood in details)
         """
 
-        receivers_grid_data_ty = self._grid_data_ty.copy()
-        receivers_grid_data_ty.update(
-            {"distance": nb.float64[::1], "weight": nb.float64[::1]}
-        )
-
-        data_dtypes: dict[nb.types.Type, list[str]] = defaultdict(list)
-        for name, value in receivers_grid_data_ty.items():
-            data_dtypes[value.dtype].append(name)
-
         node_content = "\n".join(
             [f"node_data.{name} = data.{name}[index]" for name in self._grid_data_ty]
         )
 
+        receivers_grid_data_ty = {
+            "distance": nb.float64[::1],
+            "weight": nb.float64[::1],
+        }
+        if self._get_data_at_receivers:
+            receivers_grid_data_ty.update(self._grid_data_ty.copy())
+
+        receivers_data_dtypes: dict[nb.types.Type, list[str]] = defaultdict(list)
+        for name, value in receivers_grid_data_ty.items():
+            receivers_data_dtypes[value.dtype].append(name)
+
         receivers_view_data = [
             f",\n".join([f"(receivers.{name}, receivers._{name})" for name in names])
-            for names in data_dtypes.values()
+            for names in receivers_data_dtypes.values()
         ]
 
         receivers_resize_source = "\n".join(
@@ -842,12 +849,16 @@ class NumbaFlowKernelFactory:
                 for name, value in receivers_grid_data_ty.items()
             ]
         )
-        receivers_set_content = "\n".join(
-            [
-                f"receivers._{name}[i] = data.{name}[receiver_idx]"
-                for name in self._grid_data_ty
-            ]
-        )
+
+        if self._get_data_at_receivers:
+            receivers_set_content = "\n".join(
+                [
+                    f"receivers._{name}[i] = data.{name}[receiver_idx]"
+                    for name in self._grid_data_ty
+                ]
+            )
+        else:
+            receivers_set_content = ""
 
         if max_receivers > 0:
             resize_tmpl = self._node_data_getter_fixed_resize_tmpl
@@ -923,13 +934,16 @@ class NumbaFlowKernelFactory:
             ]
         )
 
-        receivers_content = "\n".join(
-            [
-                f"data.{name}[receiver_idx] = receivers.{name}[i]"
-                for name in self._grid_data_ty
-                if name in self._outputs
-            ]
-        )
+        if self._set_data_at_receivers:
+            receivers_content = "\n".join(
+                [
+                    f"data.{name}[receiver_idx] = receivers.{name}[i]"
+                    for name in self._grid_data_ty
+                    if name in self._outputs
+                ]
+            )
+        else:
+            receivers_content = ""
 
         setter_source = self.node_data_setter_tmpl.format(
             node_content=indent(node_content, self._indent4),
