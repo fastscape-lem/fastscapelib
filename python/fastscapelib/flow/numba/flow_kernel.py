@@ -106,7 +106,15 @@ def timer(msg: str, do_print: bool) -> Iterator[None]:
 
 
 class NumbaFlowKernelData(Mapping):
-    """Proxy mapping for access to numba flow kernel data.
+    """Proxy mapping representing the (numba) flow kernel data.
+
+    Flow kernel data is an intermediate structure that allows accessing any
+    external data (either scalar values or values defined on each node of a
+    :py:class:`~fastscapelib.flow.FlowGraph`) from within the kernel function.
+
+    It is returned by :py:func:`~fastscapelib.flow.create_flow_kernel` and
+    required by :py:meth:`~fastscapelib.FlowGraph.apply_kernel` alongside the
+    :py:class:`~fastscapelib.flow.NumbaFlowKernel` object.
 
     This class implements the immutable mapping interface but still allows
     setting or updating kernel data exclusively via the ``.bind()`` method (with
@@ -213,7 +221,11 @@ class NumbaFlowKernelData(Mapping):
 
 @dataclass
 class NumbaFlowKernel:
-    """Stores a numba flow kernel.
+    """Proxy object representing a numba-compiled flow kernel function.
+
+    It is returned by :py:func:`~fastscapelib.flow.create_flow_kernel` and
+    required by :py:meth:`~fastscapelib.FlowGraph.apply_kernel` alongside the
+    :py:class:`~fastscapelib.flow.NumbaFlowKernelData` mapping object.
 
     TODO: add an Attributes section.
 
