@@ -13,24 +13,25 @@ from fastscapelib.grid import NodeStatus, RasterGrid
 nb = pytest.importorskip("numba")
 
 
+class BasicEroder(FlowKernelEroder):
+    @staticmethod
+    def param_spec():
+        return dict()
+
+    @staticmethod
+    def input_spec():
+        return dict(a=nb.float64, dt=nb.float64)
+
+    @staticmethod
+    def kernel_apply_dir():
+        return FlowGraphTraversalDir.ANY
+
+    @staticmethod
+    def kernel_func(node):
+        node.erosion = node.a * node.dt
+
+
 def test_flow_kernel_eroder_basic() -> None:
-    class BasicEroder(FlowKernelEroder):
-        @staticmethod
-        def param_spec():
-            return dict()
-
-        @staticmethod
-        def input_spec():
-            return dict(a=nb.float64, dt=nb.float64)
-
-        @staticmethod
-        def kernel_apply_dir():
-            return FlowGraphTraversalDir.ANY
-
-        @staticmethod
-        def kernel_func(node):
-            node.erosion = node.a * node.dt
-
     grid = RasterGrid([10, 10], [300.0, 300.0], NodeStatus.FIXED_VALUE)
     flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
@@ -47,24 +48,25 @@ def test_flow_kernel_eroder_basic() -> None:
         eroder.erode(a=3.0, dt=2.0, not_an_input=0)
 
 
+class InvalidEroder(FlowKernelEroder):
+    @staticmethod
+    def param_spec():
+        return {}
+
+    @staticmethod
+    def input_spec():
+        return {}
+
+    @staticmethod
+    def kernel_apply_dir():
+        return FlowGraphTraversalDir.ANY
+
+    @staticmethod
+    def kernel_func(a, b):
+        pass
+
+
 def test_flow_kernel_eroder_invalid_kernel_func() -> None:
-    class InvalidEroder(FlowKernelEroder):
-        @staticmethod
-        def param_spec():
-            return {}
-
-        @staticmethod
-        def input_spec():
-            return {}
-
-        @staticmethod
-        def kernel_apply_dir():
-            return FlowGraphTraversalDir.ANY
-
-        @staticmethod
-        def kernel_func(a, b):
-            pass
-
     grid = RasterGrid([10, 10], [300.0, 300.0], NodeStatus.FIXED_VALUE)
     flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
@@ -161,7 +163,9 @@ class SPLFlowKernelEroder(FlowKernelEroder):
     def erode(
         self, elevation: np.ndarray, drainage_area: np.ndarray, dt: float
     ) -> np.ndarray:
-        return super().erode(elevation=elevation, drainage_area=drainage_area, dt=dt)
+        return super().erode(
+            elevation=elevation.ravel(), drainage_area=drainage_area.ravel(), dt=dt
+        )
 
 
 def test_spl_eroder_vs_kernel_eroder() -> None:
