@@ -123,7 +123,12 @@ class FlowKernelEroder(abc.ABC):
         self._kernel_data.erosion.fill(0.0)
         self._kernel_data.bind(**kwargs)
 
-        # self._flow_graph.apply_kernel(self._kernel, self._kernel_data)
+        print(f"elevation: {self._kernel_data.get('elevation')}")
+        print(f"drainage_area: {self._kernel_data.get('drainage_area')}")
+        print(f"dt: {self._kernel_data.get('dt')}")
+        raise ValueError
+
+        self._flow_graph.apply_kernel(self._kernel, self._kernel_data)
 
         return self._kernel_data.erosion.reshape(self._flow_graph.grid_shape)
 
