@@ -172,8 +172,8 @@ def test_spl_eroder_vs_kernel_eroder() -> None:
     grid = RasterGrid([10, 10], [300.0, 300.0], NodeStatus.FIXED_VALUE)
     flow_graph = FlowGraph(grid, [SingleFlowRouter()])
 
-    eroder = SPLEroder(flow_graph, 1e-3, 0.4, 1, 1e-5)
-    flow_kernel_eroder = SPLFlowKernelEroder(flow_graph, 1e-3, 0.4, 1, 1e-5)
+    eroder = SPLEroder(flow_graph, 1e-7, 0.4, 1, 1e-5)
+    flow_kernel_eroder = SPLFlowKernelEroder(flow_graph, 1e-7, 0.4, 1, 1e-5)
 
     rng = np.random.Generator(np.random.PCG64(1234))
     init_elevation = rng.uniform(0, 5, size=grid.shape)
@@ -190,11 +190,11 @@ def test_spl_eroder_vs_kernel_eroder() -> None:
         flow_graph.update_routes(uplifted_elevation)
         flow_graph.accumulate(drainage_area, 1.0)
 
-        # flow_kernel_spl_erosion = flow_kernel_eroder.erode(
-        #     uplifted_elevation, drainage_area, dt
-        # )
+        flow_kernel_spl_erosion = flow_kernel_eroder.erode(
+            uplifted_elevation, drainage_area, dt
+        )
         spl_erosion = eroder.erode(uplifted_elevation, drainage_area, dt)
 
-        # np.testing.assert_allclose(spl_erosion, flow_kernel_spl_erosion)
+        np.testing.assert_allclose(spl_erosion, flow_kernel_spl_erosion)
 
         elevation = uplifted_elevation - spl_erosion
