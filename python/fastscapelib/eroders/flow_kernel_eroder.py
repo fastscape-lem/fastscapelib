@@ -85,7 +85,7 @@ class FlowKernelEroder(abc.ABC):
         )
 
         self._erosion = np.zeros(flow_graph.grid_shape)
-        self._kernel_data.bind(erosion=self._erosion)
+        self._kernel_data.bind(erosion=self._erosion.ravel())
 
     @staticmethod
     @abc.abstractmethod
