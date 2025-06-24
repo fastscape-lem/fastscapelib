@@ -70,12 +70,14 @@ class FlowKernelEroder(abc.ABC):
                 "static method 'kernel_func' must take a single argument (the kernel node data)"
             )
 
+        spec = dict(erosion=nb.float64[::1])
+        spec.update(self.input_spec())
+        spec.update(self.param_spec())
+
         self._kernel, self._kernel_data = create_flow_kernel(
             flow_graph,
-            type(self).kernel_func,
-            spec=type(self).param_spec()
-            | type(self).input_spec()
-            | {"erosion": nb.float64[::1]},
+            self.kernel_func,
+            spec=spec,
             outputs=["erosion"],
             n_threads=n_threads,
             apply_dir=self.kernel_apply_dir(),

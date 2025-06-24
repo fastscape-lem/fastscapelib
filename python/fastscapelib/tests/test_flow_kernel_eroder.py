@@ -13,6 +13,65 @@ from fastscapelib.grid import NodeStatus, RasterGrid
 nb = pytest.importorskip("numba")
 
 
+def test_flow_kernel_eroder_basic() -> None:
+    class BasicEroder(FlowKernelEroder):
+        @staticmethod
+        def param_spec():
+            return dict()
+
+        @staticmethod
+        def input_spec():
+            return dict(a=nb.float64, dt=nb.float64)
+
+        @staticmethod
+        def kernel_apply_dir():
+            return FlowGraphTraversalDir.ANY
+
+        @staticmethod
+        def kernel_func(node):
+            node.erosion = node.a * node.dt
+
+    grid = RasterGrid([10, 10], [300.0, 300.0], NodeStatus.FIXED_VALUE)
+    flow_graph = FlowGraph(grid, [SingleFlowRouter()])
+
+    eroder = BasicEroder(flow_graph)
+
+    actual = eroder.erode(a=3.0, dt=2.0)
+    expected = np.ones(grid.shape) * 3 * 2
+    np.testing.assert_array_equal(actual, expected)
+
+    with pytest.raises(KeyError, match="inputs are missing"):
+        eroder.erode(a=3.0)
+
+    with pytest.raises(ValueError, match="invalid inputs"):
+        eroder.erode(a=3.0, dt=2.0, not_an_input=0)
+
+
+def test_flow_kernel_eroder_invalid_kernel_func() -> None:
+    class InvalidEroder(FlowKernelEroder):
+        @staticmethod
+        def param_spec():
+            return {}
+
+        @staticmethod
+        def input_spec():
+            return {}
+
+        @staticmethod
+        def kernel_apply_dir():
+            return FlowGraphTraversalDir.ANY
+
+        @staticmethod
+        def kernel_func(a, b):
+            pass
+
+    grid = RasterGrid([10, 10], [300.0, 300.0], NodeStatus.FIXED_VALUE)
+    flow_graph = FlowGraph(grid, [SingleFlowRouter()])
+
+    with pytest.raises(TypeError, match="static method.*single argument"):
+        InvalidEroder(flow_graph)
+
+
 class SPLFlowKernelEroder(FlowKernelEroder):
     """Stream-Power Law implemented as a flow kernel eroder."""
 
@@ -136,62 +195,3 @@ def test_spl_eroder_vs_kernel_eroder() -> None:
         np.testing.assert_allclose(spl_erosion, flow_kernel_spl_erosion)
 
         elevation = uplifted_elevation - spl_erosion
-
-
-def test_flow_kernel_eroder_invalid_kernel_func() -> None:
-    class Eroder(FlowKernelEroder):
-        @staticmethod
-        def param_spec():
-            return {}
-
-        @staticmethod
-        def input_spec():
-            return {}
-
-        @staticmethod
-        def kernel_apply_dir():
-            return FlowGraphTraversalDir.ANY
-
-        @staticmethod
-        def kernel_func(a, b):
-            pass
-
-    grid = RasterGrid([10, 10], [300.0, 300.0], NodeStatus.FIXED_VALUE)
-    flow_graph = FlowGraph(grid, [SingleFlowRouter()])
-
-    with pytest.raises(TypeError, match="static method.*single argument"):
-        Eroder(flow_graph)
-
-
-def test_flow_kernel_eroder_basic() -> None:
-    class Eroder(FlowKernelEroder):
-        @staticmethod
-        def param_spec():
-            return {}
-
-        @staticmethod
-        def input_spec():
-            return {"a": nb.float64, "dt": nb.float64}
-
-        @staticmethod
-        def kernel_apply_dir():
-            return FlowGraphTraversalDir.ANY
-
-        @staticmethod
-        def kernel_func(node):
-            node.erosion = node.a * node.dt
-
-    grid = RasterGrid([10, 10], [300.0, 300.0], NodeStatus.FIXED_VALUE)
-    flow_graph = FlowGraph(grid, [SingleFlowRouter()])
-
-    eroder = Eroder(flow_graph)
-
-    actual = eroder.erode(a=3, dt=2)
-    expected = np.ones(grid.shape) * 3 * 2
-    np.testing.assert_array_equal(actual, expected)
-
-    with pytest.raises(KeyError, match="inputs are missing"):
-        eroder.erode(a=3)
-
-    with pytest.raises(ValueError, match="invalid inputs"):
-        eroder.erode(a=3, dt=2, not_an_input=0)
