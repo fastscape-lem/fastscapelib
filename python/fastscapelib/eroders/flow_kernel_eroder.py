@@ -123,9 +123,14 @@ class FlowKernelEroder(abc.ABC):
         self._kernel_data.erosion.fill(0.0)
         self._kernel_data.bind(**kwargs)
 
+        print(f"erosion: {self._kernel_data.get('erosion')}")
         print(f"elevation: {self._kernel_data.get('elevation')}")
         print(f"drainage_area: {self._kernel_data.get('drainage_area')}")
         print(f"dt: {self._kernel_data.get('dt')}")
+        print(f"k_coef: {self._kernel_data.get('k_coef')}")
+        print(f"area_exp: {self._kernel_data.get('area_exp')}")
+        print(f"slope_exp: {self._kernel_data.get('slope_exp')}")
+        print(f"tolerance: {self._kernel_data.get('tolerance')}")
         raise ValueError
 
         self._flow_graph.apply_kernel(self._kernel, self._kernel_data)
