@@ -110,7 +110,7 @@ class SPLFlowKernelEroder(FlowKernelEroder):
 
     @staticmethod
     def kernel_apply_dir() -> FlowGraphTraversalDir:
-        return FlowGraphTraversalDir.BREADTH_UPSTREAM
+        return FlowGraphTraversalDir.DEPTH_UPSTREAM
 
     @staticmethod
     def kernel_func(node: Any):
