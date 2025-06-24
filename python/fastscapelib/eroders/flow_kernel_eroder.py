@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     )
 
 
-class FlowKernelEroder(abc.ABC):
+class FlowKernelEroder:
     """Abstract flow kernel eroder class.
 
     This helper abstract class is for implementing a custom eroder based on a
@@ -88,25 +88,25 @@ class FlowKernelEroder(abc.ABC):
         self._kernel_data.bind(erosion=self._erosion)
 
     @staticmethod
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def param_spec() -> dict[str, nb.types.Type | tuple[nb.types.Type, Any]]:
         """Returns a dictionary with parameter names and their (numba) value type."""
         ...
 
     @staticmethod
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def input_spec() -> dict[str, nb.types.Type | tuple[nb.types.Type, Any]]:
         """Returns a dictionary with input variable names and their (numba) value type."""
         ...
 
     @staticmethod
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def kernel_apply_dir() -> FlowGraphTraversalDir:
         """Returns the kernel application direction and order."""
         ...
 
     @staticmethod
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def kernel_func(node: NumbaJittedClass) -> int | None:
         """The eroder flow kernel function."""
         ...
