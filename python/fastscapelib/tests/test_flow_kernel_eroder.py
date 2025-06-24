@@ -114,52 +114,51 @@ class SPLFlowKernelEroder(FlowKernelEroder):
 
     @staticmethod
     def kernel_func(node: Any):
-        # r_count = node.receivers.count
-        # if r_count == 1 and node.receivers.distance[0] == 0.0:
-        #     return
+        r_count = node.receivers.count
+        if r_count == 1 and node.receivers.distance[0] == 0.0:
+            return
 
-        # elevation_flooded = np.finfo(np.double).max
+        elevation_flooded = np.finfo(np.double).max
 
-        # for r in range(r_count):
-        #     irec_elevation_next = (
-        #         node.receivers.elevation[r] - node.receivers.erosion[r]
-        #     )
+        for r in range(r_count):
+            irec_elevation_next = (
+                node.receivers.elevation[r] - node.receivers.erosion[r]
+            )
 
-        #     if irec_elevation_next < elevation_flooded:
-        #         elevation_flooded = irec_elevation_next
+            if irec_elevation_next < elevation_flooded:
+                elevation_flooded = irec_elevation_next
 
-        # if node.elevation <= elevation_flooded:
-        #     return
+        if node.elevation <= elevation_flooded:
+            return
 
-        # eq_num = node.elevation
-        # eq_den = 1.0
+        eq_num = node.elevation
+        eq_den = 1.0
 
-        # for r in range(r_count):
-        #     irec_elevation = node.receivers.elevation[r]
-        #     irec_elevation_next = irec_elevation - node.receivers.erosion[r]
+        for r in range(r_count):
+            irec_elevation = node.receivers.elevation[r]
+            irec_elevation_next = irec_elevation - node.receivers.erosion[r]
 
-        #     if irec_elevation > node.elevation:
-        #         continue
+            if irec_elevation > node.elevation:
+                continue
 
-        #     irec_weight = node.receivers.weight[r]
-        #     irec_distance = node.receivers.distance[r]
+            irec_weight = node.receivers.weight[r]
+            irec_distance = node.receivers.distance[r]
 
-        #     factor = (
-        #         node.k_coef
-        #         * node.dt
-        #         * np.power(node.drainage_area * irec_weight, node.area_exp)
-        #     )
-        #     factor /= irec_distance
-        #     eq_num += factor * irec_elevation_next
-        #     eq_den += factor
+            factor = (
+                node.k_coef
+                * node.dt
+                * np.power(node.drainage_area * irec_weight, node.area_exp)
+            )
+            factor /= irec_distance
+            eq_num += factor * irec_elevation_next
+            eq_den += factor
 
-        # elevation_updated = eq_num / eq_den
+        elevation_updated = eq_num / eq_den
 
-        # if elevation_updated < elevation_flooded:
-        #     elevation_updated = elevation_flooded + np.finfo(np.double).tiny
+        if elevation_updated < elevation_flooded:
+            elevation_updated = elevation_flooded + np.finfo(np.double).tiny
 
-        # node.erosion = node.elevation - elevation_updated
-        pass
+        node.erosion = node.elevation - elevation_updated
 
     def erode(
         self, elevation: np.ndarray, drainage_area: np.ndarray, dt: float

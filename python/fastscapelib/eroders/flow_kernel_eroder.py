@@ -121,7 +121,7 @@ class FlowKernelEroder(abc.ABC):
             raise ValueError(f"invalid inputs: {invalid_inputs}")
 
         self._kernel_data.erosion.fill(0.0)
-        self._kernel_data.bind(**kwargs)
+        # self._kernel_data.bind(**kwargs)
 
         self._flow_graph.apply_kernel(self._kernel, self._kernel_data)
 
