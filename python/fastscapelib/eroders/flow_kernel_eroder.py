@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import abc
 import inspect
 from typing import TYPE_CHECKING, Any
+
+import numpy as np
 
 from fastscapelib.flow import FlowGraph, FlowGraphTraversalDir
 from fastscapelib.flow.numba import create_flow_kernel
@@ -16,101 +19,121 @@ if TYPE_CHECKING:
     )
 
 
-class FlowKernelEroderMeta(type):
-    @classmethod
-    def check_errs(cls, dct):
-        errs = []
-        missing_members = {"spec", "outputs", "apply_dir"}.difference(set(dct.keys()))
-        if missing_members:
-            errs.append(f"Missing mandatory class members {missing_members}")
+class FlowKernelEroder(abc.ABC):
+    """Abstract flow kernel eroder class.
 
-        if "eroder_kernel" not in dct:
-            errs.append(f" Missing mandatory class method 'eroder_kernel'")
-        elif not isinstance(dct["eroder_kernel"], staticmethod):
-            errs.append(
-                "Method 'eroder_kernel' must be static (add the '@staticmethod' decorator)"
-            )
-        else:
-            kernel_sig = inspect.signature(dct["eroder_kernel"])
-            if len(kernel_sig.parameters) != 1:
-                errs.append(
-                    "Method 'eroder_kernel' must take a single argument (the node data)"
-                )
+    This helper abstract class is for implementing a custom eroder based on a
+    Numba flow kernel. It has the following abstract methods that must be
+    implemented in subclasses:
 
-        return errs
+    - ``kernel_func`` is the kernel function
+      (see also :py:func:`~fastscapelib.flow.create_flow_kernel`)
+    - ``param_spec`` and ``input_spec`` should return the names and types of the
+      eroder parameters and inputs, respectively.
+    - ``kernel_apply_dir`` should return the direction / order in which the kernel
+      function is applied on the flow graph.
 
-    def __new__(cls, name, bases, dct):
-        if bases:
-            errs = cls.check_errs(dct)
-            if errs:
-                err_msg = "\n  - ".join(errs)
-                raise TypeError(f"Can't instantiate class {name}:\n  - {err_msg}")
+    This class provides one pre-defined "erosion" output variable for the flow
+    kernel function. It also provides the same API than other eroder classes in
+    Fastscapelib, i.e., an ``erode`` method that takes input variable values as
+    arguments and that returns the amount erosion computed for one time step.
 
-        instance = super().__new__(cls, name, bases, dct)
-        return instance
+    Eroder parameter values should be passed as arguments of the subclass'
+    ``__init__`` method, in addition to the parameters below. Those parameters
+    may also be exposed as properties of the eroder subclass.
 
+    Parameters
+    ----------
+    flow_graph : :py:class:`~fastscapelib.flow.FlowGraph`
+        Flow graph instance.
+    n_threads : int, optional
+        Number of threads to use for applying the kernel function in parallel
+        along the flow graph (default: 1, the kernel will be applied sequentially).
+    **kwargs
+        Keyword arguments that are passed to :py:func:`~fastscapelib.flow.create_flow_kernel`.
 
-class FlowKernelEroder(metaclass=FlowKernelEroderMeta):
-    spec: dict[str, nb.types.Type | tuple[nb.types.Type, Any]]
-    outputs: list[str]
-    apply_dir: FlowGraphTraversalDir
+    """
+
     _flow_graph: FlowGraph
     _kernel: NumbaFlowKernel
     _kernel_data: NumbaFlowKernelData
+    _erosion: np.ndarray
 
-    def __init__(self, flow_graph: FlowGraph, n_threads: int = 1):
+    def __init__(self, flow_graph: FlowGraph, n_threads: int = 1, **kwargs):
+        import numba as nb
+
         self._flow_graph = flow_graph
+
+        kernel_sig = inspect.signature(self.kernel_func)
+        if len(kernel_sig.parameters) != 1:
+            raise TypeError(
+                "static method 'kernel_func' must take a single argument (the kernel node data)"
+            )
+
         self._kernel, self._kernel_data = create_flow_kernel(
             flow_graph,
-            self.eroder_kernel,
-            spec=self.spec,
-            outputs=self.outputs,
+            self.kernel_func,
+            spec=self.param_spec() | self.input_spec() | {"erosion": nb.float64[::1]},
+            outputs=["erosion"],
             n_threads=n_threads,
-            apply_dir=self.apply_dir,
+            apply_dir=self.kernel_apply_dir(),
+            **kwargs,
         )
 
+        self._erosion = np.zeros(flow_graph.grid_shape)
+        self._kernel_data.bind(erosion=self._erosion)
+
     @staticmethod
-    def eroder_kernel(node: NumbaJittedClass):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def param_spec() -> dict[str, nb.types.Type | tuple[nb.types.Type, Any]]:
+        """Returns a dictionary with parameter names and their (numba) value type."""
+        ...
 
-    def erode(self):
-        self._flow_graph.apply_kernel(self._kernel, self._kernel_data)
+    @staticmethod
+    @abc.abstractmethod
+    def input_spec() -> dict[str, nb.types.Type | tuple[nb.types.Type, Any]]:
+        """Returns a dictionary with input variable names and their (numba) value type."""
+        ...
 
-    def set_kernel_data(self, **kwargs):
+    @staticmethod
+    @abc.abstractmethod
+    def kernel_apply_dir() -> FlowGraphTraversalDir:
+        """Returns the kernel application direction and order."""
+        ...
+
+    @staticmethod
+    @abc.abstractmethod
+    def kernel_func(node: NumbaJittedClass) -> int | None:
+        """The eroder flow kernel function."""
+        ...
+
+    def erode(self, **kwargs) -> np.ndarray:
+        """Compute and returns the amount of erosion for one time step."""
+        actual_inputs = set(kwargs)
+        expected_inputs = set(self.input_spec())
+        if missing_inputs := expected_inputs - actual_inputs:
+            raise KeyError(f"inputs are missing: {missing_inputs}")
+        if invalid_inputs := actual_inputs - expected_inputs:
+            raise ValueError(f"invalid inputs: {invalid_inputs}")
+
+        self._erosion.fill(0.0)
         self._kernel_data.bind(**kwargs)
 
-    @property
-    def kernel_data(self) -> NumbaFlowKernelData:
-        return self._kernel_data
+        self._flow_graph.apply_kernel(self._kernel, self._kernel_data)
 
-    @property
-    def kernel(self) -> NumbaFlowKernel:
-        return self._kernel
+        return self._erosion
 
     @property
     def flow_graph(self) -> FlowGraph:
+        """Returns the flow graph object used by this eroder."""
         return self._flow_graph
 
     @property
-    def n_threads(self):
-        return self._kernel.kernel.n_threads
-
-    @n_threads.setter
-    def n_threads(self, value):
-        self._kernel.kernel.n_threads = value
+    def kernel(self) -> NumbaFlowKernel:
+        """Returns the (Numba) flow kernel object used by this eroder."""
+        return self._kernel
 
     @property
-    def min_block_size(self):
-        return self._kernel.kernel.min_block_size
-
-    @min_block_size.setter
-    def min_block_size(self, value):
-        self._kernel.kernel.min_block_size = value
-
-    @property
-    def min_level_size(self):
-        return self._kernel.kernel.min_level_size
-
-    @min_level_size.setter
-    def min_level_size(self, value):
-        self._kernel.kernel.min_level_size = value
+    def kernel_data(self) -> NumbaFlowKernelData:
+        """Returns the (Numba) flow kernel data object used by this eroder."""
+        return self._kernel_data
