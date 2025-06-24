@@ -72,8 +72,10 @@ class FlowKernelEroder(abc.ABC):
 
         self._kernel, self._kernel_data = create_flow_kernel(
             flow_graph,
-            self.kernel_func,
-            spec=self.param_spec() | self.input_spec() | {"erosion": nb.float64[::1]},
+            type(self).kernel_func,
+            spec=type(self).param_spec()
+            | type(self).input_spec()
+            | {"erosion": nb.float64[::1]},
             outputs=["erosion"],
             n_threads=n_threads,
             apply_dir=self.kernel_apply_dir(),
