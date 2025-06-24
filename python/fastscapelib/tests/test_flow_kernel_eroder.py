@@ -183,19 +183,18 @@ def test_spl_eroder_vs_kernel_eroder() -> None:
     uplift_rate[[0, -1], :] = 0.0
     uplift_rate[:, [0, -1]] = 0.0
 
-    dt = 2e4
-
     # run a few time steps to test erosion array reset
-    for _ in range(3):
+    for dt in [1e4, 2e4]:
         uplift = dt * uplift_rate
         uplifted_elevation = elevation + uplift
         flow_graph.update_routes(uplifted_elevation)
         flow_graph.accumulate(drainage_area, 1.0)
 
-        spl_erosion = eroder.erode(uplifted_elevation, drainage_area, dt)
         flow_kernel_spl_erosion = flow_kernel_eroder.erode(
             uplifted_elevation, drainage_area, dt
         )
+        spl_erosion = eroder.erode(uplifted_elevation, drainage_area, dt)
+
         np.testing.assert_allclose(spl_erosion, flow_kernel_spl_erosion)
 
         elevation = uplifted_elevation - spl_erosion
