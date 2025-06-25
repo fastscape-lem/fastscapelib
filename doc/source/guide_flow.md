@@ -477,6 +477,7 @@ snapshot.update_routes(elevation)  # Error (read-only)!
 ```
 ````
 
+(guide-flow-accumulation)=
 ## Flow Accumulation
 
 After {ref}`computing the flow paths <guide-compute-flow-paths>`, a
@@ -553,6 +554,170 @@ sediment_vol = graph.accumulate(erosion)
 Where ``erosion`` has dimensions {math}`[L]` and ``sediment_vol`` has
 dimensions {math}`[L^3]`.
 
+(guide-flow-kernels)=
+## Flow Kernels
+
+{ref}`Flow accumulation <guide-flow-accumulation>` is a simple way to compute
+values by traversing the flow graph from upstream to downstream nodes. This
+could be limited for more advanced use cases, though.
+
+Fastscapelib also supports "flow kernels", which consist of user-provided
+(Python) functions in which one can compute the value of one or more variables
+at one node of the graph - and/or at its receiver or donor nodes - depending on
+the values of variables evaluated at those nodes and also depending on the
+value of some arbitrary parameters. The so-called "flow kernel" functions are
+executed for each node of a flow graph traversed in a given direction (see
+{py:class}`~fastscapelib.FlowGraphTraversalDir`), updating the output variable
+values between two executions of the kernel at adjacent nodes of the graph.
+
+Flow kernels are efficient and extremely flexible. The kernel functions written
+in pure-Python are jit-compiled using [numba] before being called from within
+C++, therefore making their application very fast. In certain cases it is even
+possible to execute those functions in parallel (multi-thread), which may yield
+some nice speed-up for functions that are expensive to evaluate at a single
+node.
+
+:::{warning}
+
+This feature is EXPERIMENTAL and for advanced usage!
+
+Flow kernels are currently only available for the Python bindings and require
+[numba].
+
+Applying flow kernel functions in parallel (``n_threads > 1``) should be safe in
+most cases, although race conditions may still occur depending on how the kernel
+function is implemented.
+
+Applying a kernel function in parallel may yield poorer performance than
+applying it sequentially, especially when the kernel function is cheap to
+evaluate at a single node. From our experience the benefit of parallelization
+may be difficult to evaluate.
+
+[numba] has some complex internal optimizations to speed up the execution of the
+jit-compiled code. As a consequence, subtle differences in the kernel function's
+code may significantly affect the performance.
+
+:::
+
+As a simple example, basic flow accumulation (computation of drainage area) is
+implemented below as a flow kernel function. See also {doc}`here
+<examples/kernel_eroder_py>` for a more advanced example that re-implements the
+Stream-Power law as a flow kernel function (using the convenient
+{py:class}`~fastscapelib.FlowKernelEroder` built on top of flow kernels).
+
+### Kernel function
+
+Let's first create the kernel function. It consists of an arbitrary function
+that accepts a single argument.
+
+
+````{tab-set-code}
+```{code-block} C++
+// Flow kernels are not yet available in C++.
+```
+
+```{code-block} Python
+def accumulate_kernel_func(node):
+    r_count = node.receivers.count
+    if r_count == 1 and node.receivers.distance[0] == 0.0:
+        # base level node
+        return
+    for i in range(r_count):
+        weight = node.receivers.weight[i]
+        node.receivers.drainage_area[i] += node.drainage_area * weight
+```
+````
+
+The ``node`` argument passed to the kernel function above is a special object
+used for getting or setting the value(s) of any arbitrary variable at the
+current visited node with ``node.<variable_name>``, at its receivers with
+``node.receivers.<variable_name>`` or at its donors with
+``node.donors.<variable_name>``. In the example above there is only one
+user-defined variable ``drainage_area``.
+
+In addition to user-defined variables, the following attributes are defined:
+
+- ``node.receivers.count``: the number of receiver nodes.
+- ``node.receivers.distance``: the distance between the current node and each of
+  its receivers (array of size=``node.receivers.count``).
+- ``node.receivers.weight``: the flow partitioning weight for each of the receivers
+  (array of size=``node.receivers.count``).
+- ``node.donors.count``: the number of donor nodes.
+
+### Kernel and Kernel Data Objects
+
+Next, {py:func}`~fastscapelib.create_flow_kernel` is used to compile the kernel
+function and create the flow kernel (data) objects.
+
+````{tab-set-code}
+```{code-block} C++
+// Flow kernels are not yet available in C++.
+```
+
+```{code-block} Python
+grid = fs.RasterGrid([100, 100], [200.0, 200.0], fs.NodeStatus.FIXED_VALUE)
+graph = fs.FlowGraph(grid, [fs.SingleFlowRouter()])
+
+kernel, kernel_data = create_flow_kernel(
+    flow_graph,
+    accumulate_kernel_func,
+    spec=dict(drainage_area=nb.float64[::1]),
+    outputs=["drainage_area"],
+    n_threads=1,
+    apply_dir=fs.FlowGraphTraversalDir.BREADTH_DOWNSTREAM,
+)
+```
+````
+
+A few arguments are passed to {py:func}`~fastscapelib.create_flow_kernel`: an
+existing flow graph object, the kernel function, the variable specifications
+(i.e., here above the "drainage\_area" variable and its array-like numba type),
+the list of output variables (here "drainage\_area" is computed by the kernel)
+as well as the direction in which to traverse the flow graph. Additionally,
+``n_threads=1`` means that the kernel will be applied sequentially along the
+graph nodes.
+
+{py:func}`~fastscapelib.create_flow_kernel` returns two objects:
+
+- ``kernel``: a {py:class}`~fastscapelib.flow.numba.flow_kernel.NumbaFlowKernel`
+  object that is a proxy to the jit-compiled kernel function.
+
+- ``kernel_data``: a
+  {py:class}`~fastscapelib.flow.numba.flow_kernel.NumbaFlowKernelData` dict-like
+  object that is a proxy to the kernel's data (input/output variables and
+  parameters).
+
+### Apply the Kernel
+
+Finally let's apply the kernel with
+{py:meth}`~fastscapelib.FlowGraph.apply_kernel`, which requires passing both the
+kernel and kernel data objects created at the previous step.
+
+Prior to applying the kernel, it is required to create the input/output
+variables (below `drainage_area` is initialized with the grid's node area
+values) and bind them to the kernel data via it's
+{py:meth}`~fastscapelib.flow.numba.flow_kernel.NumbaFlowKernelData.bind` method.
+
+````{tab-set-code}
+```{code-block} C++
+// Flow kernels are not yet available in C++.
+```
+
+```{code-block} Python
+elevation = np.random.uniform(size=grid.shape)
+graph.update_routes(elevation)
+
+drainage_area = grid.nodes_areas()
+kernel_data.bind(drainage_area=drainage_area)
+flow_graph.apply_kernel(kernel, kernel_data)
+```
+````
+
+After applying the kernel, the `drainage_area` variable should have the correct
+values resulting from the accumulation / traversal.
+
+[numba]: https://numba.pydata.org/
+
 ## Advanced Usage
 
 For advanced use cases it is possible to have read-only access to the graph
@@ -564,8 +729,8 @@ flow graph.
 
 Relying on graph internal data for implementing custom logic in 3rd-party code
 should be done only when there is no alternative. Always prefer
-{py:meth}`~fastscapelib.FlowGraph.accumulate` when possible. Feedback and/or
-feature requests are also
+{py:meth}`~fastscapelib.FlowGraph.accumulate` and {ref}`flow kernels
+<guide-flow-kernels>` when possible. Feedback and/or feature requests are also
 [welcome](https://github.com/fastscape-lem/fastscapelib/discussions).
 
 {py:class}`~fastscapelib.FlowGraphImpl` is an implementation detail and
