@@ -119,9 +119,6 @@ class SPLFlowKernelEroder(FlowKernelEroder):
 
     @staticmethod
     def kernel_func(node: Any):
-        print(node.k_coef)
-        print(node.area_exp)
-
         r_count = node.receivers.count
         if r_count == 1 and node.receivers.distance[0] == 0.0:
             return
