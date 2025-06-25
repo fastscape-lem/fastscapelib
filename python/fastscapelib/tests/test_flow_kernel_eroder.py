@@ -168,9 +168,7 @@ class SPLFlowKernelEroder(FlowKernelEroder):
     def erode(
         self, elevation: np.ndarray, drainage_area: np.ndarray, dt: float
     ) -> np.ndarray:
-        return super().erode(
-            elevation=elevation.ravel(), drainage_area=drainage_area.ravel(), dt=dt
-        )
+        return super().erode(elevation=elevation, drainage_area=drainage_area, dt=dt)
 
 
 def test_spl_eroder_vs_kernel_eroder() -> None:
