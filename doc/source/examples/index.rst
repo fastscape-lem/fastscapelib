@@ -135,3 +135,4 @@ flow routing, eroder classes, etc.)
    inner_base_levels_py
    catchment_py
    planetary_py
+   kernel_eroder_py
