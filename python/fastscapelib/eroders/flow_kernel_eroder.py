@@ -138,7 +138,6 @@ class FlowKernelEroder(abc.ABC):
 
         self._flow_graph.apply_kernel(self._kernel, self._kernel_data)
 
-        raise ValueError
         return self._kernel_data.erosion.reshape(self._flow_graph.grid_shape)
 
     @property
