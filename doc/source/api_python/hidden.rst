@@ -9,3 +9,5 @@
    MSTRouteMethod
    flow.numba.flow_kernel.NumbaFlowKernel
    flow.numba.flow_kernel.NumbaFlowKernelData
+   flow.numba.flow_kernel.NumbaFlowKernelData.bind
+   flow.numba.flow_kernel.NumbaFlowKernelData.check_bindings

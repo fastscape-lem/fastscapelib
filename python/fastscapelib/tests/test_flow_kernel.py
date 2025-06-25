@@ -298,6 +298,11 @@ class TestFlowKernel:
                 apply_dir=FlowGraphTraversalDir.ANY,
             )
 
+    def test_kernel_properties(self, kernel1):
+        assert kernel1.n_threads == 1
+        assert kernel1.apply_dir == FlowGraphTraversalDir.ANY
+        assert kernel1.outputs == ("a",)
+
     def test_multiple_types(self, kernel2, kernel2_data):
         kernel, data = kernel2, kernel2_data
 
