@@ -85,7 +85,12 @@ class SPLFlowKernelEroder(FlowKernelEroder):
         slope_exp: float,
         tolerance: float = 1e-3,
     ):
-        super().__init__(flow_graph)
+        super().__init__(
+            flow_graph,
+            set_data_at_receivers=False,
+            get_data_at_donors=False,
+            set_data_at_donors=False,
+        )
 
         self.kernel_data.bind(
             k_coef=k_coef, area_exp=area_exp, slope_exp=slope_exp, tolerance=tolerance
