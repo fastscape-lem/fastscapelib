@@ -2,6 +2,8 @@
 
 # Release Notes
 
+## v0.4.0 (Unreleased)
+
 ## v0.3.0 (25 June 2025)
 
 Thanks to the contributors to this release: Benoît Bovy, Adrien Delsalle,
@@ -28,7 +30,7 @@ and Wolfgang Bangerth.
   the C++ grid class templates have been slightly refactored and the type aliases
   have been removed.
 
-### New Features
+### New features
 
 - Added flow kernels and parallel execution of kernels and/or flow routers
   ({pull}`157`, {pull}`185`, {pull}`186`, {pull}`187`).

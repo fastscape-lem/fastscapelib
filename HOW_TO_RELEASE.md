@@ -13,6 +13,8 @@ Some instructions on how to make a new release of Fastscapelib
 3. Run ``tbump x.y.z --dry-run`` from the project's root directory and check the
    changes that will be made. If everything looks good, run ``tbump z.y.z``. If
    you need to install tbump first, see https://github.com/your-tools/tbump.
+   (FIXME: tbump automatic push won't work because there's no actual change, i.e.,
+   the new version number corresponds to the current development version number).
 
 4. Push the ``main`` branch with the last commits to
    https://github.com/fastscape-lem/fastscapelib.
