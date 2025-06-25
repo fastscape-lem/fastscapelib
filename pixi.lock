@@ -3705,8 +3705,8 @@ packages:
   timestamp: 1745502200340
 - pypi: ./
   name: fastscapelib
-  version: 0.3.0
-  sha256: 363021371a7e1f8970bdd92cc64246f94887e97b30647bff6941e78cd89d986b
+  version: 0.4.0
+  sha256: 32070bb95b3e27dceb6bd85311d8b1855d963312190ea8d55cee616ab0aaac90
   requires_dist:
   - numpy>=1.24
   - numba ; extra == 'numba'
