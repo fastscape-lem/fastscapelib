@@ -22,12 +22,12 @@ if TYPE_CHECKING:
 class FlowKernelEroder(abc.ABC):
     """Abstract flow kernel eroder class.
 
-    This helper abstract class is for implementing a custom eroder based on a
-    Numba flow kernel. It has the following abstract methods that must be
-    implemented in subclasses:
+    This helper class is for implementing a custom eroder based on a Numba flow
+    kernel. It has the following abstract methods that must be implemented in
+    subclasses:
 
     - ``kernel_func`` is the kernel function
-      (see also :py:func:`~fastscapelib.flow.create_flow_kernel`)
+      (see also :py:func:`~fastscapelib.create_flow_kernel`)
     - ``param_spec`` and ``input_spec`` should return the names and types of the
       eroder parameters and inputs, respectively.
     - ``kernel_apply_dir`` should return the direction / order in which the kernel
@@ -44,13 +44,10 @@ class FlowKernelEroder(abc.ABC):
 
     Parameters
     ----------
-    flow_graph : :py:class:`~fastscapelib.flow.FlowGraph`
+    flow_graph : :py:class:`~fastscapelib.FlowGraph`
         Flow graph instance.
-    n_threads : int, optional
-        Number of threads to use for applying the kernel function in parallel
-        along the flow graph (default: 1, the kernel will be applied sequentially).
     **kwargs
-        Keyword arguments that are passed to :py:func:`~fastscapelib.flow.create_flow_kernel`.
+        Keyword arguments that are passed to :py:func:`~fastscapelib.create_flow_kernel`.
 
     """
 
@@ -59,7 +56,7 @@ class FlowKernelEroder(abc.ABC):
     _kernel_data: NumbaFlowKernelData
     _erosion: np.ndarray
 
-    def __init__(self, flow_graph: FlowGraph, n_threads: int = 1, **kwargs):
+    def __init__(self, flow_graph: FlowGraph, **kwargs):
         import numba as nb
 
         self._flow_graph = flow_graph
@@ -79,7 +76,6 @@ class FlowKernelEroder(abc.ABC):
             self.kernel_func,
             spec=spec,
             outputs=["erosion"],
-            n_threads=n_threads,
             apply_dir=self.kernel_apply_dir(),
             **kwargs,
         )
