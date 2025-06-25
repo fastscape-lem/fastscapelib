@@ -181,6 +181,31 @@ class NumbaFlowKernelData(Mapping):
         """Return the object used to access kernel data from C++."""
         return self._kernel_data
 
+    @property
+    def var_names(self) -> tuple[str, ...]:
+        """Return the names of all kernel input and output variables.
+
+        Includes both scalar and array (grid) variables.
+
+        The value of those variables may be accessed from within the kernel
+        function as attributes of the node data object passed to the function as
+        unique argument.
+
+        """
+        return tuple(self._spec_keys)
+
+    @property
+    def grid_var_names(self) -> tuple[str, ...]:
+        """Return the names of kernel input and output array variables.
+
+        The value of those variables may be accessed from within the kernel
+        function as attributes of the node data object (passed to the function
+        as unique argument) as well as attributes of the ``receivers`` and/or
+        ``donors`` attributes of that node data object.
+
+        """
+        return tuple(self._grid_spec_keys)
+
     def bind(self, **kwargs):
         """Set or update kernel data.
 

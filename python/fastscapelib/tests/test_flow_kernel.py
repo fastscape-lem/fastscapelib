@@ -187,6 +187,17 @@ class TestFlowKernelData:
         kernel2_data.bind(f64=1.0)
         assert kernel2_data["f64"] == 1.0
 
+    def test_var_names(self, kernel2_data):
+        assert kernel2_data.var_names == tuple(kernel2_data)
+        assert kernel2_data.grid_var_names == (
+            "f64_arr",
+            "f32_arr",
+            "int32_arr",
+            "int64_arr",
+            "uint64_arr",
+            "a",
+        )
+
     def test_multiple_bindings(self, flow_graph, kernel1_data):
         data = kernel1_data
 
