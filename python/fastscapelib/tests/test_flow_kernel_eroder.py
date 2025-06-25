@@ -198,6 +198,6 @@ def test_spl_eroder_vs_kernel_eroder() -> None:
         )
         spl_erosion = eroder.erode(uplifted_elevation, drainage_area, dt)
 
-        # np.testing.assert_allclose(spl_erosion, flow_kernel_spl_erosion)
+        np.testing.assert_allclose(spl_erosion, flow_kernel_spl_erosion)
 
         elevation = uplifted_elevation - spl_erosion
