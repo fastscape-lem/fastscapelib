@@ -26,3 +26,12 @@ Hillslope erosion
    :template: fastscapelib-class-template.rst
 
    DiffusionADIEroder
+
+Flow kernel eroder
+------------------
+
+.. autosummary::
+   :toctree: _api_generated/
+   :template: fastscapelib-class-template.rst
+
+   FlowKernelEroder

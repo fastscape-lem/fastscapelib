@@ -1,6 +1,10 @@
 from _fastscapelib_py import __version__  # type: ignore[import]
 
-from fastscapelib.eroders import DiffusionADIEroder, SPLEroder  # type: ignore[import]
+from fastscapelib.eroders import (  # type: ignore[import, attr-defined]
+    DiffusionADIEroder,
+    FlowKernelEroder,
+    SPLEroder,
+)
 from fastscapelib.flow import (  # type: ignore[import, attr-defined]
     FlowDirection,
     FlowGraph,
@@ -49,6 +53,7 @@ __all__ = [
     "FlowGraph",
     "FlowGraphImpl",
     "FlowGraphTraversalDir",
+    "FlowKernelEroder",
     "FlowOperator",
     "FlowOperator",
     "FlowSnapshot",

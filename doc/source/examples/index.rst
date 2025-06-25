@@ -111,6 +111,18 @@ flow routing, eroder classes, etc.)
 
        HEALPix grid, planetary scale.
 
+   .. grid-item-card:: Mountain (Flow Kernel Eroder)
+       :link: kernel_eroder_py
+       :link-type: doc
+       :text-align: center
+       :img-bottom: ../_static/fig_mountain.png
+
+       |python-logo|
+       ^^^
+
+       2-d raster grid, block uplift + stream-power law re-implemented using
+       flow kernels + hillslope diffusion.
+
 .. toctree::
    :hidden:
    :maxdepth: 1
@@ -123,3 +135,4 @@ flow routing, eroder classes, etc.)
    inner_base_levels_py
    catchment_py
    planetary_py
+   kernel_eroder_py

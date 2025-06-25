@@ -736,7 +736,7 @@ class NumbaFlowKernelFactory:
         """
         )
 
-        default_rec_size = self._max_receivers if self._max_receivers is not None else 0
+        default_rec_size = 0 if self._auto_resize else self._max_receivers
         receivers_content_init = "\n    ".join(
             [
                 f"self.receivers._{name} = np.ones({default_rec_size}, dtype=np.{value.dtype})"
@@ -747,7 +747,7 @@ class NumbaFlowKernelFactory:
             [f"self.receivers.{name} = self.receivers._{name}[:]" for name in grid_data]
         )
 
-        default_don_size = self._max_receivers if self._max_receivers is not None else 0
+        default_don_size = 0 if self._auto_resize else self._max_donors
         donors_content_init = "\n    ".join(
             [
                 f"self.donors._{name} = np.ones({default_don_size}, dtype=np.{value.dtype})"
