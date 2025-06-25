@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 class FlowKernelEroder(abc.ABC):
     """Abstract flow kernel eroder class.
 
-    This helper class is for implementing a custom eroder based on a Numba flow
-    kernel. It has the following abstract methods that must be implemented in
-    subclasses:
+    This helper class is for implementing a custom eroder based on a Numba
+    :ref:`flow kernel <guide-flow-kernels>`. It has the following abstract
+    methods that must be implemented in subclasses:
 
     - ``kernel_func`` is the kernel function
       (see also :py:func:`~fastscapelib.create_flow_kernel`)

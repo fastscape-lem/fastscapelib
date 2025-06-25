@@ -112,9 +112,9 @@ class NumbaFlowKernelData(Mapping):
     external data (either scalar values or values defined on each node of a
     :py:class:`~fastscapelib.flow.FlowGraph`) from within the kernel function.
 
-    It is returned by :py:func:`~fastscapelib.flow.create_flow_kernel` and
+    It is returned by :py:func:`~fastscapelib.create_flow_kernel` and
     required by :py:meth:`~fastscapelib.FlowGraph.apply_kernel` alongside the
-    :py:class:`~fastscapelib.flow.NumbaFlowKernel` object.
+    :py:class:`~fastscapelib.flow.numba.flow_kernel.NumbaFlowKernel` object.
 
     This class implements the immutable mapping interface but still allows
     setting or updating kernel data exclusively via the ``.bind()`` method (with
@@ -181,6 +181,31 @@ class NumbaFlowKernelData(Mapping):
         """Return the object used to access kernel data from C++."""
         return self._kernel_data
 
+    @property
+    def var_names(self) -> tuple[str, ...]:
+        """Return the names of all kernel input and output variables.
+
+        Includes both scalar and array (grid) variables.
+
+        The value of those variables may be accessed from within the kernel
+        function as attributes of the node data object passed to the function as
+        unique argument.
+
+        """
+        return tuple(self._spec_keys)
+
+    @property
+    def grid_var_names(self) -> tuple[str, ...]:
+        """Return the names of kernel input and output array variables.
+
+        The value of those variables may be accessed from within the kernel
+        function as attributes of the node data object (passed to the function
+        as unique argument) as well as attributes of the ``receivers`` and/or
+        ``donors`` attributes of that node data object.
+
+        """
+        return tuple(self._grid_spec_keys)
+
     def bind(self, **kwargs):
         """Set or update kernel data.
 
@@ -212,6 +237,18 @@ class NumbaFlowKernelData(Mapping):
             self._bound_keys.add(name)
 
     def check_bindings(self):
+        """Check data that is bound to the kernel.
+
+        This is called prior to executing the kernel function in order to make
+        sure that all input and output data have been initialized and bound as
+        kernel data.
+
+        Raises
+        ------
+        ValueError
+            if there's unbound data required by the kernel.
+
+        """
         unbound_data = set(self._spec_keys) - self._bound_keys
         if unbound_data:
             raise ValueError(
@@ -219,27 +256,67 @@ class NumbaFlowKernelData(Mapping):
             )
 
 
-@dataclass
+@dataclass(frozen=True)
 class NumbaFlowKernel:
-    """Proxy object representing a numba-compiled flow kernel function.
+    """Immutable Proxy object representing a numba jit-compiled flow kernel function.
 
-    It is returned by :py:func:`~fastscapelib.flow.create_flow_kernel` and
+    It is returned by :py:func:`~fastscapelib.create_flow_kernel` and
     required by :py:meth:`~fastscapelib.FlowGraph.apply_kernel` alongside the
-    :py:class:`~fastscapelib.flow.NumbaFlowKernelData` mapping object.
+    :py:class:`~fastscapelib.flow.numba.flow_kernel.NumbaFlowKernelData` mapping object.
 
-    TODO: add an Attributes section.
+    Attributes
+    ----------
+    kernel : object
+        An internal object used to pass and execute the flow kernel
+        either from C++ or from numba jit-compiled code.
+    func : callable
+        The numba-compiled kernel function, which accepts one argument
+        (the kernel's node data as an instance of a numba jit-compiled class).
+    apply_dir : :py:class:`~fastscapelib.FlowGraphTraversalDir`
+        The direction and order in which the flow kernel will be applied along
+        the graph.
+    outputs : tuple
+        The names of the kernel output variables.
+    n_threads : int
+        Number of threads to use for applying the kernel function in parallel
+        along the flow graph (if equal to 1, the kernel is applied sequentially).
+    generated_code : dict
+        A dictionary with the source code generated for each of the
+        functions below.
+    generated_spec : tuple
+        The numba types of the attributes of the jit-compiled classes
+        used by the kernel.
+    node_data_create : callable
+        Internal numba compiled function used to create the kernel's
+        node data object (one instance per each thread).
+    node_data_init : callable or None
+        Internal numba jit-compiled function used to initialize node
+        data scalar values.
+    node_data_getter : callable
+        Internal numba jit-compiled function used to get grid data
+        values at the current node, its receivers and its donors.
+    node_data_setter : callable
+        Internal numba jit-compiled function used to set grid data
+        values from the kernel's data at the current node, its receivers
+        and its donors.
+    node_data_free : object
+        Used internally to de-allocate memory used by the kernel's node
+        data.
 
     """
 
     kernel: _FlowKernel
+    func: KernelFunc
+    apply_dir: FlowGraphTraversalDir
+    outputs: tuple[str, ...]
+    n_threads: int
+    generated_code: MappingProxyType[str, str]
+    generated_spec: tuple[tuple[str, Any], ...]
     node_data_create: KernelNodeDataCreate
     node_data_init: Optional[NumbaJittedFunc]
     node_data_getter: KernelNodeDataGetter
     node_data_setter: KernelNodeDataSetter
     node_data_free: Any
-    func: KernelFunc
-    generated_code: MappingProxyType[str, str]
-    generated_spec: tuple[tuple[str, Any], ...]
 
 
 class NumbaFlowKernelFactory:
@@ -301,7 +378,7 @@ class NumbaFlowKernelFactory:
         with timer("flow kernel init", print_stats):
             self._flow_graph = flow_graph
             self._py_flow_kernel = kernel_func
-            self._outputs = outputs
+            self._outputs = tuple(outputs)
             self._get_data_at_receivers = get_data_at_receivers
             self._set_data_at_receivers = set_data_at_receivers
             self._get_data_at_donors = get_data_at_donors
@@ -325,14 +402,17 @@ class NumbaFlowKernelFactory:
     def kernel(self):
         return NumbaFlowKernel(
             kernel=self._kernel,
+            func=self.flow_kernel_func,
+            apply_dir=self._apply_dir,
+            outputs=self._outputs,
+            n_threads=self._n_threads,
+            generated_code=MappingProxyType(self._generated_code),
+            generated_spec=tuple(self._generated_spec),
             node_data_create=self.node_data_create,
             node_data_init=self.node_data_init,
             node_data_getter=self.node_data_getter,
             node_data_setter=self.node_data_setter,
             node_data_free=None,
-            func=self.flow_kernel_func,
-            generated_code=MappingProxyType(self._generated_code),
-            generated_spec=tuple(self._generated_spec),
         )
 
     @property
