@@ -2,7 +2,41 @@
 
 # Release Notes
 
-## v0.3.0 (Unreleased)
+## v0.3.0 (25 June 2025)
+
+Thanks to the contributors to this release: Benoît Bovy, Adrien Delsalle,
+and Wolfgang Bangerth.
+
+### Highlights
+
+- A new HEALPix global grid for running simulations at the planetary scale (not
+  available on Windows, for pre-built Python packages only available on
+  conda-forge).
+- Flow kernels: user-defined functions as an easy, flexible and efficient way to
+  implement custom algorithms to apply on the flow graph. It is currently available
+  for the Python bindings only. User-defined function, written in pure-Python, are
+  jit-compiled with Numba, therefore making their application very fast.
+
+### Breaking changes
+
+- Updated the minimum required version of ``xtensor`` and ``xtensor-python`` to
+  0.26 and 0.28, respectively ({pull}`174`, {pull}`182`). Upstream changes in
+  the header file structure make older versions incompatible.
+- Refactored the C++ flexible container system so alternative container libraries
+  like Eigen may be used instead of Xtensor ({pull}`155`). Note that this is work
+  in progress, Fastscapelib still heavily relies on Xtensor. As a consequence, the
+  the C++ grid class templates have been slightly refactored and the type aliases
+  have been removed.
+
+### New Features
+
+- Added flow kernels and parallel execution of kernels and/or flow routers
+  ({pull}`157`, {pull}`185`, {pull}`186`, {pull}`187`).
+- Added full fletched Pixi configuration for installing the dependencies,
+  building and installing the library as well as running common development
+  tasks (tests, documentation, etc.) on all major platforms (Linux, MacOS and
+  Windows) ({pull}`170`).
+- Added HEALPix grid ({pull}`162`).
 
 ## v0.2.2 (5 June 2024)
 
