@@ -88,8 +88,8 @@ class SPLFlowKernelEroder(FlowKernelEroder):
         super().__init__(
             flow_graph,
             set_data_at_receivers=False,
-            get_data_at_donors=False,
-            set_data_at_donors=False,
+            # get_data_at_donors=False,
+            # set_data_at_donors=False,
         )
 
         self.kernel_data.bind(
